@@ -1,0 +1,9 @@
+[project]
+name = "tiktok-reels"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["fastapi", "uvicorn[standard]", "pydantic", "python-multipart"]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]
+ml = ["faster-whisper"]

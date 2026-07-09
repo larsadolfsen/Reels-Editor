@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+
+[dev]
+pytest
+httpx
+
+[ml]
+faster-whisper
