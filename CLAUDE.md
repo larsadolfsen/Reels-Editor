@@ -18,7 +18,7 @@ app/
   models.py         # Pydantic data model (Project, ClipLayer, TextPreset, TextBlockLayer, CaptionWord, CaptionTrack)
   store.py          # load/save project JSON + global presets.json
   media.py           # ffprobe command building/duration parsing, serves media files
-  timeline.py         # planned (Task 3): pure sequence math
+  timeline.py         # pure sequence math (order, durations, timeline time -> clip+source time)
   ass_render.py        # planned (Task 6): ASS subtitle generation
   ffmpeg_cmd.py         # planned (Task 4): pure ffmpeg/ffprobe command building
   transcribe.py          # planned (Task 10): faster-whisper wrapper -> CaptionWords
@@ -31,6 +31,7 @@ tests/
   test_models.py
   test_store.py
   test_media.py
+  test_timeline.py
 data/               # gitignored: projects/*.json, presets.json, exports/
 ```
 
@@ -40,3 +41,4 @@ data/               # gitignored: projects/*.json, presets.json, exports/
 - `app/store.py` — JSON persistence: `save_project`, `load_project`, `save_preset`, `load_presets`.
 - `app/media.py` — `ffprobe_cmd`, `probe_duration`, `media_response` (serves a local file via FastAPI, 404s if missing).
 - `app/main.py` — FastAPI composition root: `GET /`, `POST/GET/PUT /api/projects[/{id}]`, `GET /api/probe`, `GET /media`, static mount at `/static`.
+- `app/timeline.py` — `ordered`, `clip_duration`, `sequence_duration`, `locate` (timeline time -> clip + source-time); mirrored in `static/preview.js`.

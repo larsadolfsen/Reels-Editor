@@ -29,11 +29,31 @@ async function saveProject() {
 function renderClipList() {
   const list = document.getElementById("clip-list");
   list.innerHTML = "";
-  for (const c of project.clips) {
+  const ordered = [...project.clips].sort((a, b) => a.order - b.order);
+  ordered.forEach((c, i) => {
     const li = document.createElement("li");
-    li.textContent = `${c.file_path} (${c.in_point.toFixed(1)}-${c.out_point.toFixed(1)})`;
+    li.textContent = `${c.file_path} (${c.in_point.toFixed(1)}-${c.out_point.toFixed(1)}) `;
+    const up = document.createElement("button");
+    up.textContent = "▲";
+    up.disabled = i === 0;
+    up.addEventListener("click", () => moveClip(c, ordered[i - 1]));
+    const down = document.createElement("button");
+    down.textContent = "▼";
+    down.disabled = i === ordered.length - 1;
+    down.addEventListener("click", () => moveClip(c, ordered[i + 1]));
+    li.appendChild(up);
+    li.appendChild(down);
     list.appendChild(li);
-  }
+  });
+}
+
+async function moveClip(a, b) {
+  const t = a.order;
+  a.order = b.order;
+  b.order = t;
+  await saveProject();
+  renderClipList();
+  Preview.load(project);
 }
 
 async function addClip() {
