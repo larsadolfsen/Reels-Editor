@@ -18,3 +18,8 @@ def media_response(path: str) -> FileResponse:
     if not p.is_file():
         raise HTTPException(404, f"not found: {path}")
     return FileResponse(p)
+
+def run_export(cmd: list[str]) -> None:
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr[-2000:])

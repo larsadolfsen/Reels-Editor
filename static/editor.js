@@ -76,6 +76,20 @@ async function addClip() {
 
 document.getElementById("add-clip").addEventListener("click", addClip);
 
+async function exportProject() {
+  const resultEl = document.getElementById("export-result");
+  resultEl.textContent = "Exporting...";
+  const res = await fetch(`/api/projects/${project.id}/export`, { method: "POST" });
+  if (!res.ok) {
+    resultEl.textContent = "Export failed: " + (await res.text());
+    return;
+  }
+  const { out_path } = await res.json();
+  resultEl.innerHTML = `Exported: <a href="/media?path=${encodeURIComponent(out_path)}">download</a>`;
+}
+
+document.getElementById("export").addEventListener("click", exportProject);
+
 (async () => {
   project = await ensureProject();
   renderClipList();

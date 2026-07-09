@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.models import Project
-from app import store, media
+from app import store, media, ffmpeg_cmd
 
 DATA_DIR = Path("data")
 app = FastAPI()
@@ -36,5 +36,15 @@ def probe(path: str) -> dict:
 @app.get("/media")
 def media_file(path: str):
     return media.media_response(path)
+
+@app.post("/api/projects/{pid}/export")
+def export_project(pid: str) -> dict:
+    p = store.load_project(pid, DATA_DIR)
+    out_dir = DATA_DIR / "exports"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"{p.name}-{p.id[:8]}.mp4"
+    cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path))
+    media.run_export(cmd)
+    return {"out_path": str(out_path)}
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
