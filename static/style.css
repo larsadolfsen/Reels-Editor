@@ -1,0 +1,14 @@
+/* Dark editor layout: 9:16 stage on the left, controls panel on the right. */
+* { box-sizing: border-box; }
+body { margin: 0; background: #1a1a1a; color: #eee; font-family: system-ui, sans-serif; }
+main { display: flex; flex-direction: row; height: 100vh; }
+#stage-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 12px; }
+#stage { position: relative; width: 270px; height: 480px; background: #000; overflow: hidden; }
+#player { width: 100%; height: 100%; object-fit: contain; }
+#overlay { position: absolute; inset: 0; pointer-events: none; }
+#transport { display: flex; align-items: center; gap: 8px; }
+#panel { width: 320px; background: #222; padding: 16px; overflow-y: auto; }
+#panel h2 { margin-top: 0; font-size: 14px; text-transform: uppercase; color: #aaa; }
+#clip-path { width: 100%; padding: 6px; margin-bottom: 6px; }
+#clip-list { padding-left: 20px; }
+button { cursor: pointer; }

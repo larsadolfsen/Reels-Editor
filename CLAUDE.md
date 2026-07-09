@@ -5,26 +5,32 @@ Local web editor that assembles 4–6 mp4 clips into one vertical reel with trim
 ## Run commands
 
 - Tests: `.venv/Scripts/python -m pytest -q`
-- Server (once `app/main.py` exists): `.venv/Scripts/python -m uvicorn app.main:app --reload`
+- Server: `.venv/Scripts/python -m uvicorn app.main:app --reload` (then open http://127.0.0.1:8000)
 - Setup: `python -m venv .venv && .venv/Scripts/pip install -e .[dev]`
+- Requires `ffmpeg`/`ffprobe` on PATH for clip probing/export (not required for `pytest`, which mocks subprocess calls).
 
 ## File structure
 
 ```
 app/
   __init__.py       # package marker
-  main.py           # planned (Task 2): FastAPI app wiring only
+  main.py           # FastAPI app wiring only (routes -> modules, static mount)
   models.py         # Pydantic data model (Project, ClipLayer, TextPreset, TextBlockLayer, CaptionWord, CaptionTrack)
   store.py          # load/save project JSON + global presets.json
-  timeline.py       # planned (Task 3): pure sequence math
-  ass_render.py      # planned (Task 6): ASS subtitle generation
-  ffmpeg_cmd.py      # planned (Task 4): pure ffmpeg/ffprobe command building
-  media.py           # planned (Task 2): run ffprobe/ffmpeg subprocesses, serve media files
-  transcribe.py       # planned (Task 10): faster-whisper wrapper -> CaptionWords
-static/               # planned (Task 2+): index.html, editor.js, preview.js, style.css
+  media.py           # ffprobe command building/duration parsing, serves media files
+  timeline.py         # planned (Task 3): pure sequence math
+  ass_render.py        # planned (Task 6): ASS subtitle generation
+  ffmpeg_cmd.py         # planned (Task 4): pure ffmpeg/ffprobe command building
+  transcribe.py          # planned (Task 10): faster-whisper wrapper -> CaptionWords
+static/
+  index.html         # editor page skeleton (stage + clip panel)
+  editor.js           # UI state + API calls + DOM wiring (thin)
+  preview.js            # 9:16 stage playback (thin)
+  style.css              # editor styling
 tests/
   test_models.py
   test_store.py
+  test_media.py
 data/               # gitignored: projects/*.json, presets.json, exports/
 ```
 
@@ -32,3 +38,5 @@ data/               # gitignored: projects/*.json, presets.json, exports/
 
 - `app/models.py` — Pydantic entities: `Project`, `ClipLayer`, `TextPreset`, `TextBlockLayer`, `CaptionWord`, `CaptionTrack`, `new_id()`.
 - `app/store.py` — JSON persistence: `save_project`, `load_project`, `save_preset`, `load_presets`.
+- `app/media.py` — `ffprobe_cmd`, `probe_duration`, `media_response` (serves a local file via FastAPI, 404s if missing).
+- `app/main.py` — FastAPI composition root: `GET /`, `POST/GET/PUT /api/projects[/{id}]`, `GET /api/probe`, `GET /media`, static mount at `/static`.
