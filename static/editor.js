@@ -98,6 +98,11 @@ async function moveClip(a, b) {
 }
 
 async function addClip() {
+  const pickRes = await fetch("/api/pick-file");
+  const { path: pickedPath } = await pickRes.json();
+  if (pickedPath) {
+    document.getElementById("clip-path").value = pickedPath;
+  }
   const path = document.getElementById("clip-path").value.trim();
   if (!path) return;
   const res = await fetch(`/api/probe?path=${encodeURIComponent(path)}`);
