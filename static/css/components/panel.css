@@ -29,7 +29,7 @@
   font-size: 11px;
   padding: 9px 0;
 }
-#add-clip:hover { border-color: var(--accent); color: var(--text); }
+#add-clip:hover { border-color: var(--border-hover-color); border-width: var(--border-hover-width); color: var(--text); }
 
 #clip-list {
   list-style: none;

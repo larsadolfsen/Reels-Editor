@@ -24,6 +24,9 @@
   --space-4: 24px;
 
   --radius: 2px;
+
+  --border-hover-width: 1px;
+  --border-hover-color: var(--accent);
 }
 
 @font-face {
