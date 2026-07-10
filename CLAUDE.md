@@ -19,7 +19,7 @@ app/
   store.py          # load/save project JSON + global presets.json
   media.py           # ffprobe command building/duration parsing, serves media files
   timeline.py         # pure sequence math (order, durations, timeline time -> clip+source time)
-  ass_render.py        # planned (Task 6): ASS subtitle generation
+  ass_render.py        # ASS subtitle generation: text-block dialogue (styles + \pos/\fad entrance); captions land in Task 12
   ffmpeg_cmd.py         # pure ffmpeg export-command builder: trim/scale/pad/concat + optional ASS burn
   transcribe.py          # planned (Task 10): faster-whisper wrapper -> CaptionWords
 static/
@@ -40,6 +40,7 @@ tests/
   test_media.py
   test_timeline.py
   test_ffmpeg_cmd.py
+  test_ass_render.py
 data/               # gitignored: projects/*.json, presets.json, exports/
 ```
 
@@ -51,4 +52,5 @@ data/               # gitignored: projects/*.json, presets.json, exports/
 - `app/main.py` — FastAPI composition root: `GET /`, `POST/GET/PUT /api/projects[/{id}]`, `GET /api/probe`, `GET /api/pick-file`, `GET /media`, `POST /api/projects/{id}/export`, static mount at `/static`.
 - `app/timeline.py` — `ordered`, `clip_duration`, `sequence_duration`, `locate` (timeline time -> clip + source-time); mirrored in `static/preview.js`.
 - `app/ffmpeg_cmd.py` — `build_export_cmd` (per-clip trim/scale/pad, concat, optional ASS burn-in), `escape_filter_path`.
+- `app/ass_render.py` — `render_ass(project, presets) -> str` (full ASS file: `[Script Info]`/`[V4+ Styles]`/`[Events]` for each text block), `ass_time(seconds) -> str`, `hex_to_ass(hex) -> str` (AABBGGRR). Text-block dialogue: `\pos` anchor, `\fad`+`\t` scale pop for `entrance="fade_pop"`, heading+subheading share one Dialogue line via `\N` (one entrance unit). Subheading font-size override was in the plan's sample code but conflicted with the plan's own test asserting a literal `heading\Nsubheading` substring — implemented to match the test; subheading renders at the block's base `size_px`, not 55%.
 - `static/css/tokens.css` — design tokens (colors, fonts, spacing, radius) per `docs/superpowers/specs/2026-07-10-design-foundation-design.md`; every later screen builds on this.
