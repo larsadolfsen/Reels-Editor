@@ -1,0 +1,51 @@
+/* Media/clip panel: left sidebar and its clip rows. */
+/* Exposes #panel and children only. Depends on tokens.css. */
+#panel {
+  width: 320px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#panel-header {
+  padding: var(--space-3) 14px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+#panel-add { padding: 12px 14px 0; }
+#clip-path { width: 100%; margin-bottom: var(--space-2); }
+
+#add-clip {
+  width: 100%;
+  border: 1px dashed var(--border);
+  color: #B4B5B8;
+  font-size: 11px;
+  padding: 9px 0;
+}
+#add-clip:hover { border-color: var(--accent); color: var(--text); }
+
+#clip-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+#clip-list li {
+  padding: var(--space-2);
+  border-radius: 3px;
+  margin-bottom: var(--space-1);
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+}
+
+#clip-list li span { color: #C7C8CA; font-size: 11px; }
+#clip-list input[type="number"] { width: 5em; }

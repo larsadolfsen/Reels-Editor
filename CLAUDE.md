@@ -23,11 +23,17 @@ app/
   ffmpeg_cmd.py         # pure ffmpeg export-command builder: trim/scale/pad/concat + optional ASS burn
   transcribe.py          # planned (Task 10): faster-whisper wrapper -> CaptionWords
 static/
-  index.html         # editor page skeleton (stage + clip panel + export button)
+  index.html         # editor page: top bar (brand/project name/export) + media panel + 9:16 stage
   editor.js           # UI state + API calls + DOM wiring (thin)
   preview.js            # 9:16 stage playback (thin)
-  pico.min.css           # Pico.css v2 (vendored) — base component styling, dark theme via data-theme="dark"
-  style.css               # editor-specific styling layered over Pico
+  css/
+    tokens.css            # :root custom properties (colors, fonts, spacing, radius) + @font-face — single source of truth
+    base.css               # reset + element defaults (body, button, input) on the tokens
+    layout.css               # app shell grid: top bar, left panel, stage area
+    components/
+      panel.css                # media/clip panel + clip rows
+      stage.css                 # 9:16 stage + transport controls
+  fonts/                # vendored woff2: JetBrainsMono-Regular (variable 400-700), PublicSans-Regular (variable 400-700)
 tests/
   test_models.py
   test_store.py
@@ -45,3 +51,4 @@ data/               # gitignored: projects/*.json, presets.json, exports/
 - `app/main.py` — FastAPI composition root: `GET /`, `POST/GET/PUT /api/projects[/{id}]`, `GET /api/probe`, `GET /api/pick-file`, `GET /media`, `POST /api/projects/{id}/export`, static mount at `/static`.
 - `app/timeline.py` — `ordered`, `clip_duration`, `sequence_duration`, `locate` (timeline time -> clip + source-time); mirrored in `static/preview.js`.
 - `app/ffmpeg_cmd.py` — `build_export_cmd` (per-clip trim/scale/pad, concat, optional ASS burn-in), `escape_filter_path`.
+- `static/css/tokens.css` — design tokens (colors, fonts, spacing, radius) per `docs/superpowers/specs/2026-07-10-design-foundation-design.md`; every later screen builds on this.

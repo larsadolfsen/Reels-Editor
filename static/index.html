@@ -1,17 +1,38 @@
 <!-- Editor page: 9:16 preview stage, clip list, controls. Logic in editor.js/preview.js. -->
 <!doctype html><html data-theme="dark"><head><meta charset="utf-8"><title>Reels Editor</title>
-<link rel="stylesheet" href="/static/pico.min.css">
-<link rel="stylesheet" href="/static/style.css"></head><body>
-<main>
-  <section id="stage-wrap"><div id="stage"><video id="player"></video><div id="overlay"></div></div>
-    <div id="transport"><button id="play">&#9654;</button><span id="time">0.0</span></div></section>
-  <aside id="panel">
-    <h2>Clips</h2>
-    <input id="clip-path" placeholder="C:\path\to\clip.mp4"><button id="add-clip">Add clip</button>
-    <ol id="clip-list"></ol>
-    <button id="export">Export</button>
-    <div id="export-result"></div>
-  </aside>
-</main>
+<link rel="stylesheet" href="/static/css/tokens.css">
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/layout.css">
+<link rel="stylesheet" href="/static/css/components/panel.css">
+<link rel="stylesheet" href="/static/css/components/stage.css">
+</head><body>
+<div id="app">
+  <header id="topbar">
+    <div id="brand">
+      <span id="brand-dot"></span>
+      <span id="brand-name">REEL</span>
+      <span id="brand-tag">LOCAL</span>
+    </div>
+    <div id="topbar-divider"></div>
+    <div id="project-name"></div>
+    <div id="topbar-spacer"></div>
+    <button id="export">EXPORT &middot; 1080&times;1920</button>
+  </header>
+  <main>
+    <aside id="panel">
+      <div id="panel-header">MEDIA</div>
+      <div id="panel-add">
+        <input id="clip-path" placeholder="C:\path\to\clip.mp4">
+        <button id="add-clip">+ IMPORT VIDEO</button>
+      </div>
+      <ol id="clip-list"></ol>
+    </aside>
+    <section id="stage-wrap">
+      <div id="stage"><video id="player"></video><div id="overlay"></div></div>
+      <div id="transport"><button id="play">&#9654;</button><span id="time">0.0</span></div>
+      <div id="export-result"></div>
+    </section>
+  </main>
+</div>
 <script src="/static/preview.js"></script><script src="/static/editor.js"></script>
 </body></html>

@@ -6,7 +6,9 @@
 
 **Architecture:** FastAPI backend serving a vanilla-JS browser UI; all editing state in a JSON-persisted Pydantic project model; ffmpeg does trim/concat/burn-in via a generated ASS subtitle file; faster-whisper (CUDA) produces word-level timestamps.
 
-**Tech Stack:** Python 3.12+, FastAPI, uvicorn, pydantic, pytest, ffmpeg/ffprobe (on PATH), faster-whisper, vanilla HTML/JS/CSS styled with Pico.css (self-hosted `static/pico.min.css`, dark theme via `data-theme="dark"`; `style.css` holds editor-specific overrides).
+**Tech Stack:** Python 3.12+, FastAPI, uvicorn, pydantic, pytest, ffmpeg/ffprobe (on PATH), faster-whisper, vanilla HTML/JS/CSS. Styling: hand-rolled design system per `docs/superpowers/specs/2026-07-10-design-foundation-design.md` — CSS custom properties in `static/css/tokens.css`, one component per file under `static/css/components/`, vendored fonts. No CSS framework, no build step (Pico.css was adopted then dropped in Task 5b).
+
+**Progress (2026-07-10):** Tasks 1–5 complete and committed. Unplanned additions landed since: native file picker (`GET /api/pick-file`, spec `2026-07-09-native-file-picker-design.md`), Pico.css adoption (reversed by Task 5b). **Next up: Task 5b (design foundation), then Task 6.**
 
 ## Global Constraints
 
@@ -37,8 +39,12 @@ static/
   index.html        # editor page skeleton
   editor.js         # UI state + API calls + DOM wiring (thin)
   preview.js        # 9:16 stage playback: clip sequencing, text overlay, karaoke tick (thin)
-  pico.min.css      # Pico.css v2 (vendored) — base component styling, no build step
-  style.css         # editor-specific styling layered over Pico
+  css/
+    tokens.css      # :root custom properties (colors, fonts, spacing, radius) — single source of truth
+    base.css        # reset + element defaults built on the tokens
+    layout.css      # app shell: top bar, left panel, stage area grid
+    components/     # one file per component (panel.css, stage.css, ... as features land)
+  fonts/            # vendored woff2: JetBrains Mono (UI chrome), Public Sans (content)
 tests/
   test_models.py
   test_store.py
@@ -59,7 +65,7 @@ data/               # gitignored: projects/*.json, presets.json, exports/
 **Interfaces:**
 - Produces: `models.Project`, `models.ClipLayer(file_path, in_point, out_point, order)`, `models.TextPreset`, `models.TextBlockLayer`, `models.CaptionWord`, `models.CaptionTrack`, `models.new_id() -> str`; `store.save_project(p, data_dir)`, `store.load_project(project_id, data_dir) -> Project`, `store.load_presets(data_dir) -> list[TextPreset]`, `store.save_preset(preset, data_dir)`
 
-- [ ] **Step 1: Bootstrap.** Create `pyproject.toml`:
+- [x] **Step 1: Bootstrap.** Create `pyproject.toml`:
 
 ```toml
 [project]
@@ -75,7 +81,7 @@ ml = ["faster-whisper"]
 
 `.gitignore`: `data/`, `__pycache__/`, `*.pyc`, `.venv/`, `venv/`. Create venv and install: `python -m venv .venv && .venv/Scripts/pip install -e .[dev]`
 
-- [ ] **Step 2: Write failing tests** in `tests/test_models.py`:
+- [x] **Step 2: Write failing tests** in `tests/test_models.py`:
 
 ```python
 # Tests for app.models: entity construction, IDs, JSON round-trip.
@@ -119,8 +125,8 @@ def test_presets_accumulate_and_update(tmp_path):
     assert [x.size_px for x in load_presets(tmp_path) if x.id == a.id] == [120]
 ```
 
-- [ ] **Step 3: Run, verify FAIL** — `pytest -q` → import errors.
-- [ ] **Step 4: Implement** `app/models.py`:
+- [x] **Step 3: Run, verify FAIL** — `pytest -q` → import errors.
+- [x] **Step 4: Implement** `app/models.py`:
 
 ```python
 # Data model for the editor: Project, clip/text/caption layers, savable text presets.
@@ -213,9 +219,9 @@ def save_preset(preset: TextPreset, data_dir) -> None:
     _presets_path(data_dir).write_text(json.dumps([x.model_dump() for x in items], indent=2), encoding="utf-8")
 ```
 
-- [ ] **Step 5: Run, verify PASS** — `pytest -q`.
-- [ ] **Step 6: Write `CLAUDE.md`** with the codebase map from the plan's File Structure section (mark unbuilt files "planned"), plus inventory entries for `models.py` and `store.py`, and the run commands (`pytest -q`, `uvicorn app.main:app` once it exists).
-- [ ] **Step 7: Commit + push** — `git add -A && git commit -m "feat: data model and JSON store" && git push -u origin session/first-reel-plan`
+- [x] **Step 5: Run, verify PASS** — `pytest -q`.
+- [x] **Step 6: Write `CLAUDE.md`** with the codebase map from the plan's File Structure section (mark unbuilt files "planned"), plus inventory entries for `models.py` and `store.py`, and the run commands (`pytest -q`, `uvicorn app.main:app` once it exists).
+- [x] **Step 7: Commit + push** — `git add -A && git commit -m "feat: data model and JSON store" && git push -u origin session/first-reel-plan`
 
 ---
 
@@ -229,7 +235,7 @@ def save_preset(preset: TextPreset, data_dir) -> None:
 - Consumes: Task 1 models/store.
 - Produces: `media.probe_duration(path) -> float`; `media.ffprobe_cmd(path) -> list[str]`; HTTP: `POST /api/projects {name}` → Project JSON; `GET/PUT /api/projects/{id}` (PUT replaces whole validated Project — editor state lives client-side); `GET /media?path=...` → video file; `GET /` → editor page. `DATA_DIR = Path("data")` defined in `app/main.py`.
 
-- [ ] **Step 1: Failing test** `tests/test_media.py`:
+- [x] **Step 1: Failing test** `tests/test_media.py`:
 
 ```python
 # Tests for app.media: ffprobe command construction and duration parsing.
@@ -246,8 +252,8 @@ def test_probe_duration_parses_stdout():
         assert probe_duration("c.mp4") == 12.48
 ```
 
-- [ ] **Step 2: Run, verify FAIL.**
-- [ ] **Step 3: Implement** `app/media.py`:
+- [x] **Step 2: Run, verify FAIL.**
+- [x] **Step 3: Implement** `app/media.py`:
 
 ```python
 # Media helpers: ffprobe duration probing and safe local file serving for preview.
@@ -342,9 +348,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 `static/preview.js` (thin): `Preview.load(project)` keeps the clip array; single-clip playback for now — `#player.src = '/media?path=' + encodeURIComponent(clips[0].file_path)`; play button toggles; `timeupdate` updates `#time`.
 
-- [ ] **Step 4: Run tests PASS** — `pytest -q`.
-- [ ] **Step 5: See it.** `uvicorn app.main:app --reload` → open http://127.0.0.1:8000 → paste a real mp4 path → **your clip plays inside the vertical stage.**
-- [ ] **Step 6: Update CLAUDE.md map/inventory; commit + push** — `git commit -m "feat: editor page plays a clip in 9:16 stage"`.
+- [x] **Step 4: Run tests PASS** — `pytest -q`.
+- [x] **Step 5: See it.** `uvicorn app.main:app --reload` → open http://127.0.0.1:8000 → paste a real mp4 path → **your clip plays inside the vertical stage.**
+- [x] **Step 6: Update CLAUDE.md map/inventory; commit + push** — `git commit -m "feat: editor page plays a clip in 9:16 stage"`.
 
 ---
 
@@ -358,7 +364,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 - Consumes: `ClipLayer` from Task 1.
 - Produces: `timeline.ordered(clips) -> list[ClipLayer]`, `timeline.clip_duration(c) -> float`, `timeline.sequence_duration(clips) -> float`, `timeline.locate(clips, t) -> tuple[ClipLayer, float]` (timeline time → clip + source-time). JS mirrors `locate` in `preview.js`.
 
-- [ ] **Step 1: Failing tests** `tests/test_timeline.py`:
+- [x] **Step 1: Failing tests** `tests/test_timeline.py`:
 
 ```python
 # Tests for app.timeline: pure sequence math over ordered, trimmed clips.
@@ -384,8 +390,8 @@ def test_locate_out_of_range():
     with pytest.raises(ValueError): locate([c(0, 2, 0)], 2.5)
 ```
 
-- [ ] **Step 2: Run, verify FAIL.**
-- [ ] **Step 3: Implement** `app/timeline.py`:
+- [x] **Step 2: Run, verify FAIL.**
+- [x] **Step 3: Implement** `app/timeline.py`:
 
 ```python
 # Pure timeline math: order clips, durations, map timeline time to (clip, source time).
@@ -411,10 +417,10 @@ def locate(clips: list[ClipLayer], t: float) -> tuple[ClipLayer, float]:
     raise ValueError(f"t={t} beyond sequence end {acc}")
 ```
 
-- [ ] **Step 4: Run tests PASS.**
-- [ ] **Step 5: Preview sequencing (JS, thin).** In `preview.js`: keep `timelineTime`; on `timeupdate`, when the current clip's `out_point` is reached, switch `#player.src` to the next clip and seek to its `in_point` (`onloadedmetadata` → `currentTime = in_point` → `play()`); mirror `locate` for the transport display. `editor.js`: list shows all clips with order and ▲▼ reorder buttons (swap `order`, save, reload preview).
-- [ ] **Step 6: See it.** Add 4–6 clips → press play → **they play as one continuous reel** (a brief hiccup at joins is acceptable in preview; export will be seamless).
-- [ ] **Step 7: Update map; commit + push** — `git commit -m "feat: sequential multi-clip timeline in preview"`.
+- [x] **Step 4: Run tests PASS.**
+- [x] **Step 5: Preview sequencing (JS, thin).** In `preview.js`: keep `timelineTime`; on `timeupdate`, when the current clip's `out_point` is reached, switch `#player.src` to the next clip and seek to its `in_point` (`onloadedmetadata` → `currentTime = in_point` → `play()`); mirror `locate` for the transport display. `editor.js`: list shows all clips with order and ▲▼ reorder buttons (swap `order`, save, reload preview).
+- [x] **Step 6: See it.** Add 4–6 clips → press play → **they play as one continuous reel** (a brief hiccup at joins is acceptable in preview; export will be seamless).
+- [x] **Step 7: Update map; commit + push** — `git commit -m "feat: sequential multi-clip timeline in preview"`.
 
 ---
 
@@ -428,7 +434,7 @@ def locate(clips: list[ClipLayer], t: float) -> tuple[ClipLayer, float]:
 - Consumes: `Project`, `timeline.ordered`.
 - Produces: `ffmpeg_cmd.build_export_cmd(project, out_path, ass_path=None) -> list[str]`; `media.run_export(cmd) -> None` (raises `RuntimeError` with ffmpeg stderr on failure); HTTP `POST /api/projects/{pid}/export` → `{"out_path": ...}` writing to `data/exports/<name>-<id8>.mp4`.
 
-- [ ] **Step 1: Failing tests** `tests/test_ffmpeg_cmd.py`:
+- [x] **Step 1: Failing tests** `tests/test_ffmpeg_cmd.py`:
 
 ```python
 # Tests for app.ffmpeg_cmd: pure construction of the trim+concat+burn export command.
@@ -456,8 +462,8 @@ def test_escape_filter_path():
     assert escape_filter_path("C:\\tmp\\s.ass") == "C\\:/tmp/s.ass"
 ```
 
-- [ ] **Step 2: Run, verify FAIL.**
-- [ ] **Step 3: Implement** `app/ffmpeg_cmd.py`:
+- [x] **Step 2: Run, verify FAIL.**
+- [x] **Step 3: Implement** `app/ffmpeg_cmd.py`:
 
 ```python
 # Pure ffmpeg export-command builder: per-clip trim, scale/pad to 1080x1920, concat, optional ASS burn.
@@ -490,10 +496,10 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None) -> 
     return cmd
 ```
 
-- [ ] **Step 4: Run tests PASS.**
-- [ ] **Step 5: Wire it.** `media.run_export(cmd)`: `subprocess.run(cmd, capture_output=True, text=True)`; on nonzero returncode raise `RuntimeError(proc.stderr[-2000:])`. Route in `main.py`: load project → `out = Path("data/exports"); out.mkdir(parents=True, exist_ok=True)` → `build_export_cmd` → `run_export` → return path. `editor.js`: "Export" button → POST → show returned path (and a `<a href="/media?path=...">download</a>` link).
-- [ ] **Step 6: See it.** Export → **play the mp4: one seamless 1080×1920 reel of your clips.** Confirm it matches the preview sequence.
-- [ ] **Step 7: Update map; commit + push** — `git commit -m "feat: export assembled reel via ffmpeg"`.
+- [x] **Step 4: Run tests PASS.**
+- [x] **Step 5: Wire it.** `media.run_export(cmd)`: `subprocess.run(cmd, capture_output=True, text=True)`; on nonzero returncode raise `RuntimeError(proc.stderr[-2000:])`. Route in `main.py`: load project → `out = Path("data/exports"); out.mkdir(parents=True, exist_ok=True)` → `build_export_cmd` → `run_export` → return path. `editor.js`: "Export" button → POST → show returned path (and a `<a href="/media?path=...">download</a>` link).
+- [x] **Step 6: See it.** Export → **play the mp4: one seamless 1080×1920 reel of your clips.** Confirm it matches the preview sequence.
+- [x] **Step 7: Update map; commit + push** — `git commit -m "feat: export assembled reel via ffmpeg"`.
 
 ---
 
@@ -505,10 +511,32 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None) -> 
 **Interfaces:**
 - Consumes: `ClipLayer.in_point/out_point` (already respected by `timeline.locate` and `build_export_cmd` — this task is UI only).
 
-- [ ] **Step 1: Trim UI (thin).** Per clip in the list: numeric in/out fields (seconds, step 0.1) + "Set in/out from playhead" buttons that copy the player's current source time. Clamp `0 <= in < out <= duration`; the clamp lives in one small pure JS function `clampTrim(inP, outP, dur)` at the top of `editor.js`.
-- [ ] **Step 2: Preview honors trim** — already does via Task 3's clip switching (start at `in_point`, switch at `out_point`); verify after edits `Preview.load(project)` is re-called.
-- [ ] **Step 3: See it.** Cut dead air off two clips → play: **preview skips the trimmed parts** → export → **the mp4 is the tightened reel.**
-- [ ] **Step 4: Commit + push** — `git commit -m "feat: per-clip trim honored in preview and export"`. (Backend untouched → tests still green; run `pytest -q` anyway.)
+- [x] **Step 1: Trim UI (thin).** Per clip in the list: numeric in/out fields (seconds, step 0.1) + "Set in/out from playhead" buttons that copy the player's current source time. Clamp `0 <= in < out <= duration`; the clamp lives in one small pure JS function `clampTrim(inP, outP, dur)` at the top of `editor.js`.
+- [x] **Step 2: Preview honors trim** — already does via Task 3's clip switching (start at `in_point`, switch at `out_point`); verify after edits `Preview.load(project)` is re-called.
+- [x] **Step 3: See it.** Cut dead air off two clips → play: **preview skips the trimmed parts** → export → **the mp4 is the tightened reel.**
+- [x] **Step 4: Commit + push** — `git commit -m "feat: per-clip trim honored in preview and export"`. (Backend untouched → tests still green; run `pytest -q` anyway.)
+
+---
+
+### Task 5b: Design foundation — hand-rolled tokens, Pico removed (added 2026-07-10)
+
+**Spec:** `docs/superpowers/specs/2026-07-10-design-foundation-design.md` — read it first; it holds the approved token values (colors, fonts, spacing) and all decisions. North star is the "Local Reel Editor" mockup.
+
+**Files:**
+- Create: `static/css/tokens.css`, `static/css/base.css`, `static/css/layout.css`, `static/css/components/panel.css`, `static/css/components/stage.css`, `static/fonts/` (JetBrains Mono + Public Sans woff2)
+- Modify: `static/index.html` (swap Pico link for new CSS, semantic class names, add top bar with app/project name + relocated export button), `static/editor.js`/`static/preview.js` (class-name hooks only)
+- Delete: `static/pico.min.css`, `static/style.css` (surviving editor rules migrate into the new files)
+
+**Interfaces:**
+- Produces: the design-token layer (`:root` custom properties) every later screen (Tasks 7–12 UI) builds on. No API or model changes.
+
+- [x] **Step 1: Tokens + fonts.** Write `tokens.css` with the spec's palette/type/spacing variables and `@font-face` for the vendored woff2 files.
+- [x] **Step 2: Base + layout.** `base.css` (reset, body/button/input defaults) and `layout.css` (top bar, left panel, stage grid per mockup).
+- [x] **Step 3: Components.** `panel.css` (media/clip panel + clip rows), `stage.css` (9:16 stage + transport). Migrate surviving `style.css` rules; delete `style.css` and `pico.min.css`; update `index.html`.
+- [x] **Step 4: Verify.** `pytest -q` still green (guards HTML/JS breakage). Load http://127.0.0.1:8000 with real clips; screenshot vs mockup. Stated untested layer: visual styling (manual verification, no logic to unit test).
+- [x] **Step 5: Update map; commit + push** — `git commit -m "feat: hand-rolled design foundation from mockup, Pico removed"`.
+
+**Note for later tasks:** wherever Tasks 6–12 mention `style.css`, styles now go into the matching file under `static/css/` (new component → new file in `components/`). The Global Constraints "Font for everything: Arial" rule still governs *canvas* text (preview/export parity); UI chrome uses the token fonts.
 
 ---
 
@@ -602,7 +630,7 @@ Note for the implementer: heading and subheading share one Dialogue line (`\N` s
 ### Task 7: Text block visible on the preview, styled live
 
 **Files:**
-- Modify: `static/editor.js`, `static/preview.js`, `static/index.html`, `static/style.css`
+- Modify: `static/editor.js`, `static/preview.js`, `static/index.html`, `static/css/components/stage.css` (overlay text styles; was `style.css` pre-Task 5b)
 
 **Interfaces:**
 - Consumes: `TextBlockLayer`, `TextPreset` shapes (client-side mirrors of Task 1 models); `PUT /api/projects/{pid}`.

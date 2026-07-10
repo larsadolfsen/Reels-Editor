@@ -1,0 +1,38 @@
+/* 9:16 preview stage + transport controls. */
+/* Exposes #stage-wrap and children only. Depends on tokens.css. */
+#stage-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  background: var(--bg-0);
+  padding: var(--space-4);
+  min-width: 0;
+}
+
+#stage {
+  position: relative;
+  width: 270px;
+  height: 480px;
+  background: repeating-linear-gradient(135deg, #1E2023 0px, #1E2023 14px, #232529 14px, #232529 28px);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+#player { width: 100%; height: 100%; object-fit: contain; }
+#overlay { position: absolute; inset: 0; pointer-events: none; }
+
+#transport {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-ui);
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+#export-result { font-family: var(--font-ui); font-size: 11px; color: var(--text-muted); }

@@ -1,0 +1,46 @@
+/* App shell grid: top bar, left panel, stage area. */
+/* Exposes #app/#topbar/main layout only; component internals live in css/components/*. Depends on tokens.css. */
+#app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+#topbar {
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-2);
+}
+
+#brand { display: flex; align-items: center; gap: var(--space-2); }
+#brand-dot { width: 8px; height: 8px; border-radius: var(--radius); background: var(--accent); }
+#brand-name { font-family: var(--font-ui); font-weight: 600; font-size: 13px; letter-spacing: 0.02em; }
+#brand-tag {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 6px;
+  letter-spacing: 0.04em;
+}
+
+#topbar-divider { width: 1px; height: 20px; background: var(--border-soft); }
+#project-name { font-size: 12.5px; color: #B4B5B8; }
+#topbar-spacer { flex: 1; }
+
+#export {
+  margin-left: var(--space-2);
+  background: var(--accent);
+  border: none;
+  color: #12161A;
+  font-weight: 600;
+  font-size: 11.5px;
+  padding: 9px 16px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+#export:hover { background: #7C97B3; color: #12161A; border-color: transparent; }
+
+main { flex: 1; display: flex; min-height: 0; }

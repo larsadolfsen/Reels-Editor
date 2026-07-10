@@ -1,0 +1,42 @@
+/* Design tokens: single source of truth for colors, fonts, spacing, radius. */
+/* Exposes :root custom properties + @font-face. Values from the approved mockup. */
+:root {
+  --bg-0: #101113;
+  --bg-1: #16171A;
+  --bg-2: #18191C;
+  --surface: #1C1E20;
+  --border: #2B2D30;
+  --border-soft: #26282B;
+  --text: #E7E7E6;
+  --text-muted: #8A8B8F;
+  --text-dim: #5C5D61;
+  --accent: #6C87A3;
+  --accent-green: #6FA37E;
+  --accent-gold: #B8935A;
+
+  --font-ui: 'JetBrains Mono', monospace;
+  --font-content: 'Public Sans', sans-serif;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+
+  --radius: 2px;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/static/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/static/fonts/PublicSans-Regular.woff2') format('woff2');
+}

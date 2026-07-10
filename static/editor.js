@@ -141,6 +141,7 @@ document.getElementById("export").addEventListener("click", exportProject);
 
 (async () => {
   project = await ensureProject();
+  document.getElementById("project-name").textContent = project.name;
   renderClipList();
   Preview.load(project);
 })();
