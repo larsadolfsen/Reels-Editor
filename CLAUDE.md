@@ -23,16 +23,17 @@ app/
   ffmpeg_cmd.py         # pure ffmpeg export-command builder: trim/scale/pad/concat + optional ASS burn
   transcribe.py          # planned (Task 10): faster-whisper wrapper -> CaptionWords
 static/
-  index.html         # editor page: top bar (brand/project name/export) + media panel + text panel + 9:16 stage
+  index.html         # editor page: top bar + 3-column main (MEDIA panel | 9:16 stage | TEXT OVERLAY style panel), per the north-star mockup layout
   editor.js           # UI state + API calls + DOM wiring (thin); owns the client-side TextPreset stand-in (Task 8 will move it server-side)
   preview.js            # 9:16 stage playback + text overlay compositing (thin)
   css/
     tokens.css            # :root custom properties (colors, fonts, spacing, radius) + @font-face — single source of truth
     base.css               # reset + element defaults (body, button, input) on the tokens
-    layout.css               # app shell grid: top bar, left panel, stage area
+    layout.css               # app shell grid: top bar, left panel, stage area, right panel
     components/
-      panel.css                # media/clip panel + clip rows + text style panel (shared .panel-header class)
+      panel.css                # left MEDIA panel + clip rows (thumbnail swatch + name/duration + trim fields)
       stage.css                 # 9:16 stage + transport controls + .text-block overlay styling
+      style-panel.css            # right-hand contextual panel: text overlay style controls, mockup-matched (mono-caps section labels, dividers)
   fonts/                # vendored woff2: JetBrainsMono-Regular (variable 400-700), PublicSans-Regular (variable 400-700)
 tests/
   test_models.py
@@ -54,5 +55,6 @@ data/               # gitignored: projects/*.json, presets.json, exports/
 - `app/ffmpeg_cmd.py` — `build_export_cmd` (per-clip trim/scale/pad, concat, optional ASS burn-in), `escape_filter_path`.
 - `app/ass_render.py` — `render_ass(project, presets) -> str` (full ASS file: `[Script Info]`/`[V4+ Styles]`/`[Events]` for each text block), `ass_time(seconds) -> str`, `hex_to_ass(hex) -> str` (AABBGGRR). Text-block dialogue: `\pos` anchor, `\fad`+`\t` scale pop for `entrance="fade_pop"`. (`subheading`/`\N` merge dropped 2026-07-10 — one heading line per block.)
 - `static/css/tokens.css` — design tokens (colors, fonts, spacing, radius) per `docs/superpowers/specs/2026-07-10-design-foundation-design.md`; every later screen builds on this.
-- `static/editor.js` — text-block wiring: `defaultTextPreset()`/`loadTextPreset(id)`/`saveTextPreset()` (client-only TextPreset, persisted in `localStorage` under `textPreset:<projectId>` until Task 8 adds a presets API), `ensureTextBlock()` (lazily creates the single `project.text_blocks[0]`), `updateTextBlock()`/`updateTextStyle()` (input handlers -> save + re-render), `renderTextPanel()` (populate controls from state on load).
+- `static/css/components/style-panel.css` — `#style-panel` (right aside, 320px) + `.style-group`/`.style-group-label`/`.style-row`/`.style-field`/`.style-divider` — restyled 2026-07-10 to match the north-star mockup's contextual right panel (`docs/superpowers/specs/assets/2026-07-10-design-foundation-mockup.html`). Controls are placeholder/temporary — position uses raw x/y sliders, not the mockup's 3x3 grid + preset swatches (that lands with Task 8's real presets).
+- `static/editor.js` — text-block wiring: `defaultTextPreset()`/`loadTextPreset(id)`/`saveTextPreset()` (client-only TextPreset, persisted in `localStorage` under `textPreset:<projectId>` until Task 8 adds a presets API), `ensureTextBlock()` (lazily creates the single `project.text_blocks[0]`), `updateTextBlock()`/`updateTextStyle()` (input handlers -> save + re-render), `renderTextPanel()` (populate controls from state on load). `renderClipList()` also builds the mockup-style thumbnail-swatch + name/duration row for each clip.
 - `static/preview.js` — `Preview.renderText(project, presets, timelineTime)` composites one `.text-block` div (single heading line) per visible block into `#overlay` (position/size scaled from the 1080x1920 canvas to the stage's actual pixel size; outline via `-webkit-text-stroke` or `box`/`box_color` background); `Preview.currentTimelineTime()` exposes the last computed tick so editor.js can re-render immediately while paused.

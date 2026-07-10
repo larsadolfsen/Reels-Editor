@@ -50,36 +50,17 @@
 #clip-list li span { color: #C7C8CA; font-size: 11px; }
 #clip-list input[type="number"] { width: 5em; }
 
-#text-panel {
-  padding: 12px 14px 16px;
-  border-top: 1px solid var(--border-soft);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+.clip-row-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+
+.clip-thumb {
+  width: 34px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  background: repeating-linear-gradient(135deg, #26282B 0px, #26282B 6px, #2B2D30 6px, #2B2D30 12px);
+  border: 1px solid var(--border-soft);
 }
 
-#text-panel input[type="text"],
-#text-panel input:not([type]),
-#text-heading,
-#text-subheading { width: 100%; }
-
-.text-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-
-.text-row label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: 11px;
-  color: var(--text-muted);
-  flex: 1;
-}
-
-.text-row input[type="range"] { flex: 1; width: 100%; }
-.text-row input[type="number"] { width: 4.5em; }
-.text-row input[type="color"] { width: 2.4em; padding: 2px; }
-.text-row select { flex: 1; }
+.clip-info { min-width: 0; flex: 1; }
+.clip-info .clip-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clip-info .clip-duration { font-family: var(--font-ui); font-size: 9.5px; color: var(--text-dim); margin-top: 2px; }

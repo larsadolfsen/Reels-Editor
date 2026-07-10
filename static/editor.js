@@ -123,9 +123,25 @@ function renderClipList() {
   const ordered = [...project.clips].sort((a, b) => a.order - b.order);
   ordered.forEach((c, i) => {
     const li = document.createElement("li");
-    const label = document.createElement("span");
-    label.textContent = c.file_path + " ";
-    li.appendChild(label);
+
+    const head = document.createElement("div");
+    head.className = "clip-row-head";
+
+    const thumb = document.createElement("div");
+    thumb.className = "clip-thumb";
+    head.appendChild(thumb);
+
+    const info = document.createElement("div");
+    info.className = "clip-info";
+    const name = document.createElement("span");
+    name.className = "clip-name";
+    name.textContent = c.file_path;
+    const duration = document.createElement("span");
+    duration.className = "clip-duration";
+    duration.textContent = `${c.in_point.toFixed(1)}s – ${c.out_point.toFixed(1)}s`;
+    info.appendChild(name);
+    info.appendChild(duration);
+    head.appendChild(info);
 
     const up = document.createElement("button");
     up.textContent = "▲";
@@ -135,8 +151,9 @@ function renderClipList() {
     down.textContent = "▼";
     down.disabled = i === ordered.length - 1;
     down.addEventListener("click", () => moveClip(c, ordered[i + 1]));
-    li.appendChild(up);
-    li.appendChild(down);
+    head.appendChild(up);
+    head.appendChild(down);
+    li.appendChild(head);
 
     const dur = clipDurations[c.id] ?? c.out_point;
     const inField = document.createElement("input");
@@ -150,6 +167,7 @@ function renderClipList() {
       const t = clampTrim(parseFloat(inField.value), parseFloat(outField.value), dur);
       c.in_point = t.in_point; c.out_point = t.out_point;
       inField.value = t.in_point.toFixed(1); outField.value = t.out_point.toFixed(1);
+      duration.textContent = `${t.in_point.toFixed(1)}s – ${t.out_point.toFixed(1)}s`;
       await saveProject();
       Preview.load(project);
     }

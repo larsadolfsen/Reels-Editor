@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="/static/css/layout.css">
 <link rel="stylesheet" href="/static/css/components/panel.css">
 <link rel="stylesheet" href="/static/css/components/stage.css">
+<link rel="stylesheet" href="/static/css/components/style-panel.css">
 </head><body>
 <div id="app">
   <header id="topbar">
@@ -26,47 +27,67 @@
         <button id="add-clip">+ IMPORT VIDEO</button>
       </div>
       <ol id="clip-list"></ol>
-      <div class="panel-header">TEXT</div>
-      <div id="text-panel">
-        <input id="text-heading" placeholder="Heading">
-        <div class="text-row">
-          <label>Start <input id="text-start" type="number" step="0.1"></label>
-          <label>End <input id="text-end" type="number" step="0.1"></label>
-        </div>
-        <div class="text-row">
-          <label>Size <input id="text-size" type="range" min="24" max="200"></label>
-        </div>
-        <div class="text-row">
-          <label>Color <input id="text-color" type="color"></label>
-          <label>Outline <input id="text-outline-color" type="color"></label>
-          <label>Width <input id="text-outline-px" type="number" min="0" max="20"></label>
-        </div>
-        <div class="text-row">
-          <label><input id="text-box" type="checkbox"> Box</label>
-          <label>Box color <input id="text-box-color" type="color"></label>
-        </div>
-        <div class="text-row">
-          <label>Align
-            <select id="text-align">
-              <option value="left">Left</option>
-              <option value="center">Center</option>
-              <option value="right">Right</option>
-            </select>
-          </label>
-        </div>
-        <div class="text-row">
-          <label>X <input id="text-x" type="range" min="0" max="1080"></label>
-        </div>
-        <div class="text-row">
-          <label>Y <input id="text-y" type="range" min="0" max="1920"></label>
-        </div>
-      </div>
     </aside>
     <section id="stage-wrap">
       <div id="stage"><video id="player"></video><div id="overlay"></div></div>
       <div id="transport"><button id="play">&#9654;</button><span id="time">0.0</span></div>
       <div id="export-result"></div>
     </section>
+    <aside id="style-panel">
+      <div class="style-panel-header">TEXT OVERLAY &middot; STYLE</div>
+
+      <div class="style-group">
+        <input id="text-heading" placeholder="Heading">
+        <div class="style-row">
+          <label class="style-field">START (S)<input id="text-start" type="number" step="0.1"></label>
+          <label class="style-field">END (S)<input id="text-end" type="number" step="0.1"></label>
+        </div>
+      </div>
+
+      <div class="style-divider"></div>
+
+      <div class="style-group">
+        <div class="style-group-label">SIZE</div>
+        <input id="text-size" type="range" min="24" max="200">
+      </div>
+
+      <div class="style-group">
+        <div class="style-group-label">COLOR</div>
+        <div class="style-row">
+          <label class="style-field">FILL<input id="text-color" type="color"></label>
+          <label class="style-field">OUTLINE<input id="text-outline-color" type="color"></label>
+          <label class="style-field">WIDTH<input id="text-outline-px" type="number" min="0" max="20"></label>
+        </div>
+      </div>
+
+      <div class="style-group">
+        <div class="style-row style-row-tight">
+          <label class="style-checkbox"><input id="text-box" type="checkbox"> BOX</label>
+          <label class="style-field">BOX COLOR<input id="text-box-color" type="color"></label>
+        </div>
+      </div>
+
+      <div class="style-divider"></div>
+
+      <div class="style-group">
+        <div class="style-group-label">TEXT ALIGN</div>
+        <select id="text-align">
+          <option value="left">Left</option>
+          <option value="center">Center</option>
+          <option value="right">Right</option>
+        </select>
+      </div>
+
+      <div class="style-group">
+        <div class="style-group-label">POSITION</div>
+        <div class="style-row">
+          <label class="style-field">X (PX)<input id="text-x" type="range" min="0" max="1080"></label>
+        </div>
+        <div class="style-row">
+          <label class="style-field">Y (PX)<input id="text-y" type="range" min="0" max="1920"></label>
+        </div>
+      </div>
+    </aside>
   </main>
 </div>
 <script src="/static/preview.js"></script><script src="/static/editor.js"></script>
