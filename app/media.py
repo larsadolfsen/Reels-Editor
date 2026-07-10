@@ -1,5 +1,5 @@
 # Media helpers: ffprobe duration probing, safe local file serving, native file picker.
-# Exposes ffprobe_cmd, probe_duration, media_response, run_export, pick_file. Depends on ffprobe on PATH.
+# Exposes ffprobe_cmd, probe_duration, media_response, run_export, pick_file. Depends on ffprobe on PATH and tkinter.
 import subprocess
 import tkinter
 from tkinter import filedialog
@@ -27,6 +27,9 @@ def run_export(cmd: list[str]) -> None:
         raise RuntimeError(proc.stderr[-2000:])
 
 def pick_file() -> str | None:
+    # Must stay a sync `def` route: FastAPI dispatches sync handlers to a worker thread,
+    # so this blocking Tk dialog runs off the main thread. Switching the /api/pick-file
+    # route to `async def` would run this on the event loop and freeze the server.
     root = tkinter.Tk()
     root.withdraw()
     root.attributes("-topmost", True)

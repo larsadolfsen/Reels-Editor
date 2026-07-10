@@ -117,6 +117,7 @@ async function addClip() {
     out_point: duration,
     order: project.clips.length,
   });
+  document.getElementById("clip-path").value = "";
   await saveProject();
   renderClipList();
   Preview.load(project);
