@@ -18,6 +18,7 @@
 - `app/main.py` is composition only — no feature logic, ever.
 - Every task: tests pass (`pytest -q`), codebase map in `CLAUDE.md` updated in the same commit, commit on branch `session/first-reel-plan` (or a successor session branch), push. Never commit to main.
 - UI JS is a stated untested layer: keep it thin, verify manually via the "See it" step in each task.
+- Keep the app running throughout each session (`uvicorn app.main:app --reload`, browser preview open) so the user can watch progress live as each step lands, not just at the "See it" checkpoint.
 - No secrets in code. All processing local.
 - Canvas is fixed 1080×1920 @ 30fps. Font for everything: Arial (present on Windows, keeps preview/export parity).
 - Hardcoded caption style (used in Tasks 10–12): Arial 72px, white `#FFFFFF`, black outline 4px, bottom-center at y=1520 of 1920, max 4 words per caption line, karaoke highlight color `#FFD400`.

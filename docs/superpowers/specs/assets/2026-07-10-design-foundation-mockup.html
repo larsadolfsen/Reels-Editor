@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="760e4707-b7f3-43f4-9572-619b8bdbc499"></script>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <style>/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("7b6ec668-6e75-4ec0-ac7d-93edbe73a122") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("18c23cf8-bcd6-49cc-aecb-fb6c0b0617d5") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("bda223bb-5264-40a9-8bc6-dd2693747822") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fae17551-303e-4dc2-95b3-8252d22e7ffd") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("801744a2-2f7e-45ff-8b2e-2e103b8955bb") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("567a8b71-6f14-41f4-8cdc-1873c35e68bd") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("7b6ec668-6e75-4ec0-ac7d-93edbe73a122") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("18c23cf8-bcd6-49cc-aecb-fb6c0b0617d5") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("bda223bb-5264-40a9-8bc6-dd2693747822") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("fae17551-303e-4dc2-95b3-8252d22e7ffd") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("801744a2-2f7e-45ff-8b2e-2e103b8955bb") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("567a8b71-6f14-41f4-8cdc-1873c35e68bd") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("7b6ec668-6e75-4ec0-ac7d-93edbe73a122") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("18c23cf8-bcd6-49cc-aecb-fb6c0b0617d5") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("bda223bb-5264-40a9-8bc6-dd2693747822") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("fae17551-303e-4dc2-95b3-8252d22e7ffd") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("801744a2-2f7e-45ff-8b2e-2e103b8955bb") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("567a8b71-6f14-41f4-8cdc-1873c35e68bd") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("a097d42e-3355-4b8e-bb7a-6638bae99a73") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("cebb4572-8ed3-4e82-b0e3-f13c897a2cbd") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("66b06acd-770e-4362-a24d-f4ff25d21986") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("a097d42e-3355-4b8e-bb7a-6638bae99a73") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("cebb4572-8ed3-4e82-b0e3-f13c897a2cbd") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("66b06acd-770e-4362-a24d-f4ff25d21986") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("a097d42e-3355-4b8e-bb7a-6638bae99a73") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("cebb4572-8ed3-4e82-b0e3-f13c897a2cbd") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("66b06acd-770e-4362-a24d-f4ff25d21986") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("a097d42e-3355-4b8e-bb7a-6638bae99a73") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("cebb4572-8ed3-4e82-b0e3-f13c897a2cbd") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("66b06acd-770e-4362-a24d-f4ff25d21986") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+  <style>
+    html, body { margin: 0; padding: 0; background: #101113; overflow: hidden; }
+    * { box-sizing: border-box; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #303236; border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+  </style>
+</helmet>
+
+<div style="width:100vw; height:100vh; background:#16171A; color:#E7E7E6; font-family:'Public Sans',sans-serif; display:flex; flex-direction:column; overflow:hidden; font-size:13px;">
+
+  <!-- HEADER -->
+  <div style="height:52px; flex-shrink:0; display:flex; align-items:center; gap:20px; padding:0 16px; border-bottom:1px solid rgba(255,255,255,0.08); background:#18191C;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div style="width:8px; height:8px; border-radius:2px; background:#6C87A3;"></div>
+      <div style="font-family:'JetBrains Mono',monospace; font-weight:600; font-size:13px; letter-spacing:0.02em;">REEL</div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#5C5D61; border:1px solid rgba(255,255,255,0.1); border-radius:3px; padding:2px 6px; letter-spacing:0.04em;">LOCAL</div>
+    </div>
+    <div style="width:1px; height:20px; background:rgba(255,255,255,0.08);"></div>
+    <div style="font-size:12.5px; color:#B4B5B8;">untitled_reel_014</div>
+    <div style="flex:1;"></div>
+    <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#4A4B4F; margin-right:8px;">localhost:8000</div>
+    <button style="background:none; border:none; color:#8A8B8F; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.04em; cursor:pointer; padding:6px 8px;" style-hover="color:#E7E7E6;">UNDO</button>
+    <button style="background:none; border:none; color:#8A8B8F; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.04em; cursor:pointer; padding:6px 8px;" style-hover="color:#E7E7E6;">REDO</button>
+    <button style="margin-left:8px; background:#6C87A3; border:none; color:#12161A; font-family:'JetBrains Mono',monospace; font-weight:600; font-size:11.5px; letter-spacing:0.03em; padding:9px 16px; border-radius:4px; cursor:pointer; white-space:nowrap; flex-shrink:0;" style-hover="background:#7C97B3;">EXPORT · 1080×1920</button>
+  </div>
+
+  <!-- MAIN -->
+  <div style="flex:1; display:flex; min-height:0;">
+
+    <!-- LEFT: media bin -->
+    <sc-if value="{{ leftOpen }}">
+      <div style="width:320px; flex-shrink:0; background:#1C1E20; border-right:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column;">
+        <div style="padding:16px 14px 12px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.06em; color:#5C5D61;">MEDIA</div>
+          <button onclick="{{ toggleLeft }}" title="Collapse panel" style="background:none; border:none; color:#5C5D61; cursor:pointer; padding:4px; display:flex; align-items:center;" style-hover="color:#E7E7E6;">
+            <div style="width:15px; height:12px; border:1.4px solid currentColor; border-radius:2px; position:relative;">
+              <div style="position:absolute; top:-1.4px; bottom:-1.4px; left:5px; width:1.4px; background:currentColor;"></div>
+            </div>
+          </button>
+        </div>
+        <div style="padding:12px 14px 0;">
+          <button style="width:100%; background:none; border:1px dashed rgba(255,255,255,0.18); color:#B4B5B8; font-family:'JetBrains Mono',monospace; font-size:11px; padding:9px 0; border-radius:4px; cursor:pointer; letter-spacing:0.03em;" style-hover="border-color:#6C87A3; color:#E7E7E6;">+ IMPORT VIDEO</button>
+        </div>
+        <div style="flex:1; overflow-y:auto; padding:12px 10px;">
+          <sc-for list="{{ mediaItems }}" as="m" hint-placeholder-count="4">
+            <div onclick="{{ m.onClick }}" style="{{ m.style }}">
+              <div style="width:34px; height:52px; flex-shrink:0; border-radius:3px; background:repeating-linear-gradient(135deg, #26282B 0px, #26282B 6px, #2B2D30 6px, #2B2D30 12px); border:1px solid rgba(255,255,255,0.08);"></div>
+              <div style="min-width:0;">
+                <div style="font-size:11px; color:#C7C8CA; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ m.name }}</div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#5C5D61; margin-top:2px;">{{ m.duration }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ leftClosed }}">
+      <div style="width:72px; flex-shrink:0; background:#18191C; border-right:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column; align-items:center;">
+        <button onclick="{{ toggleLeft }}" title="Expand media panel" style="background:none; border:none; color:#5C5D61; cursor:pointer; padding:14px 0 10px; display:flex; align-items:center; justify-content:center; width:100%;" style-hover="color:#E7E7E6;">
+          <div style="width:15px; height:12px; border:1.4px solid currentColor; border-radius:2px; position:relative;">
+            <div style="position:absolute; top:-1.4px; bottom:-1.4px; left:9px; width:1.4px; background:currentColor;"></div>
+          </div>
+        </button>
+        <div style="flex:1; overflow-y:auto; padding:0 0 10px; display:flex; flex-direction:column; gap:8px; align-items:center;">
+          <sc-for list="{{ mediaItems }}" as="m" hint-placeholder-count="4">
+            <div onclick="{{ m.onClick }}" title="{{ m.name }}" style="width:34px; height:52px; flex-shrink:0; border-radius:3px; cursor:pointer; background:repeating-linear-gradient(135deg, #26282B 0px, #26282B 6px, #2B2D30 6px, #2B2D30 12px); border:1px solid rgba(255,255,255,0.08);"></div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- CENTER: preview + timeline -->
+    <div style="flex:1; display:flex; flex-direction:column; min-width:0; min-height:0;">
+
+      <!-- PREVIEW -->
+      <div style="flex:1; display:flex; flex-direction:column; min-height:0; padding:24px; position:relative; background:#131417;">
+
+        <div style="flex-shrink:0; display:flex; justify-content:flex-end; margin-bottom:10px;">
+          <button onclick="{{ toggleSafeZones }}" style="{{ safeZoneButtonStyle }}">SAFE ZONES</button>
+        </div>
+
+        <div style="flex:1; min-height:0; display:flex; align-items:center; justify-content:center;">
+        <div style="width:fit-content; display:flex; flex-direction:column;">
+
+          <div style="width:100%; flex-shrink:0; display:flex; justify-content:space-between; padding-bottom:8px;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:9px; color:rgba(255,255,255,0.25); letter-spacing:0.04em;">[ CLIP PREVIEW ]</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:9px; color:rgba(255,255,255,0.25);">00:03.4</span>
+          </div>
+
+          <div style="{{ previewBoxStyle }}">
+
+          <!-- play button -->
+          <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:15; pointer-events:none;">
+            <div style="width:52px; height:52px; border-radius:50%; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; backdrop-filter:blur(2px);">
+              <div style="width:0; height:0; border-top:9px solid transparent; border-bottom:9px solid transparent; border-left:15px solid #E7E7E6; margin-left:4px;"></div>
+            </div>
+          </div>
+
+          <!-- text overlay (interactive, preset-driven) -->
+          <div onclick="{{ selectOverlay }}" style="{{ overlayWrapStyle }}">
+            <div style="{{ overlayTextStyle }}">{{ overlayText }}</div>
+          </div>
+
+          <!-- caption bar (bottom third, driven by selected caption) -->
+          <div onclick="{{ () =&gt; selectCaption(activeCaptionIndex) }}" style="position:absolute; left:0; right:0; bottom:14%; display:flex; justify-content:center; padding:0 24px; cursor:pointer;">
+            <div style="{{ captionBarStyle }}">{{ activeCaptionText }}</div>
+          </div>
+
+          <div style="position:absolute; bottom:0; left:0; right:0; height:34%; background:linear-gradient(to top, rgba(0,0,0,0.35), transparent); pointer-events:none;"></div>
+
+          <!-- TikTok / Reels safe-zone guide -->
+          <sc-if value="{{ showSafeZones }}">
+            <div style="position:absolute; inset:0; pointer-events:none; z-index:20;">
+              <div style="position:absolute; top:0; left:0; right:0; height:6%; border-bottom:1px dashed rgba(216,110,90,0.55); background:rgba(216,110,90,0.06); display:flex; align-items:center; justify-content:center;">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:7.5px; letter-spacing:0.03em; color:rgba(216,110,90,0.85);">FOLLOWING / FOR YOU</span>
+              </div>
+              <div style="position:absolute; top:40%; right:0; width:15%; height:44%; border-left:1px dashed rgba(216,110,90,0.55); background:rgba(216,110,90,0.06); display:flex; align-items:center; justify-content:center;">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:7.5px; letter-spacing:0.02em; color:rgba(216,110,90,0.85); writing-mode:vertical-rl;">LIKE · COMMENT · SAVE · SHARE</span>
+              </div>
+              <div style="position:absolute; left:0; right:15%; bottom:7%; height:20%; border-top:1px dashed rgba(216,110,90,0.55); background:rgba(216,110,90,0.06); display:flex; align-items:flex-start; justify-content:center; padding-top:4px;">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:7.5px; letter-spacing:0.03em; color:rgba(216,110,90,0.85);">USERNAME / CAPTION / SOUND</span>
+              </div>
+              <div style="position:absolute; bottom:0; left:0; right:0; height:7%; border-top:1px dashed rgba(216,110,90,0.55); background:rgba(216,110,90,0.06); display:flex; align-items:center; justify-content:center;">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:7.5px; letter-spacing:0.03em; color:rgba(216,110,90,0.85);">HOME / DISCOVER / INBOX / PROFILE</span>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      </div>
+
+      <!-- TIMELINE -->
+      <div style="height:280px; flex-shrink:0; border-top:1px solid rgba(255,255,255,0.08); background:#18191C; display:flex; flex-direction:column; position:relative;">
+
+        <!-- toolbar -->
+        <div style="height:52px; flex-shrink:0; display:flex; align-items:center; gap:10px; padding:0 14px; border-bottom:1px solid rgba(255,255,255,0.06);">
+          <div style="display:flex; align-items:center; gap:4px;">
+            <button style="background:none; border:none; color:#6A6B6F; font-family:'JetBrains Mono',monospace; font-size:14px; cursor:pointer; width:22px; line-height:1;" style-hover="color:#E7E7E6;">–</button>
+            <button style="background:none; border:none; color:#6A6B6F; font-family:'JetBrains Mono',monospace; font-size:14px; cursor:pointer; width:22px; line-height:1;" style-hover="color:#E7E7E6;">+</button>
+          </div>
+          <div style="width:1px; align-self:stretch; background:rgba(255,255,255,0.08);"></div>
+          <div style="flex:1;"></div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5D61; margin-left:8px;">00:03.4 / 00:14.0</div>
+        </div>
+
+        <!-- slice tool, anchored to the playhead -->
+        <button onclick="{{ toggleSlice }}" style="{{ sliceButtonStyle }}">
+          <div style="width:11px; height:1px; background:currentColor; transform:rotate(45deg);"></div>
+          <span>SLICE</span>
+        </button>
+
+        <!-- ruler -->
+        <div style="height:20px; flex-shrink:0; position:relative; border-bottom:1px solid rgba(255,255,255,0.04); padding-left:88px;">
+          <sc-for list="{{ rulerMarks }}" as="m" hint-placeholder-count="8">
+            <div style="position:absolute; top:2px; left:{{ m.left }}; font-family:'JetBrains Mono',monospace; font-size:9px; color:#4A4B4F;">{{ m.label }}</div>
+          </sc-for>
+          <div style="position:absolute; top:0; bottom:-246px; left:{{ playheadLeft }}; width:1px; background:#6C87A3; z-index:5;">
+            <div style="position:absolute; top:-2px; left:-3px; width:7px; height:7px; border-radius:50%; background:#6C87A3;"></div>
+          </div>
+        </div>
+
+        <!-- tracks (stacking order: text + captions composite on top of video, audio at bottom) -->
+        <div style="flex:1; display:flex; flex-direction:column; overflow-y:auto; overflow-x:auto; position:relative;">
+
+          <!-- text overlay track -->
+          <div style="display:flex; align-items:stretch; height:36px; border-bottom:1px solid rgba(255,255,255,0.04); flex-shrink:0;">
+            <div style="width:88px; flex-shrink:0; display:flex; align-items:center; padding-left:12px; font-family:'JetBrains Mono',monospace; font-size:10px; color:#5C5D61; letter-spacing:0.03em;">TEXT</div>
+            <div style="flex:1; min-width:0; overflow-x:auto; position:relative; padding:5px 8px;">
+              <div onclick="{{ selectOverlay }}" style="{{ overlayBlockStyle }}">
+                <span style="font-size:9.5px; color:#C7C8CA; padding:0 7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">HOOK · {{ overlayPresetLabel }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- caption track -->
+          <div style="display:flex; align-items:stretch; height:44px; border-bottom:1px solid rgba(255,255,255,0.04); flex-shrink:0;">
+            <div style="width:88px; flex-shrink:0; display:flex; align-items:center; padding-left:12px; font-family:'JetBrains Mono',monospace; font-size:10px; color:#5C5D61; letter-spacing:0.03em;">CAPTIONS</div>
+            <div style="flex:1; min-width:0; overflow-x:auto; position:relative; padding:5px 8px; display:flex; gap:3px;">
+              <sc-for list="{{ captions }}" as="cap" hint-placeholder-count="4">
+                <div onclick="{{ () =&gt; selectCaption($index) }}" style="{{ cap.style }}">
+                  <span style="font-size:10px; color:#C7C8CA; padding:0 7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">{{ cap.text }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- video track -->
+          <div style="display:flex; align-items:stretch; height:56px; border-bottom:1px solid rgba(255,255,255,0.04); flex-shrink:0;">
+            <div style="width:88px; flex-shrink:0; display:flex; align-items:center; padding-left:12px; font-family:'JetBrains Mono',monospace; font-size:10px; color:#5C5D61; letter-spacing:0.03em;">VIDEO</div>
+            <div style="flex:1; min-width:0; overflow-x:auto; position:relative; padding:6px 8px; display:flex; gap:3px;">
+              <sc-for list="{{ clips }}" as="clip" hint-placeholder-count="3">
+                <div onclick="{{ selectClip }}" style="{{ clip.style }}">
+                  <div style="position:absolute; inset:0; background:repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 8px, transparent 8px, transparent 16px);"></div>
+                  <span style="position:relative; font-family:'JetBrains Mono',monospace; font-size:9.5px; color:rgba(255,255,255,0.55); padding:4px 6px; display:inline-block;">{{ clip.name }}</span>
+                  <sc-if value="{{ clip.masked }}">
+                    <div style="position:absolute; bottom:3px; right:5px; font-family:'JetBrains Mono',monospace; font-size:8px; color:#6FA37E; letter-spacing:0.03em;">MASKED</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- audio track -->
+          <div onclick="{{ selectAudio }}" style="display:flex; align-items:stretch; height:40px; flex-shrink:0; cursor:pointer;">
+            <div style="width:88px; flex-shrink:0; display:flex; align-items:center; padding-left:12px; font-family:'JetBrains Mono',monospace; font-size:10px; color:#5C5D61; letter-spacing:0.03em;">AUDIO</div>
+            <div style="flex:1; min-width:0; overflow-x:auto; padding:8px 8px; display:flex; align-items:center; gap:2px; border-radius:3px; background:{{ audioTrackBg }}; border:1px solid {{ audioTrackBorder }};">
+              <sc-for list="{{ waveBars }}" as="h" hint-placeholder-count="60">
+                <div style="width:2px; height:{{ h }}px; background:rgba(255,255,255,0.16); border-radius:1px;"></div>
+              </sc-for>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- RIGHT: contextual panel -->
+    <sc-if value="{{ rightClosed }}">
+      <div style="width:32px; flex-shrink:0; background:#18191C; border-left:1px solid rgba(255,255,255,0.08); display:flex; align-items:flex-start; justify-content:center; padding-top:14px;">
+        <button onclick="{{ toggleRight }}" title="Expand panel" style="background:none; border:none; color:#5C5D61; cursor:pointer; padding:4px; display:flex; align-items:center;" style-hover="color:#E7E7E6;">
+          <div style="width:15px; height:12px; border:1.4px solid currentColor; border-radius:2px; position:relative;">
+            <div style="position:absolute; top:-1.4px; bottom:-1.4px; left:5px; width:1.4px; background:currentColor;"></div>
+          </div>
+        </button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ rightOpen }}">
+    <div style="width:320px; flex-shrink:0; background:#1C1E20; border-left:1px solid rgba(255,255,255,0.08); overflow-y:auto; padding:18px 16px;">
+
+      <div style="display:flex; align-items:center; justify-content:flex-end; margin-bottom:-6px;">
+        <button onclick="{{ toggleRight }}" title="Collapse panel" style="background:none; border:none; color:#5C5D61; cursor:pointer; padding:4px; display:flex; align-items:center;" style-hover="color:#E7E7E6;">
+          <div style="width:15px; height:12px; border:1.4px solid currentColor; border-radius:2px; position:relative;">
+            <div style="position:absolute; top:-1.4px; bottom:-1.4px; left:9px; width:1.4px; background:currentColor;"></div>
+          </div>
+        </button>
+      </div>
+
+      <sc-if value="{{ isClip }}">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.06em; color:#5C5D61; margin-bottom:14px;">CLIP PROPERTIES</div>
+        <div style="font-size:13px; color:#E7E7E6; margin-bottom:4px;">clip_003.mp4</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6A6B6F; margin-bottom:20px;">00:00.0 – 00:04.8 · 1920×1080 · 30fps</div>
+
+        <div style="height:1px; background:rgba(255,255,255,0.07); margin:0 0 18px;"></div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.06em; color:#8A8B8F;">AI MASKING</div>
+          <div onclick="{{ toggleMasking }}" style="{{ maskingSwitchStyle }}">
+            <div style="{{ maskingKnobStyle }}"></div>
+          </div>
+        </div>
+        <div style="font-size:11.5px; color:#6A6B6F; line-height:1.5; margin-bottom:12px;">Cuts the subject out from the background. Slow — usually 1–3 minutes per clip.</div>
+
+        <sc-if value="{{ isMaskingProcessing }}">
+          <div style="margin-top:6px;">
+            <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#B8935A; margin-bottom:6px;">
+              <span style="animation:pulse 1.6s ease-in-out infinite;">PROCESSING</span>
+              <span>{{ maskingProgressLabel }}</span>
+            </div>
+            <div style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;">
+              <div style="height:100%; background:#B8935A; width:{{ maskingProgressPct }}; transition:width 0.2s linear;"></div>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#5C5D61; margin-top:6px;">Est. {{ maskingEta }} remaining · runs on your GPU</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isMaskingDone }}">
+          <div style="display:flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#6FA37E;">
+            <div style="width:5px; height:5px; border-radius:50%; background:#6FA37E;"></div>
+            <span>MASK READY</span>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ isCaption }}">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.06em; color:#5C5D61; margin-bottom:6px;">CAPTION · {{ activeCaption.time }}</div>
+
+        <div style="display:flex; gap:4px; margin-bottom:8px;">
+          <button onmousedown="{{ preventDefault }}" onclick="{{ () =&gt; formatCaption('bold') }}" style="width:28px; height:28px; background:#232427; border:1px solid rgba(255,255,255,0.1); color:#B4B5B8; font-weight:700; font-size:12px; border-radius:4px; cursor:pointer;" style-hover="border-color:rgba(255,255,255,0.3); color:#E7E7E6;">B</button>
+          <button onmousedown="{{ preventDefault }}" onclick="{{ () =&gt; formatCaption('italic') }}" style="width:28px; height:28px; background:#232427; border:1px solid rgba(255,255,255,0.1); color:#B4B5B8; font-style:italic; font-size:12px; border-radius:4px; cursor:pointer;" style-hover="border-color:rgba(255,255,255,0.3); color:#E7E7E6;">I</button>
+          <button onmousedown="{{ preventDefault }}" onclick="{{ () =&gt; formatCaption('underline') }}" style="width:28px; height:28px; background:#232427; border:1px solid rgba(255,255,255,0.1); color:#B4B5B8; text-decoration:underline; font-size:12px; border-radius:4px; cursor:pointer;" style-hover="border-color:rgba(255,255,255,0.3); color:#E7E7E6;">U</button>
+          <div style="width:1px; background:rgba(255,255,255,0.08); margin:0 2px;"></div>
+          <button onmousedown="{{ preventDefault }}" onclick="{{ () =&gt; formatCaption('justifyLeft') }}" style="width:28px; height:28px; background:#232427; border:1px solid rgba(255,255,255,0.1); color:#B4B5B8; font-family:'JetBrains Mono',monospace; font-size:11px; border-radius:4px; cursor:pointer;" style-hover="border-color:rgba(255,255,255,0.3); color:#E7E7E6;">◧</button>
+          <button onmousedown="{{ preventDefault }}" onclick="{{ () =&gt; formatCaption('justifyCenter') }}" style="width:28px; height:28px; background:#232427; border:1px solid rgba(255,255,255,0.1); color:#B4B5B8; font-family:'JetBrains Mono',monospace; font-size:11px; border-radius:4px; cursor:pointer;" style-hover="border-color:rgba(255,255,255,0.3); color:#E7E7E6;">◨</button>
+        </div>
+
+        <div ref="{{ captionEditorRef }}" contenteditable="true" suppresscontenteditablewarning="{{ true }}" onblur="{{ onCaptionBlur }}" style="font-size:15px; line-height:1.5; color:#E7E7E6; background:#232427; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:12px; min-height:70px; outline:none; margin-bottom:14px;">{{ activeCaption.text }}</div>
+        <button style="width:100%; background:none; border:1px solid rgba(255,255,255,0.12); color:#B4B5B8; font-family:'JetBrains Mono',monospace; font-size:10.5px; padding:8px 0; border-radius:4px; cursor:pointer; letter-spacing:0.03em;" style-hover="border-color:rgba(255,255,255,0.3); color:#E7E7E6;">DELETE</button>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#4A4B4F; margin-top:16px;">Auto-transcribed from speech. Click any caption on the timeline to edit.</div>
+      </sc-if>
+
+      <sc-if value="{{ isOverlay }}">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.06em; color:#5C5D61; margin-bottom:14px;">TEXT OVERLAY · STYLE</div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px;">
+          <sc-for list="{{ presets }}" as="p" hint-placeholder-count="4">
+            <div onclick="{{ () =&gt; setOverlayPreset(p.key) }}" style="{{ p.swatchStyle }}">
+              <div style="{{ p.demoStyle }}">Aa</div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#9A9B9F; margin-top:8px; letter-spacing:0.03em;">{{ p.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="height:1px; background:rgba(255,255,255,0.07); margin:0 0 16px;"></div>
+
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.06em; color:#8A8B8F; margin-bottom:8px;">TEXT ALIGN</div>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; width:210px; margin-bottom:20px;">
+          <sc-for list="{{ textAlignOptions }}" as="opt" hint-placeholder-count="3">
+            <button title="{{ opt.label }}" onclick="{{ () =&gt; setTextAlign(opt.key) }}" style="{{ opt.style }}">{{ opt.icon }}</button>
+          </sc-for>
+        </div>
+
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.06em; color:#8A8B8F; margin-bottom:8px;">POSITION</div>
+        <div style="display:flex; flex-direction:column; gap:4px; width:210px;">
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px;">
+            <sc-for list="{{ vertPositions }}" as="pos" hint-placeholder-count="3">
+              <button title="{{ pos.label }}" onclick="{{ () =&gt; setOverlayVert(pos.key) }}" style="{{ pos.style }}">{{ pos.shortLabel }}</button>
+            </sc-for>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px;">
+            <sc-for list="{{ horizPositions }}" as="pos" hint-placeholder-count="3">
+              <button title="{{ pos.label }}" onclick="{{ () =&gt; setOverlayHoriz(pos.key) }}" style="{{ pos.style }}">{{ pos.shortLabel }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; width:100%; margin-top:8px;">
+          <label style="flex:1; display:flex; flex-direction:column; gap:4px;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.05em; color:#5C5D61;">X (PX)</span>
+            <input type="number" value="{{ offsetX }}" onchange="{{ (e) =&gt; setOffsetX(e.target.value) }}" style="width:100%; background:#202225; border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:#C7C8CA; font-family:'JetBrains Mono',monospace; font-size:11px; padding:6px 8px;">
+          </label>
+          <label style="flex:1; display:flex; flex-direction:column; gap:4px;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.05em; color:#5C5D61;">Y (PX)</span>
+            <input type="number" value="{{ offsetY }}" onchange="{{ (e) =&gt; setOffsetY(e.target.value) }}" style="width:100%; background:#202225; border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:#C7C8CA; font-family:'JetBrains Mono',monospace; font-size:11px; padding:6px 8px;">
+          </label>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#5C5D61; margin-top:8px; line-height:1.5;">Shaded cells overlap the platform's own UI (nav, profile/like rail, caption area) — avoid placing text there.</div>
+      </sc-if>
+
+      <sc-if value="{{ isAudio }}">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.06em; color:#5C5D61; margin-bottom:14px;">AUDIO TRACK</div>
+        <div style="font-size:13px; color:#E7E7E6; margin-bottom:4px;">original_audio.wav</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6A6B6F; margin-bottom:20px;">00:00.0 – 00:14.0 · stereo · 48kHz</div>
+
+        <div style="height:1px; background:rgba(255,255,255,0.07); margin:0 0 18px;"></div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.06em; color:#8A8B8F;">AUTO CAPTIONS</div>
+          <button onclick="{{ startCaptioning }}" style="{{ captionActionStyle }}">{{ captionActionLabel }}</button>
+        </div>
+        <div style="font-size:11.5px; color:#6A6B6F; line-height:1.5; margin-bottom:12px;">Transcribes speech into editable caption blocks. Runs roughly in real time — about as long as the clip itself.</div>
+
+        <sc-if value="{{ isCaptioningRunning }}">
+          <div style="margin-top:6px;">
+            <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#B8935A; margin-bottom:6px;">
+              <span style="animation:pulse 1.6s ease-in-out infinite;">TRANSCRIBING</span>
+              <span>{{ captioningTimeLabel }}</span>
+            </div>
+            <div style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;">
+              <div style="height:100%; background:#B8935A; width:{{ captioningProgressPct }}; transition:width 0.2s linear;"></div>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#5C5D61; margin-top:6px;">Listening and writing caption blocks as it goes — check the CAPTIONS track.</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isCaptioningDone }}">
+          <div style="display:flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#6FA37E;">
+            <div style="width:5px; height:5px; border-radius:50%; background:#6FA37E;"></div>
+            <span>4 CAPTIONS GENERATED</span>
+          </div>
+        </sc-if>
+      </sc-if>
+
+    </div>
+    </sc-if>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script="">
+class Component extends DCLogic {
+  state = {
+    selected: 'caption',
+    activeCaptionIndex: 1,
+    captions: [
+      { time: '00:00.0–00:01.6', text: "okay so nobody talks about this" },
+      { time: '00:01.6–00:03.9', text: "kind of insane" },
+      { time: '00:03.9–00:06.2', text: "can't unsee it" },
+      { time: '00:06.2–00:09.0', text: "here's the breakdown" },
+    ],
+    maskingState: 'idle', // idle | processing | done
+    maskingProgress: 0,
+    overlayPreset: 'pop',
+    overlayPosition: 'middle-center',
+    offsetX: 0,
+    offsetY: 0,
+    overlayText: 'WAIT FOR IT',
+    textAlign: 'center',
+    leftOpen: true,
+    rightOpen: true,
+    showSafeZones: false,
+    captioningState: 'idle', // idle | running | done
+    captioningProgress: 0,
+  };
+
+  componentWillUnmount() {
+    if (this._maskTimer) clearInterval(this._maskTimer);
+    if (this._captionTimer) clearInterval(this._captionTimer);
+  }
+
+  startCaptioning = () => {
+    if (this.state.captioningState === 'running') return;
+    this.setState({ captioningState: 'running', captioningProgress: 0 });
+    this._captionTimer = setInterval(() => {
+      this.setState(s => {
+        const next = Math.min(100, s.captioningProgress + 3);
+        if (next >= 100) {
+          clearInterval(this._captionTimer);
+          return { captioningProgress: 100, captioningState: 'done' };
+        }
+        return { captioningProgress: next };
+      });
+    }, 220);
+  };
+
+  selectClip = () => this.setState({ selected: 'clip', rightOpen: true });
+  selectAudio = () => this.setState({ selected: 'audio', rightOpen: true });
+  selectCaption = (i) => this.setState({ selected: 'caption', activeCaptionIndex: i, rightOpen: true });
+  selectOverlay = (e) => { if (e) e.stopPropagation(); this.setState({ selected: 'overlay', rightOpen: true }); };
+
+  onCaptionBlur = (e) => {
+    const text = e.target.innerText;
+    this.setState(s => {
+      const captions = s.captions.slice();
+      captions[s.activeCaptionIndex] = { ...captions[s.activeCaptionIndex], text };
+      return { captions };
+    });
+  };
+
+  toggleSlice = () => this.setState(s => ({ sliceActive: !s.sliceActive }));
+
+  toggleMasking = () => {
+    const cur = this.state.maskingState;
+    if (cur === 'idle') {
+      this.setState({ maskingState: 'processing', maskingProgress: 0 });
+      this._maskTimer = setInterval(() => {
+        this.setState(s => {
+          const next = Math.min(100, s.maskingProgress + 4);
+          if (next >= 100) {
+            clearInterval(this._maskTimer);
+            return { maskingProgress: 100, maskingState: 'done' };
+          }
+          return { maskingProgress: next };
+        });
+      }, 140);
+    } else if (cur === 'done') {
+      this.setState({ maskingState: 'idle', maskingProgress: 0 });
+    }
+  };
+
+  setOverlayPreset = (key) => this.setState({ overlayPreset: key, selected: 'overlay' });
+  setOverlayPosition = (key) => this.setState({ overlayPosition: key });
+  setOverlayVert = (row) => this.setState(s => ({ overlayPosition: `${row}-${s.overlayPosition.split('-')[1]}` }));
+  setOverlayHoriz = (col) => this.setState(s => ({ overlayPosition: `${s.overlayPosition.split('-')[0]}-${col}` }));
+  setOffsetX = (val) => this.setState({ offsetX: Number(val) || 0 });
+  setOffsetY = (val) => this.setState({ offsetY: Number(val) || 0 });
+  setTextAlign = (val) => this.setState({ textAlign: val });
+
+  toggleLeft = () => this.setState(s => ({ leftOpen: !s.leftOpen }));
+  toggleRight = () => this.setState(s => ({ rightOpen: !s.rightOpen }));
+  toggleSafeZones = () => this.setState(s => ({ showSafeZones: !s.showSafeZones }));
+
+  preventDefault = (e) => e.preventDefault();
+  captionEditorRef = (el) => { this._captionEditorEl = el; };
+  formatCaption = (command) => {
+    if (this._captionEditorEl) this._captionEditorEl.focus();
+    document.execCommand(command, false, null);
+  };
+
+  renderVals() {
+    const s = this.state;
+    const accent = '#6C87A3';
+    const border = 'rgba(255,255,255,0.08)';
+    const leftW = s.leftOpen ? 320 : 72;
+    const rightW = s.rightOpen ? 320 : 32;
+    const maxW = `calc(100vw - ${leftW + rightW + 48}px)`;
+    const maxH = `calc((100vh - 440px) * 9 / 16)`;
+    const previewBoxStyle = `width:min(${maxW}, ${maxH}); aspect-ratio:9/16; position:relative; border-radius:6px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); background: repeating-linear-gradient(135deg, #1E2023 0px, #1E2023 14px, #232529 14px, #232529 28px); box-shadow:0 20px 60px rgba(0,0,0,0.5); margin-bottom:24px;`;
+
+    const presetStyles = {
+      clean: { color: '#FFFFFF', fontWeight: 700, fontFamily: "'Public Sans',sans-serif", textShadow: '0 0 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.7), 1px 1px 0 rgba(0,0,0,0.8)' },
+      boxed: { color: '#FFFFFF', fontWeight: 600, fontFamily: "'Public Sans',sans-serif", background: 'rgba(0,0,0,0.78)', padding: '6px 12px', borderRadius: '4px' },
+      pop: { color: '#FFDA1F', fontWeight: 800, fontFamily: "'Public Sans',sans-serif", textShadow: '2px 2px 0 rgba(0,0,0,0.85), -1px -1px 0 rgba(0,0,0,0.6)' },
+      minimal: { color: '#FFFFFF', fontWeight: 400, fontFamily: "'Public Sans',sans-serif", letterSpacing: '0.01em', textShadow: '0 1px 4px rgba(0,0,0,0.6)' },
+    };
+    const presetSizes = { clean: '13px', boxed: '11px', pop: '14px', minimal: '12px' };
+
+    const toStyleStr = (obj) => Object.entries(obj).map(([k, v]) => {
+      const kebab = k.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+      return `${kebab}:${v}`;
+    }).join(';');
+
+    const activeStyle = presetStyles[s.overlayPreset];
+    const overlayTextStyleStr = `${toStyleStr(activeStyle)}; font-size:${presetSizes[s.overlayPreset]}; line-height:1.15; text-align:${s.textAlign}; display:inline-block; white-space:normal; max-width:220px;`;
+
+    const alignDefs = [
+      { key: 'left', label: 'Left', icon: 'LEFT' },
+      { key: 'center', label: 'Center', icon: 'CENTER' },
+      { key: 'right', label: 'Right', icon: 'RIGHT' },
+    ];
+    const alignButtonStyle = (selected) => `display:flex; align-items:center; justify-content:center; height:34px; border-radius:4px; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.03em; background:${selected ? 'rgba(108,135,163,0.22)' : '#202225'}; border:1px solid ${selected ? accent : 'rgba(255,255,255,0.1)'}; color:${selected ? '#DCE6EE' : '#B4B5B8'};`;
+    const textAlignOptions = alignDefs.map(d => ({ ...d, style: alignButtonStyle(d.key === s.textAlign) }));
+
+    const posMap = {
+      'top-left': { top: '12%', left: '15%', align: 'flex-start' },
+      'top-center': { top: '12%', left: '50%', align: 'center' },
+      'top-right': { top: '12%', left: '80%', align: 'flex-end' },
+      'middle-left': { top: '46%', left: '15%', align: 'flex-start' },
+      'middle-center': { top: '46%', left: '50%', align: 'center' },
+      'middle-right': { top: '46%', left: '80%', align: 'flex-end' },
+      'bottom-left': { top: '68%', left: '15%', align: 'flex-start' },
+      'bottom-center': { top: '68%', left: '50%', align: 'center' },
+      'bottom-right': { top: '68%', left: '80%', align: 'flex-end' },
+    };
+
+    const presets = ['clean', 'boxed', 'pop', 'minimal'].map(key => {
+      const selected = s.overlayPreset === key;
+      return {
+        key,
+        label: key.toUpperCase(),
+        swatchStyle: `background:${selected ? 'rgba(108,135,163,0.14)' : '#202225'}; border:1px solid ${selected ? accent : border}; border-radius:6px; padding:14px 8px; display:flex; flex-direction:column; align-items:center; cursor:pointer;`,
+        demoStyle: `${toStyleStr(presetStyles[key])}; font-size:18px; background-color:${key === 'boxed' ? presetStyles.boxed.background : 'transparent'};`,
+      };
+    });
+
+    const currentVert = s.overlayPosition.split('-')[0];
+    const currentHoriz = s.overlayPosition.split('-')[1];
+    const vertDefs = [
+      { key: 'top', label: 'Top', shortLabel: 'TOP' },
+      { key: 'middle', label: 'Middle', shortLabel: 'MID' },
+      { key: 'bottom', label: 'Bottom', shortLabel: 'BTM' },
+    ];
+    const horizDefs = [
+      { key: 'left', label: 'Left', shortLabel: 'LEFT' },
+      { key: 'center', label: 'Middle', shortLabel: 'MID' },
+      { key: 'right', label: 'Right', shortLabel: 'RIGHT' },
+    ];
+    const axisButtonStyle = (selected) => `display:flex; align-items:center; justify-content:center; height:34px; border-radius:4px; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.03em; background:${selected ? 'rgba(108,135,163,0.22)' : '#202225'}; border:1px solid ${selected ? accent : 'rgba(255,255,255,0.1)'}; color:${selected ? '#DCE6EE' : '#B4B5B8'};`;
+    const vertPositions = vertDefs.map(d => ({ ...d, style: axisButtonStyle(d.key === currentVert) }));
+    const horizPositions = horizDefs.map(d => ({ ...d, style: axisButtonStyle(d.key === currentHoriz) }));
+
+    const clipDefs = [
+      { name: 'clip_001.mp4', width: 96, masked: false },
+      { name: 'clip_002.mp4', width: 150, masked: false },
+      { name: 'clip_003.mp4', width: 110, masked: true },
+    ];
+    const clips = clipDefs.map((c, i) => ({
+      name: c.name,
+      masked: c.masked,
+      style: `width:${c.width}px; flex-shrink:0; position:relative; background:#26282B; border:1px solid ${i === 2 ? accent : 'rgba(255,255,255,0.08)'}; border-radius:3px; overflow:hidden; cursor:pointer;`,
+    }));
+
+    const capWidths = [90, 150, 130, 100];
+    const captions = s.captions.map((c, i) => ({
+      text: c.text,
+      style: `width:${capWidths[i]}px; flex-shrink:0; display:flex; align-items:center; background:${i === s.activeCaptionIndex ? 'rgba(108,135,163,0.16)' : '#202225'}; border:1px solid ${i === s.activeCaptionIndex ? accent : 'rgba(255,255,255,0.07)'}; border-radius:3px; cursor:pointer;`,
+    }));
+
+    const waveBars = Array.from({ length: 60 }, (_, i) => {
+      const h = 4 + Math.round(Math.abs(Math.sin(i * 0.6)) * 18 + Math.abs(Math.sin(i * 1.7)) * 6);
+      return h;
+    });
+
+    const rulerMarks = Array.from({ length: 8 }, (_, i) => ({ left: `${i * 90 + 4}px`, label: `00:0${i * 2}` }));
+
+    const mediaDefs = [
+      { name: 'clip_001.mp4', duration: '00:04.2' },
+      { name: 'clip_002.mp4', duration: '00:06.1' },
+      { name: 'clip_003.mp4', duration: '00:03.7' },
+      { name: 'b-roll_desk.mp4', duration: '00:08.9' },
+    ];
+    const mediaItems = mediaDefs.map(m => ({
+      name: m.name,
+      duration: m.duration,
+      onClick: this.selectClip,
+      style: `display:flex; align-items:center; gap:10px; padding:8px; border-radius:5px; cursor:pointer; margin-bottom:2px;`,
+    }));
+
+    return {
+      showSafeZones: s.showSafeZones,
+      toggleSafeZones: this.toggleSafeZones,
+      safeZoneButtonStyle: `background:${s.showSafeZones ? 'rgba(200,201,204,0.14)' : '#1C1E20'}; border:1px solid ${s.showSafeZones ? 'rgba(200,201,204,0.5)' : 'rgba(255,255,255,0.12)'}; color:${s.showSafeZones ? '#C8C9CC' : '#8A8B8F'}; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.04em; padding:6px 10px; border-radius:4px; cursor:pointer;`,
+      leftOpen: s.leftOpen,
+      leftClosed: !s.leftOpen,
+      rightOpen: s.rightOpen,
+      rightClosed: !s.rightOpen,
+      toggleLeft: this.toggleLeft,
+      toggleRight: this.toggleRight,
+      mediaItems,
+      audioTrackBg: s.selected === 'audio' ? 'rgba(108,135,163,0.10)' : 'transparent',
+      audioTrackBorder: s.selected === 'audio' ? accent : 'transparent',
+      isCaptioningRunning: s.captioningState === 'running',
+      isCaptioningDone: s.captioningState === 'done',
+      captioningProgressPct: `${s.captioningProgress}%`,
+      captioningTimeLabel: `00:0${Math.min(9, Math.floor(s.captioningProgress / 100 * 14))}.0 / 00:14.0`,
+      captionActionLabel: s.captioningState === 'idle' ? 'TRANSCRIBE' : (s.captioningState === 'running' ? 'RUNNING…' : 'RE-RUN'),
+      captionActionStyle: `background:none; border:1px solid ${s.captioningState === 'running' ? 'rgba(184,147,90,0.5)' : 'rgba(255,255,255,0.14)'}; color:${s.captioningState === 'running' ? '#B8935A' : '#B4B5B8'}; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.03em; padding:5px 10px; border-radius:4px; cursor:${s.captioningState === 'running' ? 'default' : 'pointer'};`,
+      selected: s.selected,
+      isClip: s.selected === 'clip',
+      isCaption: s.selected === 'caption',
+      isOverlay: s.selected === 'overlay',
+      isAudio: s.selected === 'audio',
+
+      selectClip: this.selectClip,
+      selectAudio: this.selectAudio,
+      startCaptioning: this.startCaptioning,
+      selectCaption: this.selectCaption,
+      selectOverlay: this.selectOverlay,
+      onCaptionBlur: this.onCaptionBlur,
+      formatCaption: this.formatCaption,
+      preventDefault: this.preventDefault,
+      captionEditorRef: this.captionEditorRef,
+      toggleSlice: this.toggleSlice,
+      toggleMasking: this.toggleMasking,
+      setOverlayPreset: this.setOverlayPreset,
+      setOverlayPosition: this.setOverlayPosition,
+      setOverlayVert: this.setOverlayVert,
+      setOverlayHoriz: this.setOverlayHoriz,
+      setOffsetX: this.setOffsetX,
+      setOffsetY: this.setOffsetY,
+      setTextAlign: this.setTextAlign,
+      textAlignOptions,
+      offsetX: s.offsetX,
+      offsetY: s.offsetY,
+      vertPositions,
+      horizPositions,
+
+      activeCaptionIndex: s.activeCaptionIndex,
+      activeCaption: s.captions[s.activeCaptionIndex],
+      activeCaptionText: s.captions[s.activeCaptionIndex].text,
+      captionBarStyle: `color:#fff; font-size:11px; font-weight:600; text-align:center; text-shadow:0 0 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7); line-height:1.4; white-space:nowrap;`,
+
+      captions,
+
+      clips,
+      waveBars,
+      rulerMarks,
+      playheadLeft: '176px',
+
+      sliceButtonStyle: `position:absolute; top:14px; left:176px; transform:translateX(-50%); z-index:6; display:flex; align-items:center; gap:6px; background:${s.sliceActive ? 'rgba(108,135,163,0.22)' : '#232427'}; border:1px solid ${s.sliceActive ? accent : 'rgba(255,255,255,0.16)'}; color:${s.sliceActive ? '#DCE6EE' : '#B4B5B8'}; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.04em; padding:6px 10px; border-radius:4px; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.4);`,
+
+      previewBoxStyle,
+      overlayWrapStyle: `position:absolute; top:${posMap[s.overlayPosition].top}; left:${posMap[s.overlayPosition].left}; transform:translate(calc(${posMap[s.overlayPosition].align === 'center' ? '-50%' : (posMap[s.overlayPosition].align === 'flex-end' ? '-100%' : '0%')} + ${s.offsetX}px), calc(-50% + ${s.offsetY}px)); display:flex; justify-content:${posMap[s.overlayPosition].align}; padding:0 4px; cursor:pointer; outline:${s.selected === 'overlay' ? '1px dashed rgba(108,135,163,0.6)' : 'none'}; outline-offset:6px; max-width:70%;`,
+      overlayTextStyle: overlayTextStyleStr,
+      overlayText: s.overlayText,
+
+      overlayBlockStyle: `width:140px; height:100%; display:flex; align-items:center; overflow:hidden; background:${s.selected === 'overlay' ? 'rgba(108,135,163,0.16)' : '#202225'}; border:1px solid ${s.selected === 'overlay' ? accent : 'rgba(255,255,255,0.07)'}; border-radius:3px; cursor:pointer; margin-left:60px;`,
+      overlayPresetLabel: s.overlayPreset.toUpperCase(),
+
+      presets,
+
+      isMaskingProcessing: s.maskingState === 'processing',
+      isMaskingDone: s.maskingState === 'done',
+      maskingProgressPct: `${s.maskingProgress}%`,
+      maskingProgressLabel: `${s.maskingProgress}%`,
+      maskingEta: `${Math.max(1, Math.round((100 - s.maskingProgress) / 30))}m`,
+      maskingSwitchStyle: `width:36px; height:20px; border-radius:10px; cursor:pointer; position:relative; background:${s.maskingState === 'idle' ? '#2A2C2F' : (s.maskingState === 'processing' ? '#4A3F2A' : '#2A3A2F')}; border:1px solid ${s.maskingState === 'idle' ? 'rgba(255,255,255,0.14)' : (s.maskingState === 'processing' ? '#B8935A' : '#6FA37E')}; transition:background 0.2s;`,
+      maskingKnobStyle: `position:absolute; top:2px; left:${s.maskingState === 'idle' ? '2px' : '17px'}; width:15px; height:15px; border-radius:50%; background:${s.maskingState === 'idle' ? '#8A8B8F' : (s.maskingState === 'processing' ? '#B8935A' : '#6FA37E')}; transition:left 0.2s;`,
+    };
+  }
+}
+
+</script>
+
+
+</body></html>

@@ -7,6 +7,8 @@
 
 Replace Pico.css with a hand-rolled design system matching the approved north-star mockup ("Local Reel Editor" HTML mockup), applied to the existing screen only (top bar, clip panel, stage, export). No new features. Future screens (timeline, captions panel, text presets) adopt the same tokens when their features land per the first-reel plan.
 
+**Mockup:** `docs/superpowers/specs/assets/2026-07-10-design-foundation-mockup.html` — the "Local Reel Editor" north star (open directly in a browser to view; it's a self-contained React prototype, not the real app).
+
 ## Decisions (settled with the user)
 
 1. **The mockup is the north star** — its layout, palette, and type system are the target the app builds toward incrementally.
