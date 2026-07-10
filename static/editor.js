@@ -1,8 +1,92 @@
 // Editor state + API calls + DOM wiring. Thin — logic lives in app/*.py.
 // Exposes nothing (page script); persists project via PUT after every mutation.
 let project = null;
+let textPreset = null; // client-side TextPreset stand-in until Task 8 adds the presets API
 const clipDurations = {}; // clip.id -> source duration (seconds), populated on add-clip
 const player = document.getElementById("player");
+
+function defaultTextPreset() {
+  return {
+    id: crypto.randomUUID().replaceAll("-", ""),
+    name: "Default", font: "Arial", size_px: 96, color: "#FFFFFF",
+    outline_color: "#000000", outline_px: 4, box: false, box_color: "#000000",
+    align: "center", x: 540, y: 700, entrance: "fade_pop",
+  };
+}
+
+function loadTextPreset(projectId) {
+  const raw = localStorage.getItem("textPreset:" + projectId);
+  return raw ? JSON.parse(raw) : defaultTextPreset();
+}
+
+function saveTextPreset() {
+  localStorage.setItem("textPreset:" + project.id, JSON.stringify(textPreset));
+}
+
+function ensureTextBlock() {
+  let block = project.text_blocks[0];
+  if (!block) {
+    block = {
+      id: crypto.randomUUID().replaceAll("-", ""),
+      heading: "", subheading: "", preset_id: textPreset.id, start: 0, end: 3,
+    };
+    project.text_blocks.push(block);
+  }
+  return block;
+}
+
+function renderTextPreview() {
+  Preview.renderText(project, { [textPreset.id]: textPreset }, Preview.currentTimelineTime());
+}
+
+async function updateTextBlock() {
+  const block = ensureTextBlock();
+  block.heading = document.getElementById("text-heading").value;
+  block.subheading = document.getElementById("text-subheading").value;
+  block.start = parseFloat(document.getElementById("text-start").value) || 0;
+  block.end = parseFloat(document.getElementById("text-end").value) || 0;
+  await saveProject();
+  renderTextPreview();
+}
+
+async function updateTextStyle() {
+  textPreset.size_px = parseInt(document.getElementById("text-size").value, 10);
+  textPreset.color = document.getElementById("text-color").value;
+  textPreset.outline_color = document.getElementById("text-outline-color").value;
+  textPreset.outline_px = parseInt(document.getElementById("text-outline-px").value, 10);
+  textPreset.box = document.getElementById("text-box").checked;
+  textPreset.box_color = document.getElementById("text-box-color").value;
+  textPreset.align = document.getElementById("text-align").value;
+  textPreset.x = parseInt(document.getElementById("text-x").value, 10);
+  textPreset.y = parseInt(document.getElementById("text-y").value, 10);
+  saveTextPreset();
+  renderTextPreview();
+}
+
+function renderTextPanel() {
+  const block = ensureTextBlock();
+  document.getElementById("text-heading").value = block.heading;
+  document.getElementById("text-subheading").value = block.subheading;
+  document.getElementById("text-start").value = block.start;
+  document.getElementById("text-end").value = block.end;
+  document.getElementById("text-size").value = textPreset.size_px;
+  document.getElementById("text-color").value = textPreset.color;
+  document.getElementById("text-outline-color").value = textPreset.outline_color;
+  document.getElementById("text-outline-px").value = textPreset.outline_px;
+  document.getElementById("text-box").checked = textPreset.box;
+  document.getElementById("text-box-color").value = textPreset.box_color;
+  document.getElementById("text-align").value = textPreset.align;
+  document.getElementById("text-x").value = textPreset.x;
+  document.getElementById("text-y").value = textPreset.y;
+  renderTextPreview();
+}
+
+["text-heading", "text-subheading", "text-start", "text-end"].forEach((id) => {
+  document.getElementById(id).addEventListener("input", updateTextBlock);
+});
+["text-size", "text-color", "text-outline-color", "text-outline-px", "text-box", "text-box-color", "text-align", "text-x", "text-y"].forEach((id) => {
+  document.getElementById(id).addEventListener("input", updateTextStyle);
+});
 
 function clampTrim(inP, outP, dur) {
   inP = Math.max(0, Math.min(inP, dur));
@@ -142,6 +226,8 @@ document.getElementById("export").addEventListener("click", exportProject);
 (async () => {
   project = await ensureProject();
   document.getElementById("project-name").textContent = project.name;
+  textPreset = loadTextPreset(project.id);
   renderClipList();
   Preview.load(project);
+  renderTextPanel();
 })();
