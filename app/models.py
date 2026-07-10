@@ -31,7 +31,6 @@ class TextPreset(BaseModel):
 class TextBlockLayer(BaseModel):
     id: str = Field(default_factory=new_id)
     heading: str
-    subheading: str = ""
     preset_id: str
     start: float = 0.0             # timeline seconds
     end: float = 3.0

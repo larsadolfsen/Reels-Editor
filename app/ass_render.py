@@ -21,8 +21,7 @@ def _block_dialogue(b, p: TextPreset) -> str:
     fx = f"\\pos({p.x},{p.y})"
     if p.entrance == "fade_pop":
         fx += "\\fad(200,0)\\fscx80\\fscy80\\t(0,200,\\fscx100\\fscy100)"
-    text = b.heading + (f"\\N{b.subheading}" if b.subheading else "")
-    return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]},,0,0,0,,{{{fx}}}{text}"
+    return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]},,0,0,0,,{{{fx}}}{b.heading}"
 
 def render_ass(project: Project, presets: dict[str, TextPreset]) -> str:
     used = {b.preset_id: presets[b.preset_id] for b in project.text_blocks}

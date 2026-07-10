@@ -12,6 +12,6 @@ def test_project_defaults():
 
 def test_json_round_trip():
     p = Project(name="reel1", clips=[ClipLayer(file_path="a.mp4", in_point=1.0, out_point=4.5, order=0)],
-                text_blocks=[TextBlockLayer(heading="H", subheading="s", preset_id="x", start=0, end=3)],
+                text_blocks=[TextBlockLayer(heading="H", preset_id="x", start=0, end=3)],
                 captions=CaptionTrack(words=[CaptionWord(text="hi", t_start=0.1, t_end=0.4)]))
     assert Project.model_validate_json(p.model_dump_json()) == p

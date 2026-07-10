@@ -28,7 +28,7 @@ function ensureTextBlock() {
   if (!block) {
     block = {
       id: crypto.randomUUID().replaceAll("-", ""),
-      heading: "", subheading: "", preset_id: textPreset.id, start: 0, end: 3,
+      heading: "", preset_id: textPreset.id, start: 0, end: 3,
     };
     project.text_blocks.push(block);
   }
@@ -42,7 +42,6 @@ function renderTextPreview() {
 async function updateTextBlock() {
   const block = ensureTextBlock();
   block.heading = document.getElementById("text-heading").value;
-  block.subheading = document.getElementById("text-subheading").value;
   block.start = parseFloat(document.getElementById("text-start").value) || 0;
   block.end = parseFloat(document.getElementById("text-end").value) || 0;
   await saveProject();
@@ -66,7 +65,6 @@ async function updateTextStyle() {
 function renderTextPanel() {
   const block = ensureTextBlock();
   document.getElementById("text-heading").value = block.heading;
-  document.getElementById("text-subheading").value = block.subheading;
   document.getElementById("text-start").value = block.start;
   document.getElementById("text-end").value = block.end;
   document.getElementById("text-size").value = textPreset.size_px;
@@ -81,7 +79,7 @@ function renderTextPanel() {
   renderTextPreview();
 }
 
-["text-heading", "text-subheading", "text-start", "text-end"].forEach((id) => {
+["text-heading", "text-start", "text-end"].forEach((id) => {
   document.getElementById(id).addEventListener("input", updateTextBlock);
 });
 ["text-size", "text-color", "text-outline-color", "text-outline-px", "text-box", "text-box-color", "text-align", "text-x", "text-y"].forEach((id) => {

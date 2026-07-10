@@ -10,7 +10,8 @@ This spec covers **milestone 1: the first complete reel** — everything else is
   Ship only opinionated presets in v1. **No keyframe animation in v1** — the model allows it later without rewrite.
 - **First reel needs exactly:** assemble **4–6 mp4 clips** sequentially, **cut/trim** each clip,
   **auto-captions** (editable, karaoke word-highlight, **hardcoded design**), and a
-  **heading + subheading text block** (enters as one unit, **savable design presets**).
+  **heading text block** (single line, **savable design presets**). Dropped the separate subheading
+  line 2026-07-10 — one heading is enough for milestone 1.
 - Text presets are the "brand kit" — the key advantage over CapCut (define a look once, reuse forever).
   Presets are stored globally (cross-project), each with a unique ID.
 - Caption styling is **hardcoded** — one good karaoke look, no caption styling UI.
@@ -42,7 +43,7 @@ All entities have `id: str` (uuid4 hex). Relationships are explicit by ID.
 - **Project** `{id, name, width=1080, height=1920, fps=30, clips: [ClipLayer], text_blocks: [TextBlockLayer], captions: CaptionTrack|null}`
 - **ClipLayer** `{id, file_path, in_point, out_point, order}` — trim lives here; sequence = clips sorted by `order`.
 - **TextPreset** `{id, name, font, size_px, color, outline_color, outline_px, box, box_color, align, x, y, entrance}` — global, savable.
-- **TextBlockLayer** `{id, heading, subheading, preset_id, start, end}` — one unit, one entrance.
+- **TextBlockLayer** `{id, heading, preset_id, start, end}` — one text block, one entrance. (Revised 2026-07-10: dropped the separate `subheading` field — a single heading line only, for milestone 1.)
 - **CaptionWord** `{id, text, t_start, t_end}` — timeline-relative seconds.
 - **CaptionTrack** `{id, words: [CaptionWord]}` — style hardcoded, no preset reference.
 

@@ -625,6 +625,8 @@ Note for the implementer: heading and subheading share one Dialogue line (`\N` s
 
 **Deviation:** the sample code above inserts a `{\fs...}` override between `\N` and the subheading, but Step 1's own test asserts the literal substring `"BIG NEWS\Nsmall news"`, which that override breaks. Implemented to match the test: subheading renders at the block's base `size_px`, not 55%. Revisit if 55%-sizing is wanted later — it'll need a test update too.
 
+**Revised 2026-07-10 (post Task 7):** dropped `subheading` entirely — `TextBlockLayer` is now `{id, heading, preset_id, start, end}`, one line. `_block_dialogue` no longer has a `\N` branch. See the spec's Data model note.
+
 - [x] **Step 4: Run tests PASS.**
 - [x] **Step 5: Update map/inventory; commit + push** — `git commit -m "feat: ASS renderer for text blocks with fade+pop entrance"`.
 

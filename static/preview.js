@@ -84,18 +84,7 @@ window.Preview = (() => {
         div.style.webkitTextStroke = `${outlinePx}px ${preset.outline_color}`;
       }
 
-      const heading = document.createElement("div");
-      heading.textContent = block.heading;
-      div.appendChild(heading);
-
-      if (block.subheading) {
-        const sub = document.createElement("div");
-        sub.className = "subheading";
-        sub.textContent = block.subheading;
-        sub.style.fontSize = (sizePx * 0.55) + "px";
-        div.appendChild(sub);
-      }
-
+      div.textContent = block.heading;
       overlay.appendChild(div);
     }
   }

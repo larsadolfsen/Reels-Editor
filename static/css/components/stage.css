@@ -34,8 +34,6 @@
   white-space: pre;
 }
 
-.text-block .subheading { display: block; }
-
 #transport {
   display: flex;
   align-items: center;
