@@ -33,6 +33,10 @@ def put_project(pid: str, p: Project) -> Project:
 def probe(path: str) -> dict:
     return {"duration": media.probe_duration(path)}
 
+@app.get("/api/pick-file")
+def pick_file() -> dict:
+    return {"path": media.pick_file()}
+
 @app.get("/media")
 def media_file(path: str):
     return media.media_response(path)

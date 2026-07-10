@@ -1,6 +1,8 @@
-# Media helpers: ffprobe duration probing and safe local file serving for preview.
-# Exposes ffprobe_cmd, probe_duration, media_response. Depends on ffprobe on PATH.
+# Media helpers: ffprobe duration probing, safe local file serving, native file picker.
+# Exposes ffprobe_cmd, probe_duration, media_response, run_export, pick_file. Depends on ffprobe on PATH.
 import subprocess
+import tkinter
+from tkinter import filedialog
 from pathlib import Path
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
@@ -23,3 +25,14 @@ def run_export(cmd: list[str]) -> None:
     proc = subprocess.run(cmd, capture_output=True, text=True)
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr[-2000:])
+
+def pick_file() -> str | None:
+    root = tkinter.Tk()
+    root.withdraw()
+    root.attributes("-topmost", True)
+    path = filedialog.askopenfilename(
+        title="Choose a clip",
+        filetypes=[("Video files", "*.mp4 *.mov *.mkv"), ("All files", "*.*")],
+    )
+    root.destroy()
+    return path or None
