@@ -59,6 +59,13 @@
 .style-field input[type="range"] { padding: 0; }
 .style-field input[type="color"] { width: 100%; height: 26px; padding: 2px; }
 
+.style-field input[type="number"] {
+  padding: 10px 12px;
+  font-size: 14px;
+  text-align: right;
+  border-radius: 6px;
+}
+
 .style-checkbox {
   display: flex;
   align-items: center;
