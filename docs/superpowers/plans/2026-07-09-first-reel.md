@@ -6,7 +6,7 @@
 
 **Architecture:** FastAPI backend serving a vanilla-JS browser UI; all editing state in a JSON-persisted Pydantic project model; ffmpeg does trim/concat/burn-in via a generated ASS subtitle file; faster-whisper (CUDA) produces word-level timestamps.
 
-**Tech Stack:** Python 3.12+, FastAPI, uvicorn, pydantic, pytest, ffmpeg/ffprobe (on PATH), faster-whisper, vanilla HTML/JS/CSS.
+**Tech Stack:** Python 3.12+, FastAPI, uvicorn, pydantic, pytest, ffmpeg/ffprobe (on PATH), faster-whisper, vanilla HTML/JS/CSS styled with Pico.css (self-hosted `static/pico.min.css`, dark theme via `data-theme="dark"`; `style.css` holds editor-specific overrides).
 
 ## Global Constraints
 
@@ -37,7 +37,8 @@ static/
   index.html        # editor page skeleton
   editor.js         # UI state + API calls + DOM wiring (thin)
   preview.js        # 9:16 stage playback: clip sequencing, text overlay, karaoke tick (thin)
-  style.css         # editor styling
+  pico.min.css      # Pico.css v2 (vendored) — base component styling, no build step
+  style.css         # editor-specific styling layered over Pico
 tests/
   test_models.py
   test_store.py

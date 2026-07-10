@@ -26,7 +26,8 @@ static/
   index.html         # editor page skeleton (stage + clip panel + export button)
   editor.js           # UI state + API calls + DOM wiring (thin)
   preview.js            # 9:16 stage playback (thin)
-  style.css              # editor styling
+  pico.min.css           # Pico.css v2 (vendored) — base component styling, dark theme via data-theme="dark"
+  style.css               # editor-specific styling layered over Pico
 tests/
   test_models.py
   test_store.py
