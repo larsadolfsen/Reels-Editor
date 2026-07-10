@@ -5,18 +5,29 @@ let textPreset = null; // client-side TextPreset stand-in until Task 8 adds the 
 const clipDurations = {}; // clip.id -> source duration (seconds), populated on add-clip
 const player = document.getElementById("player");
 
+// Position grid anchors (thirds of the 1080x1920 canvas) + a pixel offset on top.
+// posRow/posCol/offsetX/offsetY are UI-only conveniences layered over TextPreset.x/y.
+const POSITION_ANCHORS_X = { left: 162, mid: 540, right: 918 };
+const POSITION_ANCHORS_Y = { top: 288, mid: 960, btm: 1632 };
+
 function defaultTextPreset() {
   return {
     id: crypto.randomUUID().replaceAll("-", ""),
     name: "Default", font: "Arial", size_px: 96, color: "#FFFFFF",
     outline_color: "#000000", outline_px: 4, box: false, box_color: "#000000",
     align: "center", x: 540, y: 700, entrance: "fade_pop",
+    posRow: "mid", posCol: "mid", offsetX: 0, offsetY: 0,
   };
+}
+
+function computeXY() {
+  textPreset.x = POSITION_ANCHORS_X[textPreset.posCol] + textPreset.offsetX;
+  textPreset.y = POSITION_ANCHORS_Y[textPreset.posRow] + textPreset.offsetY;
 }
 
 function loadTextPreset(projectId) {
   const raw = localStorage.getItem("textPreset:" + projectId);
-  return raw ? JSON.parse(raw) : defaultTextPreset();
+  return raw ? { ...defaultTextPreset(), ...JSON.parse(raw) } : defaultTextPreset();
 }
 
 function saveTextPreset() {
@@ -55,9 +66,9 @@ async function updateTextStyle() {
   textPreset.outline_px = parseInt(document.getElementById("text-outline-px").value, 10);
   textPreset.box = document.getElementById("text-box").checked;
   textPreset.box_color = document.getElementById("text-box-color").value;
-  textPreset.align = document.getElementById("text-align").value;
-  textPreset.x = parseInt(document.getElementById("text-x").value, 10);
-  textPreset.y = parseInt(document.getElementById("text-y").value, 10);
+  textPreset.offsetX = parseInt(document.getElementById("text-offset-x").value, 10) || 0;
+  textPreset.offsetY = parseInt(document.getElementById("text-offset-y").value, 10) || 0;
+  computeXY();
   saveTextPreset();
   renderTextPreview();
 }
@@ -73,16 +84,28 @@ function renderTextPanel() {
   document.getElementById("text-outline-px").value = textPreset.outline_px;
   document.getElementById("text-box").checked = textPreset.box;
   document.getElementById("text-box-color").value = textPreset.box_color;
-  document.getElementById("text-align").value = textPreset.align;
-  document.getElementById("text-x").value = textPreset.x;
-  document.getElementById("text-y").value = textPreset.y;
+  document.getElementById("text-offset-x").value = textPreset.offsetX;
+  document.getElementById("text-offset-y").value = textPreset.offsetY;
+
+  UI.buttonGroup(document.getElementById("text-align-group"),
+    [{ value: "left", label: "LEFT" }, { value: "center", label: "CENTER" }, { value: "right", label: "RIGHT" }],
+    textPreset.align, (value) => { textPreset.align = value; saveTextPreset(); renderTextPreview(); });
+
+  UI.buttonGroup(document.getElementById("position-row-group"),
+    [{ value: "top", label: "TOP" }, { value: "mid", label: "MID" }, { value: "btm", label: "BTM" }],
+    textPreset.posRow, (value) => { textPreset.posRow = value; computeXY(); saveTextPreset(); renderTextPreview(); });
+
+  UI.buttonGroup(document.getElementById("position-col-group"),
+    [{ value: "left", label: "LEFT" }, { value: "mid", label: "MID" }, { value: "right", label: "RIGHT" }],
+    textPreset.posCol, (value) => { textPreset.posCol = value; computeXY(); saveTextPreset(); renderTextPreview(); });
+
   renderTextPreview();
 }
 
 ["text-heading", "text-start", "text-end"].forEach((id) => {
   document.getElementById(id).addEventListener("input", updateTextBlock);
 });
-["text-size", "text-color", "text-outline-color", "text-outline-px", "text-box", "text-box-color", "text-align", "text-x", "text-y"].forEach((id) => {
+["text-size", "text-color", "text-outline-color", "text-outline-px", "text-box", "text-box-color", "text-offset-x", "text-offset-y"].forEach((id) => {
   document.getElementById(id).addEventListener("input", updateTextStyle);
 });
 
@@ -243,6 +266,7 @@ document.getElementById("export").addEventListener("click", exportProject);
   project = await ensureProject();
   document.getElementById("project-name").textContent = project.name;
   textPreset = loadTextPreset(project.id);
+  computeXY();
   renderClipList();
   Preview.load(project);
   renderTextPanel();

@@ -69,4 +69,19 @@
   color: var(--text-muted);
 }
 
-#text-align { width: 100%; }
+#position-row-group, #position-col-group { margin-bottom: 4px; }
+#position-row-group:last-child, #position-col-group:last-child { margin-bottom: 0; }
+
+.caption-placeholder { opacity: 0.7; }
+
+.caption-toolbar { margin-bottom: var(--space-2); }
+
+.caption-preview-box {
+  font-family: var(--font-content);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
