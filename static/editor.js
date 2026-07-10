@@ -53,8 +53,6 @@ function renderTextPreview() {
 async function updateTextBlock() {
   const block = ensureTextBlock();
   block.heading = document.getElementById("text-heading").value;
-  block.start = parseFloat(document.getElementById("text-start").value) || 0;
-  block.end = parseFloat(document.getElementById("text-end").value) || 0;
   await saveProject();
   renderTextPreview();
 }
@@ -63,12 +61,8 @@ async function updateTextStyle() {
   textPreset.size_px = parseInt(document.getElementById("text-size").value, 10);
   textPreset.color = document.getElementById("text-color").value;
   textPreset.outline_color = document.getElementById("text-outline-color").value;
-  textPreset.outline_px = parseInt(document.getElementById("text-outline-px").value, 10);
   textPreset.box = document.getElementById("text-box").checked;
   textPreset.box_color = document.getElementById("text-box-color").value;
-  textPreset.offsetX = parseInt(document.getElementById("text-offset-x").value, 10) || 0;
-  textPreset.offsetY = parseInt(document.getElementById("text-offset-y").value, 10) || 0;
-  computeXY();
   saveTextPreset();
   renderTextPreview();
 }
@@ -76,16 +70,31 @@ async function updateTextStyle() {
 function renderTextPanel() {
   const block = ensureTextBlock();
   document.getElementById("text-heading").value = block.heading;
-  document.getElementById("text-start").value = block.start;
-  document.getElementById("text-end").value = block.end;
   document.getElementById("text-size").value = textPreset.size_px;
   document.getElementById("text-color").value = textPreset.color;
   document.getElementById("text-outline-color").value = textPreset.outline_color;
-  document.getElementById("text-outline-px").value = textPreset.outline_px;
   document.getElementById("text-box").checked = textPreset.box;
   document.getElementById("text-box-color").value = textPreset.box_color;
-  document.getElementById("text-offset-x").value = textPreset.offsetX;
-  document.getElementById("text-offset-y").value = textPreset.offsetY;
+
+  UI.numberField(document.getElementById("text-start-field"),
+    { label: "START", unit: "SEC", value: block.start, step: 0.1,
+      onChange: (v) => { block.start = v; saveProject(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-end-field"),
+    { label: "END", unit: "SEC", value: block.end, step: 0.1,
+      onChange: (v) => { block.end = v; saveProject(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-outline-px-field"),
+    { label: "WIDTH", unit: "PX", value: textPreset.outline_px, min: 0, max: 20,
+      onChange: (v) => { textPreset.outline_px = v; saveTextPreset(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-offset-x-field"),
+    { label: "OFFSET H", unit: "PX", value: textPreset.offsetX, step: 1,
+      onChange: (v) => { textPreset.offsetX = v; computeXY(); saveTextPreset(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-offset-y-field"),
+    { label: "OFFSET V", unit: "PX", value: textPreset.offsetY, step: 1,
+      onChange: (v) => { textPreset.offsetY = v; computeXY(); saveTextPreset(); renderTextPreview(); } });
 
   UI.buttonGroup(document.getElementById("text-align-group"),
     [{ value: "left", label: "LEFT" }, { value: "center", label: "CENTER" }, { value: "right", label: "RIGHT" }],
@@ -102,10 +111,8 @@ function renderTextPanel() {
   renderTextPreview();
 }
 
-["text-heading", "text-start", "text-end"].forEach((id) => {
-  document.getElementById(id).addEventListener("input", updateTextBlock);
-});
-["text-size", "text-color", "text-outline-color", "text-outline-px", "text-box", "text-box-color", "text-offset-x", "text-offset-y"].forEach((id) => {
+document.getElementById("text-heading").addEventListener("input", updateTextBlock);
+["text-size", "text-color", "text-outline-color", "text-box", "text-box-color"].forEach((id) => {
   document.getElementById(id).addEventListener("input", updateTextStyle);
 });
 
