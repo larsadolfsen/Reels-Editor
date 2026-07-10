@@ -7,3 +7,6 @@ dependencies = ["fastapi", "uvicorn[standard]", "pydantic", "python-multipart"]
 [project.optional-dependencies]
 dev = ["pytest", "httpx"]
 ml = ["faster-whisper"]
+
+[tool.setuptools]
+packages = ["app"]
