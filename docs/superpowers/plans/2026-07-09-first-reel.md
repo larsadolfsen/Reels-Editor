@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.12+, FastAPI, uvicorn, pydantic, pytest, ffmpeg/ffprobe (on PATH), faster-whisper, vanilla HTML/JS/CSS. Styling: hand-rolled design system per `docs/superpowers/specs/2026-07-10-design-foundation-design.md` — CSS custom properties in `static/css/tokens.css`, one component per file under `static/css/components/`, vendored fonts. No CSS framework, no build step (Pico.css was adopted then dropped in Task 5b).
 
-**Progress (2026-07-10):** Tasks 1–5 complete and committed. Unplanned additions landed since: native file picker (`GET /api/pick-file`, spec `2026-07-09-native-file-picker-design.md`), Pico.css adoption (reversed by Task 5b). **Next up: Task 5b (design foundation), then Task 6.**
+**Progress (2026-07-10):** Tasks 1–5, 5b, and 6 complete and committed. Unplanned additions landed since: native file picker (`GET /api/pick-file`, spec `2026-07-09-native-file-picker-design.md`), Pico.css adoption (reversed by Task 5b). **Next up: Task 7 (text block visible on preview).**
 
 ## Global Constraints
 
@@ -550,7 +550,7 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None) -> 
 - Consumes: `TextBlockLayer`, `TextPreset`, `Project`.
 - Produces: `ass_render.render_ass(project, presets: dict[str, TextPreset]) -> str` (full ASS file: styles + dialogue for all text blocks; captions added in Task 12); helpers `ass_time(seconds) -> str`, `hex_to_ass(hex_color) -> str`.
 
-- [ ] **Step 1: Failing tests** `tests/test_ass_render.py`:
+- [x] **Step 1: Failing tests** `tests/test_ass_render.py`:
 
 ```python
 # Tests for app.ass_render: ASS time/color helpers and text-block dialogue generation.
@@ -578,8 +578,8 @@ def test_entrance_none_has_no_fad():
     assert "\\fad" not in render_ass(p, {pr.id: pr})
 ```
 
-- [ ] **Step 2: Run, verify FAIL.**
-- [ ] **Step 3: Implement** `app/ass_render.py`:
+- [x] **Step 2: Run, verify FAIL.**
+- [x] **Step 3: Implement** `app/ass_render.py`:
 
 ```python
 # Generates the ASS subtitle file burned into exports: text-block dialogues (+captions, Task 12).
@@ -623,8 +623,10 @@ def render_ass(project: Project, presets: dict[str, TextPreset]) -> str:
 
 Note for the implementer: heading and subheading share one Dialogue line (`\N` separator) — that IS the "enters as one unit" requirement; the subheading is auto-sized at 55% of the heading.
 
-- [ ] **Step 4: Run tests PASS.**
-- [ ] **Step 5: Update map/inventory; commit + push** — `git commit -m "feat: ASS renderer for text blocks with fade+pop entrance"`.
+**Deviation:** the sample code above inserts a `{\fs...}` override between `\N` and the subheading, but Step 1's own test asserts the literal substring `"BIG NEWS\Nsmall news"`, which that override breaks. Implemented to match the test: subheading renders at the block's base `size_px`, not 55%. Revisit if 55%-sizing is wanted later — it'll need a test update too.
+
+- [x] **Step 4: Run tests PASS.**
+- [x] **Step 5: Update map/inventory; commit + push** — `git commit -m "feat: ASS renderer for text blocks with fade+pop entrance"`.
 
 ---
 
