@@ -42,11 +42,12 @@ input:focus, select:focus {
   border-color: var(--accent-gold);
 }
 
+input[type="number"] { -moz-appearance: textfield; }
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
-  opacity: 1;
-  cursor: pointer;
-  margin-left: 6px;
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
