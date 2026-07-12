@@ -36,22 +36,6 @@
       <div id="stage"><video id="player"></video><div id="overlay"></div></div>
       <div id="transport"><button id="play">&#9654;</button><span id="time">0.0</span></div>
       <div id="export-result"></div>
-      <div id="timeline-strip">
-        <div id="playhead"></div>
-        <div id="timeline-ruler"></div>
-        <div class="timeline-row" data-row="text">
-          <div class="row-label">TEXT</div>
-          <div class="row-track" id="row-text"></div>
-        </div>
-        <div class="timeline-row" data-row="captions">
-          <div class="row-label">CAPTIONS</div>
-          <div class="row-track" id="row-captions"></div>
-        </div>
-        <div class="timeline-row" data-row="video">
-          <div class="row-label">VIDEO</div>
-          <div class="row-track" id="row-video"></div>
-        </div>
-      </div>
     </section>
     <aside id="style-panel">
       <div class="caption-placeholder">
@@ -129,6 +113,29 @@
       </div>
     </aside>
   </main>
+  <div id="timeline-strip">
+    <div id="timeline-labels">
+      <div class="row-label" id="ruler-label"></div>
+      <div class="row-label">TEXT</div>
+      <div class="row-label">CAPTIONS</div>
+      <div class="row-label">VIDEO</div>
+    </div>
+    <div id="timeline-scroll">
+      <div id="timeline-content">
+        <div id="playhead"></div>
+        <div id="timeline-ruler"></div>
+        <div class="timeline-row" data-row="text">
+          <div class="row-track" id="row-text"></div>
+        </div>
+        <div class="timeline-row" data-row="captions">
+          <div class="row-track" id="row-captions"></div>
+        </div>
+        <div class="timeline-row" data-row="video">
+          <div class="row-track" id="row-video"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <script src="/static/ui-components.js"></script>
 <script src="/static/seed.js"></script>
