@@ -1,12 +1,33 @@
-/* Right-hand contextual panel: text overlay style controls. */
-/* Exposes #style-panel and .style-* children only. Depends on tokens.css. */
+/* Right-hand contextual panel: shows VIDEO, TEXT, or CAPTIONS controls depending on selection. Closed (hidden) by default. */
+/* Exposes #style-panel and its .style- / .context-panel children only. Depends on tokens.css. */
 #style-panel {
+  position: relative;
   width: 320px;
   flex-shrink: 0;
   background: var(--surface);
   border-left: 1px solid var(--border-soft);
   overflow-y: auto;
   padding: 18px 16px;
+}
+
+#style-panel[hidden] { display: none; }
+
+#style-panel-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-dim);
+}
+#style-panel-close:hover { color: var(--text); }
+
+.context-panel-name {
+  font-size: 12.5px;
+  color: #C7C8CA;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .style-panel-header {

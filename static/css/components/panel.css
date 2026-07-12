@@ -1,4 +1,4 @@
-/* Media/clip panel: left sidebar and its clip rows. */
+/* Media/clip panel: left sidebar and its clip rows. Collapses to a 72px icon rail. */
 /* Exposes #panel and children only. Depends on tokens.css. */
 #panel {
   width: 320px;
@@ -10,6 +10,8 @@
   overflow: hidden;
 }
 
+#panel.collapsed { width: 72px; }
+
 .panel-header {
   padding: var(--space-3) 14px 12px;
   border-bottom: 1px solid var(--border-soft);
@@ -17,10 +19,15 @@
   font-size: 10.5px;
   letter-spacing: 0.06em;
   color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
+#panel.collapsed .panel-header { justify-content: center; }
+#panel.collapsed .panel-title { display: none; }
+
 #panel-add { padding: 12px 14px 0; }
-#clip-path { width: 100%; margin-bottom: var(--space-2); }
 
 #add-clip {
   width: 100%;
@@ -28,8 +35,15 @@
   color: #B4B5B8;
   font-size: 11px;
   padding: 9px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
 }
 #add-clip:hover { border-color: var(--border-hover-color); border-width: var(--border-hover-width); color: var(--text); }
+
+#panel.collapsed #panel-add { padding: 12px 10px 0; }
+#panel.collapsed #add-clip .label { display: none; }
 
 #clip-list {
   list-style: none;
@@ -40,17 +54,22 @@
 }
 
 #clip-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: var(--space-2);
   border-radius: 3px;
   margin-bottom: var(--space-1);
   background: var(--bg-2);
   border: 1px solid var(--border-soft);
+  cursor: pointer;
 }
 
-#clip-list li span { color: #C7C8CA; font-size: 11px; }
-#clip-list input[type="number"] { width: 5em; }
+#clip-list li:hover { border-color: var(--border-hover-color); }
+#clip-list li.selected { border-color: var(--accent); }
 
-.clip-row-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+#panel.collapsed #clip-list { padding: var(--space-2) 0; }
+#panel.collapsed #clip-list li { justify-content: center; padding: var(--space-2) 0; }
 
 .clip-thumb {
   width: 34px;
@@ -64,3 +83,5 @@
 .clip-info { min-width: 0; flex: 1; }
 .clip-info .clip-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .clip-info .clip-duration { font-family: var(--font-ui); font-size: 9.5px; color: var(--text-dim); margin-top: 2px; }
+
+#panel.collapsed .clip-info { display: none; }

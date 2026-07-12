@@ -2,9 +2,15 @@
 // Exposes nothing (page script); persists project via PUT after every mutation.
 let project = null;
 let textPreset = null; // client-side TextPreset stand-in until Task 8 adds the presets API
-let selected = null; // currently selected timeline block; scrolls/highlights the relevant panel section
+let selected = null; // currently selected clip/text/caption; drives which right-panel section (VIDEO/TEXT/CAPTIONS) is open
 const clipDurations = {}; // clip.id -> source duration (seconds), populated on add-clip
 const player = document.getElementById("player");
+
+function formatClipDuration(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = (seconds % 60).toFixed(1).padStart(4, "0");
+  return `${String(m).padStart(2, "0")}:${s}`;
+}
 
 // Position grid anchors (thirds of the 1080x1920 canvas) + a pixel offset on top.
 // posRow/posCol/offsetX/offsetY are UI-only conveniences layered over TextPreset.x/y.
@@ -159,6 +165,65 @@ function renderTimeline() {
   Timeline.render(project, t, selected, onTimelineSelect);
 }
 
+function showPanel(type) {
+  document.getElementById("style-panel").hidden = false;
+  ["video", "text", "captions"].forEach((t) => {
+    document.getElementById(`panel-${t}`).hidden = t !== type;
+  });
+}
+
+function closePanel() {
+  document.getElementById("style-panel").hidden = true;
+  selected = null;
+  renderClipList();
+  renderTimeline();
+}
+
+document.getElementById("style-panel-close").addEventListener("click", closePanel);
+
+function renderVideoPanel(c) {
+  const dur = clipDurations[c.id] ?? c.out_point;
+  document.getElementById("video-name").textContent = c.file_path.split(/[\\/]/).pop();
+
+  async function applyTrim(inP, outP) {
+    const t = clampTrim(inP, outP, dur);
+    c.in_point = t.in_point; c.out_point = t.out_point;
+    await saveProject();
+    Preview.load(project);
+    renderClipList();
+    renderTimeline();
+    renderVideoPanel(c);
+  }
+
+  UI.numberField(document.getElementById("video-in-field"),
+    { label: "IN", unit: "SEC", value: c.in_point, step: 0.1,
+      onChange: (v) => applyTrim(v, c.out_point) });
+
+  UI.numberField(document.getElementById("video-out-field"),
+    { label: "OUT", unit: "SEC", value: c.out_point, step: 0.1,
+      onChange: (v) => applyTrim(c.in_point, v) });
+
+  document.getElementById("video-set-in").onclick = () => applyTrim(player.currentTime, c.out_point);
+  document.getElementById("video-set-out").onclick = () => applyTrim(c.in_point, player.currentTime);
+
+  const ordered = [...project.clips].sort((a, b) => a.order - b.order);
+  const idx = ordered.findIndex((x) => x.id === c.id);
+  const upBtn = document.getElementById("video-move-up");
+  const downBtn = document.getElementById("video-move-down");
+  upBtn.disabled = idx <= 0;
+  downBtn.disabled = idx === -1 || idx === ordered.length - 1;
+  upBtn.onclick = async () => { await moveClip(c, ordered[idx - 1]); renderVideoPanel(c); };
+  downBtn.onclick = async () => { await moveClip(c, ordered[idx + 1]); renderVideoPanel(c); };
+}
+
+function selectClip(c) {
+  selected = { type: "video", item: c };
+  showPanel("video");
+  renderVideoPanel(c);
+  renderClipList();
+  renderTimeline();
+}
+
 function onTimelineSelect({ type, item, groupIndex }) {
   selected = { type, item, groupIndex };
   if (type === "video") {
@@ -169,15 +234,16 @@ function onTimelineSelect({ type, item, groupIndex }) {
       start += c.out_point - c.in_point;
     }
     Preview.seek(start);
-    const idx = ordered.findIndex((c) => c.id === item.id);
-    document.querySelectorAll("#clip-list li")[idx]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    showPanel("video");
+    renderVideoPanel(item);
   } else if (type === "text") {
-    document.getElementById("style-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+    showPanel("text");
     document.getElementById("text-heading").focus();
   } else if (type === "caption") {
     document.querySelector(".caption-preview-box").textContent = item.map((w) => w.text).join(" ");
-    document.getElementById("style-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+    showPanel("captions");
   }
+  renderClipList();
   renderTimeline();
 }
 
@@ -185,70 +251,29 @@ function renderClipList() {
   const list = document.getElementById("clip-list");
   list.innerHTML = "";
   const ordered = [...project.clips].sort((a, b) => a.order - b.order);
-  ordered.forEach((c, i) => {
+  ordered.forEach((c) => {
     const li = document.createElement("li");
-
-    const head = document.createElement("div");
-    head.className = "clip-row-head";
+    if (selected && selected.type === "video" && selected.item.id === c.id) {
+      li.classList.add("selected");
+    }
 
     const thumb = document.createElement("div");
     thumb.className = "clip-thumb";
-    head.appendChild(thumb);
+    li.appendChild(thumb);
 
     const info = document.createElement("div");
     info.className = "clip-info";
     const name = document.createElement("span");
     name.className = "clip-name";
-    name.textContent = c.file_path;
+    name.textContent = c.file_path.split(/[\\/]/).pop();
     const duration = document.createElement("span");
     duration.className = "clip-duration";
-    duration.textContent = `${c.in_point.toFixed(1)}s – ${c.out_point.toFixed(1)}s`;
+    duration.textContent = formatClipDuration(c.out_point - c.in_point);
     info.appendChild(name);
     info.appendChild(duration);
-    head.appendChild(info);
+    li.appendChild(info);
 
-    const up = document.createElement("button");
-    up.textContent = "▲";
-    up.disabled = i === 0;
-    up.addEventListener("click", () => moveClip(c, ordered[i - 1]));
-    const down = document.createElement("button");
-    down.textContent = "▼";
-    down.disabled = i === ordered.length - 1;
-    down.addEventListener("click", () => moveClip(c, ordered[i + 1]));
-    head.appendChild(up);
-    head.appendChild(down);
-    li.appendChild(head);
-
-    const dur = clipDurations[c.id] ?? c.out_point;
-    const inField = document.createElement("input");
-    inField.type = "number"; inField.step = "0.1"; inField.style.width = "5em";
-    inField.value = c.in_point.toFixed(1);
-    const outField = document.createElement("input");
-    outField.type = "number"; outField.step = "0.1"; outField.style.width = "5em";
-    outField.value = c.out_point.toFixed(1);
-
-    async function applyTrim() {
-      const t = clampTrim(parseFloat(inField.value), parseFloat(outField.value), dur);
-      c.in_point = t.in_point; c.out_point = t.out_point;
-      inField.value = t.in_point.toFixed(1); outField.value = t.out_point.toFixed(1);
-      duration.textContent = `${t.in_point.toFixed(1)}s – ${t.out_point.toFixed(1)}s`;
-      await saveProject();
-      Preview.load(project);
-      renderTimeline();
-    }
-    inField.addEventListener("change", applyTrim);
-    outField.addEventListener("change", applyTrim);
-
-    const setIn = document.createElement("button");
-    setIn.textContent = "Set in";
-    setIn.addEventListener("click", () => { inField.value = player.currentTime.toFixed(1); applyTrim(); });
-    const setOut = document.createElement("button");
-    setOut.textContent = "Set out";
-    setOut.addEventListener("click", () => { outField.value = player.currentTime.toFixed(1); applyTrim(); });
-
-    const br = document.createElement("div");
-    br.append("in: ", inField, setIn, " out: ", outField, setOut);
-    li.appendChild(br);
+    li.addEventListener("click", () => selectClip(c));
     list.appendChild(li);
   });
 }
@@ -265,11 +290,7 @@ async function moveClip(a, b) {
 
 async function addClip() {
   const pickRes = await fetch("/api/pick-file");
-  const { path: pickedPath } = await pickRes.json();
-  if (pickedPath) {
-    document.getElementById("clip-path").value = pickedPath;
-  }
-  const path = document.getElementById("clip-path").value.trim();
+  const { path } = await pickRes.json();
   if (!path) return;
   const res = await fetch(`/api/probe?path=${encodeURIComponent(path)}`);
   if (!res.ok) { alert("probe failed"); return; }
@@ -283,7 +304,6 @@ async function addClip() {
     out_point: duration,
     order: project.clips.length,
   });
-  document.getElementById("clip-path").value = "";
   await saveProject();
   renderClipList();
   Preview.load(project);
@@ -291,6 +311,15 @@ async function addClip() {
 }
 
 document.getElementById("add-clip").addEventListener("click", addClip);
+
+function setPanelCollapsed(collapsed) {
+  document.getElementById("panel").classList.toggle("collapsed", collapsed);
+  localStorage.setItem("panelCollapsed", collapsed ? "1" : "");
+}
+
+document.getElementById("panel-collapse-toggle").addEventListener("click", () => {
+  setPanelCollapsed(!document.getElementById("panel").classList.contains("collapsed"));
+});
 
 async function exportProject() {
   const resultEl = document.getElementById("export-result");
@@ -307,6 +336,7 @@ async function exportProject() {
 document.getElementById("export").addEventListener("click", exportProject);
 
 (async () => {
+  setPanelCollapsed(localStorage.getItem("panelCollapsed") === "1");
   project = await ensureProject();
   const before = JSON.stringify(project);
   seedDefaults(project);

@@ -1,4 +1,4 @@
-<!-- Editor page: three-column frame (media panel | video+timeline | style panel). Logic in editor.js/preview.js/timeline.js. -->
+<!-- Editor page: three-column frame (collapsible media panel | video+timeline | selection-driven context panel). Logic in editor.js/preview.js/timeline.js. -->
 <!doctype html><html data-theme="dark"><head><meta charset="utf-8"><title>Reels Editor</title>
 <link rel="stylesheet" href="/static/css/tokens.css">
 <link rel="stylesheet" href="/static/css/base.css">
@@ -25,10 +25,17 @@
   </header>
   <main>
     <aside id="panel">
-      <div class="panel-header">MEDIA</div>
+      <div class="panel-header">
+        <span class="panel-title">MEDIA</span>
+        <button id="panel-collapse-toggle" class="icon-btn" title="Collapse panel">
+          <svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0.5" y="0.5" width="13" height="11" rx="1.5" stroke="currentColor"/>
+            <line x1="5" y1="0.5" x2="5" y2="11.5" stroke="currentColor"/>
+          </svg>
+        </button>
+      </div>
       <div id="panel-add">
-        <input id="clip-path" placeholder="C:\path\to\clip.mp4">
-        <button id="add-clip">+ IMPORT VIDEO</button>
+        <button id="add-clip"><span class="icon">+</span><span class="label">IMPORT VIDEO</span></button>
       </div>
       <ol id="clip-list"></ol>
     </aside>
@@ -62,8 +69,42 @@
         </div>
       </div>
     </div>
-    <aside id="style-panel">
-      <div class="caption-placeholder">
+    <aside id="style-panel" hidden>
+      <button id="style-panel-close" class="icon-btn" title="Close">&times;</button>
+
+      <div id="panel-video" class="context-panel" hidden>
+        <div class="style-panel-header">VIDEO</div>
+
+        <div class="style-group">
+          <div id="video-name" class="context-panel-name"></div>
+        </div>
+
+        <div class="style-group-label">TRIM</div>
+        <div class="style-group">
+          <div class="style-row">
+            <label id="video-in-field"></label>
+            <label id="video-out-field"></label>
+          </div>
+        </div>
+        <div class="style-group">
+          <div class="style-row">
+            <button id="video-set-in">Set in</button>
+            <button id="video-set-out">Set out</button>
+          </div>
+        </div>
+
+        <div class="style-divider"></div>
+
+        <div class="style-group-label">ORDER</div>
+        <div class="style-group">
+          <div class="style-row">
+            <button id="video-move-up">&#9650; Move up</button>
+            <button id="video-move-down">&#9660; Move down</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-captions" class="context-panel caption-placeholder" hidden>
         <div class="style-group-label">CAPTIONS &middot; PREVIEW (COMING IN A LATER TASK)</div>
         <div class="style-row caption-toolbar">
           <button class="icon-btn" disabled title="Bold (not yet wired)"><b>B</b></button>
@@ -75,65 +116,65 @@
         <div class="caption-preview-box" contenteditable="false">kind of insane</div>
       </div>
 
-      <div class="style-divider"></div>
+      <div id="panel-text" class="context-panel" hidden>
+        <div class="style-panel-header">TEXT OVERLAY &middot; STYLE</div>
 
-      <div class="style-panel-header">TEXT OVERLAY &middot; STYLE</div>
-
-      <div class="style-group">
-        <input id="text-heading" placeholder="Heading">
-      </div>
-
-      <div class="style-group-label">TIME</div>
-      <div class="style-group">
-        <div class="style-row">
-          <label id="text-start-field"></label>
-          <label id="text-end-field"></label>
+        <div class="style-group">
+          <input id="text-heading" placeholder="Heading">
         </div>
-      </div>
 
-      <div class="style-divider"></div>
-
-      <div class="style-group-label">STYLE</div>
-      <div class="style-group">
-        <div class="style-field">SIZE (PX)<input id="text-size" type="range" min="24" max="200"></div>
-      </div>
-
-      <div class="style-group">
-        <label id="text-color-field"></label>
-      </div>
-
-      <div class="style-group">
-        <label id="text-outline-color-field"></label>
-      </div>
-
-      <div class="style-group">
-        <label id="text-outline-px-field"></label>
-      </div>
-
-      <div class="style-group">
-        <div class="style-row style-row-tight">
-          <label class="style-checkbox"><input id="text-box" type="checkbox"> Box</label>
+        <div class="style-group-label">TIME</div>
+        <div class="style-group">
+          <div class="style-row">
+            <label id="text-start-field"></label>
+            <label id="text-end-field"></label>
+          </div>
         </div>
-        <div id="text-box-color-field"></div>
-      </div>
 
-      <div class="style-divider"></div>
+        <div class="style-divider"></div>
 
-      <div class="style-group-label">TEXT ALIGN</div>
-      <div class="style-group">
-        <div id="text-align-group"></div>
-      </div>
+        <div class="style-group-label">STYLE</div>
+        <div class="style-group">
+          <div class="style-field">SIZE (PX)<input id="text-size" type="range" min="24" max="200"></div>
+        </div>
 
-      <div class="style-group-label">POSITION</div>
-      <div class="style-group">
-        <div id="position-row-group"></div>
-        <div id="position-col-group"></div>
-      </div>
+        <div class="style-group">
+          <label id="text-color-field"></label>
+        </div>
 
-      <div class="style-group">
-        <div class="style-row">
-          <label id="text-offset-x-field"></label>
-          <label id="text-offset-y-field"></label>
+        <div class="style-group">
+          <label id="text-outline-color-field"></label>
+        </div>
+
+        <div class="style-group">
+          <label id="text-outline-px-field"></label>
+        </div>
+
+        <div class="style-group">
+          <div class="style-row style-row-tight">
+            <label class="style-checkbox"><input id="text-box" type="checkbox"> Box</label>
+          </div>
+          <div id="text-box-color-field"></div>
+        </div>
+
+        <div class="style-divider"></div>
+
+        <div class="style-group-label">TEXT ALIGN</div>
+        <div class="style-group">
+          <div id="text-align-group"></div>
+        </div>
+
+        <div class="style-group-label">POSITION</div>
+        <div class="style-group">
+          <div id="position-row-group"></div>
+          <div id="position-col-group"></div>
+        </div>
+
+        <div class="style-group">
+          <div class="style-row">
+            <label id="text-offset-x-field"></label>
+            <label id="text-offset-y-field"></label>
+          </div>
         </div>
       </div>
     </aside>
