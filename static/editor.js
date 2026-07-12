@@ -71,15 +71,15 @@ function renderTextPanel() {
   document.getElementById("text-box").checked = textPreset.box;
 
   UI.colorSwatch(document.getElementById("text-color-field"),
-    { label: "COLOR", value: textPreset.color,
+    { label: "Color", value: textPreset.color,
       onChange: (v) => { textPreset.color = v; saveTextPreset(); renderTextPreview(); } });
 
   UI.colorSwatch(document.getElementById("text-outline-color-field"),
-    { label: "OUTLINE", value: textPreset.outline_color,
+    { label: "Outline", value: textPreset.outline_color,
       onChange: (v) => { textPreset.outline_color = v; saveTextPreset(); renderTextPreview(); } });
 
   UI.colorSwatch(document.getElementById("text-box-color-field"),
-    { label: "BOX COLOR", value: textPreset.box_color,
+    { label: "Box Color", value: textPreset.box_color,
       onChange: (v) => { textPreset.box_color = v; saveTextPreset(); renderTextPreview(); } });
 
   UI.numberField(document.getElementById("text-start-field"),

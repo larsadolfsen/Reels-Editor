@@ -69,12 +69,11 @@ window.UI = (() => {
     return (v) => { input.value = v; };
   }
 
-  // Renders a labeled full-bleed color picker (see .color-swatch) into `container`.
-  // onChange(hexString) fires on pick. Returns a setValue(hex) updater.
+  // Renders a small square color-picker swatch with a label beside it (see .color-swatch-row)
+  // into `container`. onChange(hexString) fires on pick. Returns a setValue(hex) updater.
   function colorSwatch(container, { label, value, onChange }) {
     container.innerHTML = "";
-    container.classList.add("style-field");
-    container.textContent = label;
+    container.classList.add("color-swatch-row");
 
     const input = document.createElement("input");
     input.type = "color";
@@ -82,7 +81,11 @@ window.UI = (() => {
     input.value = value;
     input.addEventListener("input", () => onChange(input.value));
 
-    container.appendChild(input);
+    const labelEl = document.createElement("span");
+    labelEl.className = "color-swatch-label";
+    labelEl.textContent = label;
+
+    container.append(input, labelEl);
     return (v) => { input.value = v; };
   }
 
