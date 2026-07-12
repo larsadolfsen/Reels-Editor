@@ -6,7 +6,10 @@
 <link rel="stylesheet" href="/static/css/components/panel.css">
 <link rel="stylesheet" href="/static/css/components/stage.css">
 <link rel="stylesheet" href="/static/css/components/timeline.css">
-<link rel="stylesheet" href="/static/css/components/context-panel.css">
+<link rel="stylesheet" href="/static/css/components/button-group.css">
+<link rel="stylesheet" href="/static/css/components/number-field.css">
+<link rel="stylesheet" href="/static/css/components/style-panel.css">
+<link rel="stylesheet" href="/static/css/components/color-swatch.css">
 </head><body>
 <div id="app">
   <header id="topbar">
@@ -22,7 +25,7 @@
   </header>
   <main>
     <aside id="panel">
-      <div id="panel-header">MEDIA</div>
+      <div class="panel-header">MEDIA</div>
       <div id="panel-add">
         <input id="clip-path" placeholder="C:\path\to\clip.mp4">
         <button id="add-clip">+ IMPORT VIDEO</button>
@@ -50,8 +53,86 @@
         </div>
       </div>
     </section>
-    <aside id="context-panel" hidden></aside>
+    <aside id="style-panel">
+      <div class="caption-placeholder">
+        <div class="style-group-label">CAPTIONS &middot; PREVIEW (COMING IN A LATER TASK)</div>
+        <div class="style-row caption-toolbar">
+          <button class="icon-btn" disabled title="Bold (not yet wired)"><b>B</b></button>
+          <button class="icon-btn" disabled title="Italic (not yet wired)"><i>I</i></button>
+          <button class="icon-btn" disabled title="Underline (not yet wired)"><u>U</u></button>
+          <button class="icon-btn" disabled title="Align left (not yet wired)">&#9664;</button>
+          <button class="icon-btn" disabled title="Align right (not yet wired)">&#9654;</button>
+        </div>
+        <div class="caption-preview-box" contenteditable="false">kind of insane</div>
+      </div>
+
+      <div class="style-divider"></div>
+
+      <div class="style-panel-header">TEXT OVERLAY &middot; STYLE</div>
+
+      <div class="style-group">
+        <input id="text-heading" placeholder="Heading">
+      </div>
+
+      <div class="style-group-label">TIME</div>
+      <div class="style-group">
+        <div class="style-row">
+          <label id="text-start-field"></label>
+          <label id="text-end-field"></label>
+        </div>
+      </div>
+
+      <div class="style-divider"></div>
+
+      <div class="style-group-label">STYLE</div>
+      <div class="style-group">
+        <div class="style-field">SIZE (PX)<input id="text-size" type="range" min="24" max="200"></div>
+      </div>
+
+      <div class="style-group">
+        <label id="text-color-field"></label>
+      </div>
+
+      <div class="style-group">
+        <label id="text-outline-color-field"></label>
+      </div>
+
+      <div class="style-group">
+        <label id="text-outline-px-field"></label>
+      </div>
+
+      <div class="style-group">
+        <div class="style-row style-row-tight">
+          <label class="style-checkbox"><input id="text-box" type="checkbox"> Box</label>
+        </div>
+        <div id="text-box-color-field"></div>
+      </div>
+
+      <div class="style-divider"></div>
+
+      <div class="style-group-label">TEXT ALIGN</div>
+      <div class="style-group">
+        <div id="text-align-group"></div>
+      </div>
+
+      <div class="style-group-label">POSITION</div>
+      <div class="style-group">
+        <div id="position-row-group"></div>
+        <div id="position-col-group"></div>
+      </div>
+
+      <div class="style-group">
+        <div class="style-row">
+          <label id="text-offset-x-field"></label>
+          <label id="text-offset-y-field"></label>
+        </div>
+      </div>
+    </aside>
   </main>
 </div>
-<script src="/static/seed.js"></script><script src="/static/preview.js"></script><script src="/static/timeline.js"></script><script src="/static/context-panel.js"></script><script src="/static/editor.js"></script>
+<script src="/static/ui-components.js"></script>
+<script src="/static/seed.js"></script>
+<script src="/static/preview.js"></script>
+<script src="/static/timeline.js"></script>
+<script src="/static/editor.js"></script>
 </body></html>

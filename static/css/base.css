@@ -24,17 +24,30 @@ button {
   padding: var(--space-1) var(--space-2);
 }
 
-button:hover { color: var(--text); border-color: var(--accent); }
+button:hover { color: var(--text); border-color: var(--border-hover-color); border-width: var(--border-hover-width); }
 button:disabled { cursor: default; opacity: 0.4; }
 
 input {
   font-family: var(--font-content);
-  font-size: 12px;
+  font-size: 1rem;
   background: var(--bg-2);
   border: 1px solid var(--border);
   color: var(--text);
   border-radius: var(--radius);
   padding: var(--space-1) var(--space-2);
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+input[type="number"] { -moz-appearance: textfield; }
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }

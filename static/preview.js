@@ -1,10 +1,16 @@
-// Preview stage playback: plays a project's clips back-to-back in timeline order.
-// Exposes window.Preview.{load, seek}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// Preview stage playback: plays a project's clips back-to-back in timeline order,
+// and composites the text-block overlay on top (renderText).
+// Exposes window.Preview.{load, seek, renderText, currentTimelineTime}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
 window.Preview = (() => {
   let clips = [];
   let activeIndex = -1;
+  let lastTimelineTime = 0;
+  let textProject = null;
+  let textPresets = {};
   const player = document.getElementById("player");
   const timeEl = document.getElementById("time");
+  const overlay = document.getElementById("overlay");
+  const stage = document.getElementById("stage");
 
   function ordered(list) {
     return [...list].sort((a, b) => a.order - b.order);
@@ -48,6 +54,41 @@ window.Preview = (() => {
     }
   }
 
+  function renderText(project, presets, timelineTime) {
+    textProject = project;
+    textPresets = presets;
+    lastTimelineTime = timelineTime;
+    overlay.innerHTML = "";
+    const stageW = stage.clientWidth, stageH = stage.clientHeight;
+    for (const block of (project.text_blocks || [])) {
+      if (!block.heading) continue;
+      if (!(block.start <= timelineTime && timelineTime < block.end)) continue;
+      const preset = presets[block.preset_id];
+      if (!preset) continue;
+
+      const div = document.createElement("div");
+      div.className = "text-block";
+      div.style.left = (preset.x / 1080 * stageW) + "px";
+      div.style.top = (preset.y / 1920 * stageH) + "px";
+      div.style.color = preset.color;
+      div.style.textAlign = preset.align;
+
+      const sizePx = preset.size_px / 1920 * stageH;
+      div.style.fontSize = sizePx + "px";
+
+      if (preset.box) {
+        div.style.backgroundColor = preset.box_color;
+        div.style.padding = "0.15em 0.35em";
+      } else {
+        const outlinePx = preset.outline_px / 1920 * stageH;
+        div.style.webkitTextStroke = `${outlinePx}px ${preset.outline_color}`;
+      }
+
+      div.textContent = block.heading;
+      overlay.appendChild(div);
+    }
+  }
+
   player.addEventListener("timeupdate", () => {
     if (activeIndex < 0) return;
     const c = clips[activeIndex];
@@ -55,6 +96,8 @@ window.Preview = (() => {
     for (let i = 0; i < activeIndex; i++) timelineTime += clipDuration(clips[i]);
     timelineTime += player.currentTime - c.in_point;
     timeEl.textContent = timelineTime.toFixed(1);
+
+    if (textProject) renderText(textProject, textPresets, timelineTime);
 
     if (player.currentTime >= c.out_point) {
       if (activeIndex + 1 < clips.length) {
@@ -66,7 +109,12 @@ window.Preview = (() => {
   });
 
   document.getElementById("play").addEventListener("click", () => {
-    if (player.paused) player.play(); else player.pause();
+    if (player.paused) player.play();
+    else if (activeIndex >= 0 && player.currentTime >= clips[activeIndex].out_point) {
+      playClipAt(0);
+    } else {
+      player.pause();
+    }
   });
 
   function seek(t) {
@@ -81,5 +129,5 @@ window.Preview = (() => {
     }
   }
 
-  return { load, locate, sequenceDuration, seek };
+  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: () => lastTimelineTime };
 })();

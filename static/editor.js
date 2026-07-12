@@ -1,9 +1,127 @@
 // Editor state + API calls + DOM wiring. Thin — logic lives in app/*.py.
 // Exposes nothing (page script); persists project via PUT after every mutation.
 let project = null;
-let selected = null; // currently selected timeline block, shown in the context panel
+let textPreset = null; // client-side TextPreset stand-in until Task 8 adds the presets API
+let selected = null; // currently selected timeline block; scrolls/highlights the relevant panel section
 const clipDurations = {}; // clip.id -> source duration (seconds), populated on add-clip
 const player = document.getElementById("player");
+
+// Position grid anchors (thirds of the 1080x1920 canvas) + a pixel offset on top.
+// posRow/posCol/offsetX/offsetY are UI-only conveniences layered over TextPreset.x/y.
+const POSITION_ANCHORS_X = { left: 162, mid: 540, right: 918 };
+const POSITION_ANCHORS_Y = { top: 288, mid: 960, btm: 1632 };
+
+function defaultTextPreset() {
+  return {
+    id: crypto.randomUUID().replaceAll("-", ""),
+    name: "Default", font: "Arial", size_px: 96, color: "#FFFFFF",
+    outline_color: "#000000", outline_px: 4, box: false, box_color: "#000000",
+    align: "center", x: 540, y: 700, entrance: "fade_pop",
+    posRow: "mid", posCol: "mid", offsetX: 0, offsetY: 0,
+  };
+}
+
+function computeXY() {
+  textPreset.x = POSITION_ANCHORS_X[textPreset.posCol] + textPreset.offsetX;
+  textPreset.y = POSITION_ANCHORS_Y[textPreset.posRow] + textPreset.offsetY;
+}
+
+function loadTextPreset(projectId) {
+  const raw = localStorage.getItem("textPreset:" + projectId);
+  return raw ? { ...defaultTextPreset(), ...JSON.parse(raw) } : defaultTextPreset();
+}
+
+function saveTextPreset() {
+  localStorage.setItem("textPreset:" + project.id, JSON.stringify(textPreset));
+}
+
+function ensureTextBlock() {
+  let block = project.text_blocks[0];
+  if (!block) {
+    block = {
+      id: crypto.randomUUID().replaceAll("-", ""),
+      heading: "", preset_id: textPreset.id, start: 0, end: 3,
+    };
+    project.text_blocks.push(block);
+  }
+  return block;
+}
+
+function renderTextPreview() {
+  Preview.renderText(project, { [textPreset.id]: textPreset }, Preview.currentTimelineTime());
+}
+
+async function updateTextBlock() {
+  const block = ensureTextBlock();
+  block.heading = document.getElementById("text-heading").value;
+  await saveProject();
+  renderTextPreview();
+}
+
+async function updateTextStyle() {
+  textPreset.size_px = parseInt(document.getElementById("text-size").value, 10);
+  textPreset.box = document.getElementById("text-box").checked;
+  saveTextPreset();
+  renderTextPreview();
+}
+
+function renderTextPanel() {
+  const block = ensureTextBlock();
+  document.getElementById("text-heading").value = block.heading;
+  document.getElementById("text-size").value = textPreset.size_px;
+  document.getElementById("text-box").checked = textPreset.box;
+
+  UI.colorSwatch(document.getElementById("text-color-field"),
+    { label: "Color", value: textPreset.color,
+      onChange: (v) => { textPreset.color = v; saveTextPreset(); renderTextPreview(); } });
+
+  UI.colorSwatch(document.getElementById("text-outline-color-field"),
+    { label: "Outline", value: textPreset.outline_color,
+      onChange: (v) => { textPreset.outline_color = v; saveTextPreset(); renderTextPreview(); } });
+
+  UI.colorSwatch(document.getElementById("text-box-color-field"),
+    { label: "Box Color", value: textPreset.box_color,
+      onChange: (v) => { textPreset.box_color = v; saveTextPreset(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-start-field"),
+    { label: "START", unit: "SEC", value: block.start, step: 0.1,
+      onChange: (v) => { block.start = v; saveProject(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-end-field"),
+    { label: "END", unit: "SEC", value: block.end, step: 0.1,
+      onChange: (v) => { block.end = v; saveProject(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-outline-px-field"),
+    { label: "WIDTH", unit: "PX", value: textPreset.outline_px, min: 0, max: 20,
+      onChange: (v) => { textPreset.outline_px = v; saveTextPreset(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-offset-x-field"),
+    { label: "OFFSET H", unit: "PX", value: textPreset.offsetX, step: 1,
+      onChange: (v) => { textPreset.offsetX = v; computeXY(); saveTextPreset(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-offset-y-field"),
+    { label: "OFFSET V", unit: "PX", value: textPreset.offsetY, step: 1,
+      onChange: (v) => { textPreset.offsetY = v; computeXY(); saveTextPreset(); renderTextPreview(); } });
+
+  UI.buttonGroup(document.getElementById("text-align-group"),
+    [{ value: "left", label: "LEFT" }, { value: "center", label: "CENTER" }, { value: "right", label: "RIGHT" }],
+    textPreset.align, (value) => { textPreset.align = value; saveTextPreset(); renderTextPreview(); });
+
+  UI.buttonGroup(document.getElementById("position-row-group"),
+    [{ value: "top", label: "TOP" }, { value: "mid", label: "MID" }, { value: "btm", label: "BTM" }],
+    textPreset.posRow, (value) => { textPreset.posRow = value; computeXY(); saveTextPreset(); renderTextPreview(); });
+
+  UI.buttonGroup(document.getElementById("position-col-group"),
+    [{ value: "left", label: "LEFT" }, { value: "mid", label: "MID" }, { value: "right", label: "RIGHT" }],
+    textPreset.posCol, (value) => { textPreset.posCol = value; computeXY(); saveTextPreset(); renderTextPreview(); });
+
+  renderTextPreview();
+}
+
+document.getElementById("text-heading").addEventListener("input", updateTextBlock);
+["text-size", "text-box"].forEach((id) => {
+  document.getElementById(id).addEventListener("input", updateTextStyle);
+});
 
 function clampTrim(inP, outP, dur) {
   inP = Math.max(0, Math.min(inP, dur));
@@ -42,12 +160,24 @@ function renderTimeline() {
 }
 
 function onTimelineSelect({ type, item, groupIndex }) {
+  selected = { type, item, groupIndex };
   if (type === "video") {
-    selected = { type, item, clipDuration: clipDurations[item.id] ?? item.out_point };
-  } else {
-    selected = { type, item, groupIndex };
+    const ordered = [...project.clips].sort((a, b) => a.order - b.order);
+    let start = 0;
+    for (const c of ordered) {
+      if (c.id === item.id) break;
+      start += c.out_point - c.in_point;
+    }
+    Preview.seek(start);
+    const idx = ordered.findIndex((c) => c.id === item.id);
+    document.querySelectorAll("#clip-list li")[idx]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } else if (type === "text") {
+    document.getElementById("style-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("text-heading").focus();
+  } else if (type === "caption") {
+    document.querySelector(".caption-preview-box").textContent = item.map((w) => w.text).join(" ");
+    document.getElementById("style-panel").scrollIntoView({ behavior: "smooth", block: "start" });
   }
-  ContextPanel.show(selected, { onChange: async () => { await saveProject(); renderTimeline(); Preview.load(project); } });
   renderTimeline();
 }
 
@@ -57,9 +187,25 @@ function renderClipList() {
   const ordered = [...project.clips].sort((a, b) => a.order - b.order);
   ordered.forEach((c, i) => {
     const li = document.createElement("li");
-    const label = document.createElement("span");
-    label.textContent = c.file_path + " ";
-    li.appendChild(label);
+
+    const head = document.createElement("div");
+    head.className = "clip-row-head";
+
+    const thumb = document.createElement("div");
+    thumb.className = "clip-thumb";
+    head.appendChild(thumb);
+
+    const info = document.createElement("div");
+    info.className = "clip-info";
+    const name = document.createElement("span");
+    name.className = "clip-name";
+    name.textContent = c.file_path;
+    const duration = document.createElement("span");
+    duration.className = "clip-duration";
+    duration.textContent = `${c.in_point.toFixed(1)}s – ${c.out_point.toFixed(1)}s`;
+    info.appendChild(name);
+    info.appendChild(duration);
+    head.appendChild(info);
 
     const up = document.createElement("button");
     up.textContent = "▲";
@@ -69,9 +215,40 @@ function renderClipList() {
     down.textContent = "▼";
     down.disabled = i === ordered.length - 1;
     down.addEventListener("click", () => moveClip(c, ordered[i + 1]));
-    li.appendChild(up);
-    li.appendChild(down);
+    head.appendChild(up);
+    head.appendChild(down);
+    li.appendChild(head);
 
+    const dur = clipDurations[c.id] ?? c.out_point;
+    const inField = document.createElement("input");
+    inField.type = "number"; inField.step = "0.1"; inField.style.width = "5em";
+    inField.value = c.in_point.toFixed(1);
+    const outField = document.createElement("input");
+    outField.type = "number"; outField.step = "0.1"; outField.style.width = "5em";
+    outField.value = c.out_point.toFixed(1);
+
+    async function applyTrim() {
+      const t = clampTrim(parseFloat(inField.value), parseFloat(outField.value), dur);
+      c.in_point = t.in_point; c.out_point = t.out_point;
+      inField.value = t.in_point.toFixed(1); outField.value = t.out_point.toFixed(1);
+      duration.textContent = `${t.in_point.toFixed(1)}s – ${t.out_point.toFixed(1)}s`;
+      await saveProject();
+      Preview.load(project);
+      renderTimeline();
+    }
+    inField.addEventListener("change", applyTrim);
+    outField.addEventListener("change", applyTrim);
+
+    const setIn = document.createElement("button");
+    setIn.textContent = "Set in";
+    setIn.addEventListener("click", () => { inField.value = player.currentTime.toFixed(1); applyTrim(); });
+    const setOut = document.createElement("button");
+    setOut.textContent = "Set out";
+    setOut.addEventListener("click", () => { outField.value = player.currentTime.toFixed(1); applyTrim(); });
+
+    const br = document.createElement("div");
+    br.append("in: ", inField, setIn, " out: ", outField, setOut);
+    li.appendChild(br);
     list.appendChild(li);
   });
 }
@@ -135,8 +312,11 @@ document.getElementById("export").addEventListener("click", exportProject);
   seedDefaults(project);
   if (JSON.stringify(project) !== before) await saveProject();
   document.getElementById("project-name").textContent = project.name;
+  textPreset = loadTextPreset(project.id);
+  computeXY();
   renderClipList();
   Preview.load(project);
+  renderTextPanel();
   renderTimeline();
 })();
 

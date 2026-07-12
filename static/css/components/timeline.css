@@ -3,6 +3,7 @@
 #timeline-strip {
   position: relative;
   align-self: stretch;
+  margin-top: auto;
   width: 100%;
   max-width: 640px;
   background: var(--surface);

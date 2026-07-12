@@ -1,17 +1,8 @@
-// Seeds placeholder text/caption data so the timeline UI has something to show
-// before real creation flows (text style panel, transcription) exist.
+// Seeds a placeholder caption line so the timeline's CAPTIONS row has something to show
+// before real transcription (Task 10) exists. Text-block seeding is not needed here —
+// editor.js's ensureTextBlock()/textPreset already create a real, style-panel-backed one.
 // Exposes window.seedDefaults(project) -> project (mutates and returns project).
 function seedDefaults(project) {
-  if (project.text_blocks.length === 0) {
-    project.text_blocks.push({
-      id: crypto.randomUUID().replaceAll("-", ""),
-      heading: "HOOK",
-      subheading: "",
-      preset_id: "seed",
-      start: 0,
-      end: 2,
-    });
-  }
   if (!project.captions) {
     const sampleWords = ["okay", "so", "nobody", "talks", "about", "this"];
     let t = 0;

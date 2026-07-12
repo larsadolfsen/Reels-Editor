@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.12+, FastAPI, uvicorn, pydantic, pytest, ffmpeg/ffprobe (on PATH), faster-whisper, vanilla HTML/JS/CSS. Styling: hand-rolled design system per `docs/superpowers/specs/2026-07-10-design-foundation-design.md` — CSS custom properties in `static/css/tokens.css`, one component per file under `static/css/components/`, vendored fonts. No CSS framework, no build step (Pico.css was adopted then dropped in Task 5b).
 
-**Progress (2026-07-10):** Tasks 1–5, 5b, and 6 complete and committed. Unplanned additions landed since: native file picker (`GET /api/pick-file`, spec `2026-07-09-native-file-picker-design.md`), Pico.css adoption (reversed by Task 5b). **Next up: Task 7 (text block visible on preview).**
+**Progress (2026-07-10):** Tasks 1–5, 5b, 6, and 7 complete and committed. Unplanned additions landed since: native file picker (`GET /api/pick-file`, spec `2026-07-09-native-file-picker-design.md`), Pico.css adoption (reversed by Task 5b). **Next up: Task 8 (savable text presets).**
 
 ## Global Constraints
 
@@ -625,6 +625,8 @@ Note for the implementer: heading and subheading share one Dialogue line (`\N` s
 
 **Deviation:** the sample code above inserts a `{\fs...}` override between `\N` and the subheading, but Step 1's own test asserts the literal substring `"BIG NEWS\Nsmall news"`, which that override breaks. Implemented to match the test: subheading renders at the block's base `size_px`, not 55%. Revisit if 55%-sizing is wanted later — it'll need a test update too.
 
+**Revised 2026-07-10 (post Task 7):** dropped `subheading` entirely — `TextBlockLayer` is now `{id, heading, preset_id, start, end}`, one line. `_block_dialogue` no longer has a `\N` branch. See the spec's Data model note.
+
 - [x] **Step 4: Run tests PASS.**
 - [x] **Step 5: Update map/inventory; commit + push** — `git commit -m "feat: ASS renderer for text blocks with fade+pop entrance"`.
 
@@ -639,10 +641,10 @@ Note for the implementer: heading and subheading share one Dialogue line (`\N` s
 - Consumes: `TextBlockLayer`, `TextPreset` shapes (client-side mirrors of Task 1 models); `PUT /api/projects/{pid}`.
 - Produces: `Preview.renderText(project, presets, timelineTime)` — shows/hides `#overlay` children by `start/end`; used again by captions in Task 10.
 
-- [ ] **Step 1: Panel UI (thin).** "Text" section in `index.html`: heading + subheading inputs, start/end seconds, and style controls (font size, color, outline color/width, box on/off + color, x/y sliders 0–1080/0–1920, align). Editing updates a working `TextPreset`-shaped object + the block, saves project via PUT, re-renders overlay.
-- [ ] **Step 2: Overlay rendering (thin).** `Preview.renderText`: a div per block, absolutely positioned at `(x/1080*stageW, y/1920*stageH)`, translate(-50%,-50%) to match ASS anchor-5, font Arial, `font-size: size_px/1920*stageH`, color, `-webkit-text-stroke` for outline or background-color for box; heading + subheading stacked in the one div (subheading at 55% size). Visible only while `start <= timelineTime < end` (tick from the player's timeupdate).
-- [ ] **Step 3: See it.** Type a heading + subheading → **your title card sits on the reel and restyles live as you drag the controls.**
-- [ ] **Step 4: Update map; commit + push** — `git commit -m "feat: live-styled text block on preview"`. Run `pytest -q` (unchanged backend, still green).
+- [x] **Step 1: Panel UI (thin).** "Text" section in `index.html`: heading + subheading inputs, start/end seconds, and style controls (font size, color, outline color/width, box on/off + color, x/y sliders 0–1080/0–1920, align). Editing updates a working `TextPreset`-shaped object + the block, saves project via PUT, re-renders overlay.
+- [x] **Step 2: Overlay rendering (thin).** `Preview.renderText`: a div per block, absolutely positioned at `(x/1080*stageW, y/1920*stageH)`, translate(-50%,-50%) to match ASS anchor-5, font Arial, `font-size: size_px/1920*stageH`, color, `-webkit-text-stroke` for outline or background-color for box; heading + subheading stacked in the one div (subheading at 55% size). Visible only while `start <= timelineTime < end` (tick from the player's timeupdate).
+- [x] **Step 3: See it.** Type a heading + subheading → **your title card sits on the reel and restyles live as you drag the controls.**
+- [x] **Step 4: Update map; commit + push** — `git commit -m "feat: live-styled text block on preview"`. Run `pytest -q` (unchanged backend, still green).
 
 ---
 

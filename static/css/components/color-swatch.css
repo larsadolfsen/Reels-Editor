@@ -1,0 +1,31 @@
+/* Color picker swatch: a small solid-fill square + label, one per row. */
+/* Exposes .color-swatch-row/.color-swatch/.color-swatch-label. Depends on tokens.css. */
+.color-swatch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.color-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.color-swatch::-webkit-color-swatch { border: none; border-radius: 6px; }
+.color-swatch::-moz-color-swatch { border: none; border-radius: 6px; }
+
+.color-swatch:hover { border-color: var(--border-hover-color); border-width: var(--border-hover-width); }
+.color-swatch:focus-visible { outline: none; border-color: var(--accent-gold); }
+
+.color-swatch-label {
+  font-family: var(--font-content);
+  font-size: 14px;
+  color: var(--text-muted);
+}

@@ -1,6 +1,7 @@
 /* Design tokens: single source of truth for colors, fonts, spacing, radius. */
 /* Exposes :root custom properties + @font-face. Values from the approved mockup. */
 :root {
+  color-scheme: dark;
   --bg-0: #101113;
   --bg-1: #16171A;
   --bg-2: #18191C;
@@ -23,6 +24,9 @@
   --space-4: 24px;
 
   --radius: 2px;
+
+  --border-hover-width: 1px;
+  --border-hover-color: var(--accent);
 }
 
 @font-face {
