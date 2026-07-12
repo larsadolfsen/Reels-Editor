@@ -1,5 +1,5 @@
 // Preview stage playback: plays a project's clips back-to-back in timeline order.
-// Exposes window.Preview.load(project). Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// Exposes window.Preview.{load, seek}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
 window.Preview = (() => {
   let clips = [];
   let activeIndex = -1;
