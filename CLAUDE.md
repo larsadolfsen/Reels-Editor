@@ -23,10 +23,12 @@ app/
   ffmpeg_cmd.py         # pure ffmpeg export-command builder: trim/scale/pad/concat + optional ASS burn
   transcribe.py          # planned (Task 10): faster-whisper wrapper -> CaptionWords
 static/
-  index.html         # editor page: top bar + 3-column main (MEDIA panel | 9:16 stage | TEXT OVERLAY style panel), per the north-star mockup layout
-  editor.js           # UI state + API calls + DOM wiring (thin); owns the client-side TextPreset stand-in (Task 8 will move it server-side)
-  preview.js            # 9:16 stage playback + text overlay compositing (thin)
+  index.html         # editor page: top bar + 3-column main (MEDIA panel | 9:16 stage + timeline strip | TEXT OVERLAY style panel), per the north-star mockup layout
+  editor.js           # UI state + API calls + DOM wiring (thin); owns the client-side TextPreset stand-in and the timeline-strip selection state (scrolls/focuses the relevant style-panel section, no separate panel)
+  preview.js            # 9:16 stage playback + text overlay compositing + timeline seek (thin)
+  timeline.js            # Timeline strip: ruler/playhead/VIDEO/TEXT/CAPTIONS rows, pure row-position math
   ui-components.js       # reusable presentational microcomponents (window.UI): buttonGroup() — single-select toggle-button row; numberField() — labeled number input with a unit suffix; colorSwatch() — small square color-picker swatch with a label beside it
+  seed.js                 # seeds a project with a sample caption line on first load so the CAPTIONS timeline row isn't empty (dev convenience; text block seeding removed — editor.js's ensureTextBlock() already creates a real, style-panel-backed one)
   css/
     tokens.css            # :root custom properties (colors, fonts, spacing, radius) + @font-face — single source of truth
     base.css               # reset + element defaults (body, button, input) on the tokens
@@ -34,6 +36,7 @@ static/
     components/
       panel.css                # left MEDIA panel + clip rows (thumbnail swatch + name/duration + trim fields)
       stage.css                 # 9:16 stage + transport controls + .text-block overlay styling
+      timeline.css              # timeline strip: ruler, playhead, row tracks, blocks
       button-group.css           # reusable .btn-group toggle-row + .icon-btn styling (used by ui-components.js)
       number-field.css            # custom up/down stepper for number inputs (native OS spin control is unstylable); used by ui-components.js
       style-panel.css            # right-hand contextual panel: caption placeholder + text overlay style controls, mockup-matched (mono-caps section labels, dividers, button-group align/position)
@@ -58,6 +61,8 @@ data/               # gitignored: projects/*.json, presets.json, exports/
 - `app/timeline.py` — `ordered`, `clip_duration`, `sequence_duration`, `locate` (timeline time -> clip + source-time); mirrored in `static/preview.js`.
 - `app/ffmpeg_cmd.py` — `build_export_cmd` (per-clip trim/scale/pad, concat, optional ASS burn-in), `escape_filter_path`.
 - `app/ass_render.py` — `render_ass(project, presets) -> str` (full ASS file: `[Script Info]`/`[V4+ Styles]`/`[Events]` for each text block), `ass_time(seconds) -> str`, `hex_to_ass(hex) -> str` (AABBGGRR). Text-block dialogue: `\pos` anchor, `\fad`+`\t` scale pop for `entrance="fade_pop"`. (`subheading`/`\N` merge dropped 2026-07-10 — one heading line per block.)
+- `static/timeline.js` — `render(project, timelineTime, selected, onSelect)` (ruler, playhead, clip/text/caption blocks), `groupWords(words, max)` (group caption words), `timeAtX(clips, rulerRect, clientX)` (timeline coordinate math). Depends on Preview (preview.js). Clicking a block doesn't open a separate panel — `editor.js`'s `onTimelineSelect` seeks/scrolls to the existing clip row or `#style-panel` section instead.
+- `static/seed.js` — `seedDefaults(project)`: seeds one sample caption line (only) when `project.captions` is null, so the CAPTIONS timeline row isn't empty on a fresh project. Does not seed a text block — `editor.js`'s `ensureTextBlock()`/`textPreset` already provide a real one.
 - `static/css/tokens.css` — design tokens (colors, fonts, spacing, radius) per `docs/superpowers/specs/2026-07-10-design-foundation-design.md`; every later screen builds on this.
 - `static/ui-components.js` — `window.UI.buttonGroup(container, options, activeValue, onSelect)`: renders a row of toggle buttons with `aria-pressed` state, exactly one active; returns a `setActive(value)` updater. Used for TEXT ALIGN and the two POSITION rows; reusable for any future single-select control (e.g. presets, when Task 8 adds them). `window.UI.numberField(container, {label, unit, value, step, min, max, onChange})`: renders a `.style-field`-styled labeled number input plus a custom up/down stepper (`.number-field-wrap`/`.number-field-stepper`; the native OS spin control turned out to be unstylable — confirmed via computed-style inspection — so it's hidden globally in base.css and replaced by this CSS-drawn one), wires typing and stepper clicks to `onChange(number)`, returns a `setValue(v)` updater. Used for START/END/WIDTH/OFFSET H/OFFSET V — one owner for that markup instead of copy-pasted `<label class="style-field">` blocks (a duplication that caused a real styling bug once, fixed by extracting this). `window.UI.colorSwatch(container, {label, value, onChange})`: renders a small square `.color-swatch` color input with a mixed-case `.color-swatch-label` beside it (one field per row — never shares a row with another control), wires picks to `onChange(hexString)`, returns a `setValue(hex)` updater. Used for Color/Outline/Box Color.
 - `static/css/components/button-group.css` — `.btn-group` (the toggle-row layout) + `.icon-btn` (small square icon buttons, used by the disabled caption-toolbar placeholder).

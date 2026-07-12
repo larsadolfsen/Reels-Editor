@@ -2,6 +2,7 @@
 // Exposes nothing (page script); persists project via PUT after every mutation.
 let project = null;
 let textPreset = null; // client-side TextPreset stand-in until Task 8 adds the presets API
+let selected = null; // currently selected timeline block; scrolls/highlights the relevant panel section
 const clipDurations = {}; // clip.id -> source duration (seconds), populated on add-clip
 const player = document.getElementById("player");
 
@@ -153,6 +154,33 @@ async function saveProject() {
   });
 }
 
+function renderTimeline() {
+  const t = parseFloat(document.getElementById("time").textContent) || 0;
+  Timeline.render(project, t, selected, onTimelineSelect);
+}
+
+function onTimelineSelect({ type, item, groupIndex }) {
+  selected = { type, item, groupIndex };
+  if (type === "video") {
+    const ordered = [...project.clips].sort((a, b) => a.order - b.order);
+    let start = 0;
+    for (const c of ordered) {
+      if (c.id === item.id) break;
+      start += c.out_point - c.in_point;
+    }
+    Preview.seek(start);
+    const idx = ordered.findIndex((c) => c.id === item.id);
+    document.querySelectorAll("#clip-list li")[idx]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } else if (type === "text") {
+    document.getElementById("style-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("text-heading").focus();
+  } else if (type === "caption") {
+    document.querySelector(".caption-preview-box").textContent = item.map((w) => w.text).join(" ");
+    document.getElementById("style-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  renderTimeline();
+}
+
 function renderClipList() {
   const list = document.getElementById("clip-list");
   list.innerHTML = "";
@@ -206,6 +234,7 @@ function renderClipList() {
       duration.textContent = `${t.in_point.toFixed(1)}s – ${t.out_point.toFixed(1)}s`;
       await saveProject();
       Preview.load(project);
+      renderTimeline();
     }
     inField.addEventListener("change", applyTrim);
     outField.addEventListener("change", applyTrim);
@@ -231,6 +260,7 @@ async function moveClip(a, b) {
   await saveProject();
   renderClipList();
   Preview.load(project);
+  renderTimeline();
 }
 
 async function addClip() {
@@ -257,6 +287,7 @@ async function addClip() {
   await saveProject();
   renderClipList();
   Preview.load(project);
+  renderTimeline();
 }
 
 document.getElementById("add-clip").addEventListener("click", addClip);
@@ -277,10 +308,22 @@ document.getElementById("export").addEventListener("click", exportProject);
 
 (async () => {
   project = await ensureProject();
+  const before = JSON.stringify(project);
+  seedDefaults(project);
+  if (JSON.stringify(project) !== before) await saveProject();
   document.getElementById("project-name").textContent = project.name;
   textPreset = loadTextPreset(project.id);
   computeXY();
   renderClipList();
   Preview.load(project);
   renderTextPanel();
+  renderTimeline();
 })();
+
+player.addEventListener("timeupdate", renderTimeline);
+
+document.getElementById("timeline-ruler").addEventListener("click", (e) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const t = Timeline.timeAtX(project.clips, rect, e.clientX);
+  Preview.seek(t);
+});

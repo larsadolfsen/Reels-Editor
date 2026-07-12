@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="/static/css/layout.css">
 <link rel="stylesheet" href="/static/css/components/panel.css">
 <link rel="stylesheet" href="/static/css/components/stage.css">
+<link rel="stylesheet" href="/static/css/components/timeline.css">
 <link rel="stylesheet" href="/static/css/components/button-group.css">
 <link rel="stylesheet" href="/static/css/components/number-field.css">
 <link rel="stylesheet" href="/static/css/components/style-panel.css">
@@ -112,7 +113,33 @@
       </div>
     </aside>
   </main>
+  <div id="timeline-strip">
+    <div id="timeline-labels">
+      <div class="row-label" id="ruler-label"></div>
+      <div class="row-label">TEXT</div>
+      <div class="row-label">CAPTIONS</div>
+      <div class="row-label">VIDEO</div>
+    </div>
+    <div id="timeline-scroll">
+      <div id="timeline-content">
+        <div id="playhead"></div>
+        <div id="timeline-ruler"></div>
+        <div class="timeline-row" data-row="text">
+          <div class="row-track" id="row-text"></div>
+        </div>
+        <div class="timeline-row" data-row="captions">
+          <div class="row-track" id="row-captions"></div>
+        </div>
+        <div class="timeline-row" data-row="video">
+          <div class="row-track" id="row-video"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <script src="/static/ui-components.js"></script>
-<script src="/static/preview.js"></script><script src="/static/editor.js"></script>
+<script src="/static/seed.js"></script>
+<script src="/static/preview.js"></script>
+<script src="/static/timeline.js"></script>
+<script src="/static/editor.js"></script>
 </body></html>
