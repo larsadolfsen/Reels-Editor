@@ -109,12 +109,11 @@ window.Preview = (() => {
   });
 
   document.getElementById("play").addEventListener("click", () => {
-    if (player.paused) player.play();
-    else if (activeIndex >= 0 && player.currentTime >= clips[activeIndex].out_point) {
-      playClipAt(0);
-    } else {
-      player.pause();
-    }
+    const atEnd = activeIndex >= 0 && activeIndex === clips.length - 1
+      && player.currentTime >= clips[activeIndex].out_point;
+    if (player.paused && atEnd) playClipAt(0);
+    else if (player.paused) player.play();
+    else player.pause();
   });
 
   function seek(t) {
