@@ -1,5 +1,5 @@
-/* App shell grid: top bar, left panel, stage area. */
-/* Exposes #app/#topbar/main layout only; component internals live in css/components/*. Depends on tokens.css. */
+/* App shell: top bar + three-column main (left panel, center video+timeline column, right panel). */
+/* Exposes #app/#topbar/main/#center-col layout only; component internals live in css/components/*. Depends on tokens.css. */
 #app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
 #topbar {
@@ -44,3 +44,11 @@
 #export:hover { background: #7C97B3; color: #12161A; border-color: transparent; }
 
 main { flex: 1; display: flex; min-height: 0; }
+
+#center-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}

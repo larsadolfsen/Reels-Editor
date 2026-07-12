@@ -1,4 +1,4 @@
-<!-- Editor page: 9:16 preview stage, clip list, controls. Logic in editor.js/preview.js. -->
+<!-- Editor page: three-column frame (media panel | video+timeline | style panel). Logic in editor.js/preview.js/timeline.js. -->
 <!doctype html><html data-theme="dark"><head><meta charset="utf-8"><title>Reels Editor</title>
 <link rel="stylesheet" href="/static/css/tokens.css">
 <link rel="stylesheet" href="/static/css/base.css">
@@ -32,11 +32,36 @@
       </div>
       <ol id="clip-list"></ol>
     </aside>
-    <section id="stage-wrap">
-      <div id="stage"><video id="player"></video><div id="overlay"></div></div>
-      <div id="transport"><button id="play">&#9654;</button><span id="time">0.0</span></div>
-      <div id="export-result"></div>
-    </section>
+    <div id="center-col">
+      <section id="stage-wrap">
+        <div id="stage"><video id="player"></video><div id="overlay"></div></div>
+        <div id="transport"><button id="play">&#9654;</button><span id="time">0.0</span></div>
+        <div id="export-result"></div>
+      </section>
+      <div id="timeline-strip">
+        <div id="timeline-labels">
+          <div class="row-label" id="ruler-label"></div>
+          <div class="row-label">TEXT</div>
+          <div class="row-label">CAPTIONS</div>
+          <div class="row-label">VIDEO</div>
+        </div>
+        <div id="timeline-scroll">
+          <div id="timeline-content">
+            <div id="playhead"></div>
+            <div id="timeline-ruler"></div>
+            <div class="timeline-row" data-row="text">
+              <div class="row-track" id="row-text"></div>
+            </div>
+            <div class="timeline-row" data-row="captions">
+              <div class="row-track" id="row-captions"></div>
+            </div>
+            <div class="timeline-row" data-row="video">
+              <div class="row-track" id="row-video"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <aside id="style-panel">
       <div class="caption-placeholder">
         <div class="style-group-label">CAPTIONS &middot; PREVIEW (COMING IN A LATER TASK)</div>
@@ -113,29 +138,6 @@
       </div>
     </aside>
   </main>
-  <div id="timeline-strip">
-    <div id="timeline-labels">
-      <div class="row-label" id="ruler-label"></div>
-      <div class="row-label">TEXT</div>
-      <div class="row-label">CAPTIONS</div>
-      <div class="row-label">VIDEO</div>
-    </div>
-    <div id="timeline-scroll">
-      <div id="timeline-content">
-        <div id="playhead"></div>
-        <div id="timeline-ruler"></div>
-        <div class="timeline-row" data-row="text">
-          <div class="row-track" id="row-text"></div>
-        </div>
-        <div class="timeline-row" data-row="captions">
-          <div class="row-track" id="row-captions"></div>
-        </div>
-        <div class="timeline-row" data-row="video">
-          <div class="row-track" id="row-video"></div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 <script src="/static/ui-components.js"></script>
 <script src="/static/seed.js"></script>

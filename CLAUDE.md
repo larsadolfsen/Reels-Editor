@@ -23,7 +23,7 @@ app/
   ffmpeg_cmd.py         # pure ffmpeg export-command builder: trim/scale/pad/concat + optional ASS burn
   transcribe.py          # planned (Task 10): faster-whisper wrapper -> CaptionWords
 static/
-  index.html         # editor page: top bar + 3-column main (MEDIA panel | 9:16 stage + timeline strip | TEXT OVERLAY style panel), per the north-star mockup layout
+  index.html         # editor page: top bar + 3-column main (MEDIA panel | center column: 9:16 stage filling height + timeline strip below it | TEXT OVERLAY style panel), per the north-star mockup layout
   editor.js           # UI state + API calls + DOM wiring (thin); owns the client-side TextPreset stand-in and the timeline-strip selection state (scrolls/focuses the relevant style-panel section, no separate panel)
   preview.js            # 9:16 stage playback + text overlay compositing + timeline seek (thin)
   timeline.js            # Timeline strip: ruler/playhead/VIDEO/TEXT/CAPTIONS rows, pure row-position math
@@ -32,10 +32,10 @@ static/
   css/
     tokens.css            # :root custom properties (colors, fonts, spacing, radius) + @font-face — single source of truth
     base.css               # reset + element defaults (body, button, input) on the tokens
-    layout.css               # app shell grid: top bar, left panel, stage area, right panel
+    layout.css               # app shell: top bar + 3-column main (left panel, #center-col, right panel); #center-col is a flex column holding the stage and timeline strip
     components/
       panel.css                # left MEDIA panel + clip rows (thumbnail swatch + name/duration + trim fields)
-      stage.css                 # 9:16 stage + transport controls + .text-block overlay styling
+      stage.css                 # 9:16 stage (height-driven via aspect-ratio, fills #stage-wrap's available height, capped to its width) + transport controls + .text-block overlay styling
       timeline.css              # timeline strip: ruler, playhead, row tracks, blocks
       button-group.css           # reusable .btn-group toggle-row + .icon-btn styling (used by ui-components.js)
       number-field.css            # custom up/down stepper for number inputs (native OS spin control is unstylable); used by ui-components.js
