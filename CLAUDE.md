@@ -23,10 +23,12 @@ app/
   ffmpeg_cmd.py         # pure ffmpeg export-command builder: trim/scale/pad/concat + optional ASS burn
   transcribe.py          # planned (Task 10): faster-whisper wrapper -> CaptionWords
 static/
-  index.html         # editor page: top bar (brand/project name/export) + media panel + 9:16 stage
-  editor.js           # UI state + API calls + DOM wiring (thin)
+  index.html         # editor page: top bar (brand/project name/export) + media panel + 9:16 stage + timeline strip + context panel
+  editor.js           # UI state + API calls + DOM wiring (thin); owns selection state, wires ContextPanel to timeline selection
   preview.js            # 9:16 stage playback (thin)
   timeline.js           # Timeline strip: ruler/playhead/VIDEO/TEXT/CAPTIONS rows, pure row-position math
+  context-panel.js      # Right-side contextual panel: renders selected block's editable fields (video trim, text heading/subheading/start/end, caption read-only)
+  seed.js                # seeds a project with sample clips/text/captions on first load (dev convenience)
   css/
     tokens.css            # :root custom properties (colors, fonts, spacing, radius) + @font-face — single source of truth
     base.css               # reset + element defaults (body, button, input) on the tokens
@@ -34,6 +36,8 @@ static/
     components/
       panel.css                # media/clip panel + clip rows
       stage.css                 # 9:16 stage + transport controls
+      timeline.css              # timeline strip: ruler, playhead, row tracks, blocks
+      context-panel.css         # right-side contextual panel styling
   fonts/                # vendored woff2: JetBrainsMono-Regular (variable 400-700), PublicSans-Regular (variable 400-700)
 tests/
   test_models.py
@@ -55,4 +59,6 @@ data/               # gitignored: projects/*.json, presets.json, exports/
 - `app/ffmpeg_cmd.py` — `build_export_cmd` (per-clip trim/scale/pad, concat, optional ASS burn-in), `escape_filter_path`.
 - `app/ass_render.py` — `render_ass(project, presets) -> str` (full ASS file: `[Script Info]`/`[V4+ Styles]`/`[Events]` for each text block), `ass_time(seconds) -> str`, `hex_to_ass(hex) -> str` (AABBGGRR). Text-block dialogue: `\pos` anchor, `\fad`+`\t` scale pop for `entrance="fade_pop"`, heading+subheading share one Dialogue line via `\N` (one entrance unit). Subheading font-size override was in the plan's sample code but conflicted with the plan's own test asserting a literal `heading\Nsubheading` substring — implemented to match the test; subheading renders at the block's base `size_px`, not 55%.
 - `static/timeline.js` — `render(project, timelineTime, selected, onSelect)` (ruler, playhead, clip/text/caption blocks), `groupWords(words, max)` (group caption words), `timeAtX(clips, rulerRect, clientX)` (timeline coordinate math). Depends on Preview (preview.js).
+- `static/context-panel.js` — `window.ContextPanel.show(selection, {onChange})` (renders VIDEO trim fields, TEXT heading/subheading/start/end fields, or read-only CAPTIONS text into `#context-panel`), `hide()`. Calls `clampTrim` (defined in `editor.js`, same page scope) for video trim edits.
+- `static/seed.js` — seeds a fresh project with sample clip/text-block/caption data so the editor screen never starts empty during development.
 - `static/css/tokens.css` — design tokens (colors, fonts, spacing, radius) per `docs/superpowers/specs/2026-07-10-design-foundation-design.md`; every later screen builds on this.

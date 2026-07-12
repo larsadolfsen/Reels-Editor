@@ -1,6 +1,7 @@
 // Editor state + API calls + DOM wiring. Thin — logic lives in app/*.py.
 // Exposes nothing (page script); persists project via PUT after every mutation.
 let project = null;
+let selected = null; // currently selected timeline block, shown in the context panel
 const clipDurations = {}; // clip.id -> source duration (seconds), populated on add-clip
 const player = document.getElementById("player");
 
@@ -37,7 +38,17 @@ async function saveProject() {
 
 function renderTimeline() {
   const t = parseFloat(document.getElementById("time").textContent) || 0;
-  Timeline.render(project, t, null, () => {});
+  Timeline.render(project, t, selected, onTimelineSelect);
+}
+
+function onTimelineSelect({ type, item, groupIndex }) {
+  if (type === "video") {
+    selected = { type, item, clipDuration: clipDurations[item.id] ?? item.out_point };
+  } else {
+    selected = { type, item, groupIndex };
+  }
+  ContextPanel.show(selected, { onChange: async () => { await saveProject(); renderTimeline(); Preview.load(project); } });
+  renderTimeline();
 }
 
 function renderClipList() {
@@ -61,35 +72,6 @@ function renderClipList() {
     li.appendChild(up);
     li.appendChild(down);
 
-    const dur = clipDurations[c.id] ?? c.out_point;
-    const inField = document.createElement("input");
-    inField.type = "number"; inField.step = "0.1"; inField.style.width = "5em";
-    inField.value = c.in_point.toFixed(1);
-    const outField = document.createElement("input");
-    outField.type = "number"; outField.step = "0.1"; outField.style.width = "5em";
-    outField.value = c.out_point.toFixed(1);
-
-    async function applyTrim() {
-      const t = clampTrim(parseFloat(inField.value), parseFloat(outField.value), dur);
-      c.in_point = t.in_point; c.out_point = t.out_point;
-      inField.value = t.in_point.toFixed(1); outField.value = t.out_point.toFixed(1);
-      await saveProject();
-      Preview.load(project);
-      renderTimeline();
-    }
-    inField.addEventListener("change", applyTrim);
-    outField.addEventListener("change", applyTrim);
-
-    const setIn = document.createElement("button");
-    setIn.textContent = "Set in";
-    setIn.addEventListener("click", () => { inField.value = player.currentTime.toFixed(1); applyTrim(); });
-    const setOut = document.createElement("button");
-    setOut.textContent = "Set out";
-    setOut.addEventListener("click", () => { outField.value = player.currentTime.toFixed(1); applyTrim(); });
-
-    const br = document.createElement("div");
-    br.append("in: ", inField, setIn, " out: ", outField, setOut);
-    li.appendChild(br);
     list.appendChild(li);
   });
 }
