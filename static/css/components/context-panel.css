@@ -1,0 +1,46 @@
+/* Right-side contextual panel: shows the selected timeline block's fields. */
+/* Exposes #context-panel and children only. Depends on tokens.css. */
+#context-panel {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border-soft);
+  padding: var(--space-3) 14px;
+  overflow-y: auto;
+}
+
+#context-panel[hidden] { display: none; }
+
+#context-panel h3 {
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin: 0 0 var(--space-3);
+}
+
+#context-panel label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+#context-panel input[type="text"],
+#context-panel input[type="number"] {
+  width: 100%;
+}
+
+#context-panel .field-row { display: flex; gap: var(--space-2); }
+#context-panel .field-row > div { flex: 1; }
+
+#context-panel .readonly-text {
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.5;
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 3px;
+  padding: var(--space-2);
+}
