@@ -141,6 +141,9 @@ document.getElementById("export").addEventListener("click", exportProject);
 
 (async () => {
   project = await ensureProject();
+  const before = JSON.stringify(project);
+  seedDefaults(project);
+  if (JSON.stringify(project) !== before) await saveProject();
   document.getElementById("project-name").textContent = project.name;
   renderClipList();
   Preview.load(project);
