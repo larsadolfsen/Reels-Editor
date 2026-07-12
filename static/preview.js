@@ -69,5 +69,17 @@ window.Preview = (() => {
     if (player.paused) player.play(); else player.pause();
   });
 
-  return { load, locate, sequenceDuration };
+  function seek(t) {
+    const loc = locate(clips, t);
+    if (!loc) return;
+    if (loc.clip !== clips[activeIndex]) {
+      activeIndex = clips.indexOf(loc.clip);
+      player.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
+      player.onloadedmetadata = () => { player.currentTime = loc.src; };
+    } else {
+      player.currentTime = loc.src;
+    }
+  }
+
+  return { load, locate, sequenceDuration, seek };
 })();

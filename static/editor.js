@@ -35,6 +35,11 @@ async function saveProject() {
   });
 }
 
+function renderTimeline() {
+  const t = parseFloat(document.getElementById("time").textContent) || 0;
+  Timeline.render(project, t, null, () => {});
+}
+
 function renderClipList() {
   const list = document.getElementById("clip-list");
   list.innerHTML = "";
@@ -70,6 +75,7 @@ function renderClipList() {
       inField.value = t.in_point.toFixed(1); outField.value = t.out_point.toFixed(1);
       await saveProject();
       Preview.load(project);
+      renderTimeline();
     }
     inField.addEventListener("change", applyTrim);
     outField.addEventListener("change", applyTrim);
@@ -95,6 +101,7 @@ async function moveClip(a, b) {
   await saveProject();
   renderClipList();
   Preview.load(project);
+  renderTimeline();
 }
 
 async function addClip() {
@@ -121,6 +128,7 @@ async function addClip() {
   await saveProject();
   renderClipList();
   Preview.load(project);
+  renderTimeline();
 }
 
 document.getElementById("add-clip").addEventListener("click", addClip);
@@ -147,4 +155,13 @@ document.getElementById("export").addEventListener("click", exportProject);
   document.getElementById("project-name").textContent = project.name;
   renderClipList();
   Preview.load(project);
+  renderTimeline();
 })();
+
+player.addEventListener("timeupdate", renderTimeline);
+
+document.getElementById("timeline-ruler").addEventListener("click", (e) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const t = Timeline.timeAtX(project.clips, rect, e.clientX);
+  Preview.seek(t);
+});
