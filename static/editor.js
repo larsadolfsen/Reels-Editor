@@ -59,10 +59,7 @@ async function updateTextBlock() {
 
 async function updateTextStyle() {
   textPreset.size_px = parseInt(document.getElementById("text-size").value, 10);
-  textPreset.color = document.getElementById("text-color").value;
-  textPreset.outline_color = document.getElementById("text-outline-color").value;
   textPreset.box = document.getElementById("text-box").checked;
-  textPreset.box_color = document.getElementById("text-box-color").value;
   saveTextPreset();
   renderTextPreview();
 }
@@ -71,10 +68,19 @@ function renderTextPanel() {
   const block = ensureTextBlock();
   document.getElementById("text-heading").value = block.heading;
   document.getElementById("text-size").value = textPreset.size_px;
-  document.getElementById("text-color").value = textPreset.color;
-  document.getElementById("text-outline-color").value = textPreset.outline_color;
   document.getElementById("text-box").checked = textPreset.box;
-  document.getElementById("text-box-color").value = textPreset.box_color;
+
+  UI.colorSwatch(document.getElementById("text-color-field"),
+    { label: "COLOR", value: textPreset.color,
+      onChange: (v) => { textPreset.color = v; saveTextPreset(); renderTextPreview(); } });
+
+  UI.colorSwatch(document.getElementById("text-outline-color-field"),
+    { label: "OUTLINE", value: textPreset.outline_color,
+      onChange: (v) => { textPreset.outline_color = v; saveTextPreset(); renderTextPreview(); } });
+
+  UI.colorSwatch(document.getElementById("text-box-color-field"),
+    { label: "BOX COLOR", value: textPreset.box_color,
+      onChange: (v) => { textPreset.box_color = v; saveTextPreset(); renderTextPreview(); } });
 
   UI.numberField(document.getElementById("text-start-field"),
     { label: "START", unit: "SEC", value: block.start, step: 0.1,
@@ -112,7 +118,7 @@ function renderTextPanel() {
 }
 
 document.getElementById("text-heading").addEventListener("input", updateTextBlock);
-["text-size", "text-color", "text-outline-color", "text-box", "text-box-color"].forEach((id) => {
+["text-size", "text-box"].forEach((id) => {
   document.getElementById(id).addEventListener("input", updateTextStyle);
 });
 

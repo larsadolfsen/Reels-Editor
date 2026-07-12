@@ -1,5 +1,5 @@
 // Small reusable presentational UI helpers, framework-free. Exposes window.UI.
-// Depends on the .btn-group/.style-field CSS components. No app state — callers own data.
+// Depends on the .btn-group/.style-field/.color-swatch CSS components. No app state — callers own data.
 window.UI = (() => {
   // Renders a row of toggle buttons into `container`; exactly one active at a time.
   // options: [{value, label}]; onSelect(value) fires on click. Returns a setActive(value) updater.
@@ -69,5 +69,22 @@ window.UI = (() => {
     return (v) => { input.value = v; };
   }
 
-  return { buttonGroup, numberField };
+  // Renders a labeled full-bleed color picker (see .color-swatch) into `container`.
+  // onChange(hexString) fires on pick. Returns a setValue(hex) updater.
+  function colorSwatch(container, { label, value, onChange }) {
+    container.innerHTML = "";
+    container.classList.add("style-field");
+    container.textContent = label;
+
+    const input = document.createElement("input");
+    input.type = "color";
+    input.className = "color-swatch";
+    input.value = value;
+    input.addEventListener("input", () => onChange(input.value));
+
+    container.appendChild(input);
+    return (v) => { input.value = v; };
+  }
+
+  return { buttonGroup, numberField, colorSwatch };
 })();
