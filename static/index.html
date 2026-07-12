@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="/static/css/components/button-group.css">
 <link rel="stylesheet" href="/static/css/components/number-field.css">
 <link rel="stylesheet" href="/static/css/components/style-panel.css">
+<link rel="stylesheet" href="/static/css/components/color-swatch.css">
 </head><body>
 <div id="app">
   <header id="topbar">
@@ -73,8 +74,8 @@
 
       <div class="style-group">
         <div class="style-row">
-          <label class="style-field">COLOR<input id="text-color" type="color"></label>
-          <label class="style-field">OUTLINE<input id="text-outline-color" type="color"></label>
+          <label class="style-field">COLOR<input id="text-color" class="color-swatch" type="color"></label>
+          <label class="style-field">OUTLINE<input id="text-outline-color" class="color-swatch" type="color"></label>
           <label id="text-outline-px-field"></label>
         </div>
       </div>
@@ -83,7 +84,7 @@
         <div class="style-row style-row-tight">
           <label class="style-checkbox"><input id="text-box" type="checkbox"> Box</label>
         </div>
-        <div class="style-field">BOX COLOR<input id="text-box-color" type="color"></div>
+        <div class="style-field">BOX COLOR<input id="text-box-color" class="color-swatch" type="color"></div>
       </div>
 
       <div class="style-divider"></div>
