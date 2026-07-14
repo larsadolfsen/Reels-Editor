@@ -72,6 +72,10 @@ window.Preview = (() => {
       div.style.top = (preset.y / 1920 * stageH) + "px";
       div.style.color = preset.color;
       div.style.textAlign = preset.align;
+      div.style.fontFamily = `"${preset.font}", sans-serif`;
+      div.style.fontWeight = preset.bold ? "700" : "400";
+      div.style.fontStyle = preset.italic ? "italic" : "normal";
+      div.style.textDecoration = preset.underline ? "underline" : "none";
 
       const sizePx = preset.size_px / 1920 * stageH;
       div.style.fontSize = sizePx + "px";
