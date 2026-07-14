@@ -1,6 +1,6 @@
 // Preview stage playback: plays a project's clips back-to-back in timeline order,
 // and composites the text-block overlay on top (renderText).
-// Exposes window.Preview.{load, seek, renderText, currentTimelineTime}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// Exposes window.Preview.{load, seek, renderText, currentTimelineTime, play, pause}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
 window.Preview = (() => {
   let clips = [];
   let activeIndex = -1;
@@ -112,13 +112,16 @@ window.Preview = (() => {
     }
   });
 
-  document.getElementById("play").addEventListener("click", () => {
+  function doPlay() {
     const atEnd = activeIndex >= 0 && activeIndex === clips.length - 1
       && player.currentTime >= clips[activeIndex].out_point;
-    if (player.paused && atEnd) playClipAt(0);
-    else if (player.paused) player.play();
-    else player.pause();
-  });
+    if (atEnd) playClipAt(0);
+    else player.play();
+  }
+  function doPause() { player.pause(); }
+
+  document.getElementById("play").addEventListener("click", doPlay);
+  document.getElementById("pause").addEventListener("click", doPause);
 
   function seek(t) {
     const loc = locate(clips, t);
@@ -132,5 +135,5 @@ window.Preview = (() => {
     }
   }
 
-  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: () => lastTimelineTime };
+  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: () => lastTimelineTime, play: doPlay, pause: doPause };
 })();

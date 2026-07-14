@@ -42,7 +42,21 @@
     <div id="center-col">
       <section id="stage-wrap">
         <div id="stage"><video id="player"></video><div id="overlay"></div></div>
-        <div id="transport"><button id="play">&#9654;</button><span id="time">0.0</span></div>
+        <div id="transport">
+          <button id="step-back" class="icon-btn" type="button" title="Step back 0.1s">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="19,4 19,20 8,12"/><rect x="4" y="4" width="2" height="16"/></svg>
+          </button>
+          <button id="pause" class="icon-btn" type="button" title="Pause">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+          <button id="play" class="icon-btn" type="button" title="Play">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+          </button>
+          <button id="step-forward" class="icon-btn" type="button" title="Step forward 0.1s">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5,4 16,12 5,20"/><rect x="18" y="4" width="2" height="16"/></svg>
+          </button>
+          <span id="time">0.0</span>
+        </div>
         <div id="export-result"></div>
       </section>
       <div id="timeline-strip">
