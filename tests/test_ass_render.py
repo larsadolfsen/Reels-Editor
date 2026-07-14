@@ -45,4 +45,3 @@ def test_multiline_heading_becomes_ass_hard_break():
     out = render_ass(p, {pr.id: pr})
     line = next(l for l in out.splitlines() if l.startswith("Dialogue:"))
     assert "LINE ONE\\NLINE TWO" in line
-    assert "\n" not in line.split("}}")[-1] if "}}" in line else True
