@@ -372,6 +372,7 @@ document.getElementById("export").addEventListener("click", exportProject);
   Preview.load(project);
   renderTextPanel();
   renderTimeline();
+  setTimeout(() => renderTextPreview(), 100);
 })();
 
 player.addEventListener("timeupdate", renderTimeline);

@@ -59,7 +59,11 @@ window.Preview = (() => {
     textPresets = presets;
     lastTimelineTime = timelineTime;
     overlay.innerHTML = "";
-    const stageW = stage.clientWidth, stageH = stage.clientHeight;
+    let stageW = overlay.clientWidth || stage.clientWidth;
+    let stageH = overlay.clientHeight || stage.clientHeight;
+    if ((stageW === 0 || stageH === 0) && stageW !== 0) {
+      stageH = stageW * 16 / 9;
+    }
     for (const block of (project.text_blocks || [])) {
       if (!block.heading) continue;
       if (!(block.start <= timelineTime && timelineTime < block.end)) continue;
@@ -111,6 +115,10 @@ window.Preview = (() => {
       }
     }
   });
+
+  new ResizeObserver(() => {
+    if (textProject) renderText(textProject, textPresets, lastTimelineTime);
+  }).observe(stage);
 
   document.getElementById("play").addEventListener("click", () => {
     const atEnd = activeIndex >= 0 && activeIndex === clips.length - 1
