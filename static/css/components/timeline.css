@@ -109,3 +109,13 @@
 }
 
 .timeline-block.selected { border-color: var(--accent); }
+
+/* VIDEO row: blocks reuse the .clip-thumb diagonal-hatch placeholder from the media
+   panel, filling the full row-track height. Distinct from the thin TEXT/CAPTIONS bars. */
+.timeline-row[data-row="video"] .timeline-block {
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+  background: repeating-linear-gradient(135deg, #26282B 0px, #26282B 6px, #2B2D30 6px, #2B2D30 12px);
+  border-color: var(--border-soft);
+}
