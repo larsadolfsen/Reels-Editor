@@ -20,8 +20,9 @@ const POSITION_ANCHORS_Y = { top: 288, mid: 960, btm: 1632 };
 function defaultTextPreset() {
   return {
     id: crypto.randomUUID().replaceAll("-", ""),
-    name: "Default", font: "Arial", size_px: 96, color: "#FFFFFF",
-    outline_color: "#000000", outline_px: 4, box: false, box_color: "#000000",
+    name: "Default", font: "Public Sans", size_px: 96, color: "#FFFFFF",
+    outline_color: "#000000", outline_px: 4, bold: false, italic: false, underline: false,
+    box: false, box_color: "#000000",
     align: "center", x: 540, y: 700, entrance: "fade_pop",
     posRow: "mid", posCol: "mid", offsetX: 0, offsetY: 0,
   };
@@ -65,7 +66,6 @@ async function updateTextBlock() {
 }
 
 async function updateTextStyle() {
-  textPreset.size_px = parseInt(document.getElementById("text-size").value, 10);
   textPreset.box = document.getElementById("text-box").checked;
   saveTextPreset();
   renderTextPreview();
@@ -74,8 +74,15 @@ async function updateTextStyle() {
 function renderTextPanel() {
   const block = ensureTextBlock();
   document.getElementById("text-heading").value = block.heading;
-  document.getElementById("text-size").value = textPreset.size_px;
+  document.getElementById("text-font").value = textPreset.font;
   document.getElementById("text-box").checked = textPreset.box;
+  document.getElementById("text-bold").setAttribute("aria-pressed", String(textPreset.bold));
+  document.getElementById("text-italic").setAttribute("aria-pressed", String(textPreset.italic));
+  document.getElementById("text-underline").setAttribute("aria-pressed", String(textPreset.underline));
+
+  UI.numberField(document.getElementById("text-size-field"),
+    { label: "SIZE", unit: "PX", value: textPreset.size_px, min: 24, max: 200,
+      onChange: (v) => { textPreset.size_px = v; saveTextPreset(); renderTextPreview(); } });
 
   UI.colorSwatch(document.getElementById("text-color-field"),
     { label: "Color", value: textPreset.color,
@@ -125,9 +132,26 @@ function renderTextPanel() {
 }
 
 document.getElementById("text-heading").addEventListener("input", updateTextBlock);
-["text-size", "text-box"].forEach((id) => {
-  document.getElementById(id).addEventListener("input", updateTextStyle);
+document.getElementById("text-box").addEventListener("input", updateTextStyle);
+
+document.getElementById("text-font").addEventListener("change", () => {
+  textPreset.font = document.getElementById("text-font").value;
+  saveTextPreset();
+  renderTextPreview();
 });
+
+function wireTextStyleToggle(id, prop) {
+  const btn = document.getElementById(id);
+  btn.addEventListener("click", () => {
+    textPreset[prop] = !textPreset[prop];
+    btn.setAttribute("aria-pressed", String(textPreset[prop]));
+    saveTextPreset();
+    renderTextPreview();
+  });
+}
+wireTextStyleToggle("text-bold", "bold");
+wireTextStyleToggle("text-italic", "italic");
+wireTextStyleToggle("text-underline", "underline");
 
 function clampTrim(inP, outP, dur) {
   inP = Math.max(0, Math.min(inP, dur));

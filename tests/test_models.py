@@ -15,3 +15,12 @@ def test_json_round_trip():
                 text_blocks=[TextBlockLayer(heading="H", preset_id="x", start=0, end=3)],
                 captions=CaptionTrack(words=[CaptionWord(text="hi", t_start=0.1, t_end=0.4)]))
     assert Project.model_validate_json(p.model_dump_json()) == p
+
+def test_text_preset_style_flags_default_false():
+    p = TextPreset(name="Pop")
+    assert (p.bold, p.italic, p.underline) == (False, False, False)
+    assert p.font == "Public Sans"
+
+def test_text_preset_style_flags_round_trip():
+    p = TextPreset(name="Pop", bold=True, italic=True, underline=True, font="JetBrains Mono")
+    assert TextPreset.model_validate_json(p.model_dump_json()) == p

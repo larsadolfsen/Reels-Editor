@@ -21,6 +21,9 @@
 }
 
 .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 28px;
   height: 28px;
   border-radius: 4px;
@@ -36,4 +39,10 @@
 .icon-btn:disabled:hover {
   color: var(--text-muted);
   border-color: var(--border);
+}
+
+.icon-btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--text);
+  background: rgba(108, 135, 163, 0.12);
 }

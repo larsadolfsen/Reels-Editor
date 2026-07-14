@@ -20,3 +20,28 @@ def test_entrance_none_has_no_fad():
     pr = TextPreset(name="Plain", entrance="none")
     p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
     assert "\\fad" not in render_ass(p, {pr.id: pr})
+
+def test_style_line_reflects_bold_italic_underline():
+    pr = TextPreset(name="Pop", bold=True, italic=True, underline=True)
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
+    out = render_ass(p, {pr.id: pr})
+    line = next(l for l in out.splitlines() if l.startswith("Style:"))
+    fields = line.split(",")
+    # Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,
+    #         Bold,Italic,Underline,StrikeOut,...
+    assert fields[7:10] == ["-1", "-1", "-1"]
+
+def test_style_line_defaults_no_bold_italic_underline():
+    pr = TextPreset(name="Plain")
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
+    out = render_ass(p, {pr.id: pr})
+    line = next(l for l in out.splitlines() if l.startswith("Style:"))
+    fields = line.split(",")
+    assert fields[7:10] == ["0", "0", "0"]
+
+def test_multiline_heading_becomes_ass_hard_break():
+    pr = TextPreset(name="Pop")
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="LINE ONE\nLINE TWO", preset_id=pr.id, start=0, end=2)])
+    out = render_ass(p, {pr.id: pr})
+    line = next(l for l in out.splitlines() if l.startswith("Dialogue:"))
+    assert "LINE ONE\\NLINE TWO" in line
