@@ -46,24 +46,43 @@
         <div id="export-result"></div>
       </section>
       <div id="timeline-strip">
-        <div id="timeline-labels">
-          <div class="row-label" id="ruler-label"></div>
-          <div class="row-label">TEXT</div>
-          <div class="row-label">CAPTIONS</div>
-          <div class="row-label">VIDEO</div>
+        <div id="timeline-toolbar">
+          <div id="zoom-controls">
+            <button id="zoom-out" class="zoom-btn" title="Zoom out">&ndash;</button>
+            <button id="zoom-in" class="zoom-btn" title="Zoom in">+</button>
+          </div>
+          <div class="toolbar-divider"></div>
+          <div class="toolbar-spacer"></div>
+          <div id="timeline-time"></div>
         </div>
-        <div id="timeline-scroll">
-          <div id="timeline-content">
-            <div id="playhead"></div>
-            <div id="timeline-ruler"></div>
-            <div class="timeline-row" data-row="text">
-              <div class="row-track" id="row-text"></div>
-            </div>
-            <div class="timeline-row" data-row="captions">
-              <div class="row-track" id="row-captions"></div>
-            </div>
-            <div class="timeline-row" data-row="video">
-              <div class="row-track" id="row-video"></div>
+        <button id="slice-btn" class="slice-btn" type="button" title="Slice (coming soon)">
+          <span class="slice-icon"></span>
+          <span>SLICE</span>
+        </button>
+        <div id="timeline-body">
+          <div id="timeline-labels">
+            <div class="row-label" id="ruler-label"></div>
+            <div class="row-label" id="label-text">TEXT</div>
+            <div class="row-label" id="label-captions">CAPTIONS</div>
+            <div class="row-label" id="label-video">VIDEO</div>
+            <div class="row-label" id="label-audio">AUDIO</div>
+          </div>
+          <div id="timeline-scroll">
+            <div id="timeline-content">
+              <div id="playhead"></div>
+              <div id="timeline-ruler"></div>
+              <div class="timeline-row" data-row="text">
+                <div class="row-track" id="row-text"></div>
+              </div>
+              <div class="timeline-row" data-row="captions">
+                <div class="row-track" id="row-captions"></div>
+              </div>
+              <div class="timeline-row" data-row="video">
+                <div class="row-track" id="row-video"></div>
+              </div>
+              <div class="timeline-row" data-row="audio">
+                <div class="row-track" id="row-audio"></div>
+              </div>
             </div>
           </div>
         </div>

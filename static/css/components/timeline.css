@@ -1,12 +1,88 @@
-/* Timeline strip: ruler, playhead, VIDEO/TEXT/CAPTIONS rows, full width below the main columns. */
+/* Timeline strip: toolbar (zoom + time readout), floating SLICE button (visual only,
+   tracks the playhead), ruler, and TEXT/CAPTIONS/VIDEO/AUDIO rows. */
 /* Exposes #timeline-strip and children only. Depends on tokens.css. */
 #timeline-strip {
+  position: relative;
   display: flex;
+  flex-direction: column;
   flex-shrink: 0;
-  height: 160px;
-  background: var(--surface);
+  height: 280px;
+  background: var(--bg-2);
   border-top: 1px solid var(--border-soft);
   font-family: var(--font-ui);
+}
+
+#timeline-toolbar {
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+#zoom-controls { display: flex; align-items: center; gap: var(--space-1); }
+
+.zoom-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  cursor: pointer;
+  width: 22px;
+  line-height: 1;
+}
+.zoom-btn:hover { color: var(--text); }
+
+.toolbar-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border-soft);
+}
+
+.toolbar-spacer { flex: 1; }
+
+#timeline-time {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-left: var(--space-2);
+}
+
+.slice-btn {
+  position: absolute;
+  top: 14px;
+  left: 88px;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #232427;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #B4B5B8;
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.slice-icon {
+  width: 11px;
+  height: 1px;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+#timeline-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
 }
 
 #timeline-labels {
@@ -21,10 +97,14 @@
 #ruler-label { height: 28px; }
 
 #timeline-labels .row-label {
-  height: 32px;
+  padding-left: 12px;
   display: flex;
   align-items: center;
 }
+#label-text { height: 36px; }
+#label-captions { height: 44px; }
+#label-video { height: 56px; }
+#label-audio { height: 40px; }
 
 #timeline-scroll {
   flex: 1;
@@ -50,6 +130,17 @@
   z-index: 2;
 }
 
+#playhead::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
 #timeline-ruler {
   position: relative;
   height: 20px;
@@ -69,30 +160,27 @@
 .timeline-row {
   display: flex;
   align-items: center;
-  height: 32px;
   border-top: 1px solid var(--border-soft);
 }
-
-.row-label {
-  padding-left: var(--space-2);
-  font-size: 10px;
-  letter-spacing: 0.03em;
-  color: var(--text-dim);
-}
+.timeline-row[data-row="text"] { height: 36px; }
+.timeline-row[data-row="captions"] { height: 44px; }
+.timeline-row[data-row="video"] { height: 56px; }
+.timeline-row[data-row="audio"] { height: 40px; }
 
 .row-track {
   position: relative;
   width: 100%;
-  height: 26px;
+  height: 100%;
+  padding: 5px 8px;
 }
 
 .timeline-block {
   position: absolute;
-  top: 2px;
-  height: 22px;
+  top: 5px;
+  bottom: 5px;
   border-radius: 3px;
-  border: 1px solid var(--border);
-  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  background: #202224;
   overflow: hidden;
   cursor: pointer;
   display: flex;
@@ -108,14 +196,36 @@
   text-overflow: ellipsis;
 }
 
-.timeline-block.selected { border-color: var(--accent); }
+.timeline-block.selected {
+  border-color: var(--accent);
+  background: rgba(108, 135, 163, 0.16);
+}
 
 /* VIDEO row: blocks reuse the .clip-thumb diagonal-hatch placeholder from the media
    panel, filling the full row-track height. Distinct from the thin TEXT/CAPTIONS bars. */
+.timeline-row[data-row="video"] .row-track { padding: 6px 8px; }
 .timeline-row[data-row="video"] .timeline-block {
   top: 0;
-  height: 100%;
+  bottom: 0;
   border-radius: 3px;
   background: repeating-linear-gradient(135deg, #26282B 0px, #26282B 6px, #2B2D30 6px, #2B2D30 12px);
   border-color: var(--border-soft);
+}
+.timeline-row[data-row="video"] .timeline-block span {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* AUDIO row: dummy static waveform placeholder (no audio track feature yet). */
+.timeline-row[data-row="audio"] .row-track {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 var(--space-2);
+}
+
+.waveform-bar {
+  width: 2px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 1px;
 }
