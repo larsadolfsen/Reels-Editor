@@ -13,15 +13,19 @@ def hex_to_ass(color: str) -> str:
 
 def _style(name: str, p: TextPreset) -> str:
     border = 3 if p.box else 1
+    bold = -1 if p.bold else 0
+    italic = -1 if p.italic else 0
+    underline = -1 if p.underline else 0
     return (f"Style: {name},{p.font},{p.size_px},{hex_to_ass(p.color)},{hex_to_ass(p.color)},"
             f"{hex_to_ass(p.outline_color if not p.box else p.box_color)},{hex_to_ass(p.box_color)},"
-            f"-1,0,0,0,100,100,0,0,{border},{p.outline_px},0,5,0,0,0,1")   # alignment 5 = center anchor, \pos places it
+            f"{bold},{italic},{underline},0,100,100,0,0,{border},{p.outline_px},0,5,0,0,0,1")   # alignment 5 = center anchor, \pos places it
 
 def _block_dialogue(b, p: TextPreset) -> str:
     fx = f"\\pos({p.x},{p.y})"
     if p.entrance == "fade_pop":
         fx += "\\fad(200,0)\\fscx80\\fscy80\\t(0,200,\\fscx100\\fscy100)"
-    return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]},,0,0,0,,{{{fx}}}{b.heading}"
+    text = b.heading.replace("\n", "\\N")
+    return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]},,0,0,0,,{{{fx}}}{text}"
 
 def render_ass(project: Project, presets: dict[str, TextPreset]) -> str:
     used = {b.preset_id: presets[b.preset_id] for b in project.text_blocks}
