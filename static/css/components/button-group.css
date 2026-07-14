@@ -37,3 +37,9 @@
   color: var(--text-muted);
   border-color: var(--border);
 }
+
+.icon-btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--text);
+  background: rgba(108, 135, 163, 0.12);
+}

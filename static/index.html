@@ -120,7 +120,7 @@
         <div class="style-panel-header">TEXT OVERLAY &middot; STYLE</div>
 
         <div class="style-group">
-          <input id="text-heading" placeholder="Heading">
+          <textarea id="text-heading" placeholder="Heading" rows="3"></textarea>
         </div>
 
         <div class="style-group-label">TIME</div>
@@ -135,7 +135,24 @@
 
         <div class="style-group-label">STYLE</div>
         <div class="style-group">
-          <div class="style-field">SIZE (PX)<input id="text-size" type="range" min="24" max="200"></div>
+          <div class="style-row">
+            <label class="style-field" id="text-font-field">
+              FONT
+              <select id="text-font">
+                <option value="Public Sans">Public Sans</option>
+                <option value="JetBrains Mono">JetBrains Mono</option>
+              </select>
+            </label>
+            <label id="text-size-field"></label>
+          </div>
+        </div>
+
+        <div class="style-group">
+          <div class="style-row">
+            <button class="icon-btn" id="text-bold" type="button" aria-pressed="false" title="Bold"><b>B</b></button>
+            <button class="icon-btn" id="text-italic" type="button" aria-pressed="false" title="Italic"><i>I</i></button>
+            <button class="icon-btn" id="text-underline" type="button" aria-pressed="false" title="Underline"><u>U</u></button>
+          </div>
         </div>
 
         <div class="style-group">
