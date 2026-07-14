@@ -16,11 +16,14 @@ class ClipLayer(BaseModel):
 class TextPreset(BaseModel):
     id: str = Field(default_factory=new_id)
     name: str
-    font: str = "Arial"
+    font: str = "Public Sans"
     size_px: int = 96
     color: str = "#FFFFFF"
     outline_color: str = "#000000"
     outline_px: int = 4
+    bold: bool = False
+    italic: bool = False
+    underline: bool = False
     box: bool = False
     box_color: str = "#000000"
     align: str = "center"          # left|center|right
