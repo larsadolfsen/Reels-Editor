@@ -43,14 +43,15 @@
       <section id="stage-wrap">
         <div id="stage"><video id="player"></video><div id="overlay"></div></div>
         <div id="transport">
+          <button id="restart" class="icon-btn" type="button" title="Restart from beginning">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
           <button id="step-back" class="icon-btn" type="button" title="Step back 0.1s">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="19,4 19,20 8,12"/><rect x="4" y="4" width="2" height="16"/></svg>
           </button>
-          <button id="pause" class="icon-btn" type="button" title="Pause">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-          </button>
-          <button id="play" class="icon-btn" type="button" title="Play">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+          <button id="play-pause" class="icon-btn" type="button" title="Play/Pause">
+            <svg class="icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+            <svg class="icon-pause" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" hidden><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
           </button>
           <button id="step-forward" class="icon-btn" type="button" title="Step forward 0.1s">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5,4 16,12 5,20"/><rect x="18" y="4" width="2" height="16"/></svg>

@@ -398,4 +398,5 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft") { e.preventDefault(); nudgeTime(-0.1); }
   else if (e.key === "ArrowRight") { e.preventDefault(); nudgeTime(0.1); }
   else if (e.key === "ArrowUp") { e.preventDefault(); if (player.paused) Preview.play(); else Preview.pause(); }
+  else if (e.key === "ArrowDown") { e.preventDefault(); Preview.restart(); }
 });
