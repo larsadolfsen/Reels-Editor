@@ -89,5 +89,19 @@ window.UI = (() => {
     return (v) => { input.value = v; };
   }
 
-  return { buttonGroup, numberField, colorSwatch };
+  // Wires an existing header <button> + body <div> pair (already in the DOM) into a collapsible
+  // section: toggles body.hidden and header's aria-expanded on click. Returns a setExpanded(bool) updater.
+  function accordion(header, body, { expanded = false } = {}) {
+    const apply = (isExpanded) => {
+      body.hidden = !isExpanded;
+      header.setAttribute("aria-expanded", String(isExpanded));
+    };
+    apply(expanded);
+    header.addEventListener("click", () => {
+      apply(header.getAttribute("aria-expanded") !== "true");
+    });
+    return (isExpanded) => apply(isExpanded);
+  }
+
+  return { buttonGroup, numberField, colorSwatch, accordion };
 })();
