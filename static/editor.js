@@ -345,6 +345,16 @@ document.getElementById("panel-collapse-toggle").addEventListener("click", () =>
   setPanelCollapsed(!document.getElementById("panel").classList.contains("collapsed"));
 });
 
+function setSafeZonesVisible(visible) {
+  document.getElementById("safe-zones").hidden = !visible;
+  document.getElementById("safe-zones-toggle").setAttribute("aria-pressed", String(visible));
+  localStorage.setItem("safeZonesVisible", visible ? "1" : "");
+}
+
+document.getElementById("safe-zones-toggle").addEventListener("click", () => {
+  setSafeZonesVisible(document.getElementById("safe-zones").hidden);
+});
+
 async function exportProject() {
   const resultEl = document.getElementById("export-result");
   resultEl.textContent = "Exporting...";
@@ -361,6 +371,7 @@ document.getElementById("export").addEventListener("click", exportProject);
 
 (async () => {
   setPanelCollapsed(localStorage.getItem("panelCollapsed") === "1");
+  setSafeZonesVisible(localStorage.getItem("safeZonesVisible") === "1");
   project = await ensureProject();
   const before = JSON.stringify(project);
   seedDefaults(project);
