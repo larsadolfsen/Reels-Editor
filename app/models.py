@@ -6,8 +6,14 @@ from pydantic import BaseModel, Field
 def new_id() -> str:
     return uuid4().hex
 
+class MediaItem(BaseModel):
+    id: str = Field(default_factory=new_id)
+    file_path: str
+    duration: float
+
 class ClipLayer(BaseModel):
     id: str = Field(default_factory=new_id)
+    media_id: str
     file_path: str
     in_point: float = 0.0   # seconds into source
     out_point: float        # seconds into source (exclusive end)
@@ -54,6 +60,7 @@ class Project(BaseModel):
     width: int = 1080
     height: int = 1920
     fps: int = 30
+    media_library: list[MediaItem] = []
     clips: list[ClipLayer] = []
     text_blocks: list[TextBlockLayer] = []
     captions: CaptionTrack | None = None
