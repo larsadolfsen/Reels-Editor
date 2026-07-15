@@ -140,14 +140,14 @@ window.Preview = (() => {
 
   // Icon swap driven by the video element's own play/pause events, so it stays correct
   // regardless of what triggered the state change (buttons, keyboard, end of clip).
-  // Uses setAttribute/removeAttribute rather than the `.hidden` property: SVGElement
-  // doesn't reflect `hidden` as an IDL property the way HTMLElement does, so the
-  // property assignment silently no-ops instead of toggling the attribute.
+  // Sets style.display directly rather than the `hidden` attribute: browsers don't
+  // reliably apply the UA `[hidden] { display: none }` rule to SVG elements, so both
+  // icons stayed visible at once when toggled via setAttribute("hidden", "").
   const iconPlay = document.querySelector("#play-pause .icon-play");
   const iconPause = document.querySelector("#play-pause .icon-pause");
   function setPlayingIcon(isPlaying) {
-    if (isPlaying) { iconPlay.setAttribute("hidden", ""); iconPause.removeAttribute("hidden"); }
-    else { iconPlay.removeAttribute("hidden"); iconPause.setAttribute("hidden", ""); }
+    iconPlay.style.display = isPlaying ? "none" : "";
+    iconPause.style.display = isPlaying ? "" : "none";
   }
   player.addEventListener("play", () => setPlayingIcon(true));
   player.addEventListener("pause", () => setPlayingIcon(false));

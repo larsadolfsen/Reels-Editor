@@ -33,8 +33,6 @@ static/
   timeline.js            # Timeline strip: ruler/playhead/VIDEO/TEXT/CAPTIONS rows, pure row-position math
   ui-components.js       # reusable presentational microcomponents (window.UI): buttonGroup() — single-select toggle-button row; numberField() — labeled number input with a unit suffix; colorSwatch() — small square color-picker swatch with a label beside it
   seed.js                 # seeds a project with a sample caption line on first load so the CAPTIONS timeline row isn't empty (dev convenience; text block seeding removed — editor.js's ensureTextBlock() already creates a real, style-panel-backed one)
-  img/
-    tiktok-safe-zones-overlay.png  # reference PNG (1080x1920, matches export canvas) of TikTok's UI chrome, used by the SAFE ZONES toggle
   css/
     tokens.css            # :root custom properties (colors, fonts, spacing, radius) + @font-face — single source of truth
     base.css               # reset + element defaults (body, button, input) on the tokens
@@ -47,7 +45,7 @@ static/
       number-field.css            # custom up/down stepper for number inputs (native OS spin control is unstylable); used by ui-components.js
       style-panel.css            # right-hand context panel: closed by default (#style-panel[hidden]), close button, three mutually-exclusive sections (#panel-video/#panel-text/#panel-captions) toggled via their own `hidden` attribute; mockup-matched (mono-caps section labels, dividers, button-group align/position)
       color-swatch.css            # .color-swatch-row/.color-swatch/.color-swatch-label: small square input[type=color] + mixed-case label beside it, one field per row
-      safe-zones.css               # #safe-zones (the TikTok-chrome reference PNG overlay, inset over #stage, toggled via [hidden]) + #safe-zones-toggle (top-right button, preview-only, persisted in localStorage)
+      safe-zones.css               # #safe-zones: 4 dashed `.safe-zone-*` guide boxes (top nav / right action rail / caption area / bottom nav, percentages matching TikTok's real UI chrome) overlaid on #stage, toggled via [hidden]; #safe-zones-toggle lives in #topbar (left of #export), preview-only, persisted in localStorage
   fonts/                # vendored woff2: JetBrainsMono-Regular (variable 400-700), PublicSans-Regular (variable 400-700)
 tests/
   test_models.py
