@@ -90,7 +90,7 @@ window.UI = (() => {
   }
 
   // Wires an existing header <button> + body <div> pair (already in the DOM) into a collapsible
-  // section: toggles body.hidden and header's aria-expanded on click. Returns a setExpanded(bool) updater.
+  // section: toggles body.hidden and header's aria-expanded on click. Returns a `(isExpanded)` updater function.
   function accordion(header, body, { expanded = false } = {}) {
     const apply = (isExpanded) => {
       body.hidden = !isExpanded;
