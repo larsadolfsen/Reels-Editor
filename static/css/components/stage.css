@@ -47,3 +47,7 @@
 }
 
 #export-result { font-family: var(--font-ui); font-size: 11px; color: var(--text-muted); }
+
+/* Hidden: still holds the current time as textContent (read by editor.js/timeline.js),
+   but the timeline toolbar's readout already shows the time, so it's not shown twice. */
+#time { display: none; }

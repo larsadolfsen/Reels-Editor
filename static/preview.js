@@ -1,10 +1,9 @@
 // Preview stage playback: plays a project's clips back-to-back in timeline order,
 // and composites the text-block overlay on top (renderText).
-// Exposes window.Preview.{load, seek, renderText, currentTimelineTime}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// Exposes window.Preview.{load, seek, renderText, currentTimelineTime, play, pause, restart}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
 window.Preview = (() => {
   let clips = [];
   let activeIndex = -1;
-  let lastTimelineTime = 0;
   let textProject = null;
   let textPresets = {};
   const player = document.getElementById("player");
@@ -57,7 +56,6 @@ window.Preview = (() => {
   function renderText(project, presets, timelineTime) {
     textProject = project;
     textPresets = presets;
-    lastTimelineTime = timelineTime;
     overlay.innerHTML = "";
     let stageW = overlay.clientWidth || stage.clientWidth;
     let stageH = overlay.clientHeight || stage.clientHeight;
@@ -97,12 +95,18 @@ window.Preview = (() => {
     }
   }
 
+  function computeTimelineTime() {
+    if (activeIndex < 0) return 0;
+    const c = clips[activeIndex];
+    let t = 0;
+    for (let i = 0; i < activeIndex; i++) t += clipDuration(clips[i]);
+    return t + (player.currentTime - c.in_point);
+  }
+
   player.addEventListener("timeupdate", () => {
     if (activeIndex < 0) return;
     const c = clips[activeIndex];
-    let timelineTime = 0;
-    for (let i = 0; i < activeIndex; i++) timelineTime += clipDuration(clips[i]);
-    timelineTime += player.currentTime - c.in_point;
+    const timelineTime = computeTimelineTime();
     timeEl.textContent = timelineTime.toFixed(1);
 
     if (textProject) renderText(textProject, textPresets, timelineTime);
@@ -117,16 +121,36 @@ window.Preview = (() => {
   });
 
   new ResizeObserver(() => {
-    if (textProject) renderText(textProject, textPresets, lastTimelineTime);
+    if (textProject) renderText(textProject, textPresets, computeTimelineTime());
   }).observe(stage);
 
-  document.getElementById("play").addEventListener("click", () => {
+  function doPlay() {
     const atEnd = activeIndex >= 0 && activeIndex === clips.length - 1
       && player.currentTime >= clips[activeIndex].out_point;
-    if (player.paused && atEnd) playClipAt(0);
-    else if (player.paused) player.play();
-    else player.pause();
+    if (atEnd) playClipAt(0);
+    else player.play();
+  }
+  function doPause() { player.pause(); }
+  function doRestart() { playClipAt(0); }
+
+  document.getElementById("play-pause").addEventListener("click", () => {
+    if (player.paused) doPlay(); else doPause();
   });
+  document.getElementById("restart").addEventListener("click", doRestart);
+
+  // Icon swap driven by the video element's own play/pause events, so it stays correct
+  // regardless of what triggered the state change (buttons, keyboard, end of clip).
+  // Uses setAttribute/removeAttribute rather than the `.hidden` property: SVGElement
+  // doesn't reflect `hidden` as an IDL property the way HTMLElement does, so the
+  // property assignment silently no-ops instead of toggling the attribute.
+  const iconPlay = document.querySelector("#play-pause .icon-play");
+  const iconPause = document.querySelector("#play-pause .icon-pause");
+  function setPlayingIcon(isPlaying) {
+    if (isPlaying) { iconPlay.setAttribute("hidden", ""); iconPause.removeAttribute("hidden"); }
+    else { iconPlay.removeAttribute("hidden"); iconPause.setAttribute("hidden", ""); }
+  }
+  player.addEventListener("play", () => setPlayingIcon(true));
+  player.addEventListener("pause", () => setPlayingIcon(false));
 
   function seek(t) {
     const loc = locate(clips, t);
@@ -140,5 +164,5 @@ window.Preview = (() => {
     }
   }
 
-  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: () => lastTimelineTime };
+  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart };
 })();

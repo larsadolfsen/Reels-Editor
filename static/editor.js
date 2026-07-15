@@ -377,8 +377,39 @@ document.getElementById("export").addEventListener("click", exportProject);
 
 player.addEventListener("timeupdate", renderTimeline);
 
+// Smooth playhead motion: timeupdate only fires a few times a second, which reads as
+// choppy. While playing, nudge just the playhead/SLICE button/time readout every
+// animation frame instead; the heavier renderTimeline() above still runs on each
+// timeupdate for correctness (track rebuilds, clip transitions).
+let tickRaf = null;
+function tickLoop() {
+  Timeline.tick(Preview.currentTimelineTime());
+  tickRaf = requestAnimationFrame(tickLoop);
+}
+player.addEventListener("play", () => { if (!tickRaf) tickRaf = requestAnimationFrame(tickLoop); });
+player.addEventListener("pause", () => { cancelAnimationFrame(tickRaf); tickRaf = null; });
+
 document.getElementById("timeline-ruler").addEventListener("click", (e) => {
   const rect = e.currentTarget.getBoundingClientRect();
   const t = Timeline.timeAtX(project.clips, rect, e.clientX);
   Preview.seek(t);
+});
+
+function nudgeTime(delta) {
+  const cur = parseFloat(document.getElementById("time").textContent) || 0;
+  const t = Math.max(0, cur + delta);
+  Preview.seek(t);
+  Timeline.render(project, t, selected, onTimelineSelect);
+}
+
+document.getElementById("step-back").addEventListener("click", () => nudgeTime(-0.1));
+document.getElementById("step-forward").addEventListener("click", () => nudgeTime(0.1));
+
+document.addEventListener("keydown", (e) => {
+  const el = document.activeElement;
+  if (["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName) || el.isContentEditable) return;
+  if (e.key === "ArrowLeft") { e.preventDefault(); nudgeTime(-0.1); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); nudgeTime(0.1); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); if (player.paused) Preview.play(); else Preview.pause(); }
+  else if (e.key === "ArrowDown") { e.preventDefault(); Preview.restart(); }
 });

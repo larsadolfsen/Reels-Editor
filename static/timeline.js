@@ -1,10 +1,16 @@
 // Timeline strip: pure row-position math (mirrors app/timeline.py) + rendering for
-// ruler/playhead/VIDEO/TEXT/CAPTIONS rows into the DOM ids defined in index.html.
+// toolbar (zoom/time readout)/ruler/playhead/SLICE button/TEXT/CAPTIONS/VIDEO/AUDIO rows
+// into the DOM ids defined in index.html. The AUDIO row is a static dummy waveform
+// (no audio-track feature yet); the SLICE button is visual only and tracks the playhead.
 // Fixed pixels-per-second scale (not stretched to container width) so content is always
 // readable; #timeline-scroll provides horizontal scroll when content exceeds the viewport.
-// Exposes window.Timeline.{render, groupWords, timeAtX}. Depends on Preview (preview.js).
+// Exposes window.Timeline.{render, groupWords, timeAtX, tick}. tick() is a cheap
+// playhead-only update driven every animation frame during playback (see editor.js),
+// so motion stays smooth between the heavier full render() calls. Depends on Preview (preview.js).
 window.Timeline = (() => {
   const PX_PER_SEC = 60;
+  const LABEL_WIDTH = 88;
+  let lastDuration = 1;
 
   function ordered(list) {
     return [...list].sort((a, b) => a.order - b.order);
@@ -27,6 +33,55 @@ window.Timeline = (() => {
     const m = Math.floor(s / 60);
     const sec = Math.floor(s % 60);
     return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  }
+
+  // mm:ss.s readout for the toolbar, e.g. "00:03.4".
+  function formatTimeDeci(s) {
+    const m = Math.floor(s / 60);
+    const rem = s - m * 60;
+    return `${String(m).padStart(2, "0")}:${rem.toFixed(1).padStart(4, "0")}`;
+  }
+
+  // Lightweight update for smooth, high-frequency playhead motion during playback:
+  // moves just the playhead/SLICE button/time readout, skipping the track rebuild that
+  // full render() does (rebuilding all block DOM nodes every animation frame would be
+  // wasteful and can visibly jank).
+  function tick(timelineTime) {
+    document.getElementById("playhead").style.left = `${timelineTime * PX_PER_SEC}px`;
+    document.getElementById("timeline-time").textContent =
+      `${formatTimeDeci(timelineTime)} / ${formatTimeDeci(lastDuration)}`;
+    updateSliceButton();
+  }
+
+  function updateSliceButton() {
+    const btn = document.getElementById("slice-btn");
+    const scrollEl = document.getElementById("timeline-scroll");
+    const playhead = document.getElementById("playhead");
+    const left = parseFloat(playhead.style.left) || 0;
+    btn.style.left = `${LABEL_WIDTH + left - scrollEl.scrollLeft}px`;
+  }
+
+  // Deterministic pseudo-random bar heights, regenerated only when the track width
+  // changes, so the placeholder doesn't reflow on every playback tick.
+  function renderAudioTrack(width) {
+    const track = document.getElementById("row-audio");
+    const rounded = String(Math.round(width));
+    if (track.dataset.width === rounded) return;
+    track.dataset.width = rounded;
+    track.innerHTML = "";
+    const pitch = 4;
+    const count = Math.max(1, Math.floor(width / pitch));
+    let seed = 1;
+    const rand = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    };
+    for (let i = 0; i < count; i++) {
+      const bar = document.createElement("div");
+      bar.className = "waveform-bar";
+      bar.style.height = `${4 + Math.round(rand() * 24)}px`;
+      track.appendChild(bar);
+    }
   }
 
   // Total duration must cover video, text blocks, and captions — not just the clip
@@ -76,11 +131,22 @@ window.Timeline = (() => {
   function render(project, timelineTime, selected, onSelect) {
     const clips = ordered(project.clips || []);
     const duration = totalDuration(project);
+    lastDuration = duration;
     const contentWidth = duration * PX_PER_SEC;
     document.getElementById("timeline-content").style.width = `${contentWidth}px`;
 
     renderRuler(duration);
     document.getElementById("playhead").style.left = `${timelineTime * PX_PER_SEC}px`;
+    document.getElementById("timeline-time").textContent =
+      `${formatTimeDeci(timelineTime)} / ${formatTimeDeci(duration)}`;
+    updateSliceButton();
+    renderAudioTrack(contentWidth);
+
+    const scrollEl = document.getElementById("timeline-scroll");
+    if (!scrollEl.dataset.sliceBound) {
+      scrollEl.dataset.sliceBound = "1";
+      scrollEl.addEventListener("scroll", updateSliceButton);
+    }
 
     const videoTrack = clearTrack("row-video");
     let acc = 0;
@@ -110,5 +176,5 @@ window.Timeline = (() => {
     });
   }
 
-  return { render, groupWords, timeAtX };
+  return { render, groupWords, timeAtX, tick };
 })();
