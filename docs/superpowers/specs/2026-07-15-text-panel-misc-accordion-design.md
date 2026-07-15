@@ -24,7 +24,7 @@ Before (current order): heading textarea → TIME group → divider → STYLE gr
 
 After:
 1. Heading textarea (`#text-heading`) — unchanged, stays first, always visible.
-2. `<button id="text-misc-header" class="accordion-header" type="button" aria-expanded="false">MISC <svg class="accordion-chevron">...</svg></button>`
+2. `<button id="text-misc-header" class="accordion-header" type="button" aria-expanded="false">MISC <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>` — the chevron is Lucide's `chevron-right` icon (per the new Conventions section in `CLAUDE.md`: icons are hand-inlined Lucide paths, no icon library/build step), pointing right by default and rotating 90° down when expanded.
 3. `<div id="text-misc-body" class="accordion-body" hidden>` wrapping, unmodified: TIME group, divider, STYLE group, color/outline/box groups, divider, TEXT ALIGN group, POSITION group.
 
 No IDs of the wrapped controls change, so no changes needed in `editor.js`'s existing `renderTextPanel`/`updateTextStyle`/etc. wiring — only one new call is added during panel setup:
