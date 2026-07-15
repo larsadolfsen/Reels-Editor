@@ -19,7 +19,7 @@ Local web editor that assembles 4–6 mp4 clips into one vertical reel with trim
 app/
   __init__.py       # package marker
   main.py           # FastAPI app wiring only (routes -> modules, static mount)
-  models.py         # Pydantic data model (Project, ClipLayer, TextPreset, TextBlockLayer, CaptionWord, CaptionTrack)
+  models.py         # Pydantic data model (Project, MediaItem, ClipLayer, TextPreset, TextBlockLayer, CaptionWord, CaptionTrack)
   store.py          # load/save project JSON + global presets.json
   media.py           # ffprobe command building/duration parsing, serves media files
   timeline.py         # pure sequence math (order, durations, timeline time -> clip+source time)
@@ -59,7 +59,7 @@ data/               # gitignored: projects/*.json, presets.json, exports/
 
 ## Inventory
 
-- `app/models.py` — Pydantic entities: `Project`, `ClipLayer`, `TextPreset` (`font` defaults to `"Public Sans"`, constrained by the UI to the 2 vendored families; `bold`/`italic`/`underline: bool = False`, whole-block formatting, added 2026-07-14), `TextBlockLayer` (single `heading` line, may contain `\n` for multiline — `subheading` was dropped 2026-07-10), `CaptionWord`, `CaptionTrack`, `new_id()`.
+- `app/models.py` — Pydantic entities: `MediaItem(id, file_path, duration)` — separates imported media library from timeline clip references; `Project` (`media_library: list[MediaItem] = []`, added 2026-07-15), `ClipLayer` (`media_id: str` required field linking to MediaItem, added 2026-07-15), `TextPreset` (`font` defaults to `"Public Sans"`, constrained by the UI to the 2 vendored families; `bold`/`italic`/`underline: bool = False`, whole-block formatting, added 2026-07-14), `TextBlockLayer` (single `heading` line, may contain `\n` for multiline — `subheading` was dropped 2026-07-10), `CaptionWord`, `CaptionTrack`, `new_id()`.
 - `app/store.py` — JSON persistence: `save_project`, `load_project`, `save_preset`, `load_presets`.
 - `app/media.py` — `ffprobe_cmd`, `probe_duration`, `media_response` (serves a local file via FastAPI, 404s if missing), `run_export` (runs an ffmpeg command, raises `RuntimeError` with stderr on failure), `pick_file` (opens a native OS file-open dialog, returns the chosen path or `None`). Both `probe_duration` and `run_export` resolve `ffprobe`/`ffmpeg` from a freshly-read registry PATH rather than the process's inherited env, so a PATH change (e.g. installing ffmpeg) takes effect without restarting every ancestor process.
 - `app/main.py` — FastAPI composition root: `GET /`, `POST/GET/PUT /api/projects[/{id}]`, `GET /api/probe`, `GET /api/pick-file`, `GET /media`, `POST /api/projects/{id}/export`, static mount at `/static`.
