@@ -35,7 +35,12 @@ function computeXY() {
 
 function loadTextPreset(projectId) {
   const raw = localStorage.getItem("textPreset:" + projectId);
-  return raw ? { ...defaultTextPreset(), ...JSON.parse(raw) } : defaultTextPreset();
+  if (!raw) return defaultTextPreset();
+  try {
+    return { ...defaultTextPreset(), ...JSON.parse(raw) };
+  } catch {
+    return defaultTextPreset();
+  }
 }
 
 function saveTextPreset() {
