@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="/static/css/components/number-field.css">
 <link rel="stylesheet" href="/static/css/components/style-panel.css">
 <link rel="stylesheet" href="/static/css/components/color-swatch.css">
+<link rel="stylesheet" href="/static/css/components/safe-zones.css">
 </head><body>
 <div id="app">
   <header id="topbar">
@@ -41,7 +42,12 @@
     </aside>
     <div id="center-col">
       <section id="stage-wrap">
-        <div id="stage"><video id="player"></video><div id="overlay"></div></div>
+        <div id="stage">
+          <video id="player"></video>
+          <div id="overlay"></div>
+          <img id="safe-zones" src="/static/img/tiktok-safe-zones-overlay.png" alt="" hidden>
+          <button id="safe-zones-toggle" class="icon-btn" type="button" aria-pressed="false" title="Toggle TikTok UI safe-zone guide">SAFE ZONES</button>
+        </div>
         <div id="transport"><button id="play">&#9654;</button><span id="time">0.0</span></div>
         <div id="export-result"></div>
       </section>

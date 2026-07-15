@@ -1,0 +1,34 @@
+/* Safe-zone reference overlay + its toggle button. */
+/* Exposes #safe-zones, #safe-zones-toggle. Depends on tokens.css, button-group.css (.icon-btn). */
+#safe-zones {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+#safe-zones[hidden] { display: none; }
+
+#safe-zones-toggle {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 10;
+  width: auto;
+  height: auto;
+  padding: 2px var(--space-2);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+#safe-zones-toggle[aria-pressed="true"] {
+  color: var(--text);
+  border-color: var(--accent);
+}
