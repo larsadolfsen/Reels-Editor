@@ -153,6 +153,8 @@ wireTextStyleToggle("text-bold", "bold");
 wireTextStyleToggle("text-italic", "italic");
 wireTextStyleToggle("text-underline", "underline");
 
+UI.accordion(document.getElementById("text-misc-header"), document.getElementById("text-misc-body"), { expanded: false });
+
 function clampTrim(inP, outP, dur) {
   inP = Math.max(0, Math.min(inP, dur));
   outP = Math.max(0, Math.min(outP, dur));
