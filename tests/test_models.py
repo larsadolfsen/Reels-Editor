@@ -1,17 +1,20 @@
 # Tests for app.models: entity construction, IDs, JSON round-trip.
-from app.models import Project, ClipLayer, TextPreset, TextBlockLayer, CaptionTrack, CaptionWord
+from app.models import Project, ClipLayer, MediaItem, TextPreset, TextBlockLayer, CaptionTrack, CaptionWord
 
 def test_ids_are_unique():
-    a, b = ClipLayer(file_path="a.mp4", in_point=0, out_point=5, order=0), ClipLayer(file_path="b.mp4", in_point=0, out_point=5, order=1)
+    a, b = ClipLayer(media_id="m1", file_path="a.mp4", in_point=0, out_point=5, order=0), ClipLayer(media_id="m2", file_path="b.mp4", in_point=0, out_point=5, order=1)
     assert a.id != b.id and len(a.id) == 32
 
 def test_project_defaults():
     p = Project(name="reel1")
     assert (p.width, p.height, p.fps) == (1080, 1920, 30)
     assert p.clips == [] and p.text_blocks == [] and p.captions is None
+    assert p.media_library == []
 
 def test_json_round_trip():
-    p = Project(name="reel1", clips=[ClipLayer(file_path="a.mp4", in_point=1.0, out_point=4.5, order=0)],
+    p = Project(name="reel1",
+                media_library=[MediaItem(id="m1", file_path="a.mp4", duration=4.5)],
+                clips=[ClipLayer(media_id="m1", file_path="a.mp4", in_point=1.0, out_point=4.5, order=0)],
                 text_blocks=[TextBlockLayer(heading="H", preset_id="x", start=0, end=3)],
                 captions=CaptionTrack(words=[CaptionWord(text="hi", t_start=0.1, t_end=0.4)]))
     assert Project.model_validate_json(p.model_dump_json()) == p
@@ -24,3 +27,8 @@ def test_text_preset_style_flags_default_false():
 def test_text_preset_style_flags_round_trip():
     p = TextPreset(name="Pop", bold=True, italic=True, underline=True, font="JetBrains Mono")
     assert TextPreset.model_validate_json(p.model_dump_json()) == p
+
+def test_media_item_round_trip():
+    m = MediaItem(file_path="clip.mp4", duration=13.2)
+    assert MediaItem.model_validate_json(m.model_dump_json()) == m
+    assert len(m.id) == 32
