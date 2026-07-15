@@ -22,7 +22,7 @@
 .color-swatch::-moz-color-swatch { border: none; border-radius: 6px; }
 
 .color-swatch:hover { border-color: var(--border-hover-color); border-width: var(--border-hover-width); }
-.color-swatch:focus-visible { outline: none; border-color: var(--accent-gold); }
+.color-swatch:focus-visible { outline: none; border-color: var(--border-active); }
 
 .color-swatch-label {
   font-family: var(--font-content);
