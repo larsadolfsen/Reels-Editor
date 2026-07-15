@@ -101,7 +101,7 @@
   display: flex;
   align-items: center;
 }
-#label-text { height: 36px; }
+#label-text { height: 44px; }
 #label-captions { height: 44px; }
 #label-video { height: 56px; }
 #label-audio { height: 40px; }
@@ -162,7 +162,7 @@
   align-items: center;
   border-top: 1px solid var(--border-soft);
 }
-.timeline-row[data-row="text"] { height: 36px; }
+.timeline-row[data-row="text"] { height: 44px; }
 .timeline-row[data-row="captions"] { height: 44px; }
 .timeline-row[data-row="video"] { height: 56px; }
 .timeline-row[data-row="audio"] { height: 40px; }

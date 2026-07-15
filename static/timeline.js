@@ -4,10 +4,13 @@
 // (no audio-track feature yet); the SLICE button is visual only and tracks the playhead.
 // Fixed pixels-per-second scale (not stretched to container width) so content is always
 // readable; #timeline-scroll provides horizontal scroll when content exceeds the viewport.
-// Exposes window.Timeline.{render, groupWords, timeAtX}. Depends on Preview (preview.js).
+// Exposes window.Timeline.{render, groupWords, timeAtX, tick}. tick() is a cheap
+// playhead-only update driven every animation frame during playback (see editor.js),
+// so motion stays smooth between the heavier full render() calls. Depends on Preview (preview.js).
 window.Timeline = (() => {
   const PX_PER_SEC = 60;
   const LABEL_WIDTH = 88;
+  let lastDuration = 1;
 
   function ordered(list) {
     return [...list].sort((a, b) => a.order - b.order);
@@ -37,6 +40,17 @@ window.Timeline = (() => {
     const m = Math.floor(s / 60);
     const rem = s - m * 60;
     return `${String(m).padStart(2, "0")}:${rem.toFixed(1).padStart(4, "0")}`;
+  }
+
+  // Lightweight update for smooth, high-frequency playhead motion during playback:
+  // moves just the playhead/SLICE button/time readout, skipping the track rebuild that
+  // full render() does (rebuilding all block DOM nodes every animation frame would be
+  // wasteful and can visibly jank).
+  function tick(timelineTime) {
+    document.getElementById("playhead").style.left = `${timelineTime * PX_PER_SEC}px`;
+    document.getElementById("timeline-time").textContent =
+      `${formatTimeDeci(timelineTime)} / ${formatTimeDeci(lastDuration)}`;
+    updateSliceButton();
   }
 
   function updateSliceButton() {
@@ -117,6 +131,7 @@ window.Timeline = (() => {
   function render(project, timelineTime, selected, onSelect) {
     const clips = ordered(project.clips || []);
     const duration = totalDuration(project);
+    lastDuration = duration;
     const contentWidth = duration * PX_PER_SEC;
     document.getElementById("timeline-content").style.width = `${contentWidth}px`;
 
@@ -161,5 +176,5 @@ window.Timeline = (() => {
     });
   }
 
-  return { render, groupWords, timeAtX };
+  return { render, groupWords, timeAtX, tick };
 })();

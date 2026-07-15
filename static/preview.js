@@ -4,7 +4,6 @@
 window.Preview = (() => {
   let clips = [];
   let activeIndex = -1;
-  let lastTimelineTime = 0;
   let textProject = null;
   let textPresets = {};
   const player = document.getElementById("player");
@@ -57,7 +56,6 @@ window.Preview = (() => {
   function renderText(project, presets, timelineTime) {
     textProject = project;
     textPresets = presets;
-    lastTimelineTime = timelineTime;
     overlay.innerHTML = "";
     const stageW = stage.clientWidth, stageH = stage.clientHeight;
     for (const block of (project.text_blocks || [])) {
@@ -93,12 +91,18 @@ window.Preview = (() => {
     }
   }
 
+  function computeTimelineTime() {
+    if (activeIndex < 0) return 0;
+    const c = clips[activeIndex];
+    let t = 0;
+    for (let i = 0; i < activeIndex; i++) t += clipDuration(clips[i]);
+    return t + (player.currentTime - c.in_point);
+  }
+
   player.addEventListener("timeupdate", () => {
     if (activeIndex < 0) return;
     const c = clips[activeIndex];
-    let timelineTime = 0;
-    for (let i = 0; i < activeIndex; i++) timelineTime += clipDuration(clips[i]);
-    timelineTime += player.currentTime - c.in_point;
+    const timelineTime = computeTimelineTime();
     timeEl.textContent = timelineTime.toFixed(1);
 
     if (textProject) renderText(textProject, textPresets, timelineTime);
@@ -128,10 +132,17 @@ window.Preview = (() => {
 
   // Icon swap driven by the video element's own play/pause events, so it stays correct
   // regardless of what triggered the state change (buttons, keyboard, end of clip).
+  // Uses setAttribute/removeAttribute rather than the `.hidden` property: SVGElement
+  // doesn't reflect `hidden` as an IDL property the way HTMLElement does, so the
+  // property assignment silently no-ops instead of toggling the attribute.
   const iconPlay = document.querySelector("#play-pause .icon-play");
   const iconPause = document.querySelector("#play-pause .icon-pause");
-  player.addEventListener("play", () => { iconPlay.hidden = true; iconPause.hidden = false; });
-  player.addEventListener("pause", () => { iconPlay.hidden = false; iconPause.hidden = true; });
+  function setPlayingIcon(isPlaying) {
+    if (isPlaying) { iconPlay.setAttribute("hidden", ""); iconPause.removeAttribute("hidden"); }
+    else { iconPlay.removeAttribute("hidden"); iconPause.setAttribute("hidden", ""); }
+  }
+  player.addEventListener("play", () => setPlayingIcon(true));
+  player.addEventListener("pause", () => setPlayingIcon(false));
 
   function seek(t) {
     const loc = locate(clips, t);
@@ -145,5 +156,5 @@ window.Preview = (() => {
     }
   }
 
-  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: () => lastTimelineTime, play: doPlay, pause: doPause, restart: doRestart };
+  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart };
 })();

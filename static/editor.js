@@ -376,6 +376,18 @@ document.getElementById("export").addEventListener("click", exportProject);
 
 player.addEventListener("timeupdate", renderTimeline);
 
+// Smooth playhead motion: timeupdate only fires a few times a second, which reads as
+// choppy. While playing, nudge just the playhead/SLICE button/time readout every
+// animation frame instead; the heavier renderTimeline() above still runs on each
+// timeupdate for correctness (track rebuilds, clip transitions).
+let tickRaf = null;
+function tickLoop() {
+  Timeline.tick(Preview.currentTimelineTime());
+  tickRaf = requestAnimationFrame(tickLoop);
+}
+player.addEventListener("play", () => { if (!tickRaf) tickRaf = requestAnimationFrame(tickLoop); });
+player.addEventListener("pause", () => { cancelAnimationFrame(tickRaf); tickRaf = null; });
+
 document.getElementById("timeline-ruler").addEventListener("click", (e) => {
   const rect = e.currentTarget.getBoundingClientRect();
   const t = Timeline.timeAtX(project.clips, rect, e.clientX);
