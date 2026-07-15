@@ -4,6 +4,7 @@ let project = null;
 let textPreset = null; // client-side TextPreset stand-in until Task 8 adds the presets API
 let selected = null; // currently selected clip/text/caption; drives which right-panel section (VIDEO/TEXT/CAPTIONS) is open
 const clipDurations = {}; // clip.id -> source duration (seconds), populated on add-clip
+let selectedMediaId = null; // MEDIA panel row highlight only — independent of timeline `selected`
 const player = document.getElementById("player");
 
 function formatClipDuration(seconds) {
@@ -206,7 +207,6 @@ function showPanel(type) {
 function closePanel() {
   document.getElementById("style-panel").hidden = true;
   selected = null;
-  renderClipList();
   renderTimeline();
 }
 
@@ -221,7 +221,6 @@ function renderVideoPanel(c) {
     c.in_point = t.in_point; c.out_point = t.out_point;
     await saveProject();
     Preview.load(project);
-    renderClipList();
     renderTimeline();
     renderVideoPanel(c);
   }
@@ -251,7 +250,6 @@ function selectClip(c) {
   selected = { type: "video", item: c };
   showPanel("video");
   renderVideoPanel(c);
-  renderClipList();
   renderTimeline();
 }
 
@@ -274,17 +272,15 @@ function onTimelineSelect({ type, item, groupIndex }) {
     document.querySelector(".caption-preview-box").textContent = item.map((w) => w.text).join(" ");
     showPanel("captions");
   }
-  renderClipList();
   renderTimeline();
 }
 
-function renderClipList() {
+function renderMediaList() {
   const list = document.getElementById("clip-list");
   list.innerHTML = "";
-  const ordered = [...project.clips].sort((a, b) => a.order - b.order);
-  ordered.forEach((c) => {
+  project.media_library.forEach((m) => {
     const li = document.createElement("li");
-    if (selected && selected.type === "video" && selected.item.id === c.id) {
+    if (selectedMediaId === m.id) {
       li.classList.add("selected");
     }
 
@@ -296,15 +292,18 @@ function renderClipList() {
     info.className = "clip-info";
     const name = document.createElement("span");
     name.className = "clip-name";
-    name.textContent = c.file_path.split(/[\\/]/).pop();
+    name.textContent = m.file_path.split(/[\\/]/).pop();
     const duration = document.createElement("span");
     duration.className = "clip-duration";
-    duration.textContent = formatClipDuration(c.out_point - c.in_point);
+    duration.textContent = formatClipDuration(m.duration);
     info.appendChild(name);
     info.appendChild(duration);
     li.appendChild(info);
 
-    li.addEventListener("click", () => selectClip(c));
+    li.addEventListener("click", () => {
+      selectedMediaId = selectedMediaId === m.id ? null : m.id;
+      renderMediaList();
+    });
     list.appendChild(li);
   });
 }
@@ -314,7 +313,6 @@ async function moveClip(a, b) {
   a.order = b.order;
   b.order = t;
   await saveProject();
-  renderClipList();
   Preview.load(project);
   renderTimeline();
 }
@@ -326,17 +324,21 @@ async function addClip() {
   const res = await fetch(`/api/probe?path=${encodeURIComponent(path)}`);
   if (!res.ok) { alert("probe failed"); return; }
   const { duration } = await res.json();
+  const mediaId = crypto.randomUUID().replaceAll("-", "");
+  project.media_library.push({ id: mediaId, file_path: path, duration });
+
   const id = crypto.randomUUID().replaceAll("-", "");
   clipDurations[id] = duration;
   project.clips.push({
     id,
+    media_id: mediaId,
     file_path: path,
     in_point: 0,
     out_point: duration,
     order: project.clips.length,
   });
   await saveProject();
-  renderClipList();
+  renderMediaList();
   Preview.load(project);
   renderTimeline();
 }
@@ -386,7 +388,7 @@ document.getElementById("export").addEventListener("click", exportProject);
   document.getElementById("project-name").textContent = project.name;
   textPreset = loadTextPreset(project.id);
   computeXY();
-  renderClipList();
+  renderMediaList();
   Preview.load(project);
   renderTextPanel();
   renderTimeline();
