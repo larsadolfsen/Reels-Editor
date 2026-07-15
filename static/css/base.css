@@ -27,7 +27,7 @@ button {
 button:hover { color: var(--text); border-color: var(--border-hover-color); border-width: var(--border-hover-width); }
 button:disabled { cursor: default; opacity: 0.4; }
 
-input {
+input, textarea {
   font-family: var(--font-content);
   font-size: 1rem;
   background: var(--bg-2);
@@ -37,9 +37,9 @@ input {
   padding: var(--space-1) var(--space-2);
 }
 
-input:focus, select:focus {
+input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: var(--accent-gold);
+  border-color: var(--border-active);
 }
 
 input[type="number"] { -moz-appearance: textfield; }

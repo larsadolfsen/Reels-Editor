@@ -23,6 +23,7 @@
     <div id="topbar-divider"></div>
     <div id="project-name"></div>
     <div id="topbar-spacer"></div>
+    <button id="safe-zones-toggle" type="button" aria-pressed="false" title="Toggle TikTok UI safe-zone guide">SAFE ZONES</button>
     <button id="export">EXPORT &middot; 1080&times;1920</button>
   </header>
   <main>
@@ -46,8 +47,12 @@
         <div id="stage">
           <video id="player"></video>
           <div id="overlay"></div>
-          <img id="safe-zones" src="/static/img/tiktok-safe-zones-overlay.png" alt="" hidden>
-          <button id="safe-zones-toggle" type="button" aria-pressed="false" title="Toggle TikTok UI safe-zone guide">SAFE ZONES</button>
+          <div id="safe-zones" hidden>
+            <div class="safe-zone safe-zone-top"><span>FOLLOWING / FOR YOU</span></div>
+            <div class="safe-zone safe-zone-right"><span>LIKE &middot; COMMENT &middot; SAVE &middot; SHARE</span></div>
+            <div class="safe-zone safe-zone-caption"><span>USERNAME / CAPTION / SOUND</span></div>
+            <div class="safe-zone safe-zone-nav"><span>HOME / DISCOVER / INBOX / PROFILE</span></div>
+          </div>
         </div>
         <div id="transport">
           <button id="restart" class="icon-btn" type="button" title="Restart from beginning">
