@@ -63,6 +63,7 @@
   background: var(--bg-2);
   border: 1px solid var(--border-soft);
   cursor: pointer;
+  height: 52px;
 }
 
 #clip-list li:hover { border-color: var(--border-hover-color); }
