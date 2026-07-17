@@ -1,0 +1,27 @@
+/* Drag-resize handles overlaid on a selected stage element: 4 corners + 4 edge midpoints. */
+/* Exposes .resize-handles/.resize-handle/.resize-handle-{n,s,e,w,ne,nw,se,sw}. Depends on tokens.css. */
+.resize-handles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px;
+  background: var(--accent);
+  border: 1px solid var(--on-accent);
+  border-radius: 2px;
+  pointer-events: auto;
+}
+
+.resize-handle-n  { top: 0;   left: 50%; cursor: ns-resize; }
+.resize-handle-s  { top: 100%; left: 50%; cursor: ns-resize; }
+.resize-handle-e  { top: 50%; left: 100%; cursor: ew-resize; }
+.resize-handle-w  { top: 50%; left: 0;    cursor: ew-resize; }
+.resize-handle-ne { top: 0;   left: 100%; cursor: nesw-resize; }
+.resize-handle-nw { top: 0;   left: 0;    cursor: nwse-resize; }
+.resize-handle-se { top: 100%; left: 100%; cursor: nwse-resize; }
+.resize-handle-sw { top: 100%; left: 0;    cursor: nesw-resize; }
