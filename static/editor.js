@@ -529,6 +529,26 @@ document.getElementById("timeline-ruler").addEventListener("click", (e) => {
   Preview.seek(t);
 });
 
+// Dragging the grip-vertical handle live-scrubs the playhead, same seek as a ruler click
+// but re-invoked continuously; Timeline.tick keeps the handle box anchored during the drag.
+document.getElementById("playhead-grip").addEventListener("mousedown", (e) => {
+  e.preventDefault();
+  const seekFromEvent = (clientX) => {
+    const rect = document.getElementById("timeline-ruler").getBoundingClientRect();
+    const t = Timeline.timeAtX(project.clips, rect, clientX);
+    Preview.seek(t);
+    Timeline.tick(Preview.currentTimelineTime());
+  };
+  seekFromEvent(e.clientX);
+  const onMouseMove = (moveEvent) => seekFromEvent(moveEvent.clientX);
+  const onMouseUp = () => {
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+  };
+  document.addEventListener("mousemove", onMouseMove);
+  document.addEventListener("mouseup", onMouseUp);
+});
+
 function nudgeTime(delta) {
   const cur = parseFloat(document.getElementById("time").textContent) || 0;
   const t = Math.max(0, cur + delta);
