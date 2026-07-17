@@ -160,7 +160,7 @@ wireTextStyleToggle("text-italic", "italic");
 wireTextStyleToggle("text-underline", "underline");
 
 UI.accordion(document.getElementById("text-font-header"), document.getElementById("text-font-body"), { expanded: false });
-UI.accordion(document.getElementById("text-misc-header"), document.getElementById("text-misc-body"), { expanded: false });
+UI.accordionSection(document.getElementById("text-misc-accordion"), document.getElementById("text-misc-body"), { title: "MISC", expanded: false });
 
 function clampTrim(inP, outP, dur) {
   inP = Math.max(0, Math.min(inP, dur));
