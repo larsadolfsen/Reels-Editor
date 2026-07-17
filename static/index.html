@@ -34,19 +34,7 @@
   </header>
   <main>
     <aside id="panel">
-      <div class="panel-header">
-        <span class="panel-title">MEDIA</span>
-        <button id="panel-collapse-toggle" class="icon-btn" title="Collapse panel">
-          <svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="0.5" y="0.5" width="13" height="11" rx="1.5" stroke="currentColor"/>
-            <line x1="5" y1="0.5" x2="5" y2="11.5" stroke="currentColor"/>
-          </svg>
-        </button>
-      </div>
-      <div id="panel-add">
-        <button id="add-clip"><span class="icon">+</span><span class="label">IMPORT VIDEO</span></button>
-      </div>
-      <ol id="clip-list"></ol>
+      <div id="panel-nav"></div>
     </aside>
     <div id="center-col">
       <section id="stage-wrap">
@@ -123,6 +111,14 @@
     </div>
     <aside id="style-panel" hidden>
       <button id="style-panel-close" class="icon-btn" title="Close">&times;</button>
+
+      <div id="panel-files" class="context-panel" hidden>
+        <div class="style-panel-header">FILES</div>
+        <div id="panel-files-add">
+          <button id="add-clip"><span class="icon">+</span><span class="label">IMPORT VIDEO</span></button>
+        </div>
+        <ol id="clip-list"></ol>
+      </div>
 
       <div id="panel-video" class="context-panel" hidden>
         <div class="style-panel-header">VIDEO</div>

@@ -199,7 +199,7 @@ function renderTimeline() {
 
 function showPanel(type) {
   document.getElementById("style-panel").hidden = false;
-  ["video", "text", "captions"].forEach((t) => {
+  ["files", "video", "text", "captions"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;
   });
 }
@@ -308,6 +308,47 @@ function renderMediaList() {
   });
 }
 
+const PANEL_NAV_ITEMS = [
+  {
+    value: "files",
+    label: "FILES",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`,
+  },
+  {
+    value: "text",
+    label: "TEXT",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><path d="M9 20h6"/></svg>`,
+  },
+  {
+    value: "captions",
+    label: "CAPTIONS",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 9.17a3 3 0 1 0 0 5.66"/><path d="M17 9.17a3 3 0 1 0 0 5.66"/><rect x="2" y="5" width="20" height="14" rx="2"/></svg>`,
+  },
+];
+
+function openFilesPanel() {
+  selected = { type: "files" };
+  showPanel("files");
+  renderTimeline();
+}
+
+function openTextPanel() {
+  selected = { type: "text" };
+  showPanel("text");
+  document.getElementById("text-heading").focus();
+  renderTimeline();
+}
+
+function openCaptionsPanel() {
+  selected = { type: "captions" };
+  showPanel("captions");
+  renderTimeline();
+}
+
+const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel };
+
+UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (value) => PANEL_NAV_HANDLERS[value]());
+
 async function moveClip(a, b) {
   const t = a.order;
   a.order = b.order;
@@ -349,15 +390,6 @@ UI.button(document.getElementById("theme-toggle"), { variant: "icon" });
 UI.button(document.getElementById("safe-zones-toggle"), { variant: "outline" });
 UI.button(document.getElementById("export"), { variant: "accent" });
 
-function setPanelCollapsed(collapsed) {
-  document.getElementById("panel").classList.toggle("collapsed", collapsed);
-  localStorage.setItem("panelCollapsed", collapsed ? "1" : "");
-}
-
-document.getElementById("panel-collapse-toggle").addEventListener("click", () => {
-  setPanelCollapsed(!document.getElementById("panel").classList.contains("collapsed"));
-});
-
 function setSafeZonesVisible(visible) {
   document.getElementById("safe-zones").hidden = !visible;
   document.getElementById("safe-zones-toggle").setAttribute("aria-pressed", String(visible));
@@ -395,7 +427,6 @@ async function exportProject() {
 document.getElementById("export").addEventListener("click", exportProject);
 
 (async () => {
-  setPanelCollapsed(localStorage.getItem("panelCollapsed") === "1");
   setSafeZonesVisible(localStorage.getItem("safeZonesVisible") === "1");
   const storedTheme = localStorage.getItem("theme");
   setTheme(storedTheme || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
