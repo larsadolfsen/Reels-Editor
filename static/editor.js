@@ -26,7 +26,9 @@ function defaultTextPreset(id) {
     id,
     name: "Default", font: "Public Sans", size_px: 96, color: "#FFFFFF",
     outline_color: "#000000", outline_px: 4, bold: false, italic: false, underline: false,
-    box: false, box_color: "#000000",
+    box_width_mode: "fit", box_height_mode: "fit", box_width: 0, box_height: 0,
+    box_background: false, box_background_color: "#000000",
+    box_border_width: 0, box_border_color: "#FFFFFF", box_border_radius: 0,
     align: "center", x: 540, y: 700, entrance: "fade_pop",
     pos_row: "mid", pos_col: "mid", offset_x: 0, offset_y: 0,
   };
@@ -70,13 +72,6 @@ async function updateTextBlock() {
   renderTextPreview();
 }
 
-async function updateTextStyle() {
-  const preset = ensureTextPreset(ensureTextBlock().preset_id);
-  preset.box = document.getElementById("text-box").checked;
-  await saveProject();
-  renderTextPreview();
-}
-
 function renderTextPanel() {
   document.getElementById("panel-text-font").hidden = true;
   document.getElementById("panel-text-main").hidden = false;
@@ -85,7 +80,7 @@ function renderTextPanel() {
   const preset = ensureTextPreset(block.preset_id);
   document.getElementById("text-heading").value = block.heading;
   renderFontRow();
-  document.getElementById("text-box").checked = preset.box;
+  renderBoxPanel();
   document.getElementById("text-bold").setAttribute("aria-pressed", String(preset.bold));
   document.getElementById("text-italic").setAttribute("aria-pressed", String(preset.italic));
   document.getElementById("text-underline").setAttribute("aria-pressed", String(preset.underline));
@@ -101,10 +96,6 @@ function renderTextPanel() {
   UI.colorSwatch(document.getElementById("text-outline-color-field"),
     { label: "Outline", value: preset.outline_color,
       onChange: (v) => { preset.outline_color = v; saveProject(); renderTextPreview(); } });
-
-  UI.colorSwatch(document.getElementById("text-box-color-field"),
-    { label: "Box Color", value: preset.box_color,
-      onChange: (v) => { preset.box_color = v; saveProject(); renderTextPreview(); } });
 
   UI.numberField(document.getElementById("text-start-field"),
     { label: "START", unit: "SEC", value: block.start, step: 0.1,
@@ -139,10 +130,83 @@ function renderTextPanel() {
     preset.pos_col, (value) => { preset.pos_col = value; computeXY(preset); saveProject(); renderTextPreview(); });
 
   renderTextPreview();
+
+  Preview.setSelectedTextBlock(block.id, {
+    onResize: (size) => handleBoxResize(preset, size),
+    onDragEnd: (size) => handleBoxResizeEnd(preset, size),
+  });
+}
+
+function renderBoxPanel() {
+  const preset = ensureTextPreset(ensureTextBlock().preset_id);
+
+  UI.buttonGroup(document.getElementById("text-box-width-mode-group"),
+    [{ value: "fit", label: "FIT" }, { value: "fixed", label: "FIXED" }],
+    preset.box_width_mode,
+    (value) => { preset.box_width_mode = value; saveProject(); renderTextPreview(); renderBoxPanel(); });
+
+  document.getElementById("text-box-width-field").hidden = preset.box_width_mode !== "fixed";
+  UI.numberField(document.getElementById("text-box-width-field"),
+    { label: "WIDTH", unit: "PX", value: preset.box_width, min: 1, max: 1080,
+      onChange: (v) => { preset.box_width = v; saveProject(); renderTextPreview(); } });
+
+  UI.buttonGroup(document.getElementById("text-box-height-mode-group"),
+    [{ value: "fit", label: "FIT" }, { value: "fixed", label: "FIXED" }],
+    preset.box_height_mode,
+    (value) => { preset.box_height_mode = value; saveProject(); renderTextPreview(); renderBoxPanel(); });
+
+  document.getElementById("text-box-height-field").hidden = preset.box_height_mode !== "fixed";
+  UI.numberField(document.getElementById("text-box-height-field"),
+    { label: "HEIGHT", unit: "PX", value: preset.box_height, min: 1, max: 1920,
+      onChange: (v) => { preset.box_height = v; saveProject(); renderTextPreview(); } });
+
+  document.getElementById("text-box-background").checked = preset.box_background;
+  document.getElementById("text-box-background").onchange = () => {
+    preset.box_background = document.getElementById("text-box-background").checked;
+    saveProject(); renderTextPreview();
+  };
+
+  UI.colorSwatch(document.getElementById("text-box-background-color-field"),
+    { label: "Background", value: preset.box_background_color,
+      onChange: (v) => { preset.box_background_color = v; saveProject(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-box-border-width-field"),
+    { label: "BORDER", unit: "PX", value: preset.box_border_width, min: 0, max: 40,
+      onChange: (v) => { preset.box_border_width = v; saveProject(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-box-border-radius-field"),
+    { label: "RADIUS", unit: "PX", value: preset.box_border_radius, min: 0, max: 200,
+      onChange: (v) => { preset.box_border_radius = v; saveProject(); renderTextPreview(); } });
+
+  UI.colorSwatch(document.getElementById("text-box-border-color-field"),
+    { label: "Border Color", value: preset.box_border_color,
+      onChange: (v) => { preset.box_border_color = v; saveProject(); renderTextPreview(); } });
+}
+
+function stageScale() {
+  const stageW = document.getElementById("overlay").clientWidth || 1;
+  return 1080 / stageW;
+}
+
+function handleBoxResize(preset, { width, height }) {
+  const scale = stageScale();
+  const previewPreset = { ...preset, box_width_mode: "fixed", box_height_mode: "fixed",
+    box_width: Math.round(width * scale), box_height: Math.round(height * scale) };
+  const previewPresets = { ...project.text_presets, [preset.id]: previewPreset };
+  Preview.renderText(project, previewPresets, Preview.currentTimelineTime());
+}
+
+async function handleBoxResizeEnd(preset, { width, height }) {
+  const scale = stageScale();
+  preset.box_width_mode = "fixed";
+  preset.box_height_mode = "fixed";
+  preset.box_width = Math.round(width * scale);
+  preset.box_height = Math.round(height * scale);
+  await saveProject();
+  renderBoxPanel();
 }
 
 document.getElementById("text-heading").addEventListener("input", updateTextBlock);
-document.getElementById("text-box").addEventListener("input", updateTextStyle);
 
 function wireTextStyleToggle(id, prop) {
   const btn = document.getElementById(id);
@@ -159,6 +223,7 @@ wireTextStyleToggle("text-italic", "italic");
 wireTextStyleToggle("text-underline", "underline");
 
 UI.accordionSection(document.getElementById("text-font-accordion"), document.getElementById("text-font-body"), { title: "FONT", expanded: false });
+UI.accordionSection(document.getElementById("text-box-accordion"), document.getElementById("text-box-body"), { title: "BOX", expanded: false });
 UI.accordionSection(document.getElementById("text-misc-accordion"), document.getElementById("text-misc-body"), { title: "MISC", expanded: false });
 
 function renderFontRow() {
@@ -256,6 +321,7 @@ function renderTimeline() {
 }
 
 function showPanel(type) {
+  if (type !== "text") Preview.setSelectedTextBlock(null, null);
   document.getElementById("style-panel").hidden = false;
   ["files", "video", "text", "captions"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;
