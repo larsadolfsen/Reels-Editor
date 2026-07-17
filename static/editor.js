@@ -7,7 +7,6 @@ let selectedMediaId = null; // MEDIA panel row highlight only — independent of
 const player = document.getElementById("player");
 
 const AVAILABLE_FONTS = ["Public Sans", "JetBrains Mono"]; // the only vendored font families (static/fonts/)
-let fontPreviewValue = null; // font being live-previewed in the Font Family drill-down view; null when not open
 let fontRowSetValue = null; // updater returned by UI.settingsRow, set once renderFontRow() runs
 
 function formatClipDuration(seconds) {
@@ -81,7 +80,6 @@ async function updateTextStyle() {
 function renderTextPanel() {
   document.getElementById("panel-text-font").hidden = true;
   document.getElementById("panel-text-main").hidden = false;
-  fontPreviewValue = null;
 
   const block = ensureTextBlock();
   const preset = ensureTextPreset(block.preset_id);
@@ -176,8 +174,6 @@ function renderFontRow() {
 }
 
 function openFontPanel() {
-  const preset = ensureTextPreset(ensureTextBlock().preset_id);
-  fontPreviewValue = preset.font;
   renderFontList();
   document.getElementById("panel-text-main").hidden = true;
   document.getElementById("panel-text-font").hidden = false;
@@ -186,33 +182,35 @@ function openFontPanel() {
 function closeFontPanel() {
   document.getElementById("panel-text-font").hidden = true;
   document.getElementById("panel-text-main").hidden = false;
-  fontPreviewValue = null;
   renderTextPreview();
 }
 
-function previewFont(fontName) {
-  fontPreviewValue = fontName;
+function hoverPreviewFont(fontName) {
   const preset = ensureTextPreset(ensureTextBlock().preset_id);
   const previewPresets = { ...project.text_presets, [preset.id]: { ...preset, font: fontName } };
   Preview.renderText(project, previewPresets, Preview.currentTimelineTime());
-  renderFontList();
 }
 
-async function applyFont(fontName) {
+async function selectFont(fontName) {
   const preset = ensureTextPreset(ensureTextBlock().preset_id);
   preset.font = fontName;
   await saveProject();
   renderFontRow();
+  renderFontList();
   closeFontPanel();
 }
 
 function renderFontList() {
   const listEl = document.getElementById("text-font-list");
   listEl.innerHTML = "";
-  for (const fontName of AVAILABLE_FONTS) {
+  const preset = ensureTextPreset(ensureTextBlock().preset_id);
+  const orderedFonts = [preset.font, ...AVAILABLE_FONTS.filter((f) => f !== preset.font)];
+  for (const fontName of orderedFonts) {
     const li = document.createElement("li");
-    li.className = "font-list-row" + (fontName === fontPreviewValue ? " active" : "");
-    li.addEventListener("click", () => previewFont(fontName));
+    li.className = "font-list-row";
+    li.addEventListener("mouseenter", () => hoverPreviewFont(fontName));
+    li.addEventListener("mouseleave", () => renderTextPreview());
+    li.addEventListener("click", () => selectFont(fontName));
 
     const nameEl = document.createElement("span");
     nameEl.className = "font-list-row-name";
@@ -220,14 +218,19 @@ function renderFontList() {
     nameEl.textContent = fontName;
     li.appendChild(nameEl);
 
-    if (fontName === fontPreviewValue) {
-      const applyBtn = document.createElement("button");
-      applyBtn.type = "button";
-      UI.button(applyBtn, { variant: "accent" });
-      applyBtn.classList.add("font-list-apply-btn");
-      applyBtn.textContent = "Apply";
-      applyBtn.addEventListener("click", (e) => { e.stopPropagation(); applyFont(fontName); });
-      li.appendChild(applyBtn);
+    if (fontName === preset.font) {
+      const check = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      check.setAttribute("class", "font-list-checkmark");
+      check.setAttribute("viewBox", "0 0 24 24");
+      check.setAttribute("fill", "none");
+      check.setAttribute("stroke", "currentColor");
+      check.setAttribute("stroke-width", "2");
+      check.setAttribute("stroke-linecap", "round");
+      check.setAttribute("stroke-linejoin", "round");
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", "M20 6 9 17l-5-5");
+      check.appendChild(path);
+      li.appendChild(check);
     }
 
     listEl.appendChild(li);
