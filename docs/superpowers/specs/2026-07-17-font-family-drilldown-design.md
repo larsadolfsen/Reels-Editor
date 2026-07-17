@@ -2,7 +2,7 @@
 
 ## Summary
 
-Replace the TEXT panel's FONT accordion (a `<select>` inside a collapsible header) with:
+Inside the TEXT panel's existing FONT accordion (kept as-is, header text still "FONT"), replace the `<select>` with:
 
 1. A **Font Family row** — a settings row showing label "Font Family" on the left and the current font's name on the right (rendered in that font), with a chevron pointing right.
 2. Tapping the row opens a **Font Family drill-down view** that fills the TEXT panel: a header with a back arrow + "Font Family" title, and a list of all available fonts, each rendered in its own font.
@@ -20,12 +20,12 @@ Neither component owns app state — callers (editor.js) own data and behavior, 
 
 ## Markup changes (`static/index.html`)
 
-- Remove the `#text-font-header` / `#text-font-body` accordion and the `<select id="text-font">` inside it.
-- Wrap `#panel-text`'s existing contents (heading textarea, MISC accordion, etc.) in a new `#panel-text-main` div — this is the "parent" view.
+- Keep the `#text-font-header` / `#text-font-body` accordion exactly as-is (header text stays "FONT", still wired via `UI.accordion`, collapsed by default). Only its body's contents change.
+- Inside `#text-font-body`, remove the `<select id="text-font">` and replace it with `<div id="text-font-row"></div>`, populated via `UI.settingsRow` (label "Font Family").
+- Wrap `#panel-text`'s existing contents (heading textarea, FONT accordion, MISC accordion, etc.) in a new `#panel-text-main` div — this is the "parent" view.
 - Add a sibling `#panel-text-font` div (hidden by default) — the "Font Family" view — containing:
   - A header slot wired via `UI.subPanelHeader`.
   - `<ul id="text-font-list" class="font-list"></ul>` populated at render time.
-- Add `<div id="text-font-row"></div>` inside `#panel-text-main` where the accordion used to sit, populated via `UI.settingsRow`.
 
 `#panel-text-main` and `#panel-text-font` are mutually exclusive (only one visible at a time), toggled via their `hidden` attribute — same shape as the existing `.context-panel` sections in `#style-panel`.
 
@@ -56,7 +56,7 @@ Two new CSS files, following the existing one-file-per-component convention:
 
 - [ ] 1. Add `UI.settingsRow` (`static/ui-settings-row.js`) + `settings-row.css`
 - [ ] 2. Add `UI.subPanelHeader` (`static/ui-sub-panel-header.js`) + `sub-panel.css`
-- [ ] 3. Restructure `#panel-text` markup in `index.html`: `#panel-text-main` wrapper, new `#panel-text-font` view, remove old FONT accordion/select, add `#text-font-row` mount point
+- [ ] 3. Restructure `#panel-text` markup in `index.html`: `#panel-text-main` wrapper, new `#panel-text-font` view, keep the FONT accordion, replace its `<select>` with a `#text-font-row` mount point
 - [ ] 4. Wire `editor.js`: `AVAILABLE_FONTS`, `fontPreviewValue` state, render/open/apply/back logic, reset-on-`renderTextPanel` discard behavior
 - [ ] 5. Manual verification in browser: row shows current font styled correctly, opening/closing/back/apply/preview-discard all behave as designed, MISC accordion and rest of TEXT panel unaffected
 - [ ] 6. Run `superpowers:finishing-a-development-branch` to integrate the work

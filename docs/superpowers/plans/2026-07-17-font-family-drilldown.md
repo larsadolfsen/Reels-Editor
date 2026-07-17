@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the TEXT panel's FONT accordion/`<select>` with a "Font Family" settings row that opens a full-panel drill-down list of fonts, each rendered in its own font, with live preview + explicit Apply.
+**Goal:** Inside the TEXT panel's existing FONT accordion (kept as-is), replace the `<select>` with a "Font Family" settings row that opens a full-panel drill-down list of fonts, each rendered in its own font, with live preview + explicit Apply.
 
-**Architecture:** Two new generic, presentational `window.UI.*` components (`settingsRow`, `subPanelHeader`) plus a markup restructure of `#panel-text` into two mutually-exclusive views (`#panel-text-main` / `#panel-text-font`), driven by module-level state in `editor.js`. No backend changes — this is purely an editor UI change to font *selection*; `preset.font` is still just a string persisted the same way it always was.
+**Architecture:** Two new generic, presentational `window.UI.*` components (`settingsRow`, `subPanelHeader`) plus a markup restructure of `#panel-text` into two mutually-exclusive views (`#panel-text-main` / `#panel-text-font`), driven by module-level state in `editor.js`. The FONT accordion (`#text-font-header`/`#text-font-body`, wired via `UI.accordion`) is untouched — only its body's contents change. No backend changes — this is purely an editor UI change to font *selection*; `preset.font` is still just a string persisted the same way it always was.
 
 **Tech Stack:** Vanilla JS (`window.UI.*` components, no framework), hand-written CSS on top of `tokens.css` custom properties. No JS test framework exists in this repo (only Python `pytest` for `app/*.py`); JS UI work is verified manually in the browser, matching how every existing `ui-*.js` component in this codebase was built.
 
@@ -24,8 +24,8 @@
 - **Create `static/css/components/settings-row.css`** — `.settings-row`/`.settings-row-btn`/`.settings-row-label`/`.settings-row-value-group`/`.settings-row-value`/`.settings-row-chevron`.
 - **Create `static/ui-sub-panel-header.js`** — `UI.subPanelHeader(container, {title, onBack})`. Generic back-chevron + title header for any drill-down view.
 - **Create `static/css/components/sub-panel.css`** — `.sub-panel-header`/`.sub-panel-back`/`.sub-panel-title`/`.font-list`/`.font-list-row`/`.font-list-row-name`/`.font-list-apply-btn`.
-- **Modify `static/index.html`** — remove the old FONT accordion + `<select>`; wrap `#panel-text`'s existing content in `#panel-text-main`; add `#panel-text-font` (header slot + `<ul id="text-font-list">`); add `<link>`/`<script>` tags for the two new files.
-- **Modify `static/editor.js`** — `AVAILABLE_FONTS` constant, `fontPreviewValue` state, `openFontPanel`/`previewFont`/`applyFont`/`renderFontList`/`renderFontRow` functions, reset logic inside `renderTextPanel()`, removal of the old `#text-font` select wiring and `UI.accordion` call for the FONT header.
+- **Modify `static/index.html`** — keep the FONT accordion (`#text-font-header`/`#text-font-body`), remove only the `<select>` inside it and replace with a `#text-font-row` mount point; wrap `#panel-text`'s existing content in `#panel-text-main`; add `#panel-text-font` (header slot + `<ul id="text-font-list">`); add `<link>`/`<script>` tags for the two new files.
+- **Modify `static/editor.js`** — `AVAILABLE_FONTS` constant, `fontPreviewValue` state, `openFontPanel`/`previewFont`/`applyFont`/`renderFontList`/`renderFontRow` functions, reset logic inside `renderTextPanel()`, removal of the old `#text-font` select's change listener (the `UI.accordion` call for the FONT header/body stays — that accordion is unchanged).
 - **Modify `CLAUDE.md`** — update the `static/index.html`, `static/editor.js`, and inventory entries to describe the new Font Family row/drill-down instead of the FONT accordion (the file's "Inventory" and "File structure" sections are meant to stay current, per its own framing).
 
 ---
@@ -312,7 +312,7 @@ git commit -m "feat: add UI.subPanelHeader component"
 
 **Interfaces:**
 - Consumes: nothing new (pure markup change).
-- Produces: `#panel-text-main` (wraps the existing TEXT content), `#panel-text-font` (new, hidden by default, contains `#text-font-subpanel-header` mount div + `<ul id="text-font-list">`), `#text-font-row` (mount div for `UI.settingsRow`) — all consumed by Task 4.
+- Produces: `#panel-text-main` (wraps the existing TEXT content, including the unchanged FONT accordion), `#panel-text-font` (new, hidden by default, contains `#text-font-subpanel-header` mount div + `<ul id="text-font-list">`), `#text-font-row` (mount div for `UI.settingsRow`, now inside `#text-font-body`) — all consumed by Task 4.
 
 - [ ] **Step 1: Replace the `#panel-text` block**
 
@@ -327,8 +327,14 @@ In `static/index.html`, replace the entire block from `<div id="panel-text" clas
             <textarea id="text-heading" placeholder="Heading" rows="3"></textarea>
           </div>
 
-          <div class="style-group">
-            <div id="text-font-row"></div>
+          <button id="text-font-header" class="accordion-header" type="button" aria-expanded="false">
+            FONT
+            <svg class="accordion-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div id="text-font-body" class="accordion-body" hidden>
+            <div class="style-group">
+              <div id="text-font-row"></div>
+            </div>
           </div>
 
           <button id="text-misc-header" class="accordion-header" type="button" aria-expanded="false">
@@ -420,11 +426,11 @@ In `static/index.html`, replace the entire block from `<div id="panel-text" clas
 </div>
 ```
 
-Note: everything inside `#panel-text-main` is unchanged from the original except the FONT accordion (removed) and the new `#text-font-row` div in its place. `#panel-text-font` is new.
+Note: everything inside `#panel-text-main` is unchanged from the original, including the FONT accordion itself (`#text-font-header`/`#text-font-body`, still wired via `UI.accordion` in Task 4 — unchanged). Only the `<select id="text-font">` that used to be inside `#text-font-body` is replaced with the new `#text-font-row` div. `#panel-text-font` is new.
 
 - [ ] **Step 2: Manual verification**
 
-Reload the page. Select the text block (click its TEXT timeline row or however the panel is opened in this app) and confirm the TEXT panel still renders (it will look slightly broken until Task 4 wires `#text-font-row` and `#panel-text-font` — that's expected at this point). Confirm no console errors from missing `#text-font`/`#text-font-header` elements yet (Task 4 removes those references in the same commit sequence, so a transient error here is fine to note but not required to fix before committing this task, since Task 4 immediately follows).
+Reload the page. Select the text block (click its TEXT timeline row or however the panel is opened in this app) and confirm the TEXT panel still renders, with the FONT accordion collapsed by default as before (it will look slightly broken once expanded, since `#text-font-row` is an empty mount point until Task 4 wires it — that's expected at this point). Confirm no console errors from the removed `<select id="text-font">` change-listener reference yet (Task 4 removes that one reference in the same commit sequence, so a transient error here is fine to note but not required to fix before committing this task, since Task 4 immediately follows).
 
 - [ ] **Step 3: Commit**
 
@@ -494,15 +500,15 @@ document.getElementById("text-font").addEventListener("change", async () => {
 });
 ```
 
-- [ ] **Step 5: Remove the FONT accordion wiring**
+- [ ] **Step 5: Leave the FONT accordion wiring as-is**
 
-In `static/editor.js`, delete this line:
+No change needed here — the FONT accordion is kept. Confirm this line is still present and untouched (it wires the still-existing `#text-font-header`/`#text-font-body` elements, unchanged by Task 3):
 
 ```js
 UI.accordion(document.getElementById("text-font-header"), document.getElementById("text-font-body"), { expanded: false });
 ```
 
-(Keep the `UI.accordion(document.getElementById("text-misc-header"), ...)` line right below it — MISC is unaffected.)
+(The `UI.accordion(document.getElementById("text-misc-header"), ...)` line right below it is likewise untouched — MISC is unaffected.)
 
 - [ ] **Step 6: Add the font row + drill-down functions**
 
@@ -627,7 +633,7 @@ the TEXT context-panel section (`#panel-text`) has a `#text-misc-header`/`#text-
 Replace it with:
 
 ```
-the TEXT context-panel section (`#panel-text`) has a "Font Family" settings row (`UI.settingsRow`, `static/ui-settings-row.js`) below the heading textarea that opens a full-panel drill-down list of fonts (`UI.subPanelHeader`, `static/ui-sub-panel-header.js`, plus `#panel-text-font`/`#text-font-list` in `editor.js`, added 2026-07-17), and a `#text-misc-header`/`#text-misc-body` accordion (wired via `UI.accordion`, added 2026-07-15) collapsing everything below the Font Family row into a MISC section, collapsed by default
+the TEXT context-panel section (`#panel-text`) has a `#text-font-header`/`#text-font-body` FONT accordion (wired via `UI.accordion`) whose body now holds a "Font Family" settings row (`UI.settingsRow`, `static/ui-settings-row.js`) that opens a full-panel drill-down list of fonts (`UI.subPanelHeader`, `static/ui-sub-panel-header.js`, plus `#panel-text-font`/`#text-font-list` in `editor.js`, added 2026-07-17), and a `#text-misc-header`/`#text-misc-body` accordion (wired via `UI.accordion`, added 2026-07-15) collapsing everything below the FONT accordion into a MISC section, collapsed by default
 ```
 
 - [ ] **Step 2: Update the `static/css/components/style-panel.css` Inventory bullet**
@@ -641,7 +647,7 @@ a multiline `#text-heading` `<textarea>`, TIME, STYLE — Word-toolbar-style FON
 Replace it with:
 
 ```
-a multiline `#text-heading` `<textarea>`, a "Font Family" settings row (`UI.settingsRow`) opening a full-panel font drill-down list (`.font-list`, `static/css/components/sub-panel.css`, added 2026-07-17), TIME, STYLE — SIZE `UI.numberField` + Bold/Italic/Underline `.icon-btn` toggles (SVG icons) — TEXT ALIGN, POSITION; added 2026-07-14
+a multiline `#text-heading` `<textarea>`, a FONT accordion whose body holds a "Font Family" settings row (`UI.settingsRow`) opening a full-panel font drill-down list (`.font-list`, `static/css/components/sub-panel.css`, added 2026-07-17), TIME, STYLE — SIZE `UI.numberField` + Bold/Italic/Underline `.icon-btn` toggles (SVG icons) — TEXT ALIGN, POSITION; added 2026-07-14
 ```
 
 - [ ] **Step 3: Update the `static/editor.js` Inventory bullet**
