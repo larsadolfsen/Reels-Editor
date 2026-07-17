@@ -72,7 +72,7 @@ def _box_dialogue(b, p: TextPreset) -> str | None:
     fill_alpha = "00" if p.box_background else "FF"
     border_color = _ass_override_color(p.box_border_color)
     border_alpha = "00" if p.box_border_width > 0 else "FF"
-    fx = (f"\\pos({left:.0f},{top:.0f})\\bord{p.box_border_width}"
+    fx = (f"\\an7\\pos({left:.0f},{top:.0f})\\bord{p.box_border_width}"
           f"\\1a&H{fill_alpha}&\\3a&H{border_alpha}&\\1c{fill_color}\\3c{border_color}\\p1")
     return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]}box,,0,0,0,,{{{fx}}}{path}{{\\p0}}"
 

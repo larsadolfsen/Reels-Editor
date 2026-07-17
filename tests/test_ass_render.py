@@ -79,6 +79,19 @@ def test_box_dialogue_present_when_background_enabled():
     assert "0:00:01.00" in line and "0:00:03.00" in line
     assert "\\p1" in line and "\\p0" in line
 
+def test_box_dialogue_pos_is_anchored_top_left():
+    # The box's Style field names a style ("...box") that render_ass never defines in
+    # [V4+ Styles], so libass falls back to undefined alignment behavior for \pos unless
+    # the dialogue's own override forces top-left anchoring explicitly (\an7) — without
+    # this, \pos(left, top) gets re-centered around the shape's bounding box instead of
+    # anchoring its top-left corner, visibly offsetting the box from the text it should
+    # sit behind (caught by comparing an actual export frame against the editor preview).
+    pr = TextPreset(name="Pop", box_background=True, box_width_mode="fixed", box_width=300,
+                     box_height_mode="fixed", box_height=100)
+    b = TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)
+    line = _box_dialogue(b, pr)
+    assert "\\an7" in line
+
 def test_render_ass_emits_box_dialogue_before_text_dialogue():
     # box_width is wide enough that "BIG NEWS" (462px at the default size_px=96 in Public
     # Sans, per real Pillow/fontTools measurement) doesn't hit wrap_text's word-wrap — this
