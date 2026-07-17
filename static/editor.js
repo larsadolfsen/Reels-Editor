@@ -441,6 +441,7 @@ document.getElementById("export").addEventListener("click", exportProject);
   Preview.load(project);
   renderTextPanel();
   renderTimeline();
+  openFilesPanel();
   setTimeout(() => renderTextPreview(), 100);
 })();
 
