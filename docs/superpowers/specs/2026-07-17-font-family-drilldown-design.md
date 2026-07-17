@@ -71,7 +71,7 @@ Two CSS files, following the existing one-file-per-component convention:
 ## Tasks (revision — this round)
 
 - [x] 7. Rework the Font Family settings row into two stacked lines (label above, value+chevron below) — `UI.settingsRow` markup/CSS
-- [ ] 8. Align the drill-down header (back arrow + title) into the same row as `#style-panel-collapse-toggle`
+- [x] 8. Align the drill-down header (back arrow + title) into the same row as `#style-panel-collapse-toggle`
 - [ ] 9. Rework font list rows: remove Apply-button/live-preview-then-commit logic; hover previews live on canvas, click saves immediately and navigates back
 - [ ] 10. Add checkmark icon on the currently-applied font's row; pin that row to the top of the list
 - [ ] 11. Font list row background: transparent at rest, lighter grey on hover only
