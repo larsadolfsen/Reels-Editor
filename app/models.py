@@ -1,7 +1,7 @@
 # Data model for the editor: Project, clip/text/caption layers, savable text presets.
 # Exposes Pydantic models with uuid4 ids and JSON round-trip via pydantic.
 from uuid import uuid4
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 def new_id() -> str:
     return uuid4().hex
@@ -30,8 +30,15 @@ class TextPreset(BaseModel):
     bold: bool = False
     italic: bool = False
     underline: bool = False
-    box: bool = False
-    box_color: str = "#000000"
+    box_width_mode: str = "fit"        # "fit" | "fixed"
+    box_height_mode: str = "fit"       # "fit" | "fixed"
+    box_width: int = 0                 # px on 1080x1920 canvas; used when box_width_mode == "fixed"
+    box_height: int = 0                # px; used when box_height_mode == "fixed"
+    box_background: bool = False       # was `box`
+    box_background_color: str = "#000000"   # was `box_color`
+    box_border_width: int = 0
+    box_border_color: str = "#FFFFFF"
+    box_border_radius: int = 0
     align: str = "center"          # left|center|right
     x: int = 540                   # anchor on 1080x1920 canvas
     y: int = 700
@@ -40,6 +47,16 @@ class TextPreset(BaseModel):
     pos_col: str = "mid"           # left|mid|right
     offset_x: int = 0
     offset_y: int = 0
+
+    @model_validator(mode="before")
+    @classmethod
+    def _migrate_legacy_box_fields(cls, data):
+        if isinstance(data, dict) and "box" in data and "box_background" not in data:
+            data = dict(data)
+            data["box_background"] = data.pop("box")
+            if "box_color" in data:
+                data["box_background_color"] = data.pop("box_color")
+        return data
 
 class TextBlockLayer(BaseModel):
     id: str = Field(default_factory=new_id)
