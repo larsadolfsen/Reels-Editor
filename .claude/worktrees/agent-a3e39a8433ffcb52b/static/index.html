@@ -1,0 +1,330 @@
+<!-- Editor page: three-column frame (collapsible media panel | video+timeline | selection-driven context panel). Logic in editor.js/preview.js/timeline.js. -->
+<!doctype html><html data-theme="dark"><head><meta charset="utf-8"><title>Reels Editor</title>
+<link rel="stylesheet" href="/static/css/tokens.css">
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/layout.css">
+<link rel="stylesheet" href="/static/css/components/button.css">
+<link rel="stylesheet" href="/static/css/components/panel.css">
+<link rel="stylesheet" href="/static/css/components/stage.css">
+<link rel="stylesheet" href="/static/css/components/timeline.css">
+<link rel="stylesheet" href="/static/css/components/button-group.css">
+<link rel="stylesheet" href="/static/css/components/number-field.css">
+<link rel="stylesheet" href="/static/css/components/style-panel.css">
+<link rel="stylesheet" href="/static/css/components/icon-rail.css">
+<link rel="stylesheet" href="/static/css/components/color-swatch.css">
+<link rel="stylesheet" href="/static/css/components/accordion.css">
+<link rel="stylesheet" href="/static/css/components/settings-row.css">
+<link rel="stylesheet" href="/static/css/components/sub-panel.css">
+<link rel="stylesheet" href="/static/css/components/resize-handles.css">
+<link rel="stylesheet" href="/static/css/components/safe-zones.css">
+</head><body>
+<div id="app">
+  <header id="topbar">
+    <div id="brand">
+      <span id="brand-dot"></span>
+      <span id="brand-name">REEL</span>
+      <span id="brand-tag">LOCAL</span>
+    </div>
+    <div id="topbar-divider"></div>
+    <div id="project-name"></div>
+    <div id="topbar-spacer"></div>
+    <button id="theme-toggle" type="button" aria-pressed="false" title="Toggle light/dark theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+    </button>
+    <button id="safe-zones-toggle" type="button" aria-pressed="false" title="Toggle TikTok UI safe-zone guide">SAFE ZONES</button>
+    <button id="export">EXPORT &middot; 1080&times;1920</button>
+  </header>
+  <main>
+    <aside id="panel">
+      <div id="panel-nav"></div>
+    </aside>
+    <div id="center-col">
+      <section id="stage-wrap">
+        <div id="stage">
+          <video id="player"></video>
+          <div id="overlay"></div>
+          <div id="safe-zones" hidden>
+            <div class="safe-zone safe-zone-top"><span>FOLLOWING / FOR YOU</span></div>
+            <div class="safe-zone safe-zone-right"><span>LIKE &middot; COMMENT &middot; SAVE &middot; SHARE</span></div>
+            <div class="safe-zone safe-zone-caption"><span>USERNAME / CAPTION / SOUND</span></div>
+            <div class="safe-zone safe-zone-nav"><span>HOME / DISCOVER / INBOX / PROFILE</span></div>
+          </div>
+        </div>
+        <div id="transport">
+          <button id="restart" class="icon-btn" type="button" title="Restart from beginning">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+          <button id="step-back" class="icon-btn" type="button" title="Step back 0.1s">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="19,4 19,20 8,12"/><rect x="4" y="4" width="2" height="16"/></svg>
+          </button>
+          <button id="play-pause" class="icon-btn" type="button" title="Play/Pause">
+            <svg class="icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+            <svg class="icon-pause" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+          <button id="step-forward" class="icon-btn" type="button" title="Step forward 0.1s">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5,4 16,12 5,20"/><rect x="18" y="4" width="2" height="16"/></svg>
+          </button>
+          <span id="time">0.0</span>
+        </div>
+        <div id="export-result"></div>
+      </section>
+      <div id="timeline-strip">
+        <div id="timeline-toolbar">
+          <div id="zoom-controls">
+            <button id="zoom-out" class="zoom-btn" title="Zoom out">&ndash;</button>
+            <button id="zoom-in" class="zoom-btn" title="Zoom in">+</button>
+          </div>
+          <div class="toolbar-divider"></div>
+          <div class="toolbar-spacer"></div>
+          <div id="timeline-time"></div>
+        </div>
+        <button id="slice-btn" class="slice-btn" type="button" title="Slice (coming soon)">
+          <span class="slice-icon"></span>
+          <span>SLICE</span>
+        </button>
+        <div id="timeline-body">
+          <div id="timeline-labels">
+            <div class="row-label" id="ruler-label"></div>
+            <div class="row-label" id="label-text">TEXT</div>
+            <div class="row-label" id="label-captions">CAPTIONS</div>
+            <div class="row-label" id="label-video">VIDEO</div>
+            <div class="row-label" id="label-audio">AUDIO</div>
+          </div>
+          <div id="timeline-scroll">
+            <div id="timeline-content">
+              <div id="playhead"></div>
+              <div id="timeline-ruler"></div>
+              <div class="timeline-row" data-row="text">
+                <div class="row-track" id="row-text"></div>
+              </div>
+              <div class="timeline-row" data-row="captions">
+                <div class="row-track" id="row-captions"></div>
+              </div>
+              <div class="timeline-row" data-row="video">
+                <div class="row-track" id="row-video"></div>
+              </div>
+              <div class="timeline-row" data-row="audio">
+                <div class="row-track" id="row-audio"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside id="style-panel">
+      <button id="style-panel-collapse-toggle" class="icon-btn" title="Collapse panel" aria-pressed="false">
+        <svg class="icon-panel-close" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m8 9 3 3-3 3"/></svg>
+        <svg class="icon-panel-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>
+      </button>
+
+      <div id="panel-files" class="context-panel">
+        <div class="style-panel-header">FILES</div>
+        <div id="panel-files-add">
+          <button id="add-clip"><span class="icon">+</span><span class="label">IMPORT VIDEO</span></button>
+        </div>
+        <ol id="clip-list"></ol>
+      </div>
+
+      <div id="panel-video" class="context-panel" hidden>
+        <div class="style-panel-header">VIDEO</div>
+
+        <div class="style-group">
+          <div id="video-name" class="context-panel-name"></div>
+        </div>
+
+        <div class="style-group-label">TRIM</div>
+        <div class="style-group">
+          <div class="style-row">
+            <label id="video-in-field"></label>
+            <label id="video-out-field"></label>
+          </div>
+        </div>
+        <div class="style-group">
+          <div class="style-row">
+            <button id="video-set-in">Set in</button>
+            <button id="video-set-out">Set out</button>
+          </div>
+        </div>
+
+        <div class="style-divider"></div>
+
+        <div class="style-group-label">ORDER</div>
+        <div class="style-group">
+          <div class="style-row">
+            <button id="video-move-up">&#9650; Move up</button>
+            <button id="video-move-down">&#9660; Move down</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-captions" class="context-panel caption-placeholder" hidden>
+        <div class="style-group-label">CAPTIONS</div>
+        <div class="style-row caption-toolbar">
+          <button class="icon-btn" disabled title="Bold (not yet wired)"><b>B</b></button>
+          <button class="icon-btn" disabled title="Italic (not yet wired)"><i>I</i></button>
+          <button class="icon-btn" disabled title="Underline (not yet wired)"><u>U</u></button>
+          <button class="icon-btn" disabled title="Align left (not yet wired)">&#9664;</button>
+          <button class="icon-btn" disabled title="Align right (not yet wired)">&#9654;</button>
+        </div>
+        <div class="caption-preview-box" contenteditable="false">kind of insane</div>
+      </div>
+
+      <div id="panel-text" class="context-panel" hidden>
+        <div id="panel-text-main">
+          <div class="style-panel-header">TEXT</div>
+
+        <div class="style-group">
+          <textarea id="text-heading" placeholder="Heading" rows="3"></textarea>
+        </div>
+
+        <div id="text-font-accordion">
+        <div id="text-font-body">
+          <div class="style-group">
+            <div id="text-font-row"></div>
+          </div>
+        </div>
+        </div>
+
+        <div id="text-box-accordion">
+        <div id="text-box-body">
+
+          <div class="style-group-label">WIDTH</div>
+          <div class="style-group">
+            <div id="text-box-width-mode-group"></div>
+          </div>
+          <div class="style-group">
+            <label id="text-box-width-field"></label>
+          </div>
+
+          <div class="style-group-label">HEIGHT</div>
+          <div class="style-group">
+            <div id="text-box-height-mode-group"></div>
+          </div>
+          <div class="style-group">
+            <label id="text-box-height-field"></label>
+          </div>
+
+          <div class="style-divider"></div>
+
+          <div class="style-group">
+            <div class="style-row style-row-tight">
+              <label class="style-checkbox"><input id="text-box-background" type="checkbox"> Background</label>
+            </div>
+            <div id="text-box-background-color-field"></div>
+          </div>
+
+          <div class="style-divider"></div>
+
+          <div class="style-group-label">BORDER</div>
+          <div class="style-group">
+            <div class="style-row">
+              <label id="text-box-border-width-field"></label>
+              <label id="text-box-border-radius-field"></label>
+            </div>
+          </div>
+          <div class="style-group">
+            <div id="text-box-border-color-field"></div>
+          </div>
+
+        </div>
+        </div>
+
+        <div id="text-misc-accordion">
+        <div id="text-misc-body">
+
+          <div class="style-group-label">TIME</div>
+          <div class="style-group">
+            <div class="style-row">
+              <label id="text-start-field"></label>
+              <label id="text-end-field"></label>
+            </div>
+          </div>
+
+          <div class="style-divider"></div>
+
+          <div class="style-group-label">STYLE</div>
+          <div class="style-group">
+            <div class="style-row">
+              <label id="text-size-field"></label>
+            </div>
+          </div>
+
+          <div class="style-group">
+            <div class="style-row">
+              <button class="icon-btn" id="text-bold" type="button" aria-pressed="false" title="Bold">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+              </button>
+              <button class="icon-btn" id="text-italic" type="button" aria-pressed="false" title="Italic">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+              </button>
+              <button class="icon-btn" id="text-underline" type="button" aria-pressed="false" title="Underline">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="style-group">
+            <label id="text-color-field"></label>
+          </div>
+
+          <div class="style-group">
+            <label id="text-outline-color-field"></label>
+          </div>
+
+          <div class="style-group">
+            <label id="text-outline-px-field"></label>
+          </div>
+
+          <div class="style-divider"></div>
+
+          <div class="style-group-label">TEXT ALIGN</div>
+          <div class="style-group">
+            <div id="text-align-group"></div>
+          </div>
+
+          <div class="style-group-label">POSITION</div>
+          <div class="style-group">
+            <div id="position-row-group"></div>
+            <div id="position-col-group"></div>
+          </div>
+
+          <div class="style-group">
+            <div class="style-row">
+              <label id="text-offset-x-field"></label>
+              <label id="text-offset-y-field"></label>
+            </div>
+          </div>
+
+        </div>
+        </div>
+        </div>
+
+        <div id="panel-text-font" hidden>
+          <div id="text-font-subpanel-header"></div>
+          <ul id="text-font-list" class="font-list"></ul>
+        </div>
+      </div>
+    </aside>
+  </main>
+</div>
+<script src="/static/ui-button-group.js"></script>
+<script src="/static/ui-number-field.js"></script>
+<script src="/static/ui-color-swatch.js"></script>
+<script src="/static/ui-accordion.js"></script>
+<script src="/static/ui-settings-row.js"></script>
+<script src="/static/ui-accordion-section.js"></script>
+<script src="/static/ui-sub-panel-header.js"></script>
+<script src="/static/ui-resize-handles.js"></script>
+<script src="/static/ui-icon-rail.js"></script>
+<script src="/static/ui-button.js"></script>
+<script src="/static/api-ensure-project.js"></script>
+<script src="/static/api-save-project.js"></script>
+<script src="/static/api-pick-file.js"></script>
+<script src="/static/api-probe-media.js"></script>
+<script src="/static/api-export-project.js"></script>
+<script src="/static/seed.js"></script>
+<script src="/static/preview.js"></script>
+<script src="/static/timeline.js"></script>
+<script src="/static/editor.js"></script>
+</body></html>

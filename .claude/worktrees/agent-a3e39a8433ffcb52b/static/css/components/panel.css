@@ -1,0 +1,12 @@
+/* Left nav rail: fixed 72px icon+label switcher for the right panel's FILES/TEXT/CAPTIONS sections. */
+/* Exposes #panel only (#panel-nav's button styling lives in icon-rail.css, built by ui-components.js). Depends on tokens.css. */
+#panel {
+  width: 72px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3) 0;
+  overflow: hidden;
+}

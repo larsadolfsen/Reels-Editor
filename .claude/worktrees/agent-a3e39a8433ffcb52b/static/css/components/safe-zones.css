@@ -1,0 +1,33 @@
+/* Safe-zone reference overlay (dashed guide boxes matching TikTok's UI chrome) + its topbar toggle button. */
+/* Exposes #safe-zones (+ .safe-zone-*), #safe-zones-toggle. Depends on tokens.css, base.css (bare <button>), #stage (position: relative, in stage.css). */
+#safe-zones-toggle[aria-pressed="true"] {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+#safe-zones {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: var(--font-ui);
+  font-size: 7px;
+  letter-spacing: 0.03em;
+  color: var(--safe-zone);
+}
+
+#safe-zones[hidden] { display: none; }
+
+.safe-zone {
+  position: absolute;
+  border: 1px dashed var(--safe-zone);
+  background: color-mix(in srgb, var(--safe-zone) 8%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.safe-zone-top { top: 0; left: 0; right: 0; height: 6%; }
+.safe-zone-right { top: 40%; right: 0; width: 15%; height: 44%; writing-mode: vertical-rl; }
+.safe-zone-caption { left: 0; right: 15%; bottom: 7%; height: 20%; align-items: flex-start; padding-top: 4px; }
+.safe-zone-nav { left: 0; right: 0; bottom: 0; height: 7%; }
