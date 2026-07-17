@@ -152,6 +152,22 @@ git add static/ui-components.js static/css/components/icon-rail.css static/index
 git commit -m "feat: add UI.iconRail component"
 ```
 
+**Next session:** Task 2 touches more surface area (HTML relocation, a CSS
+rewrite, and `editor.js` wiring) and needs judgment when verifying multiple
+visual states — subagent-driven, Sonnet 5, low-medium reasoning effort.
+Prompt:
+
+```
+Implement Task 2 of the left-nav-rail plan for the Reels Editor project
+(docs/superpowers/plans/2026-07-17-left-nav-rail.md). Task 1 is done and
+committed. Read the plan file, then execute only Task 2 ("Relocate
+clip-library content into the right panel as 'Files'; left panel becomes
+the nav rail") — its 9 steps have exact code for every change. Verify in
+the browser per Step 8, then commit per Step 9. Do not start Task 3 or
+later. Check off Task 2's steps in the plan file as you complete them and
+report what you verified before committing.
+```
+
 ---
 
 ### Task 2: Relocate clip-library content into the right panel as "Files"; left panel becomes the nav rail
@@ -400,6 +416,21 @@ git add static/index.html static/css/components/panel.css static/css/components/
 git commit -m "feat: move clip library into right panel as Files, add left nav rail"
 ```
 
+**Next session:** Task 3 is a two-line change (one call added to the init
+IIFE) with a trivial visual check — low effort, minimal token cost either
+way. Recommendation: continue in the current session rather than spinning
+up a new one; if you do dispatch it separately, subagent-driven, Haiku 4.5,
+low reasoning effort is enough. Prompt if dispatched separately:
+
+```
+Implement Task 3 of the left-nav-rail plan for the Reels Editor project
+(docs/superpowers/plans/2026-07-17-left-nav-rail.md). Tasks 1-2 are done
+and committed. Read the plan file, then execute only Task 3
+("Default-open Files on page load") — one line added to the init IIFE.
+Verify per Step 2, commit per Step 3. Do not start Task 4. Check off
+Task 3's steps in the plan file and report what you verified.
+```
+
 ---
 
 ### Task 3: Default-open Files on page load
@@ -442,6 +473,24 @@ Reload the page fresh (hard refresh). Confirm the right panel is visible immedia
 ```bash
 git add static/editor.js
 git commit -m "feat: open Files panel by default on load"
+```
+
+**Next session:** Task 4 has the trickiest verification in the plan
+(multiple collapse/expand states, state-preservation checks across
+sections) — subagent-driven, Sonnet 5, medium reasoning effort. Prompt:
+
+```
+Implement Task 4 of the left-nav-rail plan for the Reels Editor project
+(docs/superpowers/plans/2026-07-17-left-nav-rail.md). Tasks 1-3 are done
+and committed. Read the plan file, then execute only Task 4 ("Right
+panel collapses to a rail instead of closing") — read its "Note on the
+spec's generic collapsed rail" first, it explains a deliberate
+simplification vs. the spec. Verify all the states listed in Step 4
+carefully (collapsed Files = thumbnail rail, collapsed Text/Captions =
+bare rail with only the toggle, state preserved across expand/collapse),
+then commit per Step 5. Do not start Task 5. Check off Task 4's steps in
+the plan file and report what you verified, including any state that
+didn't behave as expected.
 ```
 
 ---
@@ -607,3 +656,9 @@ With the server running, in order:
 Use `computer {action: "screenshot"}` with the Files section open and expanded as the end-state proof.
 
 No commit for this task — it's verification only. If any step fails, fix it as part of the task where the regression was introduced (re-open that task's checkbox) rather than patching ad hoc here.
+
+**Next session:** this is the plan's final task — once it passes, the
+feature is complete. Recommendation: continue in the current session to
+run `superpowers:finishing-a-development-branch` (merge/PR/cleanup
+options) rather than spinning up a new one, since no further plan work
+remains to hand off.
