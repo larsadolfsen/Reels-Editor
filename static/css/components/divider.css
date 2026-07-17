@@ -1,0 +1,6 @@
+/* Static divider line, no hover/interactive state. Exposes .ui-divider. Depends on tokens.css. */
+.ui-divider {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 0 0 20px;
+}

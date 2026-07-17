@@ -163,6 +163,10 @@ wireTextStyleToggle("text-underline", "underline");
 UI.accordionSection(document.getElementById("text-font-accordion"), document.getElementById("text-font-body"), { title: "FONT", expanded: false });
 UI.accordionSection(document.getElementById("text-misc-accordion"), document.getElementById("text-misc-body"), { title: "MISC", expanded: false });
 
+UI.divider(document.getElementById("video-order-divider"));
+UI.divider(document.getElementById("text-style-divider"));
+UI.divider(document.getElementById("text-align-divider"));
+
 function renderFontRow() {
   const preset = ensureTextPreset(ensureTextBlock().preset_id);
   if (fontRowSetValue) {
@@ -209,7 +213,14 @@ async function applyFont(fontName) {
 function renderFontList() {
   const listEl = document.getElementById("text-font-list");
   listEl.innerHTML = "";
-  for (const fontName of AVAILABLE_FONTS) {
+  AVAILABLE_FONTS.forEach((fontName, index) => {
+    if (index > 0) {
+      const dividerLi = document.createElement("li");
+      dividerLi.className = "font-list-divider";
+      UI.divider(dividerLi);
+      listEl.appendChild(dividerLi);
+    }
+
     const li = document.createElement("li");
     li.className = "font-list-row" + (fontName === fontPreviewValue ? " active" : "");
     li.addEventListener("click", () => previewFont(fontName));
@@ -231,7 +242,7 @@ function renderFontList() {
     }
 
     listEl.appendChild(li);
-  }
+  });
 }
 
 UI.subPanelHeader(document.getElementById("text-font-subpanel-header"), { title: "Font Family", onBack: closeFontPanel });

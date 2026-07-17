@@ -1,5 +1,5 @@
 /* Drill-down sub-panel: back-arrow + title header, plus the font-selection list it hosts. */
-/* Exposes .sub-panel-header/.sub-panel-back/.sub-panel-title/.font-list/.font-list-row/.font-list-row-name/.font-list-apply-btn. Depends on tokens.css, button.css. */
+/* Exposes .sub-panel-header/.sub-panel-back/.sub-panel-title/.font-list/.font-list-row/.font-list-row-name/.font-list-apply-btn/.font-list-divider. Depends on tokens.css, button.css, divider.css. */
 .sub-panel-header {
   display: flex;
   align-items: center;
@@ -64,4 +64,11 @@
   padding: 0 10px;
   font-size: 10px;
   flex-shrink: 0;
+}
+
+.font-list-divider {
+  margin-bottom: var(--space-1);
+}
+.font-list-divider .ui-divider {
+  margin-bottom: 0;
 }
