@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="/static/css/components/color-swatch.css">
 <link rel="stylesheet" href="/static/css/components/accordion.css">
 <link rel="stylesheet" href="/static/css/components/settings-row.css">
+<link rel="stylesheet" href="/static/css/components/sub-panel.css">
 <link rel="stylesheet" href="/static/css/components/safe-zones.css">
 </head><body>
 <div id="app">
@@ -169,13 +170,20 @@
       </div>
 
       <div id="panel-text" class="context-panel" hidden>
-        <div class="style-panel-header">TEXT</div>
+        <div id="panel-text-main">
+          <div class="style-panel-header">TEXT</div>
 
         <div class="style-group">
           <textarea id="text-heading" placeholder="Heading" rows="3"></textarea>
         </div>
 
-        <div id="text-font-accordion"></div>
+        <div id="text-font-accordion">
+        <div id="text-font-body">
+          <div class="style-group">
+            <div id="text-font-row"></div>
+          </div>
+        </div>
+        </div>
 
         <div id="text-misc-accordion">
         <div id="text-misc-body">
@@ -252,6 +260,12 @@
 
         </div>
         </div>
+        </div>
+
+        <div id="panel-text-font" hidden>
+          <div id="text-font-subpanel-header"></div>
+          <ul id="text-font-list" class="font-list"></ul>
+        </div>
       </div>
     </aside>
   </main>
@@ -262,7 +276,7 @@
 <script src="/static/ui-accordion.js"></script>
 <script src="/static/ui-settings-row.js"></script>
 <script src="/static/ui-accordion-section.js"></script>
-<script src="/static/ui-font-accordion.js"></script>
+<script src="/static/ui-sub-panel-header.js"></script>
 <script src="/static/ui-icon-rail.js"></script>
 <script src="/static/ui-button.js"></script>
 <script src="/static/api-ensure-project.js"></script>

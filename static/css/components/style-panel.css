@@ -75,14 +75,6 @@
   margin-bottom: var(--space-2);
 }
 
-.style-field select {
-  width: 100%;
-  height: 32px;
-  padding: 0 8px;
-  font-size: 14px;
-  border-radius: 6px;
-}
-
 .style-row {
   display: flex;
   align-items: center;
