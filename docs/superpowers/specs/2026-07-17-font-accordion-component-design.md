@@ -12,9 +12,9 @@ Along the way, factor out the accordion **header+wiring shell** itself (title te
 - `UI.accordion(header, body, options)` (already in `ui-components.js`) for expand/collapse behavior — the new shell builds on top of it rather than replacing it.
 - Existing `.accordion-header`/`.accordion-chevron`/`.accordion-body` CSS (`static/css/components/accordion.css`) and `.style-group`/`.style-row`/`.style-field` CSS (`style-panel.css`) — untouched, just applied to JS-created elements instead of static markup where noted below.
 
-## New shell: `UI.accordionSection(container, body, { title, expanded })` (added to `static/ui-components.js`)
+## New shell: `UI.accordionSection(container, body, { title, expanded })` (new file `static/ui-accordion-section.js`)
 
-Generic and data-agnostic, same category as `UI.accordion` — lives in the same file, right next to it.
+Generic and data-agnostic, same category as `UI.accordion`. `static/ui-components.js` no longer exists — it was split into flat, one-component-per-file `static/ui-*.js` files (`ui-accordion.js`, `ui-button-group.js`, `ui-number-field.js`, `ui-color-swatch.js`, `ui-icon-rail.js`, `ui-button.js`), each attaching to the same `window.UI` namespace. This shell follows that established flat-file convention as `static/ui-accordion-section.js`, depending on `UI.accordion` from `static/ui-accordion.js`.
 
 - `container`: parent element the header and body live in.
 - `body`: an element holding the section's content. Two ways to use it:
@@ -27,9 +27,9 @@ Generic and data-agnostic, same category as `UI.accordion` — lives in the same
   4. Calls `UI.accordion(header, body, { expanded })` to wire the actual toggle behavior.
 - Returns `{ header, body }`.
 
-## New file: `static/components/font-accordion.js`
+## New file: `static/ui-font-accordion.js`
 
-A new folder, `static/components/`, holds composite/shared widgets that (unlike the simple atoms in `ui-components.js`) may need their own file because they compose other `UI.*` components and are reused across more than one context panel. It attaches to the same `window.UI` namespace so call sites don't need to know which file a given `UI.*` function lives in.
+Same flat-file convention as the rest of `static/ui-*.js` — one file per component, all attaching to the same `window.UI` namespace so call sites don't need to know which file a given `UI.*` function lives in. Depends on `UI.accordionSection` (`static/ui-accordion-section.js`).
 
 `UI.fontAccordion(container, { value, onChange })`:
 - Builds, entirely in JS: a `<div class="style-group"><div class="style-row"><label class="style-field">FONT <select>...options...</select></label></div></div>` as a detached body element. The `<select>` has the same two hardcoded options as today: `Public Sans`, `JetBrains Mono`.
@@ -50,7 +50,12 @@ No new CSS is needed — both the shell and `fontAccordion` reuse existing `acco
 - `<div id="text-misc-body" class="accordion-body" hidden>` becomes plain `<div id="text-misc-body">` (no `class`/`hidden` — `UI.accordionSection` adds those), nested one level deeper inside a new wrapper: `<div id="text-misc-accordion"><div id="text-misc-body">...unchanged content (TIME/STYLE/colors/box/align/position)...</div></div>`.
 
 **Script tags:**
-- New `<script src="/static/components/font-accordion.js"></script>` added after `ui-components.js` and before `editor.js` (so `UI.fontAccordion` exists before `editor.js` runs, and `UI.accordionSection`/`UI.accordion` exist before `font-accordion.js` runs).
+- Two new tags added to the existing `<script src="/static/ui-*.js"></script>` block, after `ui-accordion.js` and before `editor.js`:
+  ```html
+  <script src="/static/ui-accordion-section.js"></script>
+  <script src="/static/ui-font-accordion.js"></script>
+  ```
+  (`ui-accordion-section.js` must load after `ui-accordion.js` since it calls `UI.accordion`; `ui-font-accordion.js` must load after `ui-accordion-section.js` since it calls `UI.accordionSection`; both must load before `editor.js`.)
 
 ## Wiring changes (`static/editor.js`)
 
