@@ -20,9 +20,10 @@
 .accordion-chevron {
   flex-shrink: 0;
   transition: transform 0.15s ease;
+  transform: rotate(90deg);
 }
 .accordion-header[aria-expanded="true"] .accordion-chevron {
-  transform: rotate(90deg);
+  transform: rotate(-90deg);
 }
 
 .accordion-body[hidden] { display: none; }
