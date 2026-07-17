@@ -8,7 +8,7 @@ const player = document.getElementById("player");
 
 const AVAILABLE_FONTS = ["Public Sans", "JetBrains Mono"]; // the only vendored font families (static/fonts/)
 let fontPreviewValue = null; // font being live-previewed in the Font Family drill-down view; null when not open
-let fontRowSetValue = null; // updater returned by UI.settingsRow, set once wireFontRow() runs
+let fontRowSetValue = null; // updater returned by UI.settingsRow, set once renderFontRow() runs
 
 function formatClipDuration(seconds) {
   const m = Math.floor(seconds / 60);
@@ -199,9 +199,7 @@ async function applyFont(fontName) {
   const preset = ensureTextPreset(ensureTextBlock().preset_id);
   preset.font = fontName;
   await saveProject();
-  fontPreviewValue = null;
   renderFontRow();
-  renderTextPreview();
   closeFontPanel();
 }
 
