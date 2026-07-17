@@ -103,5 +103,13 @@ window.UI = (() => {
     return (isExpanded) => apply(isExpanded);
   }
 
-  return { buttonGroup, numberField, colorSwatch, accordion };
+  // Wires an existing <button> (already in the DOM, incl. its hand-inlined icon SVGs) into the
+  // shared button component: applies the .button sizing (42px tall) plus one color variant.
+  // variant: "accent" (solid, e.g. Export) | "outline" (bordered, e.g. Safe Zones) | "icon" (square 42x42, e.g. theme toggle).
+  function button(btn, { variant = "outline" } = {}) {
+    btn.classList.add("button", `button-${variant}`);
+    return btn;
+  }
+
+  return { buttonGroup, numberField, colorSwatch, accordion, button };
 })();

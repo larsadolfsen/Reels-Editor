@@ -60,9 +60,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #232427;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  color: #B4B5B8;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
   font-family: var(--font-ui);
   font-size: 10.5px;
   letter-spacing: 0.04em;
@@ -180,7 +180,7 @@
   bottom: 5px;
   border-radius: 3px;
   border: 1px solid var(--border-soft);
-  background: #202224;
+  background: var(--surface);
   overflow: hidden;
   cursor: pointer;
   display: flex;
@@ -189,7 +189,7 @@
 
 .timeline-block span {
   font-size: 9.5px;
-  color: #C7C8CA;
+  color: var(--text-tertiary);
   padding: 0 7px;
   white-space: nowrap;
   overflow: hidden;
@@ -208,11 +208,11 @@
   top: 0;
   bottom: 0;
   border-radius: 3px;
-  background: repeating-linear-gradient(135deg, #26282B 0px, #26282B 6px, #2B2D30 6px, #2B2D30 12px);
+  background: repeating-linear-gradient(135deg, var(--stripe-a) 0px, var(--stripe-a) 6px, var(--stripe-b) 6px, var(--stripe-b) 12px);
   border-color: var(--border-soft);
 }
 .timeline-row[data-row="video"] .timeline-block span {
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-secondary);
 }
 
 /* AUDIO row: dummy static waveform placeholder (no audio track feature yet). */
@@ -226,6 +226,6 @@
 .waveform-bar {
   width: 2px;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--text-dim);
   border-radius: 1px;
 }

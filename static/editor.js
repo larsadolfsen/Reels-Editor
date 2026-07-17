@@ -345,6 +345,10 @@ async function addClip() {
 
 document.getElementById("add-clip").addEventListener("click", addClip);
 
+UI.button(document.getElementById("theme-toggle"), { variant: "icon" });
+UI.button(document.getElementById("safe-zones-toggle"), { variant: "outline" });
+UI.button(document.getElementById("export"), { variant: "accent" });
+
 function setPanelCollapsed(collapsed) {
   document.getElementById("panel").classList.toggle("collapsed", collapsed);
   localStorage.setItem("panelCollapsed", collapsed ? "1" : "");
@@ -364,6 +368,18 @@ document.getElementById("safe-zones-toggle").addEventListener("click", () => {
   setSafeZonesVisible(document.getElementById("safe-zones").hidden);
 });
 
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  document.querySelector("#theme-toggle .icon-sun").style.display = theme === "light" ? "none" : "";
+  document.querySelector("#theme-toggle .icon-moon").style.display = theme === "light" ? "" : "none";
+  document.getElementById("theme-toggle").setAttribute("aria-pressed", String(theme === "light"));
+  localStorage.setItem("theme", theme);
+}
+
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  setTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
+});
+
 async function exportProject() {
   const resultEl = document.getElementById("export-result");
   resultEl.textContent = "Exporting...";
@@ -381,6 +397,8 @@ document.getElementById("export").addEventListener("click", exportProject);
 (async () => {
   setPanelCollapsed(localStorage.getItem("panelCollapsed") === "1");
   setSafeZonesVisible(localStorage.getItem("safeZonesVisible") === "1");
+  const storedTheme = localStorage.getItem("theme");
+  setTheme(storedTheme || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
   project = await ensureProject();
   const before = JSON.stringify(project);
   seedDefaults(project);
