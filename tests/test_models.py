@@ -10,12 +10,14 @@ def test_project_defaults():
     assert (p.width, p.height, p.fps) == (1080, 1920, 30)
     assert p.clips == [] and p.text_blocks == [] and p.captions is None
     assert p.media_library == []
+    assert p.text_presets == {}
 
 def test_json_round_trip():
     p = Project(name="reel1",
                 media_library=[MediaItem(id="m1", file_path="a.mp4", duration=4.5)],
                 clips=[ClipLayer(media_id="m1", file_path="a.mp4", in_point=1.0, out_point=4.5, order=0)],
                 text_blocks=[TextBlockLayer(heading="H", preset_id="x", start=0, end=3)],
+                text_presets={"x": TextPreset(id="x", name="Default")},
                 captions=CaptionTrack(words=[CaptionWord(text="hi", t_start=0.1, t_end=0.4)]))
     assert Project.model_validate_json(p.model_dump_json()) == p
 
@@ -27,6 +29,10 @@ def test_text_preset_style_flags_default_false():
 def test_text_preset_style_flags_round_trip():
     p = TextPreset(name="Pop", bold=True, italic=True, underline=True, font="JetBrains Mono")
     assert TextPreset.model_validate_json(p.model_dump_json()) == p
+
+def test_text_preset_position_grid_defaults():
+    p = TextPreset(name="Pop")
+    assert (p.pos_row, p.pos_col, p.offset_x, p.offset_y) == ("mid", "mid", 0, 0)
 
 def test_media_item_round_trip():
     m = MediaItem(file_path="clip.mp4", duration=13.2)

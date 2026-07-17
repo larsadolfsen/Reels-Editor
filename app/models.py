@@ -36,6 +36,10 @@ class TextPreset(BaseModel):
     x: int = 540                   # anchor on 1080x1920 canvas
     y: int = 700
     entrance: str = "fade_pop"     # fade_pop|none
+    pos_row: str = "mid"           # top|mid|btm — UI position-grid anchor row, x/y derives from this + offset
+    pos_col: str = "mid"           # left|mid|right
+    offset_x: int = 0
+    offset_y: int = 0
 
 class TextBlockLayer(BaseModel):
     id: str = Field(default_factory=new_id)
@@ -63,4 +67,5 @@ class Project(BaseModel):
     media_library: list[MediaItem] = []
     clips: list[ClipLayer] = []
     text_blocks: list[TextBlockLayer] = []
+    text_presets: dict[str, TextPreset] = {}
     captions: CaptionTrack | None = None

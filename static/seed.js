@@ -1,6 +1,6 @@
 // Seeds a placeholder caption line so the timeline's CAPTIONS row has something to show
 // before real transcription (Task 10) exists. Text-block seeding is not needed here —
-// editor.js's ensureTextBlock()/textPreset already create a real, style-panel-backed one.
+// editor.js's ensureTextBlock()/ensureTextPreset() already create a real, style-panel-backed one.
 // Exposes window.seedDefaults(project) -> project (mutates and returns project).
 function seedDefaults(project) {
   if (!project.captions) {
