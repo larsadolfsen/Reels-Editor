@@ -6,6 +6,10 @@ const clipDurations = {}; // clip.id -> source duration (seconds), populated on 
 let selectedMediaId = null; // MEDIA panel row highlight only — independent of timeline `selected`
 const player = document.getElementById("player");
 
+const AVAILABLE_FONTS = ["Public Sans", "JetBrains Mono"]; // the only vendored font families (static/fonts/)
+let fontPreviewValue = null; // font being live-previewed in the Font Family drill-down view; null when not open
+let fontRowSetValue = null; // updater returned by UI.settingsRow, set once wireFontRow() runs
+
 function formatClipDuration(seconds) {
   const m = Math.floor(seconds / 60);
   const s = (seconds % 60).toFixed(1).padStart(4, "0");
@@ -75,10 +79,14 @@ async function updateTextStyle() {
 }
 
 function renderTextPanel() {
+  document.getElementById("panel-text-font").hidden = true;
+  document.getElementById("panel-text-main").hidden = false;
+  fontPreviewValue = null;
+
   const block = ensureTextBlock();
   const preset = ensureTextPreset(block.preset_id);
   document.getElementById("text-heading").value = block.heading;
-  document.getElementById("text-font").value = preset.font;
+  renderFontRow();
   document.getElementById("text-box").checked = preset.box;
   document.getElementById("text-bold").setAttribute("aria-pressed", String(preset.bold));
   document.getElementById("text-italic").setAttribute("aria-pressed", String(preset.italic));
@@ -138,13 +146,6 @@ function renderTextPanel() {
 document.getElementById("text-heading").addEventListener("input", updateTextBlock);
 document.getElementById("text-box").addEventListener("input", updateTextStyle);
 
-document.getElementById("text-font").addEventListener("change", async () => {
-  const preset = ensureTextPreset(ensureTextBlock().preset_id);
-  preset.font = document.getElementById("text-font").value;
-  await saveProject();
-  renderTextPreview();
-});
-
 function wireTextStyleToggle(id, prop) {
   const btn = document.getElementById(id);
   btn.addEventListener("click", async () => {
@@ -158,6 +159,81 @@ function wireTextStyleToggle(id, prop) {
 wireTextStyleToggle("text-bold", "bold");
 wireTextStyleToggle("text-italic", "italic");
 wireTextStyleToggle("text-underline", "underline");
+
+function renderFontRow() {
+  const preset = ensureTextPreset(ensureTextBlock().preset_id);
+  if (fontRowSetValue) {
+    fontRowSetValue(preset.font, preset.font);
+  } else {
+    fontRowSetValue = UI.settingsRow(document.getElementById("text-font-row"), {
+      label: "Font Family", value: preset.font, valueFontFamily: preset.font,
+      onClick: openFontPanel,
+    });
+  }
+}
+
+function openFontPanel() {
+  const preset = ensureTextPreset(ensureTextBlock().preset_id);
+  fontPreviewValue = preset.font;
+  renderFontList();
+  document.getElementById("panel-text-main").hidden = true;
+  document.getElementById("panel-text-font").hidden = false;
+}
+
+function closeFontPanel() {
+  document.getElementById("panel-text-font").hidden = true;
+  document.getElementById("panel-text-main").hidden = false;
+  fontPreviewValue = null;
+  renderTextPreview();
+}
+
+function previewFont(fontName) {
+  fontPreviewValue = fontName;
+  const preset = ensureTextPreset(ensureTextBlock().preset_id);
+  const previewPresets = { ...project.text_presets, [preset.id]: { ...preset, font: fontName } };
+  Preview.renderText(project, previewPresets, Preview.currentTimelineTime());
+  renderFontList();
+}
+
+async function applyFont(fontName) {
+  const preset = ensureTextPreset(ensureTextBlock().preset_id);
+  preset.font = fontName;
+  await saveProject();
+  fontPreviewValue = null;
+  renderFontRow();
+  renderTextPreview();
+  closeFontPanel();
+}
+
+function renderFontList() {
+  const listEl = document.getElementById("text-font-list");
+  listEl.innerHTML = "";
+  for (const fontName of AVAILABLE_FONTS) {
+    const li = document.createElement("li");
+    li.className = "font-list-row" + (fontName === fontPreviewValue ? " active" : "");
+    li.addEventListener("click", () => previewFont(fontName));
+
+    const nameEl = document.createElement("span");
+    nameEl.className = "font-list-row-name";
+    nameEl.style.fontFamily = fontName;
+    nameEl.textContent = fontName;
+    li.appendChild(nameEl);
+
+    if (fontName === fontPreviewValue) {
+      const applyBtn = document.createElement("button");
+      applyBtn.type = "button";
+      UI.button(applyBtn, { variant: "accent" });
+      applyBtn.classList.add("font-list-apply-btn");
+      applyBtn.textContent = "Apply";
+      applyBtn.addEventListener("click", (e) => { e.stopPropagation(); applyFont(fontName); });
+      li.appendChild(applyBtn);
+    }
+
+    listEl.appendChild(li);
+  }
+}
+
+UI.subPanelHeader(document.getElementById("text-font-subpanel-header"), { title: "Font Family", onBack: closeFontPanel });
 
 UI.accordion(document.getElementById("text-font-header"), document.getElementById("text-font-body"), { expanded: false });
 UI.accordion(document.getElementById("text-misc-header"), document.getElementById("text-misc-body"), { expanded: false });
@@ -256,6 +332,7 @@ function onTimelineSelect({ type, item, groupIndex }) {
     renderVideoPanel(item);
   } else if (type === "text") {
     showPanel("text");
+    renderTextPanel();
     document.getElementById("text-heading").focus();
   } else if (type === "caption") {
     document.querySelector(".caption-preview-box").textContent = item.map((w) => w.text).join(" ");
@@ -324,6 +401,7 @@ function openFilesPanel() {
 function openTextPanel() {
   selected = { type: "text" };
   showPanel("text");
+  renderTextPanel();
   document.getElementById("text-heading").focus();
   renderTimeline();
 }
