@@ -137,3 +137,31 @@ not the CSS class alone.
   active section; on fresh load, Media is open by default; collapsing while
   Media is active shows clip thumbnails (click still selects a clip);
   collapsing while Text or Captions is active shows the generic empty rail.
+
+## Tasks
+
+- [ ] **1. `UI.iconRail` component** — add `UI.iconRail(container, {items,
+      activeValue, onSelect})` to `static/ui-components.js`, matching the
+      `UI.buttonGroup` return shape (`{setActive(value)}`); add its CSS
+      (`.icon-rail` and friends) as a new `static/css/components/icon-rail.css`.
+- [ ] **2. Left panel → nav rail** — replace `#panel`'s markup (drop clip
+      list/import button) with the MEDIA/TEXT/CAPTIONS `UI.iconRail`
+      instance; `onSelect` calls `showPanel(value)`; drop the old
+      `panelCollapsed` collapse toggle and its localStorage persistence
+      (the left rail no longer collapses).
+- [ ] **3. Move Media content into right panel** — add `#panel-media` to
+      `#style-panel` in `index.html`, containing the clip list + IMPORT
+      VIDEO button moved from `#panel`; update `renderMediaList()`'s target
+      container; extend `showPanel(type)`/`selected` in `editor.js` to
+      support `'media'`.
+- [ ] **4. Default-open Media on load** — call `showPanel('media')` during
+      init instead of leaving `#style-panel` hidden.
+- [ ] **5. Right panel collapse-to-rail** — replace `#style-panel-close`
+      (×) with a collapse-toggle button (reuse the left panel's former
+      collapse icon); add collapsed/expanded state that preserves
+      `selected.type` and swaps in the right rail content on collapse:
+      `UI.iconRail` re-expand-only rail for Text/Captions, the existing
+      `#panel-media` clip-thumbnail `.collapsed` markup/CSS for Media.
+- [ ] **6. Manual verification** — walk the checklist in ## Testing above
+      in the browser (see verification steps listed there).
+
