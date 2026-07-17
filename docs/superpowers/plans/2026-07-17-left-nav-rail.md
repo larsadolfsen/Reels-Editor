@@ -1,10 +1,12 @@
-# Left Nav Rail (Media/Text/Captions) Implementation Plan
+# Left Nav Rail (Files/Text/Captions) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the left MEDIA-only panel with a fixed Media/Text/Captions icon nav rail that switches content in the right panel, which now opens by default (Media) and collapses to a rail instead of closing.
+**Goal:** Replace the left MEDIA-only panel with a fixed Files/Text/Captions icon nav rail that switches content in the right panel, which now opens by default (Files) and collapses to a rail instead of closing.
 
-**Architecture:** A new `UI.iconRail` JS component (in `static/ui-components.js`, mirroring `UI.buttonGroup`'s shape) drives the left `#panel-nav` rail. The right `#style-panel`'s existing `showPanel(type)`/`selected` single-visible-section mechanism gains a fourth rail-triggered type, `'media'`, which holds the clip library moved out of the old left panel. `#panel-video` (trim/order) is untouched and stays reachable only via timeline clip selection. A `.collapsed` modifier on `#style-panel` shrinks it to a 72px rail; when Media is the active section that rail shows clip thumbnails (reusing the old collapsed-MEDIA-panel look), otherwise it shows nothing but the re-expand toggle.
+**Architecture:** A new `UI.iconRail` JS component (in `static/ui-components.js`, mirroring `UI.buttonGroup`'s shape) drives the left `#panel-nav` rail. The right `#style-panel`'s existing `showPanel(type)`/`selected` single-visible-section mechanism gains a fourth rail-triggered type, `'files'`, which holds the clip library moved out of the old left panel. `#panel-video` (trim/order) is untouched and stays reachable only via timeline clip selection. A `.collapsed` modifier on `#style-panel` shrinks it to a 72px rail; when Files is the active section that rail shows clip thumbnails (reusing the old collapsed-MEDIA-panel look), otherwise it shows nothing but the re-expand toggle.
+
+**Naming note:** "Files" is a UI label only, for the left-rail button and the right-panel section it opens. The underlying clip-library data model (`MediaItem`, `project.media_library`) and functions (`renderMediaList()`, `selectedMediaId`, `#clip-list`) keep their existing "media" naming — out of scope for this rename, per `2026-07-15-media-library-design.md`.
 
 **Tech Stack:** Vanilla JS/CSS/HTML, no build step, FastAPI static-file serving. No backend changes.
 
@@ -14,7 +16,7 @@
 
 - No JS build step/bundler — write plain browser JS, no imports/exports, no transpilation.
 - Icon SVGs are hand-inlined directly in markup, copied from lucide.dev (or GitHub raw source), keeping the existing wrapper style: `viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`.
-- Icons for this feature: MEDIA = Lucide `folder`, TEXT = Lucide `type`, CAPTIONS = Lucide `closed-caption`.
+- Icons for this feature: FILES = Lucide `folder`, TEXT = Lucide `type`, CAPTIONS = Lucide `closed-caption`.
 - Reused interactive UI is built as a `window.UI.*` component in `static/ui-components.js` (matching `buttonGroup`/`numberField`/`colorSwatch`/`accordion`/`button`), not just shared CSS.
 - Tests: `.venv/Scripts/python -m pytest -q`. This feature has no backend/pure-logic changes, so no new automated tests — verify manually in the browser per project convention for UI wiring (see `2026-07-15-media-library-design.md`'s Testing section for precedent).
 - Server: `.venv/Scripts/python -m uvicorn app.main:app --reload`, open `http://127.0.0.1:8000`.
@@ -88,7 +90,7 @@ to:
 - [ ] **Step 2: Create `static/css/components/icon-rail.css`**
 
 ```css
-/* Vertical rail of icon+label toggle buttons. Used for the left nav (MEDIA/TEXT/CAPTIONS) and any */
+/* Vertical rail of icon+label toggle buttons. Used for the left nav (FILES/TEXT/CAPTIONS) and any */
 /* other narrow icon-rail context. Exposes .icon-rail/.icon-rail-btn/.icon-rail-icon/.icon-rail-label. */
 /* Depends on tokens.css. Built by static/ui-components.js (UI.iconRail). */
 .icon-rail {
@@ -152,17 +154,17 @@ git commit -m "feat: add UI.iconRail component"
 
 ---
 
-### Task 2: Relocate MEDIA content into the right panel; left panel becomes the nav rail
+### Task 2: Relocate clip-library content into the right panel as "Files"; left panel becomes the nav rail
 
 **Files:**
-- Modify: `static/index.html:35-49` (left `#panel`), `static/index.html:123-156` (right `#style-panel`, insert `#panel-media` before `#panel-video`)
+- Modify: `static/index.html:35-49` (left `#panel`), `static/index.html:123-156` (right `#style-panel`, insert `#panel-files` before `#panel-video`)
 - Modify: `static/css/components/panel.css` (full rewrite)
 - Modify: `static/css/components/style-panel.css` (append moved MEDIA rules)
 - Modify: `static/editor.js` (remove old collapse wiring, extend `showPanel`, add rail wiring)
 
 **Interfaces:**
 - Consumes: `UI.iconRail` from Task 1.
-- Produces: `showPanel(type)` now accepts `'media' | 'video' | 'text' | 'captions'` (was `'video' | 'text' | 'captions'`). New functions `openMediaPanel()`, `openTextPanel()`, `openCaptionsPanel()` — each sets `selected = {type}`, calls `showPanel(type)`, and `renderTimeline()`; `openTextPanel()` additionally focuses `#text-heading`. Later tasks (3, 4) call `openMediaPanel()` and read `selected.type`.
+- Produces: `showPanel(type)` now accepts `'files' | 'video' | 'text' | 'captions'` (was `'video' | 'text' | 'captions'`). New functions `openFilesPanel()`, `openTextPanel()`, `openCaptionsPanel()` — each sets `selected = {type}`, calls `showPanel(type)`, and `renderTimeline()`; `openTextPanel()` additionally focuses `#text-heading`. Later tasks (3, 4) call `openFilesPanel()` and read `selected.type`.
 
 - [ ] **Step 1: Replace the left `#panel` markup in `static/index.html`**
 
@@ -194,26 +196,28 @@ with:
     </aside>
 ```
 
-- [ ] **Step 2: Add `#panel-media` to the right panel in `static/index.html`**
+- [ ] **Step 2: Add `#panel-files` to the right panel in `static/index.html`**
 
 Immediately before `<div id="panel-video" class="context-panel" hidden>` (currently line 126), insert:
 
 ```html
-      <div id="panel-media" class="context-panel" hidden>
-        <div class="style-panel-header">MEDIA</div>
-        <div id="panel-media-add">
+      <div id="panel-files" class="context-panel" hidden>
+        <div class="style-panel-header">FILES</div>
+        <div id="panel-files-add">
           <button id="add-clip"><span class="icon">+</span><span class="label">IMPORT VIDEO</span></button>
         </div>
         <ol id="clip-list"></ol>
       </div>
 ```
 
+(`<ol id="clip-list">` and `renderMediaList()`'s target keep their existing "media"/"clip" naming — only the section id/label are "Files"; see the plan header's naming note.)
+
 - [ ] **Step 3: Rewrite `static/css/components/panel.css`**
 
 Replace the entire file with:
 
 ```css
-/* Left nav rail: fixed 72px icon+label switcher for the right panel's MEDIA/TEXT/CAPTIONS sections. */
+/* Left nav rail: fixed 72px icon+label switcher for the right panel's FILES/TEXT/CAPTIONS sections. */
 /* Exposes #panel only (#panel-nav's button styling lives in icon-rail.css, built by ui-components.js). Depends on tokens.css. */
 #panel {
   width: 72px;
@@ -227,13 +231,13 @@ Replace the entire file with:
 }
 ```
 
-- [ ] **Step 4: Add the moved MEDIA rules to `static/css/components/style-panel.css`**
+- [ ] **Step 4: Add the moved clip-library rules to `static/css/components/style-panel.css`**
 
 Append at the end of the file:
 
 ```css
 
-#panel-media-add { margin-bottom: var(--space-2); }
+#panel-files-add { margin-bottom: var(--space-2); }
 
 #add-clip {
   width: 100%;
@@ -304,7 +308,7 @@ And delete this line from the init IIFE (currently line 398):
   setPanelCollapsed(localStorage.getItem("panelCollapsed") === "1");
 ```
 
-- [ ] **Step 6: Extend `showPanel` to support `'media'`**
+- [ ] **Step 6: Extend `showPanel` to support `'files'`**
 
 In `static/editor.js`, replace:
 
@@ -322,7 +326,7 @@ with:
 ```js
 function showPanel(type) {
   document.getElementById("style-panel").hidden = false;
-  ["media", "video", "text", "captions"].forEach((t) => {
+  ["files", "video", "text", "captions"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;
   });
 }
@@ -337,8 +341,8 @@ In `static/editor.js`, insert this block right after the `renderMediaList` funct
 ```js
 const PANEL_NAV_ITEMS = [
   {
-    value: "media",
-    label: "MEDIA",
+    value: "files",
+    label: "FILES",
     icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`,
   },
   {
@@ -353,9 +357,9 @@ const PANEL_NAV_ITEMS = [
   },
 ];
 
-function openMediaPanel() {
-  selected = { type: "media" };
-  showPanel("media");
+function openFilesPanel() {
+  selected = { type: "files" };
+  showPanel("files");
   renderTimeline();
 }
 
@@ -372,16 +376,16 @@ function openCaptionsPanel() {
   renderTimeline();
 }
 
-const PANEL_NAV_HANDLERS = { media: openMediaPanel, text: openTextPanel, captions: openCaptionsPanel };
+const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel };
 
-UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "media", (value) => PANEL_NAV_HANDLERS[value]());
+UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (value) => PANEL_NAV_HANDLERS[value]());
 ```
 
 - [ ] **Step 8: Verify in the browser**
 
 Reload the app. Confirm:
-- The left panel is a narrow rail showing three icon+label buttons: MEDIA (folder icon), TEXT, CAPTIONS.
-- Clicking MEDIA opens the right panel showing the clip list and IMPORT VIDEO button (same as the old left panel); importing a clip still works and the clip appears in this list and on the timeline.
+- The left panel is a narrow rail showing three icon+label buttons: FILES (folder icon), TEXT, CAPTIONS.
+- Clicking FILES opens the right panel showing the clip list and IMPORT VIDEO button (same as the old left panel); importing a clip still works and the clip appears in this list and on the timeline.
 - Clicking TEXT opens the TEXT section with the heading textarea focused.
 - Clicking CAPTIONS opens the CAPTIONS placeholder section.
 - Clicking a clip on the timeline still opens the VIDEO section (trim in/out) — unaffected by the rail.
@@ -393,20 +397,20 @@ Use `read_page` to confirm `#panel-nav` renders three `.icon-rail-btn` elements,
 
 ```bash
 git add static/index.html static/css/components/panel.css static/css/components/style-panel.css static/editor.js
-git commit -m "feat: move MEDIA panel into right panel, add left nav rail"
+git commit -m "feat: move clip library into right panel as Files, add left nav rail"
 ```
 
 ---
 
-### Task 3: Default-open Media on page load
+### Task 3: Default-open Files on page load
 
 **Files:**
 - Modify: `static/editor.js` (init IIFE)
 
 **Interfaces:**
-- Consumes: `openMediaPanel()` from Task 2.
+- Consumes: `openFilesPanel()` from Task 2.
 
-- [ ] **Step 1: Call `openMediaPanel()` during init**
+- [ ] **Step 1: Call `openFilesPanel()` during init**
 
 In `static/editor.js`, in the init IIFE, change:
 
@@ -425,19 +429,19 @@ to:
   Preview.load(project);
   renderTextPanel();
   renderTimeline();
-  openMediaPanel();
+  openFilesPanel();
   setTimeout(() => renderTextPreview(), 100);
 ```
 
 - [ ] **Step 2: Verify in the browser**
 
-Reload the page fresh (hard refresh). Confirm the right panel is visible immediately with the MEDIA section shown (clip list + import button), and the MEDIA button in the left rail shows `aria-pressed="true"`. No click required.
+Reload the page fresh (hard refresh). Confirm the right panel is visible immediately with the FILES section shown (clip list + import button), and the FILES button in the left rail shows `aria-pressed="true"`. No click required.
 
 - [ ] **Step 3: Commit**
 
 ```bash
 git add static/editor.js
-git commit -m "feat: open Media panel by default on load"
+git commit -m "feat: open Files panel by default on load"
 ```
 
 ---
@@ -451,7 +455,7 @@ re-expand item." This plan simplifies that: `#style-panel-collapse-toggle`
 stays visible when collapsed, so it already *is* the re-expand affordance —
 rendering a second, redundant `UI.iconRail` button that does the same thing
 would duplicate a control for no behavioral difference. The CSS below hides
-all non-Media section content when collapsed, leaving only that one toggle
+all non-Files section content when collapsed, leaving only that one toggle
 button visible, which matches the spec's visual/behavioral intent (an
 otherwise-empty rail with a way back) without the extra indirection.
 
@@ -461,7 +465,7 @@ otherwise-empty rail with a way back) without the extra indirection.
 - Modify: `static/editor.js` (replace `closePanel`/listener with collapse toggle)
 
 **Interfaces:**
-- Consumes: `selected` (from Task 2) to determine whether Media is the active section.
+- Consumes: `selected` (from Task 2) to determine whether Files is the active section.
 - Produces: `setStylePanelCollapsed(collapsed)` — toggles the `.collapsed` class on `#style-panel` and updates module-level `stylePanelCollapsed`.
 
 - [ ] **Step 1: Replace the close button with a collapse-toggle button in `static/index.html`**
@@ -513,11 +517,11 @@ with:
   padding: var(--space-3) 0;
 }
 
-#style-panel.collapsed .context-panel:not(#panel-media) { display: none; }
+#style-panel.collapsed .context-panel:not(#panel-files) { display: none; }
 
-#style-panel.collapsed #panel-media:not([hidden]) .style-panel-header { display: none; }
-#style-panel.collapsed #panel-media-add { padding: 0 10px; }
-#style-panel.collapsed #panel-media-add .label { display: none; }
+#style-panel.collapsed #panel-files:not([hidden]) .style-panel-header { display: none; }
+#style-panel.collapsed #panel-files-add { padding: 0 10px; }
+#style-panel.collapsed #panel-files-add .label { display: none; }
 #style-panel.collapsed #clip-list { padding: var(--space-2) 0; }
 #style-panel.collapsed #clip-list li { justify-content: center; padding: var(--space-2) 0; }
 #style-panel.collapsed .clip-info { display: none; }
@@ -554,10 +558,10 @@ document.getElementById("style-panel-collapse-toggle").addEventListener("click",
 
 - [ ] **Step 4: Verify in the browser**
 
-Reload the app (Media open by default). Click the collapse-toggle button:
-- Confirm `#style-panel` shrinks to ~72px and shows clip thumbnails only (no MEDIA header, no filename/duration labels, no IMPORT VIDEO label — icon only).
+Reload the app (Files open by default). Click the collapse-toggle button:
+- Confirm `#style-panel` shrinks to ~72px and shows clip thumbnails only (no FILES header, no filename/duration labels, no IMPORT VIDEO label — icon only).
 - Confirm clicking a thumbnail still toggles its `.selected` highlight (`renderMediaList`'s existing click handler is unaffected).
-- Click the toggle again: confirm the panel expands back to full width with the MEDIA section fully restored (header, import button with label, filenames/durations visible).
+- Click the toggle again: confirm the panel expands back to full width with the FILES section fully restored (header, import button with label, filenames/durations visible).
 - Click TEXT in the left rail, type something in the heading, then collapse the right panel: confirm it shrinks to a bare 72px rail with nothing visible but the collapse-toggle button (no TEXT content bleeding through).
 - Expand again: confirm the TEXT section reappears with the typed heading still present (state preserved, not reset).
 - Confirm the left nav rail (`#panel`) is unaffected by any of this — it never collapses.
@@ -588,18 +592,18 @@ Expected: all tests pass (this feature touches no `app/*.py` files, so this is a
 - [ ] **Step 2: Walk the full scenario in the browser**
 
 With the server running, in order:
-1. Fresh load → Media section open by default, MEDIA button pressed in the left rail.
-2. Import a clip → appears in the Media list and on the timeline; player loads it.
-3. Click TEXT in the rail → TEXT section opens, heading textarea focused; MEDIA/CAPTIONS closed.
+1. Fresh load → Files section open by default, FILES button pressed in the left rail.
+2. Import a clip → appears in the Files list and on the timeline; player loads it.
+3. Click TEXT in the rail → TEXT section opens, heading textarea focused; FILES/CAPTIONS closed.
 4. Click CAPTIONS in the rail → CAPTIONS placeholder opens; TEXT closes.
-5. Click MEDIA in the rail → Media list reopens.
-6. Click a clip on the timeline → VIDEO section opens (trim in/out) — independent of the rail's last-clicked tab; the rail's `aria-pressed` state on MEDIA/TEXT/CAPTIONS doesn't need to change for this (it's a 4th, separate state).
-7. Collapse the right panel while Media is active → thumbnail-only rail; click a thumbnail → selection toggles; expand → Media restored.
+5. Click FILES in the rail → Files list reopens.
+6. Click a clip on the timeline → VIDEO section opens (trim in/out) — independent of the rail's last-clicked tab; the rail's `aria-pressed` state on FILES/TEXT/CAPTIONS doesn't need to change for this (it's a 4th, separate state).
+7. Collapse the right panel while Files is active → thumbnail-only rail; click a thumbnail → selection toggles; expand → Files restored.
 8. Switch to Text, collapse → bare rail (toggle button only); expand → Text restored with prior input intact.
 9. Confirm the left `#panel` rail stayed a fixed 72px throughout — it has no collapse behavior of its own.
 
 - [ ] **Step 3: Take a final screenshot for the record**
 
-Use `computer {action: "screenshot"}` with the Media section open and expanded as the end-state proof.
+Use `computer {action: "screenshot"}` with the Files section open and expanded as the end-state proof.
 
 No commit for this task — it's verification only. If any step fails, fix it as part of the task where the regression was introduced (re-open that task's checkbox) rather than patching ad hoc here.
