@@ -5,7 +5,6 @@ Running list of things to do, picked one at a time. Add items as they come up (i
 ## To do
 
 - [ ] Logo dot and REEL positioning — no spec/details yet, gather when picked up
-- [ ] Font Family revision: finish development branch — see [2026-07-17-font-family-drilldown-design.md](specs/2026-07-17-font-family-drilldown-design.md), task 14
 - [ ] Move Color control into FONT accordion + shrink color swatch to 28x28px — no spec/details yet, gather when picked up
 - [ ] Text Box component — spec + implementation plan ready, see [2026-07-17-text-box-design.md](specs/2026-07-17-text-box-design.md) and [2026-07-17-text-box.md](plans/2026-07-17-text-box.md)
 - [ ] Video Box (picture-in-picture) component — needs its own brainstorming session first (see Background section of the Text Box spec above); ClipLayer has no position/size concept yet
@@ -26,3 +25,4 @@ Running list of things to do, picked one at a time. Add items as they come up (i
 - [x] Font list: checkmark on applied font, pinned to top of list — see [2026-07-17-font-family-drilldown-design.md](specs/2026-07-17-font-family-drilldown-design.md), task 10
 - [x] Font list row background: transparent at rest, lighter grey on hover only — see [2026-07-17-font-family-drilldown-design.md](specs/2026-07-17-font-family-drilldown-design.md), task 11
 - [x] `UI.resizeHandles` component (Text Box plan Task 6) — see [2026-07-17-text-box.md](plans/2026-07-17-text-box.md)
+- [x] Font Family revision: manual verification in browser — see [2026-07-17-font-family-drilldown-design.md](specs/2026-07-17-font-family-drilldown-design.md), task 13
