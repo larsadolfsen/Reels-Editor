@@ -6,11 +6,11 @@ Running list of things to do, picked one at a time. Add items as they come up (i
 
 Major roadmap revised — see [2026-07-17-major-plan-revision-design.md](specs/2026-07-17-major-plan-revision-design.md) for process rules (brainstorm before every phase, small parallel-worktree tasks, visual checkpoint per phase) and full phase detail. Phases below, in order:
 
-- [ ] **Phase 1 — Text Box finish** — see [2026-07-17-text-box-design.md](specs/2026-07-17-text-box-design.md) and [2026-07-17-text-box.md](plans/2026-07-17-text-box.md); needs its own brainstorm before planning the drag subthread (the other two are just finishing the existing plan, no brainstorm needed)
+- [ ] **Phase 1 — Text Box finish** — see [2026-07-17-text-box-design.md](specs/2026-07-17-text-box-design.md) and [2026-07-17-text-box.md](plans/2026-07-17-text-box.md); subthreads below already broken out — verify against codebase state at pickup time, brainstorm only the drag subthread (new, no existing design), the other two are just finishing the existing plan
   - [ ] [sequential] Existing plan Task 12 — `CLAUDE.md` inventory update (docs only)
   - [ ] [sequential] Existing plan Task 13 — end-to-end browser + export verification, then `superpowers:finishing-a-development-branch` (needs ffmpeg on PATH)
   - [ ] [new, brainstorm first] Drag-to-reposition the box body on the stage — the existing plan explicitly deferred this to resize-only; likely touches `preview.js` (mousedown/drag on `.text-block`, distinct from `UI.resizeHandles`) and `editor.js` (write back to `offset_x`/`offset_y`), no backend change expected
-- [ ] **Phase 2 — Text panel accordion restructure** — components built with an eye to reuse by Phase 3 Captions; needs its own brainstorm before planning (in particular: exact STYLE-preset UX, and whether highlight is `TextPreset` fields or a separate model)
+- [ ] **Phase 2 — Text panel accordion restructure** — components built with an eye to reuse by Phase 3 Captions; subthreads below already broken out — verify against codebase state at pickup time, brainstorm the open questions (exact STYLE-preset UX, whether highlight is `TextPreset` fields or a separate model)
   - [ ] [parallel-safe] Backend: `GET /api/presets` / `POST /api/presets` routes in `app/main.py` — `store.load_presets`/`store.save_preset` already exist, routes never built (original plan's Task 8)
   - [ ] [parallel-safe] Backend: `TextPreset` highlight fields (e.g. `highlight: bool`, `highlight_color: str`) + migration, mirroring the existing box-field pattern in `app/models.py`
   - [ ] [parallel-safe] Backend: `ass_render.py` highlight rendering (background box behind glyphs, distinct from the Box `\p1` dialogue) + tests
@@ -21,7 +21,7 @@ Major roadmap revised — see [2026-07-17-major-plan-revision-design.md](specs/2
   - [ ] [parallel-safe] UI: `preview.js` highlight rendering — background-behind-glyphs CSS on `.text-block` spans, reads the new highlight fields
   - [ ] [parallel-safe] UI: inline text editing — make the `.text-block` div on the stage `contenteditable`, wire input to update `project.text_blocks[].heading` + `saveProject()`, keep the panel textarea in sync both ways
   - [ ] [sequential, after the above land] Confirm BOX accordion (already built in Phase 1) sits correctly among the new six-accordion order; no code expected, just placement/verification
-- [ ] **Phase 3 — Captions** — revives original plan's Tasks 10-12; needs its own brainstorm before planning (in particular: how a caption track's FONT/STYLE/BOX/POSITION settings are modeled — one shared preset for the whole track, or per-line)
+- [ ] **Phase 3 — Captions** — revives original plan's Tasks 10-12; subthreads below already broken out — verify against codebase state at pickup time, brainstorm the open question (how a caption track's FONT/STYLE/BOX/POSITION settings are modeled — one shared preset for the whole track, or per-line)
   - [ ] [parallel-safe] Backend: `app/transcribe.py` — faster-whisper wrapper, `words_from_segments`/`transcribe_file` (original plan's Task 10)
   - [ ] [parallel-safe] Backend: `ffmpeg_cmd.build_audio_cmd` — export assembled reel's audio to wav for transcription (original plan's Task 10)
   - [ ] [sequential, needs both above] Backend: `POST /api/projects/{pid}/transcribe` route wiring

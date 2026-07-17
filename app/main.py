@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.models import Project
-from app import store, media, ffmpeg_cmd
+from app import store, media, ffmpeg_cmd, ass_render
 
 DATA_DIR = Path("data")
 app = FastAPI()
@@ -47,7 +47,12 @@ def export_project(pid: str) -> dict:
     out_dir = DATA_DIR / "exports"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{p.name}-{p.id[:8]}.mp4"
-    cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path))
+    ass_path = None
+    if p.text_blocks:
+        ass_file = out_dir / f"{p.name}-{p.id[:8]}.ass"
+        ass_file.write_text(ass_render.render_ass(p, p.text_presets), encoding="utf-8")
+        ass_path = str(ass_file)
+    cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), ass_path)
     media.run_export(cmd)
     return {"out_path": str(out_path)}
 
