@@ -635,7 +635,7 @@ git commit -m "feat: collapse right panel to a rail instead of closing it"
 
 **Files:** none (verification only)
 
-- [ ] **Step 1: Run the backend test suite to confirm nothing broke**
+- [x] **Step 1: Run the backend test suite to confirm nothing broke**
 
 ```bash
 .venv/Scripts/python -m pytest -q
@@ -643,7 +643,7 @@ git commit -m "feat: collapse right panel to a rail instead of closing it"
 
 Expected: all tests pass (this feature touches no `app/*.py` files, so this is a regression check, not new coverage).
 
-- [ ] **Step 2: Walk the full scenario in the browser**
+- [x] **Step 2: Walk the full scenario in the browser**
 
 With the server running, in order:
 1. Fresh load → Files section open by default, FILES button pressed in the left rail.
@@ -656,14 +656,15 @@ With the server running, in order:
 8. Switch to Text, collapse → bare rail (toggle button only); expand → Text restored with prior input intact.
 9. Confirm the left `#panel` rail stayed a fixed 72px throughout — it has no collapse behavior of its own.
 
-- [ ] **Step 3: Take a final screenshot for the record**
+- [x] **Step 3: Take a final screenshot for the record**
 
-Use `computer {action: "screenshot"}` with the Files section open and expanded as the end-state proof.
+Pixel screenshot could not be captured — the Browser pane's `computer{screenshot}` action timed out session-wide (confirmed unrelated to this app: it also timed out on `http://example.com`). Substituted with `get_page_text`/`read_page`/computed-style verification of the Files-expanded end state, confirmed clean per Step 2. User accepted this in place of the screenshot.
 
 No commit for this task — it's verification only. If any step fails, fix it as part of the task where the regression was introduced (re-open that task's checkbox) rather than patching ad hoc here.
 
+- [ ] **Step 4: Run `superpowers:finishing-a-development-branch`** to decide merge/PR/cleanup for the branch.
+
 **Next session:** this is the plan's final task — once it passes, the
-feature is complete. Recommendation: continue in the current session to
-run `superpowers:finishing-a-development-branch` (merge/PR/cleanup
-options) rather than spinning up a new one, since no further plan work
-remains to hand off.
+feature is complete. Recommendation: continue in the current session
+rather than spinning up a new one, since no further plan work remains
+to hand off.
