@@ -26,7 +26,9 @@ function defaultTextPreset(id) {
     id,
     name: "Default", font: "Public Sans", size_px: 96, color: "#FFFFFF",
     outline_color: "#000000", outline_px: 4, bold: false, italic: false, underline: false,
-    box: false, box_color: "#000000",
+    box_width_mode: "fit", box_height_mode: "fit", box_width: 0, box_height: 0,
+    box_background: false, box_background_color: "#000000",
+    box_border_width: 0, box_border_color: "#FFFFFF", box_border_radius: 0,
     align: "center", x: 540, y: 700, entrance: "fade_pop",
     pos_row: "mid", pos_col: "mid", offset_x: 0, offset_y: 0,
   };
