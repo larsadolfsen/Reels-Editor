@@ -226,6 +226,12 @@ UI.accordionSection(document.getElementById("text-font-accordion"), document.get
 UI.accordionSection(document.getElementById("text-box-accordion"), document.getElementById("text-box-body"), { title: "BOX", expanded: false });
 UI.accordionSection(document.getElementById("text-misc-accordion"), document.getElementById("text-misc-body"), { title: "MISC", expanded: false });
 
+UI.divider(document.getElementById("video-order-divider"));
+UI.divider(document.getElementById("text-style-divider"));
+UI.divider(document.getElementById("text-align-divider"));
+UI.divider(document.getElementById("text-box-width-height-divider"));
+UI.divider(document.getElementById("text-box-background-border-divider"));
+
 function renderFontRow() {
   const preset = ensureTextPreset(ensureTextBlock().preset_id);
   if (fontRowSetValue) {
@@ -270,7 +276,14 @@ function renderFontList() {
   listEl.innerHTML = "";
   const preset = ensureTextPreset(ensureTextBlock().preset_id);
   const orderedFonts = [preset.font, ...AVAILABLE_FONTS.filter((f) => f !== preset.font)];
-  for (const fontName of orderedFonts) {
+  orderedFonts.forEach((fontName, index) => {
+    if (index > 0) {
+      const dividerLi = document.createElement("li");
+      dividerLi.className = "font-list-divider";
+      UI.divider(dividerLi);
+      listEl.appendChild(dividerLi);
+    }
+
     const li = document.createElement("li");
     li.className = "font-list-row";
     li.addEventListener("mouseenter", () => hoverPreviewFont(fontName));
@@ -299,7 +312,7 @@ function renderFontList() {
     }
 
     listEl.appendChild(li);
-  }
+  });
 }
 
 UI.subPanelHeader(document.getElementById("text-font-subpanel-header"), { title: "Font Family", onBack: closeFontPanel });
