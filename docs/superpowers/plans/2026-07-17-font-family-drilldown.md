@@ -40,7 +40,7 @@
 **Interfaces:**
 - Produces: `window.UI.settingsRow(container, {label, value, valueFontFamily, onClick}) -> setValue(value, valueFontFamily)` — used by Task 4.
 
-- [ ] **Step 1: Create the CSS component**
+- [x] **Step 1: Create the CSS component**
 
 Create `static/css/components/settings-row.css`:
 
@@ -89,7 +89,7 @@ Create `static/css/components/settings-row.css`:
 }
 ```
 
-- [ ] **Step 2: Add the CSS link to `index.html`**
+- [x] **Step 2: Add the CSS link to `index.html`**
 
 In `static/index.html`, after line 15 (`<link rel="stylesheet" href="/static/css/components/accordion.css">`), add:
 
@@ -97,7 +97,7 @@ In `static/index.html`, after line 15 (`<link rel="stylesheet" href="/static/css
 <link rel="stylesheet" href="/static/css/components/settings-row.css">
 ```
 
-- [ ] **Step 3: Create the component**
+- [x] **Step 3: Create the component**
 
 Create `static/ui-settings-row.js`:
 
@@ -142,7 +142,7 @@ window.UI.settingsRow = function settingsRow(container, { label, value, valueFon
 };
 ```
 
-- [ ] **Step 4: Add the script tag to `index.html`**
+- [x] **Step 4: Add the script tag to `index.html`**
 
 In `static/index.html`, after the line `<script src="/static/ui-accordion.js"></script>`, add:
 
@@ -150,7 +150,7 @@ In `static/index.html`, after the line `<script src="/static/ui-accordion.js"></
 <script src="/static/ui-settings-row.js"></script>
 ```
 
-- [ ] **Step 5: Manual verification**
+- [x] **Step 5: Manual verification**
 
 This component has no consumer yet, so verify it loads without errors: start the dev server (`.venv/Scripts/python -m uvicorn app.main:app --reload`), open `http://127.0.0.1:8000`, open the browser console, and confirm there are no script errors and `window.UI.settingsRow` is a function (type `UI.settingsRow` in the console — expect `[Function: settingsRow]`).
 
