@@ -103,6 +103,42 @@ window.UI = (() => {
     return (isExpanded) => apply(isExpanded);
   }
 
+  // Renders a narrow vertical rail of icon+label toggle buttons into `container`. items:
+  // [{value, icon (inline SVG markup string), label}] — omit `label` for an icon-only button.
+  // onSelect(value) fires on click. Returns a setActive(value) updater (mirrors buttonGroup).
+  function iconRail(container, items, activeValue, onSelect) {
+    container.innerHTML = "";
+    container.classList.add("icon-rail");
+    const buttons = items.map(({ value, icon, label }) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "icon-rail-btn";
+      if (!label) btn.classList.add("icon-rail-btn-icon-only");
+      btn.dataset.value = value;
+      btn.setAttribute("aria-pressed", String(value === activeValue));
+
+      const iconEl = document.createElement("span");
+      iconEl.className = "icon-rail-icon";
+      iconEl.innerHTML = icon;
+      btn.appendChild(iconEl);
+
+      if (label) {
+        const labelEl = document.createElement("span");
+        labelEl.className = "icon-rail-label";
+        labelEl.textContent = label;
+        btn.appendChild(labelEl);
+      }
+
+      btn.addEventListener("click", () => {
+        buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === value)));
+        onSelect(value);
+      });
+      container.appendChild(btn);
+      return btn;
+    });
+    return (value) => buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === value)));
+  }
+
   // Wires an existing <button> (already in the DOM, incl. its hand-inlined icon SVGs) into the
   // shared button component: applies the .button sizing (42px tall) plus one color variant.
   // variant: "accent" (solid, e.g. Export) | "outline" (bordered, e.g. Safe Zones) | "icon" (square 42x42, e.g. theme toggle).
@@ -111,5 +147,5 @@ window.UI = (() => {
     return btn;
   }
 
-  return { buttonGroup, numberField, colorSwatch, accordion, button };
+  return { buttonGroup, numberField, colorSwatch, accordion, button, iconRail };
 })();
