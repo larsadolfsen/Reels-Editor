@@ -183,7 +183,7 @@ report what you verified before committing.
 - Consumes: `UI.iconRail` from Task 1.
 - Produces: `showPanel(type)` now accepts `'files' | 'video' | 'text' | 'captions'` (was `'video' | 'text' | 'captions'`). New functions `openFilesPanel()`, `openTextPanel()`, `openCaptionsPanel()` — each sets `selected = {type}`, calls `showPanel(type)`, and `renderTimeline()`; `openTextPanel()` additionally focuses `#text-heading`. Later tasks (3, 4) call `openFilesPanel()` and read `selected.type`.
 
-- [ ] **Step 1: Replace the left `#panel` markup in `static/index.html`**
+- [x] **Step 1: Replace the left `#panel` markup in `static/index.html`**
 
 Replace (currently lines 35-49):
 
@@ -213,7 +213,7 @@ with:
     </aside>
 ```
 
-- [ ] **Step 2: Add `#panel-files` to the right panel in `static/index.html`**
+- [x] **Step 2: Add `#panel-files` to the right panel in `static/index.html`**
 
 Immediately before `<div id="panel-video" class="context-panel" hidden>` (currently line 126), insert:
 
@@ -229,7 +229,7 @@ Immediately before `<div id="panel-video" class="context-panel" hidden>` (curren
 
 (`<ol id="clip-list">` and `renderMediaList()`'s target keep their existing "media"/"clip" naming — only the section id/label are "Files"; see the plan header's naming note.)
 
-- [ ] **Step 3: Rewrite `static/css/components/panel.css`**
+- [x] **Step 3: Rewrite `static/css/components/panel.css`**
 
 Replace the entire file with:
 
@@ -248,7 +248,7 @@ Replace the entire file with:
 }
 ```
 
-- [ ] **Step 4: Add the moved clip-library rules to `static/css/components/style-panel.css`**
+- [x] **Step 4: Add the moved clip-library rules to `static/css/components/style-panel.css`**
 
 Append at the end of the file:
 
@@ -304,7 +304,7 @@ Append at the end of the file:
 .clip-info .clip-duration { font-family: var(--font-ui); font-size: 9.5px; color: var(--text-dim); margin-top: 2px; }
 ```
 
-- [ ] **Step 5: Remove the old left-panel collapse wiring from `static/editor.js`**
+- [x] **Step 5: Remove the old left-panel collapse wiring from `static/editor.js`**
 
 Delete these lines (currently lines 352-359):
 
@@ -325,7 +325,7 @@ And delete this line from the init IIFE (currently line 398):
   setPanelCollapsed(localStorage.getItem("panelCollapsed") === "1");
 ```
 
-- [ ] **Step 6: Extend `showPanel` to support `'files'`**
+- [x] **Step 6: Extend `showPanel` to support `'files'`**
 
 In `static/editor.js`, replace:
 
@@ -351,7 +351,7 @@ function showPanel(type) {
 
 (`closePanel()` and its `#style-panel-close` listener stay untouched for now — Task 4 replaces them with the collapse toggle.)
 
-- [ ] **Step 7: Add the nav rail items, handlers, and `UI.iconRail` wiring**
+- [x] **Step 7: Add the nav rail items, handlers, and `UI.iconRail` wiring**
 
 In `static/editor.js`, insert this block right after the `renderMediaList` function's closing `}` (currently after line 309, before `async function moveClip`):
 
@@ -398,7 +398,7 @@ const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, caption
 UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (value) => PANEL_NAV_HANDLERS[value]());
 ```
 
-- [ ] **Step 8: Verify in the browser**
+- [x] **Step 8: Verify in the browser**
 
 Reload the app. Confirm:
 - The left panel is a narrow rail showing three icon+label buttons: FILES (folder icon), TEXT, CAPTIONS.
@@ -410,7 +410,7 @@ Reload the app. Confirm:
 
 Use `read_page` to confirm `#panel-nav` renders three `.icon-rail-btn` elements, and `computer` clicks to exercise each one; `read_console_messages` to confirm no errors.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add static/index.html static/css/components/panel.css static/css/components/style-panel.css static/editor.js
