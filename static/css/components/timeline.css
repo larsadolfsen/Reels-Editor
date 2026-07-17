@@ -1,5 +1,5 @@
-/* Timeline strip: toolbar (zoom + time readout), floating SLICE button (visual only,
-   tracks the playhead), ruler, and TEXT/CAPTIONS/VIDEO/AUDIO rows. */
+/* Timeline strip: toolbar (zoom + time readout), floating playhead-handle box (grip-vertical
+   drag handle + scissors slice icon, tracks the playhead), ruler, and TEXT/CAPTIONS/VIDEO/AUDIO rows. */
 /* Exposes #timeline-strip and children only. Depends on tokens.css. */
 #timeline-strip {
   position: relative;
@@ -59,25 +59,28 @@
   z-index: 6;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text-secondary);
-  font-family: var(--font-ui);
-  font-size: 10.5px;
-  letter-spacing: 0.04em;
-  padding: 6px 10px;
+  padding: 4px;
   border-radius: 4px;
-  cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
-.slice-icon {
-  width: 11px;
-  height: 1px;
-  background: currentColor;
-  transform: rotate(45deg);
+.slice-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  cursor: pointer;
 }
+.slice-icon-btn:hover { background: var(--bg-2); }
+
+#playhead-grip { cursor: grab; }
+#playhead-grip:active { cursor: grabbing; }
 
 #timeline-body {
   display: flex;

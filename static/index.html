@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="/static/css/components/settings-row.css">
 <link rel="stylesheet" href="/static/css/components/sub-panel.css">
 <link rel="stylesheet" href="/static/css/components/divider.css">
+<link rel="stylesheet" href="/static/css/components/resize-handles.css">
 <link rel="stylesheet" href="/static/css/components/safe-zones.css">
 </head><body>
 <div id="app">
@@ -79,10 +80,14 @@
           <div class="toolbar-spacer"></div>
           <div id="timeline-time"></div>
         </div>
-        <button id="slice-btn" class="slice-btn" type="button" title="Slice (coming soon)">
-          <span class="slice-icon"></span>
-          <span>SLICE</span>
-        </button>
+        <div id="slice-btn" class="slice-btn">
+          <span id="playhead-grip" class="slice-icon-btn" title="Drag to move playhead">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+          </span>
+          <span id="slice-action" class="slice-icon-btn" title="Slice (coming soon)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><path d="M14.8 14.8 20 20"/></svg>
+          </span>
+        </div>
         <div id="timeline-body">
           <div id="timeline-labels">
             <div class="row-label" id="ruler-label"></div>
@@ -186,6 +191,50 @@
         </div>
         </div>
 
+        <div id="text-box-accordion">
+        <div id="text-box-body">
+
+          <div class="style-group-label">WIDTH</div>
+          <div class="style-group">
+            <div id="text-box-width-mode-group"></div>
+          </div>
+          <div class="style-group">
+            <label id="text-box-width-field"></label>
+          </div>
+
+          <div class="style-group-label">HEIGHT</div>
+          <div class="style-group">
+            <div id="text-box-height-mode-group"></div>
+          </div>
+          <div class="style-group">
+            <label id="text-box-height-field"></label>
+          </div>
+
+          <div id="text-box-width-height-divider"></div>
+
+          <div class="style-group">
+            <div class="style-row style-row-tight">
+              <label class="style-checkbox"><input id="text-box-background" type="checkbox"> Background</label>
+            </div>
+            <div id="text-box-background-color-field"></div>
+          </div>
+
+          <div id="text-box-background-border-divider"></div>
+
+          <div class="style-group-label">BORDER</div>
+          <div class="style-group">
+            <div class="style-row">
+              <label id="text-box-border-width-field"></label>
+              <label id="text-box-border-radius-field"></label>
+            </div>
+          </div>
+          <div class="style-group">
+            <div id="text-box-border-color-field"></div>
+          </div>
+
+        </div>
+        </div>
+
         <div id="text-misc-accordion">
         <div id="text-misc-body">
 
@@ -232,13 +281,6 @@
             <label id="text-outline-px-field"></label>
           </div>
 
-          <div class="style-group">
-            <div class="style-row style-row-tight">
-              <label class="style-checkbox"><input id="text-box" type="checkbox"> Box</label>
-            </div>
-            <div id="text-box-color-field"></div>
-          </div>
-
           <div id="text-align-divider"></div>
 
           <div class="style-group-label">TEXT ALIGN</div>
@@ -279,6 +321,7 @@
 <script src="/static/ui-accordion-section.js"></script>
 <script src="/static/ui-sub-panel-header.js"></script>
 <script src="/static/ui-divider.js"></script>
+<script src="/static/ui-resize-handles.js"></script>
 <script src="/static/ui-icon-rail.js"></script>
 <script src="/static/ui-button.js"></script>
 <script src="/static/api-ensure-project.js"></script>

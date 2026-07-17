@@ -1,7 +1,9 @@
 // Timeline strip: pure row-position math (mirrors app/timeline.py) + rendering for
-// toolbar (zoom/time readout)/ruler/playhead/SLICE button/TEXT/CAPTIONS/VIDEO/AUDIO rows
-// into the DOM ids defined in index.html. The AUDIO row is a static dummy waveform
-// (no audio-track feature yet); the SLICE button is visual only and tracks the playhead.
+// toolbar (zoom/time readout)/ruler/playhead/playhead-handle box/TEXT/CAPTIONS/VIDEO/AUDIO
+// rows into the DOM ids defined in index.html. The AUDIO row is a static dummy waveform
+// (no audio-track feature yet). The playhead-handle box (#slice-btn) tracks the playhead
+// and holds two icons: a grip-vertical handle (dragged in editor.js to scrub the playhead)
+// and a scissors icon (visual only, no slice feature yet).
 // Fixed pixels-per-second scale (not stretched to container width) so content is always
 // readable; #timeline-scroll provides horizontal scroll when content exceeds the viewport.
 // Exposes window.Timeline.{render, groupWords, timeAtX, tick}. tick() is a cheap

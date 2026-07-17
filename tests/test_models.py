@@ -38,3 +38,21 @@ def test_media_item_round_trip():
     m = MediaItem(file_path="clip.mp4", duration=13.2)
     assert MediaItem.model_validate_json(m.model_dump_json()) == m
     assert len(m.id) == 32
+
+def test_text_preset_box_defaults():
+    p = TextPreset(name="Pop")
+    assert p.box_width_mode == "fit" and p.box_height_mode == "fit"
+    assert p.box_width == 0 and p.box_height == 0
+    assert p.box_background is False and p.box_background_color == "#000000"
+    assert p.box_border_width == 0 and p.box_border_color == "#FFFFFF" and p.box_border_radius == 0
+
+def test_text_preset_migrates_legacy_box_fields():
+    p = TextPreset.model_validate({"name": "Pop", "box": True, "box_color": "#FF00FF"})
+    assert p.box_background is True
+    assert p.box_background_color == "#FF00FF"
+
+def test_text_preset_box_round_trip():
+    p = TextPreset(name="Pop", box_width_mode="fixed", box_width=400, box_height_mode="fit",
+                    box_background=True, box_background_color="#111111",
+                    box_border_width=3, box_border_color="#EEEEEE", box_border_radius=8)
+    assert TextPreset.model_validate_json(p.model_dump_json()) == p
