@@ -78,11 +78,19 @@ function renderTextPanel() {
   const block = ensureTextBlock();
   const preset = ensureTextPreset(block.preset_id);
   document.getElementById("text-heading").value = block.heading;
-  document.getElementById("text-font").value = preset.font;
   document.getElementById("text-box").checked = preset.box;
   document.getElementById("text-bold").setAttribute("aria-pressed", String(preset.bold));
   document.getElementById("text-italic").setAttribute("aria-pressed", String(preset.italic));
   document.getElementById("text-underline").setAttribute("aria-pressed", String(preset.underline));
+
+  UI.fontAccordion(document.getElementById("text-font-accordion"), {
+    value: preset.font,
+    onChange: async (font) => {
+      preset.font = font;
+      await saveProject();
+      renderTextPreview();
+    },
+  });
 
   UI.numberField(document.getElementById("text-size-field"),
     { label: "SIZE", unit: "PX", value: preset.size_px, min: 24, max: 200,
@@ -138,13 +146,6 @@ function renderTextPanel() {
 document.getElementById("text-heading").addEventListener("input", updateTextBlock);
 document.getElementById("text-box").addEventListener("input", updateTextStyle);
 
-document.getElementById("text-font").addEventListener("change", async () => {
-  const preset = ensureTextPreset(ensureTextBlock().preset_id);
-  preset.font = document.getElementById("text-font").value;
-  await saveProject();
-  renderTextPreview();
-});
-
 function wireTextStyleToggle(id, prop) {
   const btn = document.getElementById(id);
   btn.addEventListener("click", async () => {
@@ -159,8 +160,7 @@ wireTextStyleToggle("text-bold", "bold");
 wireTextStyleToggle("text-italic", "italic");
 wireTextStyleToggle("text-underline", "underline");
 
-UI.accordion(document.getElementById("text-font-header"), document.getElementById("text-font-body"), { expanded: false });
-UI.accordion(document.getElementById("text-misc-header"), document.getElementById("text-misc-body"), { expanded: false });
+UI.accordionSection(document.getElementById("text-misc-accordion"), document.getElementById("text-misc-body"), { title: "MISC", expanded: false });
 
 function clampTrim(inP, outP, dur) {
   inP = Math.max(0, Math.min(inP, dur));
