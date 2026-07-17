@@ -107,3 +107,8 @@ No new integration/rendering tests — the suite mocks subprocess calls rather t
 
 - PIL's font-metrics measurement needs to closely match the browser's actual text layout (font hinting/kerning can differ slightly between PIL's rasterizer and a browser engine) — some pixel-level drift between preview and export is possible and may need a small tolerance/padding constant, tuned during implementation.
 - ASS bezier-approximated rounded corners are a manual vector-math computation (no built-in "rounded rect" primitive in the ASS drawing spec) — implementation should keep this isolated in one small helper function so it's easy to unit-test in isolation.
+
+**Found and fixed during Task 13's export verification (2026-07-17):**
+- `app/main.py`'s export route never wired `render_ass()`/`ass_path` into `ffmpeg_cmd.build_export_cmd()` at all — every export prior to this fix contained video only, no text/captions/box burned in regardless of editor settings. This predates the Text Box work; the export route simply never called `ass_render`. Fixed by writing the rendered `.ass` to `data/exports/<name>-<id8>.ass` and passing its path when a project has text blocks.
+- `_box_dialogue()`'s `Style` field named a style (`P<id8>box`) that `render_ass()` never defines in `[V4+ Styles]`, so libass fell back to undefined alignment behavior for `\pos`, visibly offsetting the box from its text in export (confirmed via an actual export + frame extraction, not just code reading). Fixed with an explicit `\an7` (top-left) override in the box dialogue's own inline style, independent of any named style.
+- Both confirmed fixed via a real export + `ffmpeg` frame extraction: the box now renders directly behind its text, matching the editor preview.
