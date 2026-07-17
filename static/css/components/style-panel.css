@@ -12,15 +12,25 @@
 
 #style-panel[hidden] { display: none; }
 
-#style-panel-close {
+#style-panel-collapse-toggle {
   position: absolute;
   top: 12px;
   right: 12px;
-  font-size: 16px;
-  line-height: 1;
-  color: var(--text-dim);
 }
-#style-panel-close:hover { color: var(--text); }
+
+#style-panel.collapsed {
+  width: 72px;
+  padding: var(--space-3) 0;
+}
+
+#style-panel.collapsed .context-panel:not(#panel-files) { display: none; }
+
+#style-panel.collapsed #panel-files:not([hidden]) .style-panel-header { display: none; }
+#style-panel.collapsed #panel-files-add { padding: 0 10px; }
+#style-panel.collapsed #panel-files-add .label { display: none; }
+#style-panel.collapsed #clip-list { padding: var(--space-2) 0; }
+#style-panel.collapsed #clip-list li { justify-content: center; padding: var(--space-2) 0; }
+#style-panel.collapsed .clip-info { display: none; }
 
 .context-panel-name {
   font-size: 12.5px;

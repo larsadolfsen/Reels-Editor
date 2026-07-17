@@ -522,7 +522,7 @@ otherwise-empty rail with a way back) without the extra indirection.
 - Consumes: `selected` (from Task 2) to determine whether Files is the active section.
 - Produces: `setStylePanelCollapsed(collapsed)` — toggles the `.collapsed` class on `#style-panel` and updates module-level `stylePanelCollapsed`.
 
-- [ ] **Step 1: Replace the close button with a collapse-toggle button in `static/index.html`**
+- [x] **Step 1: Replace the close button with a collapse-toggle button in `static/index.html`**
 
 Replace (currently line 124):
 
@@ -541,7 +541,7 @@ with:
       </button>
 ```
 
-- [ ] **Step 2: Update `static/css/components/style-panel.css`**
+- [x] **Step 2: Update `static/css/components/style-panel.css`**
 
 Replace:
 
@@ -581,7 +581,7 @@ with:
 #style-panel.collapsed .clip-info { display: none; }
 ```
 
-- [ ] **Step 3: Replace `closePanel` with the collapse toggle in `static/editor.js`**
+- [x] **Step 3: Replace `closePanel` with the collapse toggle in `static/editor.js`**
 
 Replace:
 
@@ -610,7 +610,7 @@ document.getElementById("style-panel-collapse-toggle").addEventListener("click",
 });
 ```
 
-- [ ] **Step 4: Verify in the browser**
+- [x] **Step 4: Verify in the browser**
 
 Reload the app (Files open by default). Click the collapse-toggle button:
 - Confirm `#style-panel` shrinks to ~72px and shows clip thumbnails only (no FILES header, no filename/duration labels, no IMPORT VIDEO label — icon only).
@@ -622,7 +622,7 @@ Reload the app (Files open by default). Click the collapse-toggle button:
 
 Use `read_page` on `#style-panel` before/after each toggle to confirm the `.collapsed` class and visible children, and `computer` screenshots for a final visual check.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add static/index.html static/css/components/style-panel.css static/editor.js

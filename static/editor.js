@@ -204,13 +204,16 @@ function showPanel(type) {
   });
 }
 
-function closePanel() {
-  document.getElementById("style-panel").hidden = true;
-  selected = null;
-  renderTimeline();
+let stylePanelCollapsed = false;
+
+function setStylePanelCollapsed(collapsed) {
+  stylePanelCollapsed = collapsed;
+  document.getElementById("style-panel").classList.toggle("collapsed", collapsed);
 }
 
-document.getElementById("style-panel-close").addEventListener("click", closePanel);
+document.getElementById("style-panel-collapse-toggle").addEventListener("click", () => {
+  setStylePanelCollapsed(!stylePanelCollapsed);
+});
 
 function renderVideoPanel(c) {
   const dur = clipDurations[c.id] ?? c.out_point;
