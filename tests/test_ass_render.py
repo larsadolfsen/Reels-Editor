@@ -45,3 +45,21 @@ def test_multiline_heading_becomes_ass_hard_break():
     out = render_ass(p, {pr.id: pr})
     line = next(l for l in out.splitlines() if l.startswith("Dialogue:"))
     assert "LINE ONE\\NLINE TWO" in line
+
+from app.ass_render import _rounded_rect_path, _ass_override_color
+
+def test_rounded_rect_path_square_corners_when_radius_zero():
+    path = _rounded_rect_path(100, 50, 0)
+    assert path == "m 0 0 l 100 0 l 100 50 l 0 50"
+
+def test_rounded_rect_path_has_four_bezier_corners_when_radius_positive():
+    path = _rounded_rect_path(100, 50, 10)
+    assert path.startswith("m 10 0")
+    assert path.count(" b ") == 4
+
+def test_rounded_rect_path_clamps_radius_to_half_min_dimension():
+    path = _rounded_rect_path(20, 100, 50)
+    assert path.startswith("m 10 0")   # radius clamped to width/2 = 10
+
+def test_ass_override_color_format():
+    assert _ass_override_color("#FFD400") == "&H00D4FF&"

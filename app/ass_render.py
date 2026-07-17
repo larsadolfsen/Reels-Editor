@@ -11,6 +11,30 @@ def hex_to_ass(color: str) -> str:
     r, g, b = color[1:3], color[3:5], color[5:7]
     return f"&H00{b}{g}{r}".upper()
 
+def _ass_override_color(hex_color: str) -> str:
+    r, g, b = hex_color[1:3], hex_color[3:5], hex_color[5:7]
+    return f"&H{b}{g}{r}&".upper()
+
+def _rounded_rect_path(width: float, height: float, radius: float) -> str:
+    r = max(0.0, min(radius, width / 2, height / 2))
+    if r <= 0:
+        return f"m 0 0 l {_n(width)} 0 l {_n(width)} {_n(height)} l 0 {_n(height)}"
+    k = r * 0.5523
+    return (
+        f"m {_n(r)} 0 "
+        f"l {_n(width - r)} 0 "
+        f"b {_n(width - r + k)} 0 {_n(width)} {_n(r - k)} {_n(width)} {_n(r)} "
+        f"l {_n(width)} {_n(height - r)} "
+        f"b {_n(width)} {_n(height - r + k)} {_n(width - r + k)} {_n(height)} {_n(width - r)} {_n(height)} "
+        f"l {_n(r)} {_n(height)} "
+        f"b {_n(r - k)} {_n(height)} 0 {_n(height - r + k)} 0 {_n(height - r)} "
+        f"l 0 {_n(r)} "
+        f"b 0 {_n(r - k)} {_n(r - k)} 0 {_n(r)} 0"
+    )
+
+def _n(v: float) -> str:
+    return str(int(v)) if float(v).is_integer() else f"{v:.2f}"
+
 def _style(name: str, p: TextPreset) -> str:
     border = 3 if p.box else 1
     bold = -1 if p.bold else 0
