@@ -13,7 +13,6 @@ Local web editor that assembles 4–6 mp4 clips into one vertical reel with trim
 
 - No JS build step/bundler — icon SVGs are hand-inlined directly in markup. When an icon is needed, use [Lucide](https://lucide.dev) icon paths (copy the `<path>` markup from lucide.dev; keep the existing `viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"` wrapper style already used for play/pause/restart/step/bold/italic/underline icons).
 - Reusable JS logic — UI components (`window.UI.*`) and API/service calls (`window.Api.*`) — each live in their own file, one function/component per file; never grouped into a shared `*-components.js`-style catch-all.
-- Same principle on the backend: each `app/*.py` module owns one concern (e.g. `media.py` = ffprobe/export, `store.py` = persistence, `timeline.py` = sequence math, `ass_render.py` = subtitle generation) — never merge unrelated concerns into one file or grow a module into a catch-all. Small, single-purpose files (frontend and backend alike) keep edits cheap: touching one behavior means reading one small file, not a large multi-concern one.
 - Every `static/*.js` and `static/css/**/*.css` file opens with a one- or two-line comment stating that file's purpose/role, so its job is clear without reading the whole file. Keep this comment current when a file's role changes.
 
 ## File structure

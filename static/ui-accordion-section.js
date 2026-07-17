@@ -4,6 +4,8 @@
 window.UI = window.UI || {};
 
 window.UI.accordionSection = function accordionSection(container, body, { title, expanded = false } = {}) {
+  container.innerHTML = "";
+
   const header = document.createElement("button");
   header.type = "button";
   header.className = "accordion-header";
