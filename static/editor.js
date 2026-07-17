@@ -130,6 +130,11 @@ function renderTextPanel() {
     preset.pos_col, (value) => { preset.pos_col = value; computeXY(preset); saveProject(); renderTextPreview(); });
 
   renderTextPreview();
+
+  Preview.setSelectedTextBlock(block.id, {
+    onResize: (size) => handleBoxResize(preset, size),
+    onDragEnd: (size) => handleBoxResizeEnd(preset, size),
+  });
 }
 
 function renderBoxPanel() {
@@ -176,6 +181,29 @@ function renderBoxPanel() {
   UI.colorSwatch(document.getElementById("text-box-border-color-field"),
     { label: "Border Color", value: preset.box_border_color,
       onChange: (v) => { preset.box_border_color = v; saveProject(); renderTextPreview(); } });
+}
+
+function stageScale() {
+  const stageW = document.getElementById("overlay").clientWidth || 1;
+  return 1080 / stageW;
+}
+
+function handleBoxResize(preset, { width, height }) {
+  const scale = stageScale();
+  const previewPreset = { ...preset, box_width_mode: "fixed", box_height_mode: "fixed",
+    box_width: Math.round(width * scale), box_height: Math.round(height * scale) };
+  const previewPresets = { ...project.text_presets, [preset.id]: previewPreset };
+  Preview.renderText(project, previewPresets, Preview.currentTimelineTime());
+}
+
+async function handleBoxResizeEnd(preset, { width, height }) {
+  const scale = stageScale();
+  preset.box_width_mode = "fixed";
+  preset.box_height_mode = "fixed";
+  preset.box_width = Math.round(width * scale);
+  preset.box_height = Math.round(height * scale);
+  await saveProject();
+  renderBoxPanel();
 }
 
 document.getElementById("text-heading").addEventListener("input", updateTextBlock);
@@ -293,6 +321,7 @@ function renderTimeline() {
 }
 
 function showPanel(type) {
+  if (type !== "text") Preview.setSelectedTextBlock(null, null);
   document.getElementById("style-panel").hidden = false;
   ["files", "video", "text", "captions"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;

@@ -6,6 +6,8 @@ window.Preview = (() => {
   let activeIndex = -1;
   let textProject = null;
   let textPresets = {};
+  let selectedTextBlockId = null;
+  let boxResizeCallbacks = null;
   const player = document.getElementById("player");
   const timeEl = document.getElementById("time");
   const overlay = document.getElementById("overlay");
@@ -101,7 +103,22 @@ window.Preview = (() => {
 
       div.textContent = block.heading;
       overlay.appendChild(div);
+
+      if (block.id === selectedTextBlockId && boxResizeCallbacks) {
+        div.style.pointerEvents = "auto";
+        UI.resizeHandles(div, {
+          getSize: () => ({ width: div.offsetWidth, height: div.offsetHeight }),
+          onResize: (size) => boxResizeCallbacks.onResize(size),
+          onDragEnd: (size) => boxResizeCallbacks.onDragEnd(size),
+        });
+      }
     }
+  }
+
+  function setSelectedTextBlock(blockId, callbacks) {
+    selectedTextBlockId = blockId;
+    boxResizeCallbacks = callbacks || null;
+    if (textProject) renderText(textProject, textPresets, computeTimelineTime());
   }
 
   function computeTimelineTime() {
@@ -173,5 +190,5 @@ window.Preview = (() => {
     }
   }
 
-  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart };
+  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, setSelectedTextBlock };
 })();
