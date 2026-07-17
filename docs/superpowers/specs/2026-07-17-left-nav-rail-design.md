@@ -57,11 +57,20 @@ still closed until a timeline clip is clicked.
 
 `#style-panel-close` (×) is replaced by a collapse-toggle button using the
 same icon as the left panel's current collapse control. Clicking it does not
-hide the panel — it shrinks `#style-panel` to the same ~72px icon-rail
-treatment used elsewhere (empty beyond a re-expand affordance for now;
-reserved for future quick-action icons). The previously active section
-(`selected.type`) is remembered underneath; expanding the rail back out
-restores that section rather than resetting to Media.
+hide the panel — it shrinks `#style-panel` to a ~72px icon-rail. What that
+rail shows depends on which section is active:
+
+- **Media active**: the rail is today's `#panel.collapsed` clip-thumbnail
+  rail verbatim — import icon + clip thumbnails only, click-to-select,
+  exactly the current collapsed-MEDIA-panel behavior, just relocated to the
+  right panel.
+- **Text or Captions active**: the rail has no section-specific content yet
+  (empty beyond a re-expand affordance), reserved for future quick-action
+  icons.
+
+The previously active section (`selected.type`) is remembered underneath;
+expanding the rail back out restores that section rather than resetting to
+Media.
 
 ## Shared component: `UI.iconRail`
 
@@ -84,9 +93,16 @@ Call sites:
 
 - Left `#panel`: `UI.iconRail(panelEl, {items: [MEDIA, TEXT, CAPTIONS], ...})`,
   `onSelect` calls `showPanel(value)`.
-- Right `#style-panel`'s collapsed state: a `UI.iconRail` instance with a
-  single re-expand item (icon only), swapped in for the full panel content
-  when collapsed, matching the same CSS/markup shape as the left rail.
+- Right `#style-panel`'s collapsed state, when Text or Captions is active: a
+  `UI.iconRail` instance with a single re-expand item (icon only).
+- Right `#style-panel`'s collapsed state, when Media is active: **not**
+  `UI.iconRail` — this reuses the existing `#panel-media` clip-thumbnail
+  markup/CSS (`.collapsed` treatment from `panel.css`) directly, since that
+  rail's content (thumbnails, click-to-select) is data-driven and specific
+  to the media list, not a generic icon+label button set. `UI.iconRail`
+  covers the two generic nav rails (left panel, and the right panel's
+  Text/Captions collapse state); the collapsed Media rail is the clip list
+  itself rendered narrow.
 
 A shared CSS component (`.icon-rail` and friends) backs the JS component's
 markup, but the JS component is the reusable unit call sites depend on —
@@ -118,4 +134,6 @@ not the CSS class alone.
   (import, row click/highlight, zero effect on player); clicking a timeline
   clip still opens VIDEO (trim) independent of the rail's active tab;
   right-panel collapse button shrinks it to a rail and back, preserving the
-  active section; on fresh load, Media is open by default.
+  active section; on fresh load, Media is open by default; collapsing while
+  Media is active shows clip thumbnails (click still selects a clip);
+  collapsing while Text or Captions is active shows the generic empty rail.
