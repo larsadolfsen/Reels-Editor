@@ -752,6 +752,8 @@ git commit -m "feat: contextual right panel for timeline block selection"
 git push
 ```
 
+- [ ] **Step 8: Run `superpowers:finishing-a-development-branch`** to decide merge/PR/cleanup for the branch.
+
 ---
 
 ## Verification (whole feature)

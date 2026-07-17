@@ -209,6 +209,11 @@ let stylePanelCollapsed = false;
 function setStylePanelCollapsed(collapsed) {
   stylePanelCollapsed = collapsed;
   document.getElementById("style-panel").classList.toggle("collapsed", collapsed);
+  const toggle = document.getElementById("style-panel-collapse-toggle");
+  toggle.setAttribute("aria-pressed", String(collapsed));
+  toggle.title = collapsed ? "Expand panel" : "Collapse panel";
+  toggle.querySelector(".icon-panel-close").style.display = collapsed ? "none" : "";
+  toggle.querySelector(".icon-panel-open").style.display = collapsed ? "" : "none";
 }
 
 document.getElementById("style-panel-collapse-toggle").addEventListener("click", () => {

@@ -441,6 +441,8 @@ git add static/editor.js static/preview.js
 git commit -m "feat: wire Word-style TEXT toolbar (font, size, bold/italic/underline)"
 ```
 
+- [ ] **Step 9: Run `superpowers:finishing-a-development-branch`** to decide merge/PR/cleanup for the branch.
+
 ---
 
 ## Self-Review Notes

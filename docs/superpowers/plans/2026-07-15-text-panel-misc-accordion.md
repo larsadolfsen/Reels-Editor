@@ -266,3 +266,5 @@ Also add `UI.accordion(header, body, options)` to the `static/ui-components.js` 
 git add static/index.html static/editor.js CLAUDE.md
 git commit -m "feat: collapse TEXT panel misc controls into a MISC accordion"
 ```
+
+- [ ] **Step 6: Run `superpowers:finishing-a-development-branch`** to decide merge/PR/cleanup for the branch.

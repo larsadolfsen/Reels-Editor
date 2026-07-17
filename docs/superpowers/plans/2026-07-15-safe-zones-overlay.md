@@ -133,3 +133,5 @@ Check in browser:
 git add static/index.html static/css/components/safe-zones.css static/editor.js
 git commit -m "feat: add SAFE ZONES toggle overlaying TikTok UI reference image on stage"
 ```
+
+- [ ] **Step 7: Run `superpowers:finishing-a-development-branch`** to decide merge/PR/cleanup for the branch.

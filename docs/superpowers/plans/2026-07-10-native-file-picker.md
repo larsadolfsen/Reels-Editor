@@ -146,6 +146,8 @@ git add static/editor.js
 git commit -m "feat: Add clip opens native file picker"
 ```
 
+- [ ] **Step 5: Run `superpowers:finishing-a-development-branch`** to decide merge/PR/cleanup for the branch.
+
 ---
 
 ## Verification (whole feature)

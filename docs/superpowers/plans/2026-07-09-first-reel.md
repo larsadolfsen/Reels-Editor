@@ -828,6 +828,7 @@ and in `render_ass`: append `CAPTION_STYLE` to the styles section and `_caption_
 - [ ] **Step 5: Preview karaoke (thin).** In the caption overlay, render each word of the active line as a `<span>`; on the playback tick, the span whose `t_start <= t < t_end` gets color `#FFD400`.
 - [ ] **Step 6: See it — the finish line.** Play: **words light up as they're spoken.** Export → **the finished reel: 4–6 cut clips, popping title card, karaoke captions — post it.**
 - [ ] **Step 7: Update map/inventory; commit + push** — `git commit -m "feat: karaoke caption highlight in preview and export"`.
+- [ ] **Step 8: Run `superpowers:finishing-a-development-branch`** to decide merge/PR/cleanup for the branch.
 
 ---
 
