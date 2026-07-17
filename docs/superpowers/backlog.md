@@ -15,6 +15,7 @@ Running list of things to do, picked one at a time. Add items as they come up (i
 - [ ] Video Box (picture-in-picture) component — needs its own brainstorming session first (see Background section of the Text Box spec above); ClipLayer has no position/size concept yet
 - [ ] Captions Box component — blocked on captions having any real rendered layer at all (currently a non-functional placeholder); see Background section of the Text Box spec above
 - [ ] Redesign safe-zone guide overlay for clarity — dashed lines/labels in `static/css/components/safe-zones.css` are hard to see against busy video content; needs higher-contrast styling (shaded bands, label chips, etc.), preview-only, no spec yet
+- [ ] Accordion section spacing/divider — add bottom padding/margin to accordion body content (`static/css/components/accordion.css`), and move the divider from `border-top` to `border-bottom`; no spec/details yet, gather when picked up
 
 ## Done
 
