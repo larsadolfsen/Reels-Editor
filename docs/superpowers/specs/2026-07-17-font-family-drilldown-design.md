@@ -70,11 +70,11 @@ Two CSS files, following the existing one-file-per-component convention:
 
 ## Tasks (revision — this round)
 
-- [ ] 7. Rework the Font Family settings row into two stacked lines (label above, value+chevron below) — `UI.settingsRow` markup/CSS
+- [x] 7. Rework the Font Family settings row into two stacked lines (label above, value+chevron below) — `UI.settingsRow` markup/CSS
 - [ ] 8. Align the drill-down header (back arrow + title) into the same row as `#style-panel-collapse-toggle`
 - [ ] 9. Rework font list rows: remove Apply-button/live-preview-then-commit logic; hover previews live on canvas, click saves immediately and navigates back
 - [ ] 10. Add checkmark icon on the currently-applied font's row; pin that row to the top of the list
 - [ ] 11. Font list row background: transparent at rest, lighter grey on hover only
-- [ ] 12. Add a divider between the FONT accordion's content and the MISC accordion
+- [x] 12. Add a divider between the FONT accordion's content and the MISC accordion
 - [ ] 13. Manual verification in browser: two-line row, header alignment, hover-preview + click-to-save, checkmark + pinned-to-top, hover-only background, divider — all behave as designed; MISC accordion and rest of TEXT panel unaffected
 - [ ] 14. Run `superpowers:finishing-a-development-branch` to integrate the work
