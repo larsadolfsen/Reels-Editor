@@ -444,7 +444,7 @@ file and report what you verified.
 **Interfaces:**
 - Consumes: `openFilesPanel()` from Task 2.
 
-- [ ] **Step 1: Call `openFilesPanel()` during init**
+- [x] **Step 1: Call `openFilesPanel()` during init**
 
 In `static/editor.js`, in the init IIFE, change:
 
@@ -467,11 +467,11 @@ to:
   setTimeout(() => renderTextPreview(), 100);
 ```
 
-- [ ] **Step 2: Verify in the browser**
+- [x] **Step 2: Verify in the browser**
 
 Reload the page fresh (hard refresh). Confirm the right panel is visible immediately with the FILES section shown (clip list + import button), and the FILES button in the left rail shows `aria-pressed="true"`. No click required.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add static/editor.js
