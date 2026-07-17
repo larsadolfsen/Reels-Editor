@@ -1,4 +1,4 @@
-// Editor state + API calls + DOM wiring. Thin — logic lives in app/*.py.
+// Editor state + DOM wiring. Thin — logic lives in app/*.py; API calls live in window.Api (api-*.js).
 // Exposes nothing (page script); persists project via PUT after every mutation.
 let project = null;
 let selected = null; // currently selected clip/text/caption; drives which right-panel section (VIDEO/TEXT/CAPTIONS) is open
@@ -159,6 +159,7 @@ wireTextStyleToggle("text-bold", "bold");
 wireTextStyleToggle("text-italic", "italic");
 wireTextStyleToggle("text-underline", "underline");
 
+UI.accordion(document.getElementById("text-font-header"), document.getElementById("text-font-body"), { expanded: false });
 UI.accordion(document.getElementById("text-misc-header"), document.getElementById("text-misc-body"), { expanded: false });
 
 function clampTrim(inP, outP, dur) {
@@ -168,28 +169,8 @@ function clampTrim(inP, outP, dur) {
   return { in_point: inP, out_point: outP };
 }
 
-async function ensureProject() {
-  const savedId = localStorage.getItem("projectId");
-  if (savedId) {
-    const res = await fetch(`/api/projects/${savedId}`);
-    if (res.ok) return res.json();
-  }
-  const res = await fetch("/api/projects", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: "reel" }),
-  });
-  const p = await res.json();
-  localStorage.setItem("projectId", p.id);
-  return p;
-}
-
 async function saveProject() {
-  await fetch(`/api/projects/${project.id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(project),
-  });
+  await Api.saveProject(project);
 }
 
 function renderTimeline() {
@@ -367,12 +348,11 @@ async function moveClip(a, b) {
 }
 
 async function addClip() {
-  const pickRes = await fetch("/api/pick-file");
-  const { path } = await pickRes.json();
+  const path = await Api.pickFile();
   if (!path) return;
-  const res = await fetch(`/api/probe?path=${encodeURIComponent(path)}`);
-  if (!res.ok) { alert("probe failed"); return; }
-  const { duration } = await res.json();
+  const probeResult = await Api.probeMedia(path);
+  if (!probeResult) { alert("probe failed"); return; }
+  const { duration } = probeResult;
   const mediaId = crypto.randomUUID().replaceAll("-", "");
   project.media_library.push({ id: mediaId, file_path: path, duration });
 
@@ -423,13 +403,12 @@ document.getElementById("theme-toggle").addEventListener("click", () => {
 async function exportProject() {
   const resultEl = document.getElementById("export-result");
   resultEl.textContent = "Exporting...";
-  const res = await fetch(`/api/projects/${project.id}/export`, { method: "POST" });
-  if (!res.ok) {
-    resultEl.textContent = "Export failed: " + (await res.text());
+  const result = await Api.exportProject(project.id);
+  if (!result.ok) {
+    resultEl.textContent = "Export failed: " + result.error;
     return;
   }
-  const { out_path } = await res.json();
-  resultEl.innerHTML = `Exported: <a href="/media?path=${encodeURIComponent(out_path)}">download</a>`;
+  resultEl.innerHTML = `Exported: <a href="/media?path=${encodeURIComponent(result.out_path)}">download</a>`;
 }
 
 document.getElementById("export").addEventListener("click", exportProject);
@@ -438,7 +417,7 @@ document.getElementById("export").addEventListener("click", exportProject);
   setSafeZonesVisible(localStorage.getItem("safeZonesVisible") === "1");
   const storedTheme = localStorage.getItem("theme");
   setTheme(storedTheme || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
-  project = await ensureProject();
+  project = await Api.ensureProject();
   const before = JSON.stringify(project);
   seedDefaults(project);
   if (JSON.stringify(project) !== before) await saveProject();

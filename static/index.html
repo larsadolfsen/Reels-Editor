@@ -174,6 +174,24 @@
           <textarea id="text-heading" placeholder="Heading" rows="3"></textarea>
         </div>
 
+        <button id="text-font-header" class="accordion-header" type="button" aria-expanded="false">
+          FONT
+          <svg class="accordion-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <div id="text-font-body" class="accordion-body" hidden>
+          <div class="style-group">
+            <div class="style-row">
+              <label class="style-field" id="text-font-field">
+                FONT
+                <select id="text-font">
+                  <option value="Public Sans">Public Sans</option>
+                  <option value="JetBrains Mono">JetBrains Mono</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+
         <button id="text-misc-header" class="accordion-header" type="button" aria-expanded="false">
           MISC
           <svg class="accordion-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
@@ -193,13 +211,6 @@
           <div class="style-group-label">STYLE</div>
           <div class="style-group">
             <div class="style-row">
-              <label class="style-field" id="text-font-field">
-                FONT
-                <select id="text-font">
-                  <option value="Public Sans">Public Sans</option>
-                  <option value="JetBrains Mono">JetBrains Mono</option>
-                </select>
-              </label>
               <label id="text-size-field"></label>
             </div>
           </div>
@@ -262,7 +273,17 @@
     </aside>
   </main>
 </div>
-<script src="/static/ui-components.js"></script>
+<script src="/static/ui-button-group.js"></script>
+<script src="/static/ui-number-field.js"></script>
+<script src="/static/ui-color-swatch.js"></script>
+<script src="/static/ui-accordion.js"></script>
+<script src="/static/ui-icon-rail.js"></script>
+<script src="/static/ui-button.js"></script>
+<script src="/static/api-ensure-project.js"></script>
+<script src="/static/api-save-project.js"></script>
+<script src="/static/api-pick-file.js"></script>
+<script src="/static/api-probe-media.js"></script>
+<script src="/static/api-export-project.js"></script>
 <script src="/static/seed.js"></script>
 <script src="/static/preview.js"></script>
 <script src="/static/timeline.js"></script>
