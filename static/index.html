@@ -186,7 +186,54 @@
           <div class="style-group">
             <div id="text-font-row"></div>
           </div>
+
+          <div id="text-font-family-style-divider"></div>
+
+          <div class="style-group">
+            <div class="style-row">
+              <label id="text-size-field"></label>
+            </div>
+          </div>
+
+          <div class="style-group">
+            <div class="style-row">
+              <button class="icon-btn" id="text-bold" type="button" aria-pressed="false" title="Bold">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+              </button>
+              <button class="icon-btn" id="text-italic" type="button" aria-pressed="false" title="Italic">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+              </button>
+              <button class="icon-btn" id="text-underline" type="button" aria-pressed="false" title="Underline">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="style-group">
+            <label id="text-color-field"></label>
+          </div>
+
+          <div class="style-group">
+            <label id="text-outline-color-field"></label>
+          </div>
+
+          <div class="style-group">
+            <label id="text-outline-px-field"></label>
+          </div>
         </div>
+        </div>
+
+        <div id="text-style-accordion"></div>
+        <div id="text-style-body">
+          <div class="style-group">
+            <button id="text-style-save" type="button">+ Save current style</button>
+          </div>
+          <div class="style-group">
+            <ul id="text-style-most-used" class="font-list"></ul>
+          </div>
+          <div class="style-group">
+            <div id="text-style-browse-row"></div>
+          </div>
         </div>
 
         <div id="text-box-accordion">
@@ -233,53 +280,8 @@
         </div>
         </div>
 
-        <div id="text-misc-accordion">
-        <div id="text-misc-body">
-
-          <div class="style-group-label">TIME</div>
-          <div class="style-group">
-            <div class="style-row">
-              <label id="text-start-field"></label>
-              <label id="text-end-field"></label>
-            </div>
-          </div>
-
-          <div id="text-style-divider"></div>
-
-          <div class="style-group-label">STYLE</div>
-          <div class="style-group">
-            <div class="style-row">
-              <label id="text-size-field"></label>
-            </div>
-          </div>
-
-          <div class="style-group">
-            <div class="style-row">
-              <button class="icon-btn" id="text-bold" type="button" aria-pressed="false" title="Bold">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
-              </button>
-              <button class="icon-btn" id="text-italic" type="button" aria-pressed="false" title="Italic">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
-              </button>
-              <button class="icon-btn" id="text-underline" type="button" aria-pressed="false" title="Underline">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
-              </button>
-            </div>
-          </div>
-
-          <div class="style-group">
-            <label id="text-color-field"></label>
-          </div>
-
-          <div class="style-group">
-            <label id="text-outline-color-field"></label>
-          </div>
-
-          <div class="style-group">
-            <label id="text-outline-px-field"></label>
-          </div>
-
-          <div id="text-align-divider"></div>
+        <div id="text-position-accordion"></div>
+        <div id="text-position-body">
 
           <div class="style-group-label">TEXT ALIGN</div>
           <div class="style-group">
@@ -300,12 +302,27 @@
           </div>
 
         </div>
+
+        <div id="text-time-accordion"></div>
+        <div id="text-time-body">
+          <div class="style-group">
+            <div class="style-row">
+              <label id="text-start-field"></label>
+              <label id="text-end-field"></label>
+            </div>
+          </div>
         </div>
+
         </div>
 
         <div id="panel-text-font" hidden>
           <div id="text-font-subpanel-header"></div>
           <ul id="text-font-list" class="font-list"></ul>
+        </div>
+
+        <div id="panel-text-style" hidden>
+          <div id="text-style-subpanel-header"></div>
+          <ul id="text-style-list" class="font-list"></ul>
         </div>
       </div>
     </aside>
@@ -327,6 +344,14 @@
 <script src="/static/api-pick-file.js"></script>
 <script src="/static/api-probe-media.js"></script>
 <script src="/static/api-export-project.js"></script>
+<script src="/static/api-list-presets.js"></script>
+<script src="/static/api-save-preset.js"></script>
+<script src="/static/text-panel-font-family.js"></script>
+<script src="/static/text-panel-font-style.js"></script>
+<script src="/static/text-panel-style.js"></script>
+<script src="/static/text-panel-align.js"></script>
+<script src="/static/text-panel-position.js"></script>
+<script src="/static/text-panel-time.js"></script>
 <script src="/static/seed.js"></script>
 <script src="/static/preview.js"></script>
 <script src="/static/timeline.js"></script>
