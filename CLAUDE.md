@@ -58,7 +58,7 @@ static/
       timeline.css              # timeline strip: ruler, playhead, row tracks, blocks
       button-group.css           # reusable .btn-group toggle-row + .icon-btn styling (used by ui-components.js)
       number-field.css            # custom up/down stepper for number inputs (native OS spin control is unstylable); used by ui-components.js
-      style-panel.css            # right-hand context panel: closed by default (#style-panel[hidden]), close button, three mutually-exclusive sections (#panel-video/#panel-text/#panel-captions) toggled via their own `hidden` attribute; mockup-matched (mono-caps section labels, button-group align/position)
+      style-panel.css            # right-hand context panel: closed by default (#style-panel[hidden]), close button, four mutually-exclusive sections (#panel-files/#panel-video/#panel-text/#panel-captions) toggled via their own `hidden` attribute; mockup-matched (mono-caps section labels, button-group align/position)
       divider.css                 # .ui-divider: a plain static 1px line, no hover effect; pairs with UI.divider (static/ui-divider.js), added 2026-07-17
       color-swatch.css            # .color-swatch-row/.color-swatch/.color-swatch-label: small square input[type=color] + mixed-case label beside it, one field per row
       resize-handles.css      # .resize-handle-* styling for ui-resize-handles.js
