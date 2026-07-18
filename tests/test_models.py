@@ -56,3 +56,11 @@ def test_text_preset_box_round_trip():
                     box_background=True, box_background_color="#111111",
                     box_border_width=3, box_border_color="#EEEEEE", box_border_radius=8)
     assert TextPreset.model_validate_json(p.model_dump_json()) == p
+
+def test_text_preset_usage_count_defaults_zero():
+    p = TextPreset(name="Pop")
+    assert p.usage_count == 0
+
+def test_text_preset_usage_count_round_trips():
+    p = TextPreset(name="Pop", usage_count=7)
+    assert TextPreset.model_validate_json(p.model_dump_json()).usage_count == 7

@@ -1,7 +1,7 @@
 # Tests for app.main's export route: confirms ASS subtitles are rendered to a file and
 # burned into the ffmpeg command when a project has text blocks, and skipped otherwise.
 from unittest.mock import patch
-from app.main import export_project
+from app.main import export_project, list_presets, create_preset
 from app.models import Project, TextBlockLayer, TextPreset
 
 def test_export_writes_ass_file_and_burns_it_in(tmp_path, monkeypatch):
@@ -27,3 +27,20 @@ def test_export_omits_ass_when_no_text_blocks(tmp_path, monkeypatch):
     assert list((tmp_path / "exports").glob("*.ass")) == []
     cmd = run_export.call_args[0][0]
     assert not any("ass=" in part for part in cmd)
+
+def test_create_and_list_presets(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    p = TextPreset(name="Pop")
+    result = create_preset(p)
+    assert result == p
+    assert list_presets() == [p]
+
+def test_create_preset_same_id_updates(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    p = TextPreset(name="Pop")
+    create_preset(p)
+    p.usage_count = 3
+    create_preset(p)
+    result = list_presets()
+    assert len(result) == 1
+    assert result[0].usage_count == 3

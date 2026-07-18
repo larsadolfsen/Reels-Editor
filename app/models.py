@@ -47,6 +47,7 @@ class TextPreset(BaseModel):
     pos_col: str = "mid"           # left|mid|right
     offset_x: int = 0
     offset_y: int = 0
+    usage_count: int = 0    # how many times this saved preset has been applied to a block; drives the STYLE accordion's "most used" list
 
     @model_validator(mode="before")
     @classmethod
