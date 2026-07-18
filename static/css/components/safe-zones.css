@@ -1,28 +1,45 @@
-/* Safe-zone reference overlay (dashed guide boxes matching TikTok's UI chrome), toggled from the timeline toolbar. */
-/* Exposes #safe-zones (+ .safe-zone-*). #safe-zones-toggle lives in #timeline-toolbar and uses .icon-btn styling (button-group.css) for its pressed state. Depends on tokens.css, #stage (position: relative, in stage.css). */
+/* Safe-zone reference overlay: shaded bands + solid accent edge (matching TikTok's UI chrome) with high-contrast label chips, toggled from the timeline toolbar. */
+/* Exposes #safe-zones (+ .safe-zone-*). #safe-zones-toggle lives in #timeline-toolbar and uses .icon-btn styling (button-group.css) for its pressed state. Depends on tokens.css, #stage (position: relative, in stage.css). Labels use an opaque chip (same visual language as .slice-btn in timeline.css) rather than bare text so they stay legible over any video content underneath. */
 #safe-zones {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  font-family: var(--font-ui);
-  font-size: 7px;
-  letter-spacing: 0.03em;
-  color: var(--safe-zone);
 }
 
 #safe-zones[hidden] { display: none; }
 
 .safe-zone {
   position: absolute;
-  border: 1px dashed var(--safe-zone);
-  background: color-mix(in srgb, var(--safe-zone) 8%, transparent);
+  background: color-mix(in srgb, var(--safe-zone) 30%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
 }
 
-.safe-zone-top { top: 0; left: 0; right: 0; height: 6%; }
-.safe-zone-right { top: 40%; right: 0; width: 15%; height: 44%; writing-mode: vertical-rl; }
-.safe-zone-caption { left: 0; right: 15%; bottom: 7%; height: 20%; align-items: flex-start; padding-top: 4px; }
-.safe-zone-nav { left: 0; right: 0; bottom: 0; height: 7%; }
+/* Solid (non-dashed) accent line on the edge facing the safe interior, so the
+   boundary reads clearly even against busy/bright footage where a thin dashed
+   line disappears. */
+.safe-zone-top { top: 0; left: 0; right: 0; height: 6%; border-bottom: 2px solid var(--safe-zone); }
+.safe-zone-right { top: 40%; right: 0; width: 15%; height: 44%; writing-mode: vertical-rl; border-left: 2px solid var(--safe-zone); }
+.safe-zone-caption { left: 0; right: 15%; bottom: 7%; height: 20%; align-items: flex-start; padding-top: var(--space-2); border-top: 2px solid var(--safe-zone); }
+.safe-zone-nav { left: 0; right: 0; bottom: 0; height: 7%; border-top: 2px solid var(--safe-zone); }
+
+/* Label chip: opaque surface + border + drop shadow (same recipe as .slice-btn
+   in timeline.css) so text contrast never depends on the video color beneath it. */
+.safe-zone span {
+  display: inline-block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--safe-zone);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
