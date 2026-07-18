@@ -16,7 +16,7 @@ This spec sets that process, then lays out the phase order and scope for the rem
 These rules govern every future plan derived from this roadmap (not just the phases below):
 
 - **Phase** = a chunk of the roadmap (e.g. "Captions"). A phase ends with a mandatory visual-review checkpoint: the app running, the feature fully wired end-to-end (backend + UI), reviewed live in the browser before the next phase starts.
-- **Brainstorm each phase in full, then write its implementation plan immediately** — the plan is not deferred to a separate future session. Phase 1 has already been brainstormed this way: it has a depth doc (resolved decisions, subthread breakdown) and a real implementation plan under `docs/superpowers/plans/`. Phase 3 (Rich-Text Formatting) and Phase 4 (Captions) have depth docs but no plan yet. Phases 2 (Project Management), 5 (Video Box), and 6 (Export Polish) haven't been brainstormed yet — when picked up, they get the same full brainstorm-then-plan treatment before any code is written, since Phase 5 in particular has no existing design to check against.
+- **Brainstorm each phase in full, then write its implementation plan immediately** — the plan is not deferred to a separate future session. Phase 1 has already been brainstormed this way: it has a depth doc (resolved decisions, subthread breakdown) and a real implementation plan under `docs/superpowers/plans/`. Phase 4 (Captions) and Phase 5 (Rich-Text Formatting) have depth docs but no plan yet. Phases 2 (Project Management), 3 (Video Box), and 6 (Export Polish) haven't been brainstormed yet — when picked up, they get the same full brainstorm-then-plan treatment before any code is written, since Phase 3 in particular has no existing design to check against.
 - If a phase is picked up materially later than when its depth doc/plan were written, re-verify the plan against the codebase's actual state first (things may have shifted) — but that's a verification pass, not a reason to start over from a blank page.
 - **Task** = one component or service within a phase: one `UI.*` JS component, one CSS component file, one backend model/route change, one ASS-render addition, one service module. Small enough to hand to a single worktree subagent in one sitting.
 - **Parallelize independent tasks.** Tasks within a phase's plan that don't touch the same files/state are flagged "parallel-safe" and run via `superpowers:using-git-worktrees` + `superpowers:subagent-driven-development`, each in its own worktree, merged back before the phase's visual checkpoint.
@@ -32,19 +32,19 @@ Finishes **every** whole-block text-styling feature in one phase, so rich-text (
 
 ### Phase 2: Project management — [depth doc](2026-07-17-phase-2-project-management-design.md)
 
-Added after the fact when the user asked "when can we save a project?" — work is already autosaved (`PUT /api/projects/{id}` after every mutation) but there's no way to name a project, see a list, or switch between several; only one implicit project per browser via a `localStorage` id. Independent, low-risk infrastructure work, slotted in right after Phase 1 since it doesn't block or depend on the styling/rich-text/captions work. No depth-doc subthread breakdown yet — needs its own brainstorming session first.
+Added after the fact when the user asked "when can we save a project?" — work is already autosaved (`PUT /api/projects/{id}` after every mutation) but there's no way to name a project, see a list, or switch between several; only one implicit project per browser via a `localStorage` id. **Hard requirement:** a project must survive browser storage being cleared entirely (different browser, different machine, cache reset) — the project list this phase adds must be sourced from the server (every file on disk), not from `localStorage`, which becomes a "reopen last" convenience only. Independent, low-risk infrastructure work, slotted in right after Phase 1 since it doesn't block or depend on the styling/rich-text/captions work. No depth-doc subthread breakdown yet — needs its own brainstorming session first.
 
-### Phase 3: Rich-text formatting — [depth doc](2026-07-17-phase-3-rich-text-formatting-design.md)
+### Phase 3: Video Box — [depth doc](2026-07-17-phase-3-video-box-design.md)
 
-Split out of Phase 1 into its own phase because it's a materially bigger, riskier unit of work. Lets FONT properties (including a new highlight — background behind glyphs) vary per selected range of text within a block, instead of one flat style per block. Carries real open technical risk (word-wrap with mixed run widths, multi-line highlight rendering) flagged explicitly in its depth doc rather than glossed over.
+Picture-in-picture clip layer. `ClipLayer` has no position/size concept yet, so this phase's first step is its own full brainstorming session to design that data model — not a verification pass like Phase 1, since there's no existing design to check against. Moved up to right after Project Management (was originally scheduled last among the feature phases) since it doesn't depend on anything from Captions or Rich-Text Formatting.
 
 ### Phase 4: Captions — [depth doc](2026-07-17-phase-4-captions-design.md)
 
-Replaces the non-functional placeholder panel with real, functional captions: transcription (faster-whisper), a caption list subpanel with timestamps, reuse of Phase 1's FONT/STYLE/BOX/POSITION accordions (no TIME — already timestamped) and Phase 3's per-range highlight mechanism (driven by playback time instead of a user selection, for the current-word-only vs progressive-fill karaoke modes), and preview+export rendering. Revives the original plan's Tasks 10–12.
+Replaces the non-functional placeholder panel with real, functional captions: transcription (faster-whisper), a caption list subpanel with timestamps, reuse of Phase 1's FONT/STYLE/BOX/POSITION accordions (no TIME — already timestamped), a self-contained karaoke highlight (current-word-only vs progressive-fill modes, plain ASS `\k` tags — not shared with Rich-Text Formatting, since that phase now lands after this one), and preview+export rendering. Revives the original plan's Tasks 10–12.
 
-### Phase 5: Video Box — [depth doc](2026-07-17-phase-5-video-box-design.md)
+### Phase 5: Rich-text formatting — [depth doc](2026-07-17-phase-5-rich-text-formatting-design.md)
 
-Picture-in-picture clip layer. `ClipLayer` has no position/size concept yet, so this phase's first step is its own full brainstorming session to design that data model — not a verification pass like Phases 1–4, since there's no existing design to check against. Deferred until Phases 1–4 are done.
+Split out of Phase 1 into its own phase because it's a materially bigger, riskier unit of work — the highest-technical-risk piece of the remaining roadmap, deliberately scheduled last among the feature phases (just before Export Polish) rather than blocking Video Box or Captions on it. Lets FONT properties (including a new highlight — background behind glyphs) vary per selected range of text within a block, instead of one flat style per block. Carries real open technical risk (word-wrap with mixed run widths, multi-line highlight rendering) flagged explicitly in its depth doc rather than glossed over.
 
 ### Phase 6: Export polish — [depth doc](2026-07-17-phase-6-export-polish-design.md)
 
@@ -53,6 +53,6 @@ Final pass once all layer types (text, captions, video box) are functional: prev
 ## Out of scope for this spec
 
 - Full step-by-step implementation plans for Phases 2–6 — those get written when each phase's own brainstorm completes, following the same immediate-plan-writing rule Phase 1 followed (see Process Rules). Phase 1's plan already exists (linked above).
-- The Video Box data model — deferred to Phase 5's brainstorm, including its subthread breakdown (its depth doc intentionally has none yet, unlike Phases 1, 3, and 4).
-- The Project Management UI shape (list view, rename flow, deletion/duplication) — deferred to Phase 2's brainstorm.
+- The Video Box data model — deferred to Phase 3's brainstorm, including its subthread breakdown (its depth doc intentionally has none yet, unlike Phases 1, 4, and 5).
+- The Project Management UI shape (list view, rename flow, deletion/duplication) — deferred to Phase 2's brainstorm, though the "survives storage being cleared" requirement above is fixed, not open.
 - Backlog items already tracked independently (logo/REEL positioning, safe-zone contrast, divider component, etc.) — unaffected by this revision, still tracked in `docs/superpowers/backlog.md`.

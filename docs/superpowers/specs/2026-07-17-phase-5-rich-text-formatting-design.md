@@ -1,4 +1,4 @@
-# Phase 3 — Rich-Text Formatting
+# Phase 5 — Rich-Text Formatting
 
 **Parent:** [2026-07-17-major-plan-revision-design.md](2026-07-17-major-plan-revision-design.md)
 **Status:** planning only — brainstormed for this revision, but carries real open technical risk (see below) that the pre-plan brainstorm at pickup time should treat as a genuine design pass, not just a verification of this doc.
@@ -7,7 +7,7 @@
 
 Let FONT properties — size, weight, italic, underline, color, outline, and the new highlight — vary per selected range of text within a single text block, instead of being one flat style for the whole heading. Select text on the stage, change a control in the FONT accordion, and only the selection restyles live. This is also where the text-highlight feature (background behind glyphs) actually lands, since highlight only makes sense applied to a user-chosen range, not the whole block.
 
-Split out of Phase 1 into its own phase because it's a materially bigger and riskier unit of work than the whole-block accordion restructure — see the parent doc's Phase 1/3 split rationale.
+Split out of Phase 1 into its own phase because it's a materially bigger and riskier unit of work than the whole-block accordion restructure — see the parent doc's Phase 1/5 split rationale. Scheduled last among the feature phases (just before Export Polish) since it's the highest-technical-risk piece and the other feature phases (Video Box, Captions) don't depend on it landing first.
 
 ## Why this is a real architecture change
 
