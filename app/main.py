@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from app.models import Project
+from app.models import Project, TextPreset
 from app import store, media, ffmpeg_cmd, ass_render
 
 DATA_DIR = Path("data")
@@ -36,6 +36,15 @@ def probe(path: str) -> dict:
 @app.get("/api/pick-file")
 def pick_file() -> dict:
     return {"path": media.pick_file()}
+
+@app.get("/api/presets")
+def list_presets() -> list[TextPreset]:
+    return store.load_presets(DATA_DIR)
+
+@app.post("/api/presets")
+def create_preset(preset: TextPreset) -> TextPreset:
+    store.save_preset(preset, DATA_DIR)
+    return preset
 
 @app.get("/media")
 def media_file(path: str):

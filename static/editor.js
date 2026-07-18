@@ -7,7 +7,6 @@ let selectedMediaId = null; // MEDIA panel row highlight only — independent of
 const player = document.getElementById("player");
 
 const AVAILABLE_FONTS = ["Public Sans", "JetBrains Mono"]; // the only vendored font families (static/fonts/)
-let fontRowSetValue = null; // updater returned by UI.settingsRow, set once renderFontRow() runs
 
 function formatClipDuration(seconds) {
   const m = Math.floor(seconds / 60);
@@ -65,75 +64,31 @@ function renderTextPreview() {
   Preview.renderText(project, project.text_presets, Preview.currentTimelineTime());
 }
 
-async function updateTextBlock() {
-  const block = ensureTextBlock();
-  block.heading = document.getElementById("text-heading").value;
-  await saveProject();
-  renderTextPreview();
-}
-
 function renderTextPanel() {
   document.getElementById("panel-text-font").hidden = true;
+  document.getElementById("panel-text-style").hidden = true;
   document.getElementById("panel-text-main").hidden = false;
 
   const block = ensureTextBlock();
   const preset = ensureTextPreset(block.preset_id);
-  document.getElementById("text-heading").value = block.heading;
-  renderFontRow();
+
+  TextPanel.renderFontFamily();
+  TextPanel.renderFontStyle();
+  TextPanel.renderStyle();
   renderBoxPanel();
-  document.getElementById("text-bold").setAttribute("aria-pressed", String(preset.bold));
-  document.getElementById("text-italic").setAttribute("aria-pressed", String(preset.italic));
-  document.getElementById("text-underline").setAttribute("aria-pressed", String(preset.underline));
-
-  UI.numberField(document.getElementById("text-size-field"),
-    { label: "SIZE", unit: "PX", value: preset.size_px, min: 24, max: 200,
-      onChange: (v) => { preset.size_px = v; saveProject(); renderTextPreview(); } });
-
-  UI.colorSwatch(document.getElementById("text-color-field"),
-    { label: "Color", value: preset.color,
-      onChange: (v) => { preset.color = v; saveProject(); renderTextPreview(); } });
-
-  UI.colorSwatch(document.getElementById("text-outline-color-field"),
-    { label: "Outline", value: preset.outline_color,
-      onChange: (v) => { preset.outline_color = v; saveProject(); renderTextPreview(); } });
-
-  UI.numberField(document.getElementById("text-start-field"),
-    { label: "START", unit: "SEC", value: block.start, step: 0.1,
-      onChange: (v) => { block.start = v; saveProject(); renderTextPreview(); } });
-
-  UI.numberField(document.getElementById("text-end-field"),
-    { label: "END", unit: "SEC", value: block.end, step: 0.1,
-      onChange: (v) => { block.end = v; saveProject(); renderTextPreview(); } });
-
-  UI.numberField(document.getElementById("text-outline-px-field"),
-    { label: "WIDTH", unit: "PX", value: preset.outline_px, min: 0, max: 20,
-      onChange: (v) => { preset.outline_px = v; saveProject(); renderTextPreview(); } });
-
-  UI.numberField(document.getElementById("text-offset-x-field"),
-    { label: "OFFSET H", unit: "PX", value: preset.offset_x, step: 1,
-      onChange: (v) => { preset.offset_x = v; computeXY(preset); saveProject(); renderTextPreview(); } });
-
-  UI.numberField(document.getElementById("text-offset-y-field"),
-    { label: "OFFSET V", unit: "PX", value: preset.offset_y, step: 1,
-      onChange: (v) => { preset.offset_y = v; computeXY(preset); saveProject(); renderTextPreview(); } });
-
-  UI.buttonGroup(document.getElementById("text-align-group"),
-    [{ value: "left", label: "LEFT" }, { value: "center", label: "CENTER" }, { value: "right", label: "RIGHT" }],
-    preset.align, (value) => { preset.align = value; saveProject(); renderTextPreview(); });
-
-  UI.buttonGroup(document.getElementById("position-row-group"),
-    [{ value: "top", label: "TOP" }, { value: "mid", label: "MID" }, { value: "btm", label: "BTM" }],
-    preset.pos_row, (value) => { preset.pos_row = value; computeXY(preset); saveProject(); renderTextPreview(); });
-
-  UI.buttonGroup(document.getElementById("position-col-group"),
-    [{ value: "left", label: "LEFT" }, { value: "mid", label: "MID" }, { value: "right", label: "RIGHT" }],
-    preset.pos_col, (value) => { preset.pos_col = value; computeXY(preset); saveProject(); renderTextPreview(); });
+  TextPanel.renderAlign();
+  TextPanel.renderPosition();
+  TextPanel.renderTime();
 
   renderTextPreview();
 
   Preview.setSelectedTextBlock(block.id, {
     onResize: (size) => handleBoxResize(preset, size),
     onDragEnd: (size) => handleBoxResizeEnd(preset, size),
+    onMove: (delta) => handleBoxMove(preset, delta),
+    onMoveEnd: (delta) => handleBoxMoveEnd(preset, delta),
+    onEdit: (heading) => { block.heading = heading; },
+    onEditEnd: async (heading) => { block.heading = heading; await saveProject(); },
   });
 }
 
@@ -206,116 +161,51 @@ async function handleBoxResizeEnd(preset, { width, height }) {
   renderBoxPanel();
 }
 
-document.getElementById("text-heading").addEventListener("input", updateTextBlock);
-
-function wireTextStyleToggle(id, prop) {
-  const btn = document.getElementById(id);
-  btn.addEventListener("click", async () => {
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
-    preset[prop] = !preset[prop];
-    btn.setAttribute("aria-pressed", String(preset[prop]));
-    await saveProject();
-    renderTextPreview();
-  });
-}
-wireTextStyleToggle("text-bold", "bold");
-wireTextStyleToggle("text-italic", "italic");
-wireTextStyleToggle("text-underline", "underline");
-
-UI.accordionSection(document.getElementById("text-font-accordion"), document.getElementById("text-font-body"), { title: "FONT", expanded: false });
-UI.accordionSection(document.getElementById("text-box-accordion"), document.getElementById("text-box-body"), { title: "BOX", expanded: false });
-UI.accordionSection(document.getElementById("text-misc-accordion"), document.getElementById("text-misc-body"), { title: "MISC", expanded: false });
-
-UI.divider(document.getElementById("video-order-divider"));
-UI.divider(document.getElementById("text-style-divider"));
-UI.divider(document.getElementById("text-align-divider"));
-UI.divider(document.getElementById("text-box-width-height-divider"));
-UI.divider(document.getElementById("text-box-background-border-divider"));
-
-function renderFontRow() {
-  const preset = ensureTextPreset(ensureTextBlock().preset_id);
-  if (fontRowSetValue) {
-    fontRowSetValue(preset.font, preset.font);
-  } else {
-    fontRowSetValue = UI.settingsRow(document.getElementById("text-font-row"), {
-      label: "Font Family", value: preset.font, valueFontFamily: preset.font,
-      onClick: openFontPanel,
-    });
-  }
+function nearestAnchorKey(value, anchors) {
+  return Object.keys(anchors).reduce((best, key) =>
+    Math.abs(value - anchors[key]) < Math.abs(value - anchors[best]) ? key : best);
 }
 
-function openFontPanel() {
-  renderFontList();
-  document.getElementById("panel-text-main").hidden = true;
-  document.getElementById("panel-text-font").hidden = false;
+// Recomputes pos_row/pos_col from the preset's current x/y (after a free-pixel drag), then
+// rebases offset_x/offset_y to the remaining distance from that anchor cell — keeps the
+// anchor-grid model meaningful after a drag that isn't itself snapped.
+function rebaseAnchorFromXY(preset) {
+  preset.pos_row = nearestAnchorKey(preset.y, POSITION_ANCHORS_Y);
+  preset.pos_col = nearestAnchorKey(preset.x, POSITION_ANCHORS_X);
+  preset.offset_x = preset.x - POSITION_ANCHORS_X[preset.pos_col];
+  preset.offset_y = preset.y - POSITION_ANCHORS_Y[preset.pos_row];
 }
 
-function closeFontPanel() {
-  document.getElementById("panel-text-font").hidden = true;
-  document.getElementById("panel-text-main").hidden = false;
-  renderTextPreview();
-}
-
-function hoverPreviewFont(fontName) {
-  const preset = ensureTextPreset(ensureTextBlock().preset_id);
-  const previewPresets = { ...project.text_presets, [preset.id]: { ...preset, font: fontName } };
+function handleBoxMove(preset, { dx, dy }) {
+  const scale = stageScale();
+  const previewPreset = { ...preset, offset_x: preset.offset_x + dx * scale, offset_y: preset.offset_y + dy * scale };
+  computeXY(previewPreset);
+  const previewPresets = { ...project.text_presets, [preset.id]: previewPreset };
   Preview.renderText(project, previewPresets, Preview.currentTimelineTime());
 }
 
-async function selectFont(fontName) {
-  const preset = ensureTextPreset(ensureTextBlock().preset_id);
-  preset.font = fontName;
+async function handleBoxMoveEnd(preset, { dx, dy }) {
+  const scale = stageScale();
+  // TextPreset.offset_x/offset_y are int fields (app/models.py) — round before persisting,
+  // else the PUT /api/projects/{id} save fails Pydantic validation (422) and the drag is lost.
+  preset.offset_x += Math.round(dx * scale);
+  preset.offset_y += Math.round(dy * scale);
+  computeXY(preset);
+  rebaseAnchorFromXY(preset);
   await saveProject();
-  renderFontRow();
-  renderFontList();
-  closeFontPanel();
+  renderTextPanel();
 }
 
-function renderFontList() {
-  const listEl = document.getElementById("text-font-list");
-  listEl.innerHTML = "";
-  const preset = ensureTextPreset(ensureTextBlock().preset_id);
-  const orderedFonts = [preset.font, ...AVAILABLE_FONTS.filter((f) => f !== preset.font)];
-  orderedFonts.forEach((fontName, index) => {
-    if (index > 0) {
-      const dividerLi = document.createElement("li");
-      dividerLi.className = "font-list-divider";
-      UI.divider(dividerLi);
-      listEl.appendChild(dividerLi);
-    }
+UI.accordionSection(document.getElementById("text-font-accordion"), document.getElementById("text-font-body"), { title: "FONT", expanded: false });
+UI.accordionSection(document.getElementById("text-style-accordion"), document.getElementById("text-style-body"), { title: "STYLE", expanded: false });
+UI.accordionSection(document.getElementById("text-box-accordion"), document.getElementById("text-box-body"), { title: "BOX", expanded: false });
+UI.accordionSection(document.getElementById("text-position-accordion"), document.getElementById("text-position-body"), { title: "POSITION", expanded: false });
+UI.accordionSection(document.getElementById("text-time-accordion"), document.getElementById("text-time-body"), { title: "TIME", expanded: false });
 
-    const li = document.createElement("li");
-    li.className = "font-list-row";
-    li.addEventListener("mouseenter", () => hoverPreviewFont(fontName));
-    li.addEventListener("mouseleave", () => renderTextPreview());
-    li.addEventListener("click", () => selectFont(fontName));
-
-    const nameEl = document.createElement("span");
-    nameEl.className = "font-list-row-name";
-    nameEl.style.fontFamily = fontName;
-    nameEl.textContent = fontName;
-    li.appendChild(nameEl);
-
-    if (fontName === preset.font) {
-      const check = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      check.setAttribute("class", "font-list-checkmark");
-      check.setAttribute("viewBox", "0 0 24 24");
-      check.setAttribute("fill", "none");
-      check.setAttribute("stroke", "currentColor");
-      check.setAttribute("stroke-width", "2");
-      check.setAttribute("stroke-linecap", "round");
-      check.setAttribute("stroke-linejoin", "round");
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", "M20 6 9 17l-5-5");
-      check.appendChild(path);
-      li.appendChild(check);
-    }
-
-    listEl.appendChild(li);
-  });
-}
-
-UI.subPanelHeader(document.getElementById("text-font-subpanel-header"), { title: "Font Family", onBack: closeFontPanel });
+UI.divider(document.getElementById("video-order-divider"));
+UI.divider(document.getElementById("text-font-family-style-divider"));
+UI.divider(document.getElementById("text-box-width-height-divider"));
+UI.divider(document.getElementById("text-box-background-border-divider"));
 
 function clampTrim(inP, outP, dur) {
   inP = Math.max(0, Math.min(inP, dur));
@@ -413,7 +303,6 @@ function onTimelineSelect({ type, item, groupIndex }) {
   } else if (type === "text") {
     showPanel("text");
     renderTextPanel();
-    document.getElementById("text-heading").focus();
   } else if (type === "caption") {
     document.querySelector(".caption-preview-box").textContent = item.map((w) => w.text).join(" ");
     showPanel("captions");
@@ -492,7 +381,6 @@ function openTextPanel() {
   selected = { type: "text" };
   showPanel("text");
   renderTextPanel();
-  document.getElementById("text-heading").focus();
   renderTimeline();
 }
 
@@ -603,6 +491,7 @@ document.getElementById("export").addEventListener("click", exportProject);
   document.title = project.name ? `${project.name} – Reels Editor` : "Reels Editor";
   renderMediaList();
   Preview.load(project);
+  await TextPanel.loadSavedPresets();
   renderTextPanel();
   renderTimeline();
   openFilesPanel();
