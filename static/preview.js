@@ -69,7 +69,11 @@ window.Preview = (() => {
       stageH = stageW * 16 / 9;
     }
     for (const block of (project.text_blocks || [])) {
-      if (!block.heading) continue;
+      const isSelected = block.id === selectedTextBlockId;
+      // An empty heading normally means "nothing to show" — but the selected block must still
+      // render (even empty) so there's something on the stage to click into and start typing;
+      // this is the only way to enter a heading now that the side-panel textarea is gone.
+      if (!block.heading && !isSelected) continue;
       if (!(block.start <= timelineTime && timelineTime < block.end)) continue;
       const preset = presets[block.preset_id];
       if (!preset) continue;
@@ -107,6 +111,7 @@ window.Preview = (() => {
       div.style.boxSizing = "border-box";
 
       div.textContent = block.heading;
+      if (!block.heading) { div.style.minWidth = "40px"; div.style.minHeight = "1em"; } // stay clickable while empty
       overlay.appendChild(div);
 
       if (block.id === selectedTextBlockId) {
