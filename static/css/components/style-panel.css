@@ -167,3 +167,19 @@
 .clip-info .clip-duration { font-family: var(--font-ui); font-size: 9.5px; color: var(--text-dim); margin-top: 2px; }
 
 #panel-export #export { width: 100%; }
+
+/* TEXT ALIGN's buttons are icons, not text — override .btn-group's stretched 1fr columns/padding
+   so they render as plain 28x28 .icon-btn squares instead. Scoped to this one group; other
+   button-group uses (POSITION row/col, BOX size mode, etc.) keep the default text-label sizing. */
+#text-align-group {
+  grid-auto-columns: min-content;
+  justify-content: start;
+}
+#text-align-group button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
