@@ -85,6 +85,8 @@ function renderTextPanel() {
   Preview.setSelectedTextBlock(block.id, {
     onResize: (size) => handleBoxResize(preset, size),
     onDragEnd: (size) => handleBoxResizeEnd(preset, size),
+    onMove: (delta) => handleBoxMove(preset, delta),
+    onMoveEnd: (delta) => handleBoxMoveEnd(preset, delta),
     onEdit: (heading) => { block.heading = heading; },
     onEditEnd: async (heading) => { block.heading = heading; await saveProject(); },
   });
@@ -157,6 +159,41 @@ async function handleBoxResizeEnd(preset, { width, height }) {
   preset.box_height = Math.round(height * scale);
   await saveProject();
   renderBoxPanel();
+}
+
+function nearestAnchorKey(value, anchors) {
+  return Object.keys(anchors).reduce((best, key) =>
+    Math.abs(value - anchors[key]) < Math.abs(value - anchors[best]) ? key : best);
+}
+
+// Recomputes pos_row/pos_col from the preset's current x/y (after a free-pixel drag), then
+// rebases offset_x/offset_y to the remaining distance from that anchor cell — keeps the
+// anchor-grid model meaningful after a drag that isn't itself snapped.
+function rebaseAnchorFromXY(preset) {
+  preset.pos_row = nearestAnchorKey(preset.y, POSITION_ANCHORS_Y);
+  preset.pos_col = nearestAnchorKey(preset.x, POSITION_ANCHORS_X);
+  preset.offset_x = preset.x - POSITION_ANCHORS_X[preset.pos_col];
+  preset.offset_y = preset.y - POSITION_ANCHORS_Y[preset.pos_row];
+}
+
+function handleBoxMove(preset, { dx, dy }) {
+  const scale = stageScale();
+  const previewPreset = { ...preset, offset_x: preset.offset_x + dx * scale, offset_y: preset.offset_y + dy * scale };
+  computeXY(previewPreset);
+  const previewPresets = { ...project.text_presets, [preset.id]: previewPreset };
+  Preview.renderText(project, previewPresets, Preview.currentTimelineTime());
+}
+
+async function handleBoxMoveEnd(preset, { dx, dy }) {
+  const scale = stageScale();
+  // TextPreset.offset_x/offset_y are int fields (app/models.py) — round before persisting,
+  // else the PUT /api/projects/{id} save fails Pydantic validation (422) and the drag is lost.
+  preset.offset_x += Math.round(dx * scale);
+  preset.offset_y += Math.round(dy * scale);
+  computeXY(preset);
+  rebaseAnchorFromXY(preset);
+  await saveProject();
+  renderTextPanel();
 }
 
 UI.accordionSection(document.getElementById("text-font-accordion"), document.getElementById("text-font-body"), { title: "FONT", expanded: false });

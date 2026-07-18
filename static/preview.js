@@ -128,6 +128,8 @@ window.Preview = (() => {
             editingDiv = null;
             if (boxResizeCallbacks && boxResizeCallbacks.onEditEnd) boxResizeCallbacks.onEditEnd(text);
           },
+          onMove: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMove) boxResizeCallbacks.onMove(delta); },
+          onMoveEnd: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMoveEnd) boxResizeCallbacks.onMoveEnd(delta); },
         });
         if (boxResizeCallbacks) {
           UI.resizeHandles(div, {
