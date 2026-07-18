@@ -12,7 +12,7 @@
 }
 
 /* Brand mark, relocated here from the top bar — pinned to the rail's bottom via margin-top: auto,
-   shrunk to fit the 72px width (dot+name stacked above the tag, all smaller than the original). */
+   shrunk to fit the 72px width (dot above name, no "LOCAL" tag). */
 #panel-brand {
   margin-top: auto;
   display: flex;
@@ -23,12 +23,3 @@
 }
 #panel-brand #brand-dot { width: 6px; height: 6px; border-radius: var(--radius); background: var(--accent); }
 #panel-brand #brand-name { font-family: var(--font-ui); font-weight: 600; font-size: 10px; letter-spacing: 0.02em; }
-#panel-brand #brand-tag {
-  font-family: var(--font-ui);
-  font-size: 8px;
-  color: var(--text-dim);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 1px 4px;
-  letter-spacing: 0.03em;
-}

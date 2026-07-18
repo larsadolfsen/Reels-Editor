@@ -29,7 +29,7 @@ Finish **every** whole-block text-styling feature before starting rich-text (per
 - **Inline editing replaces the side-panel textarea entirely** — `#text-heading` is removed, not kept in sync. The `.text-block` div on the stage becomes `contenteditable` and is the *only* way to edit a heading's text. No rich formatting yet (that's Phase 2) — plain text only.
 - **Drag-to-reposition the box body**: clicking and dragging anywhere inside the box that isn't one of the 8 existing resize handles starts a move-drag; the handles keep working exactly as they do today. Free pixel drag while dragging (updates `offset_x`/`offset_y` live, the same fields the POSITION anchor grid already writes to) — no visual snapping to the anchor grid mid-drag. On drag-end, recompute which of the 9 anchor thirds the final position falls into, update `pos_row`/`pos_col` to that cell, and rebase `offset_x`/`offset_y` to the remaining distance from that cell's anchor point.
 - **Drag-vs-edit-click on the same element**: a plain click (no meaningful pointer movement) enters edit mode / places the caret in the now-contenteditable box; a click that moves past a small pixel threshold before release is a box-move drag instead. Both land together since they're the same `mousedown`/`mouseup` handling on the same element.
-- Two small existing backlog polish items are folded in here since they touch the same accordions: moving the Color control into the FONT accordion (already happens naturally as part of FONT consolidation) and BOX accordion's checkmark/transparent-default cosmetic fix.
+- The existing "move Color control into FONT accordion" backlog item is folded in here — it happens naturally as part of FONT consolidation (subthread 3). The separate "BOX accordion: remove checkmark, transparent default" backlog item stays out of this phase's plan: it has no grounding in the current code (no checkmark element exists anywhere near BOX in `static/`, and `box_background` already defaults to `False`/transparent) — it needs eyes-on-browser investigation before it can be turned into concrete steps, so it stays in the backlog as its own ungrounded item.
 
 ## Subthreads
 
@@ -47,17 +47,16 @@ Finish **every** whole-block text-styling feature before starting rich-text (per
 4. **POSITION accordion** — [parallel-safe]. Extract the existing align-button-group + anchor grid + offset-X/Y fields out of MISC into their own accordion.
 5. **TIME accordion** — [parallel-safe]. Extract the existing start/end `UI.numberField`s out of MISC into their own accordion.
 6. **STYLE accordion** — [depends on subthread 2]. New component(s): save-as-new-preset flow (name prompt), an inline most-used/recent list in the accordion body, and a drill-down subpanel for the full preset list.
-7. **BOX accordion cosmetic fixes** — [parallel-safe]. Remove the stray checkmark, set background transparent by default.
-8. **Confirm five-accordion order** — [sequential, after 3–7 land]. FONT, STYLE, BOX, POSITION, TIME. No code expected, just placement/verification.
+7. **Confirm five-accordion order** — [sequential, after 3–6 land]. FONT, STYLE, BOX, POSITION, TIME. No code expected, just placement/verification.
 
 ### Frontend — drag + inline editing
 
-9. **Drag-to-reposition the box body** — [parallel-safe, but shares the same element/handlers as subthread 10]. `preview.js` (mousedown-drag on `.text-block`, mirroring `UI.resizeHandles`'s drag-tracking pattern but without handles) and `editor.js` (drag-end handler recomputing anchor + offset, symmetric to `handleBoxResizeEnd`).
-10. **Inline stage text editing** — [same element as subthread 9, land together]. Make the `.text-block` div's text `contenteditable`; wire `input` events to update `project.text_blocks[].heading` + debounced `saveProject()`. Remove `#text-heading` and its wiring entirely.
+8. **Inline stage text editing** — [land before subthread 9, same element]. Make the `.text-block` div's text `contenteditable`; wire `input`/`blur` to update `project.text_blocks[].heading` + `saveProject()`. Remove `#text-heading` and its wiring entirely.
+9. **Drag-to-reposition the box body** — [builds on subthread 8's click handling]. `preview.js` (mousedown-drag on `.text-block`, mirroring `UI.resizeHandles`'s drag-tracking pattern but without handles, replacing subthread 8's plain click listener with a click-vs-drag distinction) and `editor.js` (drag-end handler recomputing anchor + offset, symmetric to `handleBoxResizeEnd`).
 
 ### Finish
 
-11. **End-to-end verification + finish branch** — [sequential, last]. Full `pytest -q` pass, a manual walkthrough of every item above, then `superpowers:finishing-a-development-branch`. This is the phase's visual/functional checkpoint — nothing in Phase 2 (rich-text formatting) starts until this passes.
+10. **End-to-end verification + finish branch** — [sequential, last]. Full `pytest -q` pass, a manual walkthrough of every item above, then `superpowers:finishing-a-development-branch`. This is the phase's visual/functional checkpoint — nothing in Phase 2 (rich-text formatting) starts until this passes.
 
 ## Verification (phase checkpoint)
 

@@ -14,6 +14,9 @@ Major roadmap revised — see [2026-07-17-major-plan-revision-design.md](specs/2
 - [ ] Redesign safe-zone guide overlay for clarity — dashed lines/labels in `static/css/components/safe-zones.css` are hard to see against busy video content; needs higher-contrast styling (shaded bands, label chips, etc.), preview-only, no spec yet
 - [ ] Export icon in the left rail that opens a dedicated export right panel — no spec/details yet, gather when picked up
 - [ ] Move the safe-zones toggle button from the top bar into the timeline toolbar row (next to the zoom −/+ buttons), using a shield Lucide icon instead of its current label/icon — no spec/details yet, gather when picked up
+- [ ] Settings icon in the left rail that opens a dedicated settings right panel; panel should include a dark/light theme setting — no spec/details yet, gather when picked up
+- [ ] BOX accordion: remove the checkmark, set background to transparent by default — no grounding found in current code (no checkmark element near BOX in `static/`, `box_background` already defaults `False`); needs eyes-on-browser investigation before it can be planned, gather when picked up
+- [ ] Remove the top header/`#topbar` entirely — blocked on: logo already moved to left rail (done above), theme setting moved into the new settings panel, safe-zones toggle moved into the timeline toolbar, and export moved into its own left-rail panel; once all four have landed, nothing should be left in `#topbar` to justify keeping it, no spec/details yet, gather when picked up
 
 ## Done
 
@@ -32,3 +35,4 @@ Major roadmap revised — see [2026-07-17-major-plan-revision-design.md](specs/2
 - [x] Accordion header label vertical centering + section spacing/divider — `line-height: 1` on `.accordion-header` (was inheriting a larger default, pushing text off-center); divider moved from the header's `border-top` to the body's `border-bottom` + `padding-bottom` for breathing room. Verified numerically (header text/row vertically centered to sub-pixel precision; all three TEXT-panel accordion bodies have the padding+border) — see `static/css/components/accordion.css`
 - [x] Logo dot and REEL positioning — investigated, confirmed already correct: pixel-accurate match to the design-foundation mockup (dot's `border-radius: 2px` "rounded square" look, spacing, vertical alignment all intentional/as-designed). No change needed.
 - [x] Move REEL logo from top bar to the bottom of the left nav rail — removed `#brand`/`#topbar-divider` from `#topbar`, added a shrunk `#panel-brand` (6px dot, 10px name, 8px tag, vertically stacked) pinned to `#panel`'s bottom via `margin-top: auto`. Verified numerically (16px from rail bottom, fits the 72px width, no console errors) — see `static/css/components/panel.css`
+- [x] Remove the "LOCAL" tag from the relocated REEL logo — dropped `#brand-tag` span + its now-dead CSS rule, leaving just the dot + "REEL" name in `#panel-brand`. Verified: no console errors, 43/43 tests pass.
