@@ -95,22 +95,23 @@ function renderTextPanel() {
 function renderBoxPanel() {
   const preset = ensureTextPreset(ensureTextBlock().preset_id);
 
-  UI.buttonGroup(document.getElementById("text-box-width-mode-group"),
-    [{ value: "fit", label: "FIT" }, { value: "fixed", label: "FIXED" }],
+  UI.buttonGroup(document.getElementById("text-box-size-mode-group"),
+    [{ value: "fit", label: "FIT" }, { value: "fixed", label: "FREE" }],
     preset.box_width_mode,
-    (value) => { preset.box_width_mode = value; saveProject(); renderTextPreview(); renderBoxPanel(); });
+    (value) => {
+      preset.box_width_mode = value;
+      preset.box_height_mode = value;
+      saveProject(); renderTextPreview(); renderBoxPanel();
+    });
 
-  document.getElementById("text-box-width-field").hidden = preset.box_width_mode !== "fixed";
+  const boxSizeFieldsHidden = preset.box_width_mode !== "fixed";
+  document.getElementById("text-box-width-field").hidden = boxSizeFieldsHidden;
+  document.getElementById("text-box-height-field").hidden = boxSizeFieldsHidden;
+
   UI.numberField(document.getElementById("text-box-width-field"),
     { label: "WIDTH", unit: "PX", value: preset.box_width, min: 1, max: 1080,
       onChange: (v) => { preset.box_width = v; saveProject(); renderTextPreview(); } });
 
-  UI.buttonGroup(document.getElementById("text-box-height-mode-group"),
-    [{ value: "fit", label: "FIT" }, { value: "fixed", label: "FIXED" }],
-    preset.box_height_mode,
-    (value) => { preset.box_height_mode = value; saveProject(); renderTextPreview(); renderBoxPanel(); });
-
-  document.getElementById("text-box-height-field").hidden = preset.box_height_mode !== "fixed";
   UI.numberField(document.getElementById("text-box-height-field"),
     { label: "HEIGHT", unit: "PX", value: preset.box_height, min: 1, max: 1920,
       onChange: (v) => { preset.box_height = v; saveProject(); renderTextPreview(); } });

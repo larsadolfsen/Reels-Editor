@@ -78,6 +78,8 @@
   flex: 1;
 }
 
+.style-field[hidden] { display: none; }
+
 .style-field input { width: 100%; }
 
 .style-field input[type="number"] {

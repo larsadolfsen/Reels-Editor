@@ -20,7 +20,6 @@
   max-width: 100%;
   aspect-ratio: 9 / 16;
   background: repeating-linear-gradient(135deg, #1E2023 0px, #1E2023 14px, #232529 14px, #232529 28px);
-  border: 1px solid var(--border);
   border-radius: 6px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
