@@ -1,7 +1,7 @@
-# Phase 4 — Video Box (Picture-in-Picture)
+# Phase 5 — Video Box (Picture-in-Picture)
 
 **Parent:** [2026-07-17-major-plan-revision-design.md](2026-07-17-major-plan-revision-design.md)
-**Status:** planning only, minimal — this phase's first real step is its own full brainstorming session (not a verification pass like Phases 1–3, since there's no existing design to check against).
+**Status:** planning only, minimal — this phase's first real step is its own full brainstorming session (not a verification pass like Phases 1–4, since there's no existing design to check against).
 
 ## Goal
 
@@ -9,7 +9,7 @@ Add a second visual clip layer that can be composited picture-in-picture over th
 
 ## Why this phase is thin
 
-`ClipLayer` (`app/models.py`) currently has no position/size concept at all — it's a flat sequence entry (`file_path`, `in_point`, `out_point`, `order`). Every other phase in this roadmap (Text Box, accordion restructure, Captions) builds on data models and UI patterns that already exist somewhere in the codebase. Video Box doesn't: the data model itself — does a video-box clip get a new layer type distinct from `ClipLayer`, or does `ClipLayer` grow optional position/size fields used only when it's flagged as picture-in-picture? — is an open design question that needs full exploration, not just verification of a pre-drafted breakdown.
+`ClipLayer` (`app/models.py`) currently has no position/size concept at all — it's a flat sequence entry (`file_path`, `in_point`, `out_point`, `order`). Every other phase in this roadmap (Text Box, accordion restructure, rich-text formatting, Captions) builds on data models and UI patterns that already exist somewhere in the codebase. Video Box doesn't: the data model itself — does a video-box clip get a new layer type distinct from `ClipLayer`, or does `ClipLayer` grow optional position/size fields used only when it's flagged as picture-in-picture? — is an open design question that needs full exploration, not just verification of a pre-drafted breakdown.
 
 ## What's likely reusable (informal, not a commitment)
 
