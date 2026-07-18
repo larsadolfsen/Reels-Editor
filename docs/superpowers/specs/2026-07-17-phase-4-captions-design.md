@@ -1,13 +1,13 @@
-# Phase 3 — Captions
+# Phase 4 — Captions
 
 **Parent:** [2026-07-17-major-plan-revision-design.md](2026-07-17-major-plan-revision-design.md)
 **Status:** planning only — subthreads verified/refined by a brainstorm at pickup time before their plans are written.
 
 ## Goal
 
-Replace the current non-functional placeholder caption panel (`#panel-captions` in `static/index.html` — disabled B/I/U/align icons, a static preview box) with real, functional captions: transcription, a track-level style reusing Phase 1's accordion components and Phase 2's per-range formatting/highlight mechanism, and a caption list subpanel for reviewing/editing every word with its timestamp.
+Replace the current non-functional placeholder caption panel (`#panel-captions` in `static/index.html` — disabled B/I/U/align icons, a static preview box) with real, functional captions: transcription, a track-level style reusing Phase 1's accordion components and Phase 3's per-range formatting/highlight mechanism, and a caption list subpanel for reviewing/editing every word with its timestamp.
 
-This revives the original [2026-07-09-first-reel.md](../plans/2026-07-09-first-reel.md) plan's Tasks 10–12 (auto-captions, editable words, karaoke highlight), which were never started, adapted to the accordion architecture Phase 1 builds and the rich-text run mechanism Phase 2 builds. Captions' word-by-word karaoke highlight is, structurally, the same "background behind a range of characters" primitive Phase 2 builds for manual text-block highlighting — the difference is only *which ranges are highlighted and when* (user-selected and static for text blocks; playback-time-computed and moving for captions). Confirm at pickup that Phase 2 landed a primitive general enough to drive from a computed range instead of only a user selection; if not, that's a gap to close here, not a reason to build a second, parallel highlight mechanism.
+This revives the original [2026-07-09-first-reel.md](../plans/2026-07-09-first-reel.md) plan's Tasks 10–12 (auto-captions, editable words, karaoke highlight), which were never started, adapted to the accordion architecture Phase 1 builds and the rich-text run mechanism Phase 3 builds. Captions' word-by-word karaoke highlight is, structurally, the same "background behind a range of characters" primitive Phase 3 builds for manual text-block highlighting — the difference is only *which ranges are highlighted and when* (user-selected and static for text blocks; playback-time-computed and moving for captions). Confirm at pickup that Phase 3 landed a primitive general enough to drive from a computed range instead of only a user selection; if not, that's a gap to close here, not a reason to build a second, parallel highlight mechanism.
 
 ## Open question for the pre-phase brainstorm
 
@@ -25,7 +25,7 @@ This revives the original [2026-07-09-first-reel.md](../plans/2026-07-09-first-r
 ### Frontend — panel wiring
 
 5. **Wire FONT/STYLE/BOX/POSITION accordions into the CAPTIONS panel** — [depends on Phase 1's accordion components existing]. Reuses Phase 1's `renderFontRow`-style components and their backing `UI.*` calls, but pointed at the caption track's preset rather than a text block's `preset_id`. No TIME accordion — captions are already timestamped by transcription, not manually set start/end.
-6. **HIGHLIGHT mode for captions** — [parallel-safe, depends on Phase 2's per-range highlight rendering]. Adds a mode toggle: **current word only** (single active word highlighted) vs **progressive fill** (karaoke-style — all spoken words stay highlighted up to and including the current one). Drives Phase 2's highlight-range rendering primitive from a playback-time computation instead of a fixed user selection, rather than building a second rendering path.
+6. **HIGHLIGHT mode for captions** — [parallel-safe, depends on Phase 3's per-range highlight rendering]. Adds a mode toggle: **current word only** (single active word highlighted) vs **progressive fill** (karaoke-style — all spoken words stay highlighted up to and including the current one). Drives Phase 3's highlight-range rendering primitive from a playback-time computation instead of a fixed user selection, rather than building a second rendering path.
 7. **Caption list subpanel** — [parallel-safe]. New drill-down component (structurally similar to the existing font list subpanel pattern — `UI.subPanelHeader`, a list, click/hover interactions) showing every caption word/line with its `t_start`/`t_end`, text editable inline (empty text deletes the word, per the original plan's Task 11 — timing itself stays non-editable in v1, matching that plan's accepted limitation).
 8. **"Auto-caption" button wiring** — [sequential, after subthread 3]. Button in `editor.js` that calls the transcribe route and refreshes state on completion.
 9. **`preview.js` caption overlay** — [sequential, after the above land]. Active-line rendering (grouped via `group_words`, mirrored client-side per the original plan) plus the live highlight tick implementing whichever mode is selected (current-word vs progressive-fill) against `Preview.currentTimelineTime()`.

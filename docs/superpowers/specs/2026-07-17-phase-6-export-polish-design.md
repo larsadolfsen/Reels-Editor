@@ -1,7 +1,7 @@
-# Phase 5 — Export Polish
+# Phase 6 — Export Polish
 
 **Parent:** [2026-07-17-major-plan-revision-design.md](2026-07-17-major-plan-revision-design.md)
-**Status:** planning only — final phase, picked up only after Phases 1–4 are functional; needs its own brainstorm at pickup time since its exact scope depends on what state those phases actually land in.
+**Status:** planning only — final phase, picked up only after Phases 1–5 are functional; needs its own brainstorm at pickup time since its exact scope depends on what state those phases actually land in.
 
 ## Goal
 
@@ -18,4 +18,4 @@ A final pass across the whole editor once every layer type (text, text box, capt
 
 ## Next step
 
-When this phase is picked up: brainstorm to confirm which of the above still applies (some "known limitations" may already be moot by then) and whether new limitations surfaced during Phases 1–4 belong here too, then write the plan.
+When this phase is picked up: brainstorm to confirm which of the above still applies (some "known limitations" may already be moot by then) and whether new limitations surfaced during Phases 1–5 belong here too, then write the plan.
