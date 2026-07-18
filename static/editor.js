@@ -64,13 +64,6 @@ function renderTextPreview() {
   Preview.renderText(project, project.text_presets, Preview.currentTimelineTime());
 }
 
-async function updateTextBlock() {
-  const block = ensureTextBlock();
-  block.heading = document.getElementById("text-heading").value;
-  await saveProject();
-  renderTextPreview();
-}
-
 function renderTextPanel() {
   document.getElementById("panel-text-font").hidden = true;
   document.getElementById("panel-text-style").hidden = true;
@@ -78,7 +71,6 @@ function renderTextPanel() {
 
   const block = ensureTextBlock();
   const preset = ensureTextPreset(block.preset_id);
-  document.getElementById("text-heading").value = block.heading;
 
   TextPanel.renderFontFamily();
   TextPanel.renderFontStyle();
@@ -93,6 +85,8 @@ function renderTextPanel() {
   Preview.setSelectedTextBlock(block.id, {
     onResize: (size) => handleBoxResize(preset, size),
     onDragEnd: (size) => handleBoxResizeEnd(preset, size),
+    onEdit: (heading) => { block.heading = heading; },
+    onEditEnd: async (heading) => { block.heading = heading; await saveProject(); },
   });
 }
 
@@ -164,8 +158,6 @@ async function handleBoxResizeEnd(preset, { width, height }) {
   await saveProject();
   renderBoxPanel();
 }
-
-document.getElementById("text-heading").addEventListener("input", updateTextBlock);
 
 UI.accordionSection(document.getElementById("text-font-accordion"), document.getElementById("text-font-body"), { title: "FONT", expanded: false });
 UI.accordionSection(document.getElementById("text-style-accordion"), document.getElementById("text-style-body"), { title: "STYLE", expanded: false });
@@ -274,7 +266,6 @@ function onTimelineSelect({ type, item, groupIndex }) {
   } else if (type === "text") {
     showPanel("text");
     renderTextPanel();
-    document.getElementById("text-heading").focus();
   } else if (type === "caption") {
     document.querySelector(".caption-preview-box").textContent = item.map((w) => w.text).join(" ");
     showPanel("captions");
@@ -343,7 +334,6 @@ function openTextPanel() {
   selected = { type: "text" };
   showPanel("text");
   renderTextPanel();
-  document.getElementById("text-heading").focus();
   renderTimeline();
 }
 

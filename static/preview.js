@@ -8,6 +8,8 @@ window.Preview = (() => {
   let textPresets = {};
   let selectedTextBlockId = null;
   let boxResizeCallbacks = null;
+  let editingBlockId = null;
+  let editingDiv = null;
   const player = document.getElementById("player");
   const timeEl = document.getElementById("time");
   const overlay = document.getElementById("overlay");
@@ -58,7 +60,9 @@ window.Preview = (() => {
   function renderText(project, presets, timelineTime) {
     textProject = project;
     textPresets = presets;
+    const keepEditingDiv = editingDiv && overlay.contains(editingDiv);
     overlay.innerHTML = "";
+    if (keepEditingDiv) overlay.appendChild(editingDiv); // preserve focus/caret across re-renders while typing
     let stageW = overlay.clientWidth || stage.clientWidth;
     let stageH = overlay.clientHeight || stage.clientHeight;
     if ((stageW === 0 || stageH === 0) && stageW !== 0) {
@@ -69,6 +73,7 @@ window.Preview = (() => {
       if (!(block.start <= timelineTime && timelineTime < block.end)) continue;
       const preset = presets[block.preset_id];
       if (!preset) continue;
+      if (keepEditingDiv && block.id === editingBlockId) continue; // already re-attached above, leave untouched
 
       const div = document.createElement("div");
       div.className = "text-block";
@@ -104,13 +109,28 @@ window.Preview = (() => {
       div.textContent = block.heading;
       overlay.appendChild(div);
 
-      if (block.id === selectedTextBlockId && boxResizeCallbacks) {
+      if (block.id === selectedTextBlockId) {
         div.style.pointerEvents = "auto";
-        UI.resizeHandles(div, {
-          getSize: () => ({ width: div.offsetWidth, height: div.offsetHeight }),
-          onResize: (size) => boxResizeCallbacks.onResize(size),
-          onDragEnd: (size) => boxResizeCallbacks.onDragEnd(size),
+        UI.textInteraction(div, {
+          onEditStart: () => { editingBlockId = block.id; editingDiv = div; },
+          onInput: (text) => {
+            block.heading = text;
+            if (boxResizeCallbacks && boxResizeCallbacks.onEdit) boxResizeCallbacks.onEdit(text);
+          },
+          onEditEnd: (text) => {
+            block.heading = text;
+            editingBlockId = null;
+            editingDiv = null;
+            if (boxResizeCallbacks && boxResizeCallbacks.onEditEnd) boxResizeCallbacks.onEditEnd(text);
+          },
         });
+        if (boxResizeCallbacks) {
+          UI.resizeHandles(div, {
+            getSize: () => ({ width: div.offsetWidth, height: div.offsetHeight }),
+            onResize: (size) => boxResizeCallbacks.onResize(size),
+            onDragEnd: (size) => boxResizeCallbacks.onDragEnd(size),
+          });
+        }
       }
     }
   }
