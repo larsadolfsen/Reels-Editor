@@ -600,7 +600,7 @@ document.getElementById("export").addEventListener("click", exportProject);
   const before = JSON.stringify(project);
   seedDefaults(project);
   if (JSON.stringify(project) !== before) await saveProject();
-  document.getElementById("project-name").textContent = project.name;
+  document.title = project.name ? `${project.name} – Reels Editor` : "Reels Editor";
   renderMediaList();
   Preview.load(project);
   renderTextPanel();
