@@ -18,6 +18,38 @@ window.TextPanel = window.TextPanel || {};
   wireTextStyleToggle("text-italic", "italic");
   wireTextStyleToggle("text-underline", "underline");
 
+  const FONT_SIZE_PRESETS = [12, 14, 16, 18, 21, 24, 36, 45, 56];
+
+  function stepFontSizePreset(currentSize, direction) {
+    // direction: -1 = down, +1 = up. Snaps to the nearest preset in that
+    // direction first if currentSize isn't exactly on the scale, then clamps
+    // at the ends instead of wrapping or going out of range.
+    if (direction < 0) {
+      const lower = FONT_SIZE_PRESETS.filter((p) => p < currentSize);
+      return lower.length ? lower[lower.length - 1] : FONT_SIZE_PRESETS[0];
+    }
+    const higher = FONT_SIZE_PRESETS.filter((p) => p > currentSize);
+    return higher.length ? higher[0] : FONT_SIZE_PRESETS[FONT_SIZE_PRESETS.length - 1];
+  }
+
+  let currentSizeFieldSetValue = null;
+
+  document.getElementById("text-size-step-down").addEventListener("click", () => {
+    const preset = ensureTextPreset(ensureTextBlock().preset_id);
+    preset.size_px = stepFontSizePreset(preset.size_px, -1);
+    saveProject();
+    renderTextPreview();
+    if (currentSizeFieldSetValue) currentSizeFieldSetValue(preset.size_px);
+  });
+
+  document.getElementById("text-size-step-up").addEventListener("click", () => {
+    const preset = ensureTextPreset(ensureTextBlock().preset_id);
+    preset.size_px = stepFontSizePreset(preset.size_px, 1);
+    saveProject();
+    renderTextPreview();
+    if (currentSizeFieldSetValue) currentSizeFieldSetValue(preset.size_px);
+  });
+
   window.TextPanel.renderFontStyle = function renderFontStyle() {
     const preset = ensureTextPreset(ensureTextBlock().preset_id);
 
@@ -25,7 +57,7 @@ window.TextPanel = window.TextPanel || {};
     document.getElementById("text-italic").setAttribute("aria-pressed", String(preset.italic));
     document.getElementById("text-underline").setAttribute("aria-pressed", String(preset.underline));
 
-    UI.numberField(document.getElementById("text-size-field"),
+    currentSizeFieldSetValue = UI.numberField(document.getElementById("text-size-field"),
       { label: "SIZE", unit: "PX", value: preset.size_px, min: 24, max: 200,
         onChange: (v) => { preset.size_px = v; saveProject(); renderTextPreview(); } });
 

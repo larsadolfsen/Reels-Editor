@@ -3,14 +3,21 @@
 window.UI = window.UI || {};
 
 // Renders a row of toggle buttons into `container`; exactly one active at a time.
-// options: [{value, label}]; onSelect(value) fires on click. Returns a setActive(value) updater.
+// options: [{value, label, icon}]; icon (optional raw SVG markup string) renders instead of the text
+// label, with `label` kept as the button's aria-label so screen readers still get a name.
+// onSelect(value) fires on click. Returns a setActive(value) updater.
 window.UI.buttonGroup = function buttonGroup(container, options, activeValue, onSelect) {
   container.innerHTML = "";
   container.classList.add("btn-group");
-  const buttons = options.map(({ value, label }) => {
+  const buttons = options.map(({ value, label, icon }) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.textContent = label;
+    if (icon) {
+      btn.innerHTML = icon;
+      btn.setAttribute("aria-label", label);
+    } else {
+      btn.textContent = label;
+    }
     btn.dataset.value = value;
     btn.setAttribute("aria-pressed", String(value === activeValue));
     btn.addEventListener("click", () => {
