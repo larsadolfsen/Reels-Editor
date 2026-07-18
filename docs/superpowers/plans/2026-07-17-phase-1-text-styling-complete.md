@@ -20,6 +20,16 @@
 - UI JS is a stated untested layer: keep it thin, verify manually via each task's "manual verification" step, matching this codebase's existing convention (see the Text Box plan).
 - Every task: tests pass (`pytest -q`), commit on the current branch, update `CLAUDE.md` where the task changes something documented there.
 
+## Execution Strategy — this phase runs as parallel worktree tasks, not one sequential session
+
+Each task below is scoped to be dispatched as its own `superpowers:using-git-worktrees` + `superpowers:subagent-driven-development` subagent, run **simultaneously** with the others in its batch, not one after another in a single session. Multiple tasks in the same batch may touch the same file (`static/index.html`, `static/editor.js`) — that's expected, not a problem: each worktree branches from the same commit and edits a *different, non-overlapping region* of the file (see each task's Step 1 — every task now edits only its own slice of the old MISC accordion, never "whatever's left after an earlier task"). Merge conflicts, if any come up during merge-back, are resolved at integration time; they are not a reason to serialize tasks that don't actually depend on each other.
+
+- **Task 1** (docs) is already done (landed in the currently running worktree). Skip it if you're picking this plan back up.
+- **Batch A — dispatch simultaneously:** Task 2 (backend preset library), Task 3 (FONT accordion), Task 4 (POSITION accordion), Task 5 (TIME accordion), Task 6 (STYLE accordion), Task 7 (inline stage text editing). None of these depend on each other's code to be *written* (Task 6's STYLE accordion won't be *end-to-end functional* until Task 2's routes are merged too, but that only affects when you can manually verify it, not when you can write and commit it).
+- **Integration checkpoint:** once Tasks 3, 4, and 5 have all merged, `#text-misc-accordion`/`#text-misc-body` is empty (all its content moved out) but the wrapper element and its `editor.js` wiring still exist — Task 5b below removes them. Small and sequential, do it right after Batch A finishes merging, before Batch B starts.
+- **Batch B — dispatch after Task 7 merges:** Task 8 (drag-to-reposition) builds directly on Task 7's exact code (replaces its click listener) — this is a real sequential dependency, not a batching convenience. It can still be dispatched as its own worktree task; it just can't start until Task 7's branch is merged.
+- **Task 9** (end-to-end verification + finish branch) is last, after everything above has merged.
+
 ---
 
 ### Task 1: Finish the existing Text Box plan's documentation debt
@@ -230,7 +240,7 @@ In `static/index.html`, inside `#text-font-body`, after the existing `<div class
           </div>
 ```
 
-Then delete that exact same block (STYLE label + SIZE field + bold/italic/underline buttons + color/outline-color/outline-px fields) from `#text-misc-body`, i.e. everything from the `<div class="style-group-label">STYLE</div>` line through the `<label id="text-outline-px-field"></label>` field's closing `</div>`, along with the `<div id="text-style-divider"></div>` immediately above it (the divider moves with the content — Step 1 above already added its own divider inside FONT).
+Then delete that exact same block (STYLE label + SIZE field + bold/italic/underline buttons + color/outline-color/outline-px fields) from `#text-misc-body`, i.e. everything from the `<div class="style-group-label">STYLE</div>` line through the `<label id="text-outline-px-field"></label>` field's closing `</div>`, along with the `<div id="text-style-divider"></div>` immediately above it (the divider moves with the content — Step 1 above already added its own divider inside FONT). **This task only removes the STYLE block** — `#text-misc-body`'s TEXT ALIGN/POSITION and TIME content is untouched here; it's removed independently by Tasks 4 and 5 working from the same starting file (see the Execution Strategy section above for why that's fine to parallelize).
 
 - [ ] **Step 2: Update the divider wiring in `editor.js`**
 
@@ -304,7 +314,7 @@ In `static/index.html`, immediately after the closing `</div>` of `#text-box-acc
 
 - [ ] **Step 2: Remove that content from MISC**
 
-In the same file, delete from `#text-misc-body`: the `<div id="text-align-divider"></div>` line, the `TEXT ALIGN` style-group-label + `#text-align-group` block, the `POSITION` style-group-label + `#position-row-group`/`#position-col-group` block, and the offset-X/offset-Y field row. (What remains in `#text-misc-body` after this task is just the TIME block — removed in Task 5.)
+In the same file, delete from `#text-misc-body`: the `<div id="text-align-divider"></div>` line, the `TEXT ALIGN` style-group-label + `#text-align-group` block, the `POSITION` style-group-label + `#position-row-group`/`#position-col-group` block, and the offset-X/offset-Y field row. **This task only removes the TEXT ALIGN/POSITION block** — the STYLE content (Task 3) and TIME content (Task 5) are removed independently, each working from the same starting file.
 
 - [ ] **Step 3: Wire the new accordion in `editor.js`**
 
@@ -336,18 +346,18 @@ git commit -m "refactor: extract POSITION into its own accordion"
 
 ---
 
-### Task 5: TIME accordion extraction + remove MISC
+### Task 5: TIME accordion extraction
 
 **Files:**
 - Modify: `static/index.html`, `static/editor.js`
 
 **Interfaces:**
 - Consumes: `UI.accordionSection`, `UI.numberField` (pre-existing).
-- Produces: `#text-time-accordion`/`#text-time-body`. Removes `#text-misc-accordion`/`#text-misc-body` entirely (empty after this task).
+- Produces: `#text-time-accordion`/`#text-time-body` (new accordion, sibling of `#text-misc-accordion`, not a replacement for it — see Task 5b).
 
-- [ ] **Step 1: Add the TIME accordion markup, remove MISC's wrapper**
+- [ ] **Step 1: Add the TIME accordion markup**
 
-In `static/index.html`, replace the entire `<div id="text-misc-accordion">...</div>` block (now containing only the TIME group after Tasks 3–4) with:
+In `static/index.html`, immediately after the closing `</div>` of `#text-position-accordion`'s wrapper (Task 4) and before `<div id="text-misc-accordion">`, insert:
 
 ```html
         <div id="text-time-accordion"></div>
@@ -361,32 +371,73 @@ In `static/index.html`, replace the entire `<div id="text-misc-accordion">...</d
         </div>
 ```
 
-- [ ] **Step 2: Update the accordion wiring in `editor.js`**
+- [ ] **Step 2: Remove the TIME content from MISC**
 
-In `static/editor.js`, replace:
+In the same file, delete the TIME `style-group-label` + start/end field row from `#text-misc-body`. **This task only removes the TIME block** — leave `#text-misc-accordion`/`#text-misc-body`'s wrapper `<div>`s themselves in place (they'll be empty once Tasks 3, 4, and 5 have all merged; removing the now-dead wrapper is Task 5b, done once, after all three land — not by any single one of them, to avoid three tasks racing to delete the same element).
 
-```js
-UI.accordionSection(document.getElementById("text-misc-accordion"), document.getElementById("text-misc-body"), { title: "MISC", expanded: false });
-```
+- [ ] **Step 3: Wire the new accordion in `editor.js`**
 
-with:
+In `static/editor.js`, add alongside the existing `UI.accordionSection(...)` calls (do not touch the existing MISC line — Task 5b removes it):
 
 ```js
 UI.accordionSection(document.getElementById("text-time-accordion"), document.getElementById("text-time-body"), { title: "TIME", expanded: false });
 ```
 
-- [ ] **Step 3: Manual verification**
+- [ ] **Step 4: Manual verification**
 
-Reload, select the text block. Confirm the TEXT panel now shows four accordions in order: FONT, BOX, POSITION, TIME (STYLE is added in Task 6, landing between FONT and BOX — verified at the end of that task). Expand TIME, confirm START/END still work.
+Reload, select the text block, expand TIME. Confirm START/END still work. (MISC will still be visible, now empty of TIME content, until Task 5b runs — that's expected at this point.)
 
-- [ ] **Step 4: Run tests, commit**
+- [ ] **Step 5: Run tests, commit**
 
 Run: `.venv/Scripts/python -m pytest -q`
 Expected: PASS.
 
 ```bash
 git add static/index.html static/editor.js
-git commit -m "refactor: extract TIME into its own accordion, remove the MISC catch-all"
+git commit -m "refactor: extract TIME into its own accordion"
+```
+
+---
+
+### Task 5b: Integration — remove the now-empty MISC accordion
+
+**Files:**
+- Modify: `static/index.html`, `static/editor.js`
+
+**Interfaces:**
+- Consumes: nothing new.
+- Produces: nothing new — cleanup only.
+
+Run this once, after Tasks 3, 4, and 5 have all merged (not before — it assumes MISC is empty). Small and sequential; doesn't need its own worktree.
+
+- [ ] **Step 1: Confirm MISC is empty**
+
+Open `static/index.html` and check `#text-misc-body`'s contents. If Tasks 3, 4, and 5 all merged cleanly, it should contain no `style-group-label`/`style-group` children — just whitespace. If it's not empty, one of Tasks 3–5 didn't merge as expected; resolve that before continuing.
+
+- [ ] **Step 2: Remove the MISC wrapper**
+
+Delete the (now-empty) `<div id="text-misc-accordion">...</div>` block from `static/index.html` entirely.
+
+- [ ] **Step 3: Remove the MISC wiring**
+
+In `static/editor.js`, delete:
+
+```js
+UI.accordionSection(document.getElementById("text-misc-accordion"), document.getElementById("text-misc-body"), { title: "MISC", expanded: false });
+```
+
+- [ ] **Step 4: Manual verification**
+
+Reload, select the text block. Confirm the TEXT panel shows four accordions (STYLE is added by Task 6, landing between FONT and BOX): FONT, BOX, POSITION, TIME — no MISC, no console errors.
+
+- [ ] **Step 5: Run tests, commit**
+
+Run: `.venv/Scripts/python -m pytest -q`
+Expected: PASS.
+
+```bash
+git add static/index.html static/editor.js
+git commit -m "refactor: remove the now-empty MISC accordion wrapper"
 ```
 
 ---
@@ -586,7 +637,7 @@ Finally, load the preset library once on startup. In the closing `(async () => {
 
 - [ ] **Step 5: Manual verification**
 
-Reload, select the text block, expand STYLE. Confirm: "+ Save current style" prompts for a name and, after entering one, the style appears in the "most used" list and the drill-down (click "Browse all styles"). Style a second text block differently, apply the saved style to it, confirm its appearance changes to match. Restart the server (`Ctrl+C`, re-run `uvicorn`), reload, confirm the saved style is still there. Confirm the five accordions now appear in the order FONT, STYLE, BOX, POSITION, TIME.
+Reload, select the text block, expand STYLE. Confirm: "+ Save current style" prompts for a name and, after entering one, the style appears in the "most used" list and the drill-down (click "Browse all styles"). Style a second text block differently, apply the saved style to it, confirm its appearance changes to match. Restart the server (`Ctrl+C`, re-run `uvicorn`), reload, confirm the saved style is still there. Confirm STYLE sits between FONT and BOX (full five-accordion order — FONT, STYLE, BOX, POSITION, TIME, with MISC gone — is only guaranteed once Tasks 4, 5, and 5b have also merged; if you're verifying this task in isolation before those land, MISC may still be visible alongside it, which is expected).
 
 - [ ] **Step 6: Update `CLAUDE.md`**
 

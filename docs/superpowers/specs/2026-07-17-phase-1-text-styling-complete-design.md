@@ -33,30 +33,32 @@ Finish **every** whole-block text-styling feature before starting rich-text (per
 
 ## Subthreads
 
+Execution model: subthreads tagged **[Batch A]** are dispatched as *simultaneous* worktree subagents (`superpowers:using-git-worktrees` + `superpowers:subagent-driven-development`), not run one after another in a single session — see the plan's "Execution Strategy" section for exactly how each Batch A task is scoped to avoid depending on another Batch A task's edits.
+
 ### Finishing the existing Text Box plan
 
-1. **`CLAUDE.md` inventory update** — [sequential]. Task 12 of the existing Text Box plan. Documentation only: add `app/font_metrics.py` and the two new `static/ui-resize-handles.js`/`resize-handles.css` files to the file tree and Inventory section, update the `TextPreset`/`ass_render.py`/`preview.js`/`editor.js` bullets for the Box fields.
+1. **`CLAUDE.md` inventory update** — [done, landed already]. Task 12 of the existing Text Box plan.
 
 ### Backend
 
-2. **`GET /api/presets` / `POST /api/presets` routes** — [parallel-safe]. `store.load_presets`/`store.save_preset` already exist in `app/store.py`; only the HTTP routes in `app/main.py` are missing. Wiring only, per `CLAUDE.md`'s "main.py is composition only" rule.
+2. **`GET /api/presets` / `POST /api/presets` routes** — [Batch A]. `store.load_presets`/`store.save_preset` already exist in `app/store.py`; only the HTTP routes in `app/main.py` are missing. Wiring only, per `CLAUDE.md`'s "main.py is composition only" rule.
 
 ### Frontend — accordions
 
-3. **FONT accordion consolidation** — [parallel-safe]. Move size/weight/italic/underline/color/outline controls out of `#text-misc-body` into `#text-font-body` in `static/index.html`, alongside the existing font-family row; update `editor.js`'s `renderTextPanel()`/`renderFontRow()` wiring accordingly.
-4. **POSITION accordion** — [parallel-safe]. Extract the existing align-button-group + anchor grid + offset-X/Y fields out of MISC into their own accordion.
-5. **TIME accordion** — [parallel-safe]. Extract the existing start/end `UI.numberField`s out of MISC into their own accordion.
-6. **STYLE accordion** — [depends on subthread 2]. New component(s): save-as-new-preset flow (name prompt), an inline most-used/recent list in the accordion body, and a drill-down subpanel for the full preset list.
-7. **Confirm five-accordion order** — [sequential, after 3–6 land]. FONT, STYLE, BOX, POSITION, TIME. No code expected, just placement/verification.
+3. **FONT accordion consolidation** — [Batch A]. Move size/weight/italic/underline/color/outline controls out of `#text-misc-body` into `#text-font-body` in `static/index.html`, alongside the existing font-family row; update `editor.js`'s `renderTextPanel()`/`renderFontRow()` wiring accordingly. Removes only its own slice of MISC.
+4. **POSITION accordion** — [Batch A]. Extract the existing align-button-group + anchor grid + offset-X/Y fields out of MISC into their own accordion. Removes only its own slice of MISC.
+5. **TIME accordion** — [Batch A]. Extract the existing start/end `UI.numberField`s out of MISC into their own accordion. Removes only its own slice of MISC.
+5b. **Integration: remove the now-empty MISC wrapper** — [sequential, after 3/4/5 merge]. Small cleanup, doesn't need its own worktree — deletes the dead `#text-misc-accordion` element + its `editor.js` wiring once nothing references it anymore.
+6. **STYLE accordion** — [Batch A]. New component(s): save-as-new-preset flow (name prompt), an inline most-used/recent list in the accordion body, and a drill-down subpanel for the full preset list. Not functionally end-to-end until subthread 2 is also merged, but writable/committable independently.
 
 ### Frontend — drag + inline editing
 
-8. **Inline stage text editing** — [land before subthread 9, same element]. Make the `.text-block` div's text `contenteditable`; wire `input`/`blur` to update `project.text_blocks[].heading` + `saveProject()`. Remove `#text-heading` and its wiring entirely.
-9. **Drag-to-reposition the box body** — [builds on subthread 8's click handling]. `preview.js` (mousedown-drag on `.text-block`, mirroring `UI.resizeHandles`'s drag-tracking pattern but without handles, replacing subthread 8's plain click listener with a click-vs-drag distinction) and `editor.js` (drag-end handler recomputing anchor + offset, symmetric to `handleBoxResizeEnd`).
+7. **Inline stage text editing** — [Batch A]. Make the `.text-block` div's text `contenteditable`; wire `input`/`blur` to update `project.text_blocks[].heading` + `saveProject()`. Remove `#text-heading` and its wiring entirely.
+8. **Drag-to-reposition the box body** — [Batch B, real sequential dependency on subthread 7's exact code — not just a batching convenience]. `preview.js` (mousedown-drag on `.text-block`, mirroring `UI.resizeHandles`'s drag-tracking pattern but without handles, replacing subthread 7's plain click listener with a click-vs-drag distinction) and `editor.js` (drag-end handler recomputing anchor + offset, symmetric to `handleBoxResizeEnd`).
 
 ### Finish
 
-10. **End-to-end verification + finish branch** — [sequential, last]. Full `pytest -q` pass, a manual walkthrough of every item above, then `superpowers:finishing-a-development-branch`. This is the phase's visual/functional checkpoint — nothing in Phase 2 (rich-text formatting) starts until this passes.
+9. **End-to-end verification + finish branch** — [sequential, last]. Full `pytest -q` pass, a manual walkthrough of every item above, then `superpowers:finishing-a-development-branch`. This is the phase's visual/functional checkpoint — nothing in Phase 2 (rich-text formatting) starts until this passes.
 
 ## Verification (phase checkpoint)
 
