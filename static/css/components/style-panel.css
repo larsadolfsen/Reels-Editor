@@ -173,3 +173,5 @@
 .clip-info { min-width: 0; flex: 1; }
 .clip-info .clip-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .clip-info .clip-duration { font-family: var(--font-ui); font-size: 9.5px; color: var(--text-dim); margin-top: 2px; }
+
+#panel-export #export { width: 100%; }
