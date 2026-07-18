@@ -1,10 +1,5 @@
-/* Safe-zone reference overlay (dashed guide boxes matching TikTok's UI chrome) + its topbar toggle button. */
-/* Exposes #safe-zones (+ .safe-zone-*), #safe-zones-toggle. Depends on tokens.css, base.css (bare <button>), #stage (position: relative, in stage.css). */
-#safe-zones-toggle[aria-pressed="true"] {
-  color: var(--text);
-  border-color: var(--accent);
-}
-
+/* Safe-zone reference overlay (dashed guide boxes matching TikTok's UI chrome), toggled from the timeline toolbar. */
+/* Exposes #safe-zones (+ .safe-zone-*). #safe-zones-toggle lives in #timeline-toolbar and uses .icon-btn styling (button-group.css) for its pressed state. Depends on tokens.css, #stage (position: relative, in stage.css). */
 #safe-zones {
   position: absolute;
   inset: 0;

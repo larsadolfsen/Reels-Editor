@@ -533,7 +533,6 @@ async function addClip() {
 document.getElementById("add-clip").addEventListener("click", addClip);
 
 UI.button(document.getElementById("theme-toggle"), { variant: "icon" });
-UI.button(document.getElementById("safe-zones-toggle"), { variant: "outline" });
 UI.button(document.getElementById("export"), { variant: "accent" });
 
 function setSafeZonesVisible(visible) {

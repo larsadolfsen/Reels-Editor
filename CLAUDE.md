@@ -48,7 +48,7 @@ static/
       style-panel.css            # right-hand context panel: closed by default (#style-panel[hidden]), close button, three mutually-exclusive sections (#panel-video/#panel-text/#panel-captions) toggled via their own `hidden` attribute; mockup-matched (mono-caps section labels, button-group align/position)
       divider.css                 # .ui-divider: a plain static 1px line, no hover effect; pairs with UI.divider (static/ui-divider.js), added 2026-07-17
       color-swatch.css            # .color-swatch-row/.color-swatch/.color-swatch-label: small square input[type=color] + mixed-case label beside it, one field per row
-      safe-zones.css               # #safe-zones: 4 dashed `.safe-zone-*` guide boxes (top nav / right action rail / caption area / bottom nav, percentages matching TikTok's real UI chrome) overlaid on #stage, toggled via [hidden]; #safe-zones-toggle lives in #topbar (left of #export), preview-only, persisted in localStorage
+      safe-zones.css               # #safe-zones: 4 dashed `.safe-zone-*` guide boxes (top nav / right action rail / caption area / bottom nav, percentages matching TikTok's real UI chrome) overlaid on #stage, toggled via [hidden]; #safe-zones-toggle lives in the timeline toolbar (`#timeline-toolbar`, next to zoom −/+, shield icon), preview-only, persisted in localStorage
   fonts/                # vendored woff2: JetBrainsMono-Regular (variable 400-700), PublicSans-Regular (variable 400-700)
 tests/
   test_models.py
