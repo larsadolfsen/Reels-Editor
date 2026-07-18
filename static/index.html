@@ -23,10 +23,6 @@
   <header id="topbar">
     <div id="project-name"></div>
     <div id="topbar-spacer"></div>
-    <button id="theme-toggle" type="button" aria-pressed="false" title="Toggle light/dark theme">
-      <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-    </button>
     <button id="export">EXPORT &middot; 1080&times;1920</button>
   </header>
   <main>
@@ -173,6 +169,21 @@
           <button class="icon-btn" disabled title="Align right (not yet wired)">&#9654;</button>
         </div>
         <div class="caption-preview-box" contenteditable="false">kind of insane</div>
+      </div>
+
+      <div id="panel-settings" class="context-panel" hidden>
+        <div class="style-panel-header">SETTINGS</div>
+
+        <div class="style-group-label">APPEARANCE</div>
+        <div class="style-group">
+          <div class="style-row">
+            <span class="context-panel-name">Theme</span>
+            <button id="theme-toggle" type="button" aria-pressed="false" title="Toggle light/dark theme">
+              <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+              <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div id="panel-text" class="context-panel" hidden>
