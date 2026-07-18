@@ -1,4 +1,4 @@
-# Phase 3 — Rich-Text Formatting
+# Phase 2 — Rich-Text Formatting
 
 **Parent:** [2026-07-17-major-plan-revision-design.md](2026-07-17-major-plan-revision-design.md)
 **Status:** planning only — brainstormed for this revision, but carries real open technical risk (see below) that the pre-plan brainstorm at pickup time should treat as a genuine design pass, not just a verification of this doc.
@@ -7,7 +7,7 @@
 
 Let FONT properties — size, weight, italic, underline, color, outline, and the new highlight — vary per selected range of text within a single text block, instead of being one flat style for the whole heading. Select text on the stage, change a control in the FONT accordion, and only the selection restyles live. This is also where the text-highlight feature (background behind glyphs) actually lands, since highlight only makes sense applied to a user-chosen range, not the whole block.
 
-Split out of Phase 2 because it's a materially bigger and riskier unit of work than the accordion restructure — see the parent doc's Phase 2/3 split rationale.
+Split out of Phase 1 into its own phase because it's a materially bigger and riskier unit of work than the whole-block accordion restructure — see the parent doc's Phase 1/2 split rationale.
 
 ## Why this is a real architecture change
 
@@ -27,7 +27,7 @@ Highlight itself: `highlight: bool` + `highlight_color: str`, available both on 
 
 ## Selection → editing flow
 
-1. Phase 2 lands `contenteditable` text-block editing on the stage (plain text only, no formatting UI yet — see [phase-2-accordion-restructure-design.md](2026-07-17-phase-2-accordion-restructure-design.md)). This phase builds on that element.
+1. Phase 1 lands `contenteditable` text-block editing on the stage (plain text only, no formatting UI yet — see [phase-1-text-styling-complete-design.md](2026-07-17-phase-1-text-styling-complete-design.md)). This phase builds on that element.
 2. Selecting text inside the contenteditable block uses the browser's native Selection API (`window.getSelection()`), scoped to that element; the selected range is converted to character offsets into the plain-text `heading` string.
 3. While a non-collapsed selection exists, changing any FONT accordion control writes/updates a `FormatRun` for that exact range instead of touching the base preset. With no selection (or a collapsed caret), FONT controls behave exactly as they do today — edit the base preset.
 4. `preview.js` re-renders the block as a sequence of `<span>`s, each styled by merging the base preset with any overlapping run's overrides.
@@ -37,7 +37,7 @@ Highlight itself: `highlight: bool` + `highlight_color: str`, available both on 
 - **Word-wrap with mixed run widths.** `wrap_text`'s current signature (`text, measure_width, max_width_px`) assumes a single measurer for the whole string. Rich runs need wrapping that can switch measurers mid-string (different font/size per run). Recommend prototyping this in isolation (a pure-function spike with tests) before wiring it into `ass_render.py`, since a wrong abstraction here is expensive to unwind later.
 - **Multi-line highlight rendering.** A run's highlighted range can span a wrapped line break, so a single background rectangle isn't enough — highlighting (in both the browser preview and the ASS `\p1` export) needs one rectangle per visual line the run touches, the way native text-selection highlighting works. Contained to the highlight-rendering subthread, but non-trivial.
 - **Drag-to-move vs. text-selection-drag on the same element.** Phase 1's box-drag decided "click-drag inside the box that isn't a resize handle = move." Once the box is also `contenteditable` with text selection, a click-drag over the glyphs themselves should text-select, not move the box. Likely resolution: once a block is the active/selected block (already one click in), drags starting on visible glyphs select text; drags starting on empty box padding move the box. Prototype and confirm in-browser during implementation — flagged here so it isn't missed, not fully specified.
-- **Saved STYLE presets vs. rich runs.** Confirm at implementation time: does applying a saved preset (Phase 2's STYLE accordion) clear existing formatting runs on the block, or only update the base and leave runs intact? Recommend clearing runs on preset-apply (a preset is "reset to this whole look"), but confirm this doesn't surprise users mid-session.
+- **Saved STYLE presets vs. rich runs.** Confirm at implementation time: does applying a saved preset (Phase 1's STYLE accordion) clear existing formatting runs on the block, or only update the base and leave runs intact? Recommend clearing runs on preset-apply (a preset is "reset to this whole look"), but confirm this doesn't surprise users mid-session.
 
 ## Subthreads
 
