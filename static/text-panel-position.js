@@ -7,12 +7,12 @@ window.TextPanel.renderPosition = function renderPosition() {
   const preset = ensureTextPreset(ensureTextBlock().preset_id);
 
   UI.numberField(document.getElementById("text-offset-x-field"),
-    { label: "OFFSET H", unit: "PX", value: preset.offset_x, step: 1,
-      onChange: (v) => { preset.offset_x = v; computeXY(preset); saveProject(); renderTextPreview(); } });
+    { label: "HORIZONTAL", unit: "PX", value: preset.offset_x, step: 1,
+      onChange: (v) => { preset.offset_x = Math.round(v); computeXY(preset); saveProject(); renderTextPreview(); } });
 
   UI.numberField(document.getElementById("text-offset-y-field"),
-    { label: "OFFSET V", unit: "PX", value: preset.offset_y, step: 1,
-      onChange: (v) => { preset.offset_y = v; computeXY(preset); saveProject(); renderTextPreview(); } });
+    { label: "VERTICAL", unit: "PX", value: preset.offset_y, step: 1,
+      onChange: (v) => { preset.offset_y = Math.round(v); computeXY(preset); saveProject(); renderTextPreview(); } });
 
   UI.buttonGroup(document.getElementById("position-row-group"),
     [{ value: "top", label: "TOP" }, { value: "mid", label: "MID" }, { value: "btm", label: "BTM" }],

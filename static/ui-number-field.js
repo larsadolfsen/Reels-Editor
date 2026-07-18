@@ -5,10 +5,12 @@ window.UI = window.UI || {};
 // Renders a labeled number input (label always shows its unit, e.g. "START (SEC)") with a
 // custom up/down stepper (the native spin button can't be restyled) into `container`.
 // onChange(number) fires on typing and on stepper clicks. Returns a setValue(v) updater.
-window.UI.numberField = function numberField(container, { label, unit, value, step = 1, min, max, onChange }) {
+window.UI.numberField = function numberField(container, { label, unit, value, step = 1, min, max, decimals, onChange }) {
   container.innerHTML = "";
   container.classList.add("style-field");
   container.textContent = unit ? `${label} (${unit})` : label;
+
+  const format = (v) => (decimals !== undefined ? v.toFixed(decimals) : v);
 
   const wrap = document.createElement("div");
   wrap.className = "number-field-wrap";
@@ -18,7 +20,7 @@ window.UI.numberField = function numberField(container, { label, unit, value, st
   input.step = step;
   if (min !== undefined) input.min = min;
   if (max !== undefined) input.max = max;
-  input.value = value;
+  input.value = format(value);
   input.addEventListener("input", () => onChange(parseFloat(input.value) || 0));
 
   const clamp = (v) => {
@@ -28,7 +30,7 @@ window.UI.numberField = function numberField(container, { label, unit, value, st
   };
   const bump = (delta) => {
     const v = clamp((parseFloat(input.value) || 0) + delta);
-    input.value = v;
+    input.value = format(v);
     onChange(v);
   };
 
@@ -46,5 +48,5 @@ window.UI.numberField = function numberField(container, { label, unit, value, st
 
   wrap.append(input, stepper);
   container.appendChild(wrap);
-  return (v) => { input.value = v; };
+  return (v) => { input.value = format(v); };
 };
