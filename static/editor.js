@@ -7,7 +7,6 @@ let selectedMediaId = null; // MEDIA panel row highlight only — independent of
 const player = document.getElementById("player");
 
 const AVAILABLE_FONTS = ["Public Sans", "JetBrains Mono"]; // the only vendored font families (static/fonts/)
-let fontRowSetValue = null; // updater returned by UI.settingsRow, set once renderFontRow() runs
 
 function formatClipDuration(seconds) {
   const m = Math.floor(seconds / 60);
