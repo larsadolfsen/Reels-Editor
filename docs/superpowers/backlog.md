@@ -12,6 +12,7 @@ Major roadmap revised — see [2026-07-17-major-plan-revision-design.md](specs/2
 - [ ] **Phase 4 — Captions** — [depth doc](specs/2026-07-17-phase-4-captions-design.md): real transcription-backed captions reusing Phase 1's accordions, self-contained karaoke highlight modes (plain ASS `\k` tags, no longer shared with Rich-Text Formatting since that phase now lands after this one), caption list subpanel; one open question flagged in the doc to resolve before planning
 - [ ] **Phase 5 — Rich-text formatting** — [depth doc](specs/2026-07-17-phase-5-rich-text-formatting-design.md): per-selection FONT formatting incl. highlight; split out of Phase 1 as its own phase, carries real open technical risk (word-wrap with mixed run widths, multi-line highlight) flagged in the doc; scheduled last among the feature phases (highest technical risk); brainstormed, plan not yet written
 - [ ] **Phase 6 — Export polish** — [depth doc](specs/2026-07-17-phase-6-export-polish-design.md): parity spot-checks, known-limitation cleanup, whole-milestone verification
+
 ## Done
 
 - [x] Font Family row: two stacked lines (label above, value+chevron below) — see [2026-07-17-font-family-drilldown-design.md](specs/2026-07-17-font-family-drilldown-design.md), task 7
