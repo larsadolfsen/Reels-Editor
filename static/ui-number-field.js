@@ -5,7 +5,9 @@ window.UI = window.UI || {};
 // Renders a labeled number input (label always shows its unit, e.g. "START (SEC)") with a
 // custom up/down stepper (the native spin button can't be restyled) into `container`.
 // onChange(number) fires on typing and on stepper clicks. Returns a setValue(v) updater.
-window.UI.numberField = function numberField(container, { label, unit, value, step = 1, min, max, decimals, onChange }) {
+// disabled (default false) disables the input and both stepper buttons — used e.g. by the
+// TEXT panel's SIZE (PX) field when BOX's SIZE mode is FILL (size is computed, not typed).
+window.UI.numberField = function numberField(container, { label, unit, value, step = 1, min, max, decimals, disabled = false, onChange }) {
   container.innerHTML = "";
   container.classList.add("style-field");
   container.textContent = unit ? `${label} (${unit})` : label;
@@ -21,6 +23,7 @@ window.UI.numberField = function numberField(container, { label, unit, value, st
   if (min !== undefined) input.min = min;
   if (max !== undefined) input.max = max;
   input.value = format(value);
+  input.disabled = disabled;
   input.addEventListener("input", () => onChange(parseFloat(input.value) || 0));
 
   const clamp = (v) => {
@@ -39,10 +42,12 @@ window.UI.numberField = function numberField(container, { label, unit, value, st
   const up = document.createElement("button");
   up.type = "button"; up.className = "number-field-step number-field-step-up";
   up.setAttribute("aria-label", "Increment");
+  up.disabled = disabled;
   up.addEventListener("click", () => bump(step));
   const down = document.createElement("button");
   down.type = "button"; down.className = "number-field-step number-field-step-down";
   down.setAttribute("aria-label", "Decrement");
+  down.disabled = disabled;
   down.addEventListener("click", () => bump(-step));
   stepper.append(up, down);
 

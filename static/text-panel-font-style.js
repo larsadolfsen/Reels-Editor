@@ -51,12 +51,18 @@ window.TextPanel = window.TextPanel || {};
 
   window.TextPanel.renderFontStyle = function renderFontStyle() {
     const preset = ensureTextPreset(ensureTextBlock().preset_id);
+    // BOX SIZE mode FILL computes size_px automatically (static/preview.js's maybeRefitFillText) —
+    // the field still shows the live value, but typing into it would just be overwritten on the
+    // next render, so it's disabled rather than hidden.
+    const sizeFieldDisabled = preset.box_width_mode === "fill";
 
     document.getElementById("text-italic").setAttribute("aria-pressed", String(preset.italic));
     document.getElementById("text-underline").setAttribute("aria-pressed", String(preset.underline));
+    document.getElementById("text-size-step-down").disabled = sizeFieldDisabled;
+    document.getElementById("text-size-step-up").disabled = sizeFieldDisabled;
 
     currentSizeFieldSetValue = UI.numberField(document.getElementById("text-size-field"),
-      { label: "SIZE", unit: "PX", value: preset.size_px, min: 24, max: 200,
+      { label: "SIZE", unit: "PX", value: preset.size_px, min: 24, max: 200, disabled: sizeFieldDisabled,
         onChange: (v) => { preset.size_px = v; saveProject(); renderTextPreview(); } });
 
     UI.colorSwatch(document.getElementById("text-color-field"),
