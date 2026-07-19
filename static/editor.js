@@ -406,6 +406,13 @@ const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, caption
 
 UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (value) => PANEL_NAV_HANDLERS[value]());
 
+// Clicking stage text while some other right-panel section is open (FILES/VIDEO/CAPTIONS/...)
+// should switch to TEXT and fully select the block, in the same click that entered edit mode.
+Preview.setOnStageTextActivate((blockId) => {
+  if (selected && selected.type === "text") return; // already the active panel, nothing to do
+  openTextPanel();
+});
+
 async function moveClip(a, b) {
   const t = a.order;
   a.order = b.order;

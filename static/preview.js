@@ -1,6 +1,6 @@
 // Preview stage playback: plays a project's clips back-to-back in timeline order,
 // and composites the text-block overlay on top (renderText).
-// Exposes window.Preview.{load, seek, renderText, currentTimelineTime, play, pause, restart}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// Exposes window.Preview.{load, seek, renderText, currentTimelineTime, play, pause, restart, setSelectedTextBlock, setOnStageTextActivate}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
 window.Preview = (() => {
   let clips = [];
   let activeIndex = -1;
@@ -10,6 +10,7 @@ window.Preview = (() => {
   let boxResizeCallbacks = null;
   let editingBlockId = null;
   let editingDiv = null;
+  let onStageTextActivate = null;
   const player = document.getElementById("player");
   const timeEl = document.getElementById("time");
   const overlay = document.getElementById("overlay");
@@ -62,7 +63,23 @@ window.Preview = (() => {
     textPresets = presets;
     const keepEditingDiv = editingDiv && overlay.contains(editingDiv);
     overlay.innerHTML = "";
-    if (keepEditingDiv) overlay.appendChild(editingDiv); // preserve focus/caret across re-renders while typing
+    if (keepEditingDiv) {
+      overlay.appendChild(editingDiv); // preserve focus/caret across re-renders while typing
+      // Re-appending a node (even the same one) drops browser focus silently — no blur event,
+      // contentEditable stays "true", but document.activeElement falls back to <body>. This bites
+      // whenever a re-render happens synchronously inside onEditStart itself (e.g. clicking an
+      // unselected block also opens the TEXT panel, which re-renders before the click finishes) —
+      // without this, the block looks editable but the caret/keyboard focus never actually lands.
+      if (document.activeElement !== editingDiv && editingDiv.isContentEditable) {
+        editingDiv.focus();
+        const range = document.createRange();
+        range.selectNodeContents(editingDiv);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
     let stageW = overlay.clientWidth || stage.clientWidth;
     let stageH = overlay.clientHeight || stage.clientHeight;
     if ((stageW === 0 || stageH === 0) && stageW !== 0) {
@@ -114,32 +131,44 @@ window.Preview = (() => {
       if (!block.heading) { div.style.minWidth = "40px"; div.style.minHeight = "1em"; } // stay clickable while empty
       overlay.appendChild(div);
 
-      if (block.id === selectedTextBlockId) {
-        div.style.pointerEvents = "auto";
-        UI.textInteraction(div, {
-          onEditStart: () => { editingBlockId = block.id; editingDiv = div; },
-          onInput: (text) => {
-            block.heading = text;
-            if (boxResizeCallbacks && boxResizeCallbacks.onEdit) boxResizeCallbacks.onEdit(text);
-          },
-          onEditEnd: (text) => {
-            block.heading = text;
-            editingBlockId = null;
-            editingDiv = null;
-            if (boxResizeCallbacks && boxResizeCallbacks.onEditEnd) boxResizeCallbacks.onEditEnd(text);
-          },
-          onMove: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMove) boxResizeCallbacks.onMove(delta); },
-          onMoveEnd: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMoveEnd) boxResizeCallbacks.onMoveEnd(delta); },
+      // Always clickable/editable, regardless of which right-panel section is open (not just
+      // when this block is the "selected" one) — a stage text block should always show a text
+      // cursor and always be one click away from edit mode.
+      div.style.pointerEvents = "auto";
+      div.style.cursor = "text";
+      UI.textInteraction(div, {
+        onEditStart: () => {
+          editingBlockId = block.id;
+          editingDiv = div;
+          // If this block isn't the currently-selected one, ask the caller (editor.js) to
+          // switch the right panel to TEXT and fully select it, on this same click.
+          if (block.id !== selectedTextBlockId && onStageTextActivate) onStageTextActivate(block.id);
+        },
+        onInput: (text) => {
+          block.heading = text;
+          if (boxResizeCallbacks && boxResizeCallbacks.onEdit) boxResizeCallbacks.onEdit(text);
+        },
+        onEditEnd: (text) => {
+          block.heading = text;
+          editingBlockId = null;
+          editingDiv = null;
+          if (boxResizeCallbacks && boxResizeCallbacks.onEditEnd) boxResizeCallbacks.onEditEnd(text);
+        },
+        onMove: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMove) boxResizeCallbacks.onMove(delta); },
+        onMoveEnd: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMoveEnd) boxResizeCallbacks.onMoveEnd(delta); },
+      });
+      if (block.id === selectedTextBlockId && boxResizeCallbacks) {
+        UI.resizeHandles(div, {
+          getSize: () => ({ width: div.offsetWidth, height: div.offsetHeight }),
+          onResize: (size) => boxResizeCallbacks.onResize(size),
+          onDragEnd: (size) => boxResizeCallbacks.onDragEnd(size),
         });
-        if (boxResizeCallbacks) {
-          UI.resizeHandles(div, {
-            getSize: () => ({ width: div.offsetWidth, height: div.offsetHeight }),
-            onResize: (size) => boxResizeCallbacks.onResize(size),
-            onDragEnd: (size) => boxResizeCallbacks.onDragEnd(size),
-          });
-        }
       }
     }
+  }
+
+  function setOnStageTextActivate(fn) {
+    onStageTextActivate = fn || null;
   }
 
   function setSelectedTextBlock(blockId, callbacks) {
@@ -217,5 +246,5 @@ window.Preview = (() => {
     }
   }
 
-  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, setSelectedTextBlock };
+  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, setSelectedTextBlock, setOnStageTextActivate };
 })();
