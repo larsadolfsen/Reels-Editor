@@ -720,6 +720,7 @@ git commit -m "feat: add GET /api/fonts/{name}/weights route"
 - Modify: `static/editor.js`
 - Modify: `static/text-panel-font-style.js`
 - Modify: `static/preview.js`
+- Modify: `static/css/components/sub-panel.css`
 
 **Interfaces:**
 - Consumes: `GET /api/fonts/{name}/weights` (Task 6), `TextPreset.weight` (Task 3), `ensureTextBlock()`/`ensureTextPreset()`/`saveProject()`/`renderTextPreview()`/`AVAILABLE_FONTS` (existing `editor.js` globals), `UI.settingsRow`/`UI.subPanelHeader` (existing components).
@@ -781,16 +782,38 @@ window.TextPanel = window.TextPanel || {};
   function renderWeightList() {
     const listEl = document.getElementById("text-weight-list");
     listEl.innerHTML = "";
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
+    const block = ensureTextBlock();
+    const preset = ensureTextPreset(block.preset_id);
+    // Each row renders the block's actual heading text (not just the weight's label) in the
+    // current font family at that exact weight — a real preview of how the block would look,
+    // not just a labeled option. Falls back to the label itself for an empty/new block, so
+    // there's still something visible to compare.
+    const previewText = block.heading || "";
     currentWeights.forEach((w) => {
       const li = document.createElement("li");
       li.className = "font-list-row";
       li.addEventListener("click", () => selectWeight(w.value));
 
-      const nameEl = document.createElement("span");
-      nameEl.className = "font-list-row-name";
-      nameEl.textContent = w.label;
-      li.appendChild(nameEl);
+      // Label + preview are grouped in one wrapper so this row still has exactly two direct
+      // children (content, checkmark?) — matching font-list-row's existing
+      // `justify-content: space-between` layout, which expects the checkmark as the sole
+      // right-hand item.
+      const content = document.createElement("span");
+      content.className = "font-weight-row-content";
+
+      const labelEl = document.createElement("span");
+      labelEl.className = "font-list-row-name";
+      labelEl.textContent = w.label;
+      content.appendChild(labelEl);
+
+      const previewEl = document.createElement("span");
+      previewEl.className = "font-weight-row-preview";
+      previewEl.style.fontFamily = preset.font;
+      previewEl.style.fontWeight = w.value;
+      previewEl.textContent = previewText || w.label;
+      content.appendChild(previewEl);
+
+      li.appendChild(content);
 
       if (w.value === preset.weight) {
         const check = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -834,7 +857,31 @@ window.TextPanel = window.TextPanel || {};
 
 Note: `currentWeights` is module-local state used only by `renderWeightList()` (populated fresh by `renderFontWeight()` on every render) — it isn't exposed outside this file. Task 8's font-family snap-to-nearest logic needs the *new* font's weight list before `renderFontWeight()` re-runs for it, so it fetches its own copy via `Api.listFontWeights()` rather than reading this module's (necessarily stale, at that point) state.
 
-- [ ] **Step 3: Wire the new script and markup into `index.html`**
+- [ ] **Step 3: Add CSS for the preview row**
+
+In `static/css/components/sub-panel.css`, add after the existing `.font-list-row-name` rule:
+
+```css
+.font-weight-row-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.font-weight-row-preview {
+  font-size: 20px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+```
+
+Update the file's header comment (currently `/* Exposes .sub-panel-header/.sub-panel-back/.sub-panel-title/.font-list/.font-list-row/.font-list-row-name/.font-list-checkmark/.font-list-divider. Depends on tokens.css, button.css, divider.css. */`) to also list `.font-weight-row-content`/`.font-weight-row-preview`.
+
+- [ ] **Step 4: Wire the new script and markup into `index.html`**
 
 In `static/index.html`, find the Bold/Italic/Underline row (inside `#text-font-body`):
 
@@ -908,7 +955,7 @@ Finally, add the two new `<script>` tags, placed right after `text-panel-font-fa
 ```
 (add this right after `<script src="/static/text-panel-font-style.js"></script>`)
 
-- [ ] **Step 4: Remove the Bold wiring from `text-panel-font-style.js`**
+- [ ] **Step 5: Remove the Bold wiring from `text-panel-font-style.js`**
 
 In `static/text-panel-font-style.js`, remove the `text-bold` line from the toggle wiring:
 
@@ -940,7 +987,7 @@ becomes:
     document.getElementById("text-underline").setAttribute("aria-pressed", String(preset.underline));
 ```
 
-- [ ] **Step 5: Wire `renderFontWeight()` into `renderTextPanel()` and reset its drill-down, in `editor.js`**
+- [ ] **Step 6: Wire `renderFontWeight()` into `renderTextPanel()` and reset its drill-down, in `editor.js`**
 
 Current (`static/editor.js`):
 ```js
@@ -1041,7 +1088,7 @@ function defaultTextPreset(id) {
 }
 ```
 
-- [ ] **Step 6: `preview.js` reads `weight` instead of `bold`**
+- [ ] **Step 7: `preview.js` reads `weight` instead of `bold`**
 
 Current (`static/preview.js`):
 ```js
@@ -1053,7 +1100,7 @@ Change to:
       div.style.fontWeight = String(preset.weight);
 ```
 
-- [ ] **Step 7: Manual verification**
+- [ ] **Step 8: Manual verification**
 
 Run: `.venv/Scripts/python -m pytest -q` — expected: all pass, unaffected (this task is entirely frontend).
 
@@ -1061,14 +1108,14 @@ Then, since this is a real UI change:
 1. Start the server: `.venv/Scripts/python -m uvicorn app.main:app --reload` (or a scratch port if another instance is already running).
 2. Open it in a browser tool, navigate to TEXT panel → FONT accordion.
 3. Confirm: no Bold button remains (only Italic/Underline in that row); a new "Weight" settings row appears above it, showing "Regular" by default.
-4. Click the Weight row, confirm the drill-down opens listing "Regular", "Medium", "SemiBold", "Bold" (Public Sans is the default font) with a checkmark on "Regular".
+4. Click the Weight row, confirm the drill-down opens listing "Regular", "Medium", "SemiBold", "Bold" (Public Sans is the default font) with a checkmark on "Regular", and that **each row renders a live preview** of the block's actual heading text set in Public Sans at that row's exact weight (getting visibly heavier down the list) — not just the plain label word. Type a heading first if the block is currently empty, so there's real text to preview.
 5. Click "Medium", confirm the drill-down closes, the Weight row now shows "Medium", and the stage text visibly gets heavier (inspect `getComputedStyle` on the `.text-block` div, confirm `fontWeight === "500"`).
 6. Check `read_console_messages` for errors.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add static/api-list-font-weights.js static/text-panel-font-weight.js static/index.html static/editor.js static/text-panel-font-style.js static/preview.js
+git add static/api-list-font-weights.js static/text-panel-font-weight.js static/index.html static/editor.js static/text-panel-font-style.js static/preview.js static/css/components/sub-panel.css
 git commit -m "feat: add Weight settings row + drill-down, remove Bold toggle"
 ```
 
