@@ -54,3 +54,13 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
     cmd += ["-filter_complex", fc, "-map", current, "-map", "[a]",
             "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-c:a", "aac", out_path]
     return cmd
+
+def build_audio_cmd(p: Project, wav_path: str) -> list[str]:
+    clips = ordered(p.clips)
+    cmd = ["ffmpeg", "-y"]
+    parts = []
+    for i, c in enumerate(clips):
+        cmd += ["-i", c.file_path]
+        parts.append(f"[{i}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS[a{i}];")
+    fc = "".join(parts) + "".join(f"[a{i}]" for i in range(len(clips))) + f"concat=n={len(clips)}:v=0:a=1[a]"
+    return cmd + ["-filter_complex", fc, "-map", "[a]", "-vn", "-ac", "1", "-ar", "16000", wav_path]
