@@ -145,6 +145,7 @@ async function renderCaptionPanel() {
   await CaptionPanel.renderFontWeight();
   CaptionPanel.renderFontStyle();
   CaptionPanel.renderBox();
+  CaptionPanel.renderHighlight();
   CaptionPanel.renderWords();
 
   renderCaptionPreview();
@@ -280,6 +281,7 @@ UI.accordionSection(document.getElementById("text-time-accordion"), document.get
 UI.accordionSection(document.getElementById("caption-style-accordion"), document.getElementById("caption-style-body"), { title: "STYLE", expanded: false });
 UI.accordionSection(document.getElementById("caption-font-accordion"), document.getElementById("caption-font-body"), { title: "FONT", expanded: false });
 UI.accordionSection(document.getElementById("caption-box-accordion"), document.getElementById("caption-box-body"), { title: "BOX", expanded: false });
+UI.accordionSection(document.getElementById("caption-highlight-accordion"), document.getElementById("caption-highlight-body"), { title: "HIGHLIGHT", expanded: false });
 
 UI.divider(document.getElementById("video-order-divider"));
 UI.divider(document.getElementById("text-box-width-height-divider"));
