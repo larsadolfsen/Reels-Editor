@@ -1,6 +1,6 @@
 # Tests for app.models: entity construction, IDs, JSON round-trip.
 from datetime import datetime as _datetime
-from app.models import Project, ClipLayer, MediaItem, TextPreset, TextBlockLayer, CaptionTrack, CaptionWord, VideoBoxLayer
+from app.models import Project, ClipLayer, MediaItem, TextPreset, TextBlockLayer, CaptionTrack, CaptionWord, VideoBoxLayer, FormatRun
 
 def test_ids_are_unique():
     a, b = ClipLayer(media_id="m1", file_path="a.mp4", in_point=0, out_point=5, order=0), ClipLayer(media_id="m2", file_path="b.mp4", in_point=0, out_point=5, order=1)
@@ -131,3 +131,26 @@ def test_caption_track_has_preset_id():
     from app.models import CaptionTrack, CaptionWord
     t = CaptionTrack(words=[CaptionWord(text="hi", t_start=0.0, t_end=0.5)])
     assert isinstance(t.preset_id, str) and len(t.preset_id) == 32
+
+def test_format_run_only_start_end_required():
+    r = FormatRun(start=2, end=5)
+    assert (r.start, r.end) == (2, 5)
+    assert r.color is None and r.weight is None and r.highlight is None
+
+def test_format_run_sparse_overrides_round_trip():
+    r = FormatRun(start=0, end=3, color="#FF0000", weight=700, highlight=True, highlight_color="#00FF00")
+    assert FormatRun.model_validate_json(r.model_dump_json()) == r
+
+def test_text_block_formatting_runs_defaults_empty():
+    b = TextBlockLayer(heading="hi", preset_id="x")
+    assert b.formatting_runs == []
+
+def test_text_block_formatting_runs_round_trip():
+    b = TextBlockLayer(heading="hi there", preset_id="x",
+                        formatting_runs=[FormatRun(start=0, end=2, weight=700)])
+    out = TextBlockLayer.model_validate_json(b.model_dump_json())
+    assert out.formatting_runs == [FormatRun(start=0, end=2, weight=700)]
+
+def test_text_preset_highlight_defaults_off():
+    p = TextPreset(name="Pop")
+    assert p.highlight is False

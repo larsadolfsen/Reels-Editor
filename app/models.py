@@ -59,9 +59,10 @@ class TextPreset(BaseModel):
     y: int = 700                   # vertical px: always the top edge of the box
     entrance: str = "fade_pop"     # fade_pop|none
     usage_count: int = 0    # how many times this saved preset has been applied to a block; drives the STYLE accordion's "most used" list
-    highlight_color: str = "#FFD400"   # caption karaoke highlight color; unused by TextBlockLayer consumers
+    highlight_color: str = "#FFD400"   # shared: caption karaoke highlight color AND rich-text highlight color
     highlight_mode: str = "current_word"   # current_word | progressive_fill; unused by TextBlockLayer consumers
     max_words_per_line: int = 4        # caption line-grouping size; unused by TextBlockLayer consumers
+    highlight: bool = False            # block-level highlight default (off); highlight_color above is shared with captions
 
     @model_validator(mode="before")
     @classmethod
@@ -76,6 +77,24 @@ class TextPreset(BaseModel):
             data["weight"] = 700 if data.pop("bold") else 400
         return data
 
+class FormatRun(BaseModel):
+    # Character-offset range into a TextBlockLayer.heading string. All style fields below are
+    # sparse overrides — None means "fall through to the block's base TextPreset" — so an
+    # unstyled edit to the base preset (e.g. changing font size) still applies to any part of
+    # the heading that isn't explicitly overridden by a run.
+    start: int
+    end: int
+    font: str | None = None
+    size_px: int | None = None
+    color: str | None = None
+    outline_color: str | None = None
+    outline_px: int | None = None
+    weight: int | None = None
+    italic: bool | None = None
+    underline: bool | None = None
+    highlight: bool | None = None
+    highlight_color: str | None = None
+
 class TextBlockLayer(BaseModel):
     id: str = Field(default_factory=new_id)
     heading: str
@@ -83,6 +102,7 @@ class TextBlockLayer(BaseModel):
     start: float = 0.0             # timeline seconds
     end: float = 3.0
     z_index: int = 0
+    formatting_runs: list[FormatRun] = []   # sparse per-range style overrides; [] = today's flat-style rendering
 
 class CaptionWord(BaseModel):
     id: str = Field(default_factory=new_id)
