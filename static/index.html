@@ -18,12 +18,16 @@
 <link rel="stylesheet" href="/static/css/components/divider.css">
 <link rel="stylesheet" href="/static/css/components/resize-handles.css">
 <link rel="stylesheet" href="/static/css/components/safe-zones.css">
+<link rel="stylesheet" href="/static/css/components/save-indicator.css">
+<link rel="stylesheet" href="/static/css/components/project-list-row.css">
+<link rel="stylesheet" href="/static/css/components/project-picker.css">
 </head><body>
 <div id="app">
   <main>
     <aside id="panel">
       <div id="panel-nav"></div>
       <div id="panel-brand">
+        <div id="save-indicator"></div>
         <span id="brand-dot"></span>
         <span id="brand-name">REEL</span>
       </div>
@@ -188,6 +192,14 @@
         <div id="export-result"></div>
       </div>
 
+      <div id="panel-projects" class="context-panel" hidden>
+        <div class="style-panel-header">PROJECTS</div>
+        <div class="style-group">
+          <button id="project-create" class="new-project-btn"><span class="icon">+</span><span class="label">NEW PROJECT</span></button>
+        </div>
+        <ul id="project-list" class="project-list-row-list"></ul>
+      </div>
+
       <div id="panel-text" class="context-panel" hidden>
         <div id="panel-text-main">
           <div class="style-panel-header">TEXT</div>
@@ -339,6 +351,7 @@
     </aside>
   </main>
 </div>
+<div id="project-picker" hidden></div>
 <script src="/static/ui-button-group.js"></script>
 <script src="/static/ui-number-field.js"></script>
 <script src="/static/ui-color-swatch.js"></script>
@@ -350,6 +363,9 @@
 <script src="/static/ui-resize-handles.js"></script>
 <script src="/static/ui-icon-rail.js"></script>
 <script src="/static/ui-button.js"></script>
+<script src="/static/ui-save-indicator.js"></script>
+<script src="/static/ui-project-list-row.js"></script>
+<script src="/static/ui-project-picker.js"></script>
 <script src="/static/api-ensure-project.js"></script>
 <script src="/static/api-save-project.js"></script>
 <script src="/static/api-pick-file.js"></script>
@@ -357,6 +373,11 @@
 <script src="/static/api-export-project.js"></script>
 <script src="/static/api-list-presets.js"></script>
 <script src="/static/api-save-preset.js"></script>
+<script src="/static/api-list-projects.js"></script>
+<script src="/static/api-delete-project.js"></script>
+<script src="/static/api-duplicate-project.js"></script>
+<script src="/static/api-rename-project.js"></script>
+<script src="/static/api-create-project.js"></script>
 <script src="/static/api-list-font-weights.js"></script>
 <script src="/static/text-panel-font-family.js"></script>
 <script src="/static/text-panel-font-style.js"></script>
@@ -366,6 +387,7 @@
 <script src="/static/text-panel-position.js"></script>
 <script src="/static/text-panel-time.js"></script>
 <script src="/static/seed.js"></script>
+<script src="/static/panel-projects.js"></script>
 <script src="/static/ui-text-interaction.js"></script>
 <script src="/static/font-fit.js"></script>
 <script src="/static/preview.js"></script>

@@ -8,6 +8,39 @@ const player = document.getElementById("player");
 
 const AVAILABLE_FONTS = ["Public Sans", "JetBrains Mono"]; // the only vendored font families (static/fonts/)
 
+function showEditorShell() {
+  document.getElementById("project-picker").hidden = true;
+  document.getElementById("app").hidden = false;
+}
+
+async function showPickerScreen() {
+  // Clear the current project so a stale beforeunload PUT can't resurrect a project that was
+  // just deleted (onDeletedCurrent routes here) or overwrite state after a fresh cold start.
+  project = null;
+  document.getElementById("app").hidden = true;
+  const pickerEl = document.getElementById("project-picker");
+  pickerEl.hidden = false;
+  await UI.projectPicker(pickerEl, { onOpen: (p) => openProject(p) });
+}
+
+// Loads `target` (a ProjectSummary or full Project — only .id is used) as the current project
+// and renders the full editor for it. Used by cold start, PROJECTS-panel switch, and after create.
+async function openProject(target) {
+  const res = await fetch(`/api/projects/${target.id}`);
+  project = await res.json();
+  localStorage.setItem("projectId", project.id);
+  const before = JSON.stringify(project);
+  seedDefaults(project);
+  if (JSON.stringify(project) !== before) await saveProject();
+  showEditorShell();
+  document.title = project.name ? `${project.name} – Reels Editor` : "Reels Editor";
+  renderMediaList();
+  Preview.load(project);
+  await renderTextPanel();
+  renderTimeline();
+  openFilesPanel();
+}
+
 function formatClipDuration(seconds) {
   const m = Math.floor(seconds / 60);
   const s = (seconds % 60).toFixed(1).padStart(4, "0");
@@ -197,8 +230,23 @@ function clampTrim(inP, outP, dur) {
   return { in_point: inP, out_point: outP };
 }
 
+const saveIndicator = UI.saveIndicator(document.getElementById("save-indicator"));
+
 async function saveProject() {
+  saveIndicator.setSaving();
   await Api.saveProject(project);
+  saveIndicator.setSaved();
+}
+
+function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+
+// Leaving the current project (switching to another, or creating a new one) always flushes an
+// explicit save first, then holds briefly on the "Saved" state as a deliberate moment against
+// an accidental click, before actually navigating.
+async function confirmFlushAndSwitch(action) {
+  await saveProject();
+  await delay(400);
+  await action();
 }
 
 function renderTimeline() {
@@ -209,7 +257,7 @@ function renderTimeline() {
 function showPanel(type) {
   if (type !== "text") Preview.setSelectedTextBlock(null, null);
   document.getElementById("style-panel").hidden = false;
-  ["files", "video", "text", "captions", "settings", "export"].forEach((t) => {
+  ["files", "video", "text", "captions", "settings", "export", "projects"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;
   });
 }
@@ -352,6 +400,11 @@ const PANEL_NAV_ITEMS = [
     label: "EXPORT",
     icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>`,
   },
+  {
+    value: "projects",
+    label: "PROJECTS",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>`,
+  },
 ];
 
 function openFilesPanel() {
@@ -385,7 +438,29 @@ function openExportPanel() {
   renderTimeline();
 }
 
-const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, settings: openSettingsPanel, export: openExportPanel };
+async function openProjectsPanel() {
+  selected = { type: "projects" };
+  showPanel("projects");
+  await ProjectsPanel.render(project.id, {
+    onSwitch: (p) => confirmFlushAndSwitch(() => openProject(p)),
+    onCreateRequested: (name) => confirmFlushAndSwitch(async () => {
+      const created = await Api.createProject(name);
+      await openProject(created);
+    }),
+    onDeletedCurrent: () => showPickerScreen(),
+    onRenamedCurrent: (name) => {
+      // panel-projects.js's Api.renameProject call already persisted the rename to disk against
+      // a fresh server-fetched copy — it never touches this in-memory `project`. Without this,
+      // the next saveProject() (any subsequent edit, a switch-away flush, or beforeunload) would
+      // overwrite the on-disk rename with the still-stale in-memory name.
+      project.name = name;
+      document.title = `${project.name} – Reels Editor`;
+    },
+  });
+  renderTimeline();
+}
+
+const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel };
 
 UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (value) => PANEL_NAV_HANDLERS[value]());
 
@@ -474,18 +549,25 @@ document.getElementById("export").addEventListener("click", exportProject);
   setSafeZonesVisible(localStorage.getItem("safeZonesVisible") === "1");
   const storedTheme = localStorage.getItem("theme");
   setTheme(storedTheme || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
-  project = await Api.ensureProject();
-  const before = JSON.stringify(project);
-  seedDefaults(project);
-  if (JSON.stringify(project) !== before) await saveProject();
-  document.title = project.name ? `${project.name} – Reels Editor` : "Reels Editor";
-  renderMediaList();
-  Preview.load(project);
   await TextPanel.loadSavedPresets();
-  await renderTextPanel();
-  renderTimeline();
-  openFilesPanel();
-  setTimeout(() => renderTextPreview(), 100);
+
+  window.addEventListener("beforeunload", () => {
+    if (!project) return;
+    fetch(`/api/projects/${project.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(project),
+      keepalive: true,
+    });
+  });
+
+  const existing = await Api.ensureProject();
+  if (existing) {
+    await openProject(existing);
+    setTimeout(() => renderTextPreview(), 100);
+  } else {
+    await showPickerScreen();
+  }
 })();
 
 player.addEventListener("timeupdate", renderTimeline);

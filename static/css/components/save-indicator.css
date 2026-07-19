@@ -1,0 +1,26 @@
+/* "Saving…/Saved" indicator for #panel-brand — persistent across all panels. */
+/* Exposes .save-indicator/.save-indicator-dot/.save-indicator-label. Depends on tokens.css. */
+.save-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: var(--space-2);
+}
+
+.save-indicator-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius);
+  background: var(--text-dim);
+}
+
+.save-indicator.is-saving .save-indicator-dot { background: var(--accent); }
+
+.save-indicator-label {
+  font-family: var(--font-ui);
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  text-align: center;
+}
