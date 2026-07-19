@@ -1,7 +1,7 @@
 # Phase 3 — Video Box (Picture-in-Picture)
 
 **Parent:** [2026-07-17-major-plan-revision-design.md](2026-07-17-major-plan-revision-design.md)
-**Status:** planning only, minimal — this phase's first real step is its own full brainstorming session (not a verification pass like Phase 1, since there's no existing design to check against).
+**Status:** superseded — see [2026-07-19-phase-3-video-box-design.md](2026-07-19-phase-3-video-box-design.md) for the full brainstormed design.
 
 ## Goal
 
