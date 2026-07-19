@@ -161,7 +161,7 @@ def test_wrapped_lines_and_size_fixed_dimensions_used_as_is():
     pr = TextPreset(name="Pop", size_px=48, box_width_mode="fixed", box_width=200,
                      box_height_mode="fixed", box_height=80)
     b = TextBlockLayer(heading="hello", preset_id=pr.id, start=0, end=2)
-    text, width, height = _wrapped_lines_and_size(b, pr)
+    text, width, height, _ = _wrapped_lines_and_size(b, pr)
     assert (width, height) == (200, 80)
 
 def test_style_alignment_reflects_text_align():
@@ -199,7 +199,7 @@ def test_wrapped_lines_and_size_fill_mode_same_as_fixed():
     pr = TextPreset(name="Pop", size_px=48, box_width_mode="fill", box_width=200,
                      box_height_mode="fill", box_height=80)
     b = TextBlockLayer(heading="hello", preset_id=pr.id, start=0, end=2)
-    text, width, height = _wrapped_lines_and_size(b, pr)
+    text, width, height, _ = _wrapped_lines_and_size(b, pr)
     assert (width, height) == (200, 80)
 
 def test_box_dialogue_present_with_fill_mode():
@@ -289,3 +289,34 @@ def test_render_caption_ass_no_words_still_valid_header():
     out = render_caption_ass(p, pr)
     assert "PlayResX: 1080" in out and "Style: Caption," in out
     assert not [l for l in out.splitlines() if l.startswith("Dialogue:")]
+
+from app.models import FormatRun
+
+def test_block_dialogue_with_no_runs_is_unchanged():
+    pr = TextPreset(name="Pop", size_px=96)
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="PLAIN TEXT", preset_id=pr.id, start=0, end=2)])
+    out = render_ass(p, {pr.id: pr})
+    line = next(l for l in out.splitlines() if l.startswith("Dialogue:") and "box" not in l)
+    assert "PLAIN TEXT" in line
+    assert "\\fn" not in line  # no per-run override tags when there are no runs
+
+def test_block_dialogue_with_one_run_emits_override_and_reset_tags():
+    pr = TextPreset(name="Pop", font="Public Sans", size_px=96, color="#FFFFFF", weight=400)
+    run = FormatRun(start=0, end=3, color="#FF0000", weight=700)  # "BIG" in "BIG NEWS"
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG NEWS", preset_id=pr.id, start=0, end=2,
+                                                        formatting_runs=[run])])
+    out = render_ass(p, {pr.id: pr})
+    line = next(l for l in out.splitlines() if l.startswith("Dialogue:") and "BIG" in l)
+    assert "\\1c&H0000FF&" in line              # _ass_override_color("#FF0000") == "&H0000FF&" (BGR)
+    assert "\\fnPublic Sans Bold" in line       # run's overridden weight face
+    assert "\\fnPublic Sans Regular" in line    # reset back to base style after the run ends
+    assert line.index("BIG") < line.index("NEWS")
+
+def test_block_dialogue_run_preserves_unstyled_text_around_it():
+    pr = TextPreset(name="Pop")
+    run = FormatRun(start=4, end=8, color="#00FF00")  # "NEWS" in "BIG NEWS TODAY"
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG NEWS TODAY", preset_id=pr.id, start=0, end=2,
+                                                        formatting_runs=[run])])
+    out = render_ass(p, {pr.id: pr})
+    line = next(l for l in out.splitlines() if l.startswith("Dialogue:") and "TODAY" in l)
+    assert "BIG " in line and "NEWS" in line and " TODAY" in line

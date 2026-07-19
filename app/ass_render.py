@@ -1,7 +1,8 @@
 # Generates the ASS subtitle files burned into exports: text-block dialogues via render_ass() (accepts an optional text_blocks subset so app/main.py can render one ASS file per z-order band, see app.timeline.banded_layers), and karaoke caption dialogues via render_caption_ass().
 # Exposes render_ass, render_caption_ass, group_words, ass_time, hex_to_ass. Consumed by the export route; rendered by libass.
+from typing import Callable
 from app.models import Project, TextPreset, CaptionWord
-from app.font_metrics import wrap_text, pil_font_measurer, WEIGHT_LABELS, nearest_available_weight
+from app.font_metrics import wrap_text, wrap_text_runs, pil_font_measurer, WEIGHT_LABELS, nearest_available_weight
 
 BOX_PAD_X_EM = 0.35
 BOX_PAD_Y_EM = 0.15
@@ -56,26 +57,72 @@ def _style(name: str, p: TextPreset, weight: int | None = None) -> str:
             f"{hex_to_ass(p.outline_color)},{hex_to_ass('#000000')},"
             f"0,{italic},{underline},0,100,100,0,0,1,{p.outline_px},0,{alignment},0,0,0,1")   # Bold always 0 — bold-ness lives in Fontname's face selection
 
-def _wrapped_lines_and_size(b, p: TextPreset, weight: int | None = None) -> tuple[str, float, float]:
+def _measure_range_for(b, p: TextPreset, weight: int) -> Callable[[int, int], float]:
+    """Builds a measure_range(start, end) callable over b.heading that's aware of
+    b.formatting_runs — a range spanning multiple runs (or run + unstyled text) is split at
+    each run boundary and measured with that piece's own font/size/weight, then summed."""
+    base_measure = pil_font_measurer(p.font, p.size_px, weight)
+    if not b.formatting_runs:
+        return lambda s, e: base_measure(b.heading[s:e])
+
+    boundaries = sorted({0, len(b.heading)} | {r.start for r in b.formatting_runs} | {r.end for r in b.formatting_runs})
+    measurer_cache: dict[tuple[str, int, int], Callable[[str], float]] = {}
+
+    def measurer_for(pos: int) -> Callable[[str], float]:
+        run = next((r for r in b.formatting_runs if r.start <= pos < r.end), None)
+        font = (run.font if run and run.font else p.font)
+        size = (run.size_px if run and run.size_px else p.size_px)
+        rweight = nearest_available_weight(font, run.weight if run and run.weight else weight)
+        key = (font, size, rweight)
+        if key not in measurer_cache:
+            measurer_cache[key] = pil_font_measurer(*key)
+        return measurer_cache[key]
+
+    def measure_range(start: int, end: int) -> float:
+        total = 0.0
+        pos = start
+        for b_end in boundaries:
+            if b_end <= pos:
+                continue
+            seg_end = min(b_end, end)
+            if seg_end > pos:
+                total += measurer_for(pos)(b.heading[pos:seg_end])
+                pos = seg_end
+            if pos >= end:
+                break
+        return total
+
+    return measure_range
+
+def _wrapped_lines_and_size(b, p: TextPreset, weight: int | None = None) -> tuple[str, float, float, list[tuple[int, int]]]:
     weight = weight if weight is not None else _resolved_weight(p)
-    measure = pil_font_measurer(p.font, p.size_px, weight)
+    measure_range = _measure_range_for(b, p, weight)
     pad_x = BOX_PAD_X_EM * p.size_px * 2
     pad_y = BOX_PAD_Y_EM * p.size_px * 2
     width_fixed = p.box_width_mode in ("fixed", "fill")
     height_fixed = p.box_height_mode in ("fixed", "fill")
     if width_fixed:
-        text = wrap_text(b.heading, measure, max(1, p.box_width - pad_x))
+        text, spans = wrap_text_runs(b.heading, measure_range, max(1, p.box_width - pad_x))
     else:
         text = b.heading
+        spans = [(0, len(b.heading))] if "\n" not in b.heading else _spans_for_hard_breaks(b.heading)
     lines = text.split("\n")
-    width = p.box_width if width_fixed else max(measure(line) for line in lines) + pad_x
+    width = p.box_width if width_fixed else max(measure_range(s, e) for s, e in spans) + pad_x
     height = p.box_height if height_fixed else len(lines) * p.size_px * LINE_HEIGHT + pad_y
-    return text, width, height
+    return text, width, height, spans
+
+def _spans_for_hard_breaks(text: str) -> list[tuple[int, int]]:
+    spans = []
+    pos = 0
+    for line in text.split("\n"):
+        spans.append((pos, pos + len(line)))
+        pos += len(line) + 1
+    return spans
 
 def _box_dialogue(b, p: TextPreset, weight: int | None = None) -> str | None:
     if not p.box_background and p.box_border_width <= 0:
         return None
-    _, width, height = _wrapped_lines_and_size(b, p, weight)
+    _, width, height, _ = _wrapped_lines_and_size(b, p, weight)
     if p.align == "left":
         left = p.x
     elif p.align == "right":
@@ -92,13 +139,49 @@ def _box_dialogue(b, p: TextPreset, weight: int | None = None) -> str | None:
           f"\\1a&H{fill_alpha}&\\3a&H{border_alpha}&\\1c{fill_color}\\3c{border_color}\\p1")
     return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]}box,,0,0,0,,{{{fx}}}{path}{{\\p0}}"
 
+def _run_style_tag(p: TextPreset, run: "FormatRun | None") -> str:
+    """Full ASS override tag switching to a run's effective style (base preset + this run's
+    sparse overrides), or back to the base style when run is None. Always emits every field
+    rather than a diff against the previous state, so each run's tag is self-contained and the
+    reset-to-base tag after a run ends never has to remember what came before it."""
+    font = (run.font if run and run.font else p.font)
+    size = (run.size_px if run and run.size_px else p.size_px)
+    weight = nearest_available_weight(font, run.weight if run and run.weight else p.weight)
+    color = (run.color if run and run.color else p.color)
+    outline_color = (run.outline_color if run and run.outline_color else p.outline_color)
+    outline_px = (run.outline_px if run and run.outline_px is not None else p.outline_px)
+    italic = (run.italic if run and run.italic is not None else p.italic)
+    underline = (run.underline if run and run.underline is not None else p.underline)
+    fontname = f"{font} {WEIGHT_LABELS[weight]}"
+    return (f"\\fn{fontname}\\fs{size}\\1c{_ass_override_color(color)}\\3c{_ass_override_color(outline_color)}"
+            f"\\bord{outline_px}\\i{1 if italic else 0}\\u{1 if underline else 0}")
+
+def _run_at(runs: list, offset: int):
+    return next((r for r in runs if r.start <= offset < r.end), None)
+
+def _tagged_text(b, p: TextPreset, text: str) -> str:
+    """text is the wrapped output of _wrapped_lines_and_size — same length as b.heading except
+    word-break spaces have become \\n in place, so offsets into b.heading still line up 1:1."""
+    out = []
+    active = "unset"
+    for i, ch in enumerate(text):
+        run = _run_at(b.formatting_runs, i)
+        if run is not active:
+            out.append(f"{{{_run_style_tag(p, run)}}}")
+            active = run
+        out.append("\\N" if ch == "\n" else ch)
+    return "".join(out)
+
 def _block_dialogue(b, p: TextPreset, weight: int | None = None) -> str:
     fx = f"\\pos({p.x},{p.y})"
     if p.entrance == "fade_pop":
         fx += "\\fad(200,0)\\fscx80\\fscy80\\t(0,200,\\fscx100\\fscy100)"
-    text, _, _ = _wrapped_lines_and_size(b, p, weight)
-    text = text.replace("\n", "\\N")
-    return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]},,0,0,0,,{{{fx}}}{text}"
+    text, _, _, _ = _wrapped_lines_and_size(b, p, weight)
+    if b.formatting_runs:
+        body = _tagged_text(b, p, text)
+    else:
+        body = text.replace("\n", "\\N")
+    return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]},,0,0,0,,{{{fx}}}{body}"
 
 def render_ass(project: Project, presets: dict[str, TextPreset], text_blocks: list | None = None) -> str:
     blocks = project.text_blocks if text_blocks is None else text_blocks
