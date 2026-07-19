@@ -29,6 +29,15 @@ Investigated the two vendored variable fonts directly (`fontTools`, `fvar` table
 
 So "hide 600 for a font that doesn't have SemiBold" is a real, present-day case (JetBrains Mono), not a hypothetical.
 
+**Real, pre-existing bug found while investigating this** (2026-07-19): `app/ffmpeg_cmd.py` passes no `fontsdir` to the `ass` filter today, so on this Windows dev machine libass falls back to its `directwrite` (with GDI) font provider — not fontconfig, despite ffmpeg being built with fontconfig support. Since "Public Sans"/"JetBrains Mono" aren't installed as real Windows system fonts, DirectWrite silently substitutes the nearest system font it can find with zero warning or error — confirmed via a real `ffmpeg`+`ass` filter run, whose stderr showed:
+```
+fontselect: (Public Sans, 400, 0) -> ArialMT, 0, ArialMT
+fontselect: (Public Sans, 700, 0) -> Arial-BoldMT, 0, Arial-BoldMT
+```
+**Every export today silently renders in Arial, not the vendored fonts at all** — Bold only "works" today because Arial (the silent substitute) happens to ship a genuine separate Bold face already. This is unrelated to the weight-picker ask but was invisible until this investigation; the `fontsdir` fix this spec already calls for happens to fix it as a side effect.
+
+**Empirically validated the `fontsdir` + static-instancing approach works on this exact environment** before committing to it: generated a real static instance at weight 400 via `fontTools.varLib.instancer.instantiateVariableFont`, renamed its family to plain "Public Sans", pointed `fontsdir` at the containing folder, and reran the same export — libass correctly found and used it (`fontselect: (Public Sans, 400, 0) -> PublicSans-Regular, 0, PublicSans-Regular`), confirming DirectWrite's font provider does respect `fontsdir` for exact family-name matches (the first attempt at this failed for an unrelated reason — using the raw variable font file un-instanced picks up its *default* named instance, which for Public Sans is axis-default 100/"Thin", not "Regular" — a naming mismatch, not a provider limitation).
+
 ## Goals
 
 - A "Weight" settings row (mirroring the existing Font Family row/drill-down pattern exactly) replaces the Bold toggle, listing only 400/500/600/700 the current font actually has a named instance for.
