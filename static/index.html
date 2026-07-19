@@ -163,16 +163,148 @@
         </div>
       </div>
 
-      <div id="panel-captions" class="context-panel caption-placeholder" hidden>
-        <div class="style-group-label">CAPTIONS</div>
-        <div class="style-row caption-toolbar">
-          <button class="icon-btn" disabled title="Bold (not yet wired)"><b>B</b></button>
-          <button class="icon-btn" disabled title="Italic (not yet wired)"><i>I</i></button>
-          <button class="icon-btn" disabled title="Underline (not yet wired)"><u>U</u></button>
-          <button class="icon-btn" disabled title="Align left (not yet wired)">&#9664;</button>
-          <button class="icon-btn" disabled title="Align right (not yet wired)">&#9654;</button>
+      <div id="panel-captions" class="context-panel" hidden>
+        <div id="panel-captions-main">
+          <div class="style-panel-header">CAPTIONS</div>
+
+          <div class="style-group">
+            <button id="caption-auto-btn" type="button">Auto-caption</button>
+            <p id="caption-empty-state" class="context-panel-name">No captions yet — click Auto-caption to transcribe this reel's audio.</p>
+          </div>
+
+          <div id="caption-style-accordion"></div>
+          <div id="caption-style-body">
+            <div class="style-group">
+              <button id="caption-style-save" type="button">+ Save current style</button>
+            </div>
+            <div class="style-group">
+              <ul id="caption-style-most-used" class="font-list"></ul>
+            </div>
+            <div class="style-group">
+              <div id="caption-style-browse-row"></div>
+            </div>
+          </div>
+
+          <div id="caption-font-accordion">
+          <div id="caption-font-body">
+            <div class="style-group">
+              <div id="caption-font-row"></div>
+            </div>
+
+            <div class="style-group">
+              <div class="style-row" id="caption-size-row">
+                <button class="icon-btn" id="caption-size-step-down" type="button" aria-label="Decrease font size" title="Decrease font size">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 12 4 4 4-4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>
+                </button>
+                <label id="caption-size-field"></label>
+                <button class="icon-btn" id="caption-size-step-up" type="button" aria-label="Increase font size" title="Increase font size">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 11 4-4 4 4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="style-group">
+              <div id="caption-weight-row"></div>
+            </div>
+
+            <div class="style-group">
+              <div class="style-row">
+                <button class="icon-btn" id="caption-italic" type="button" aria-pressed="false" title="Italic">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                </button>
+                <button class="icon-btn" id="caption-underline" type="button" aria-pressed="false" title="Underline">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="style-group">
+              <label id="caption-color-field"></label>
+            </div>
+
+            <div class="style-group">
+              <label id="caption-outline-color-field"></label>
+            </div>
+
+            <div class="style-group">
+              <label id="caption-outline-px-field"></label>
+            </div>
+          </div>
+          </div>
+
+          <div id="caption-box-accordion">
+          <div id="caption-box-body">
+
+            <div class="style-group-label">SIZE</div>
+            <div class="style-group">
+              <div id="caption-box-size-mode-group"></div>
+            </div>
+            <div class="style-group">
+              <div class="style-row">
+                <label id="caption-box-width-field"></label>
+                <label id="caption-box-height-field"></label>
+              </div>
+            </div>
+
+            <div id="caption-box-width-height-divider"></div>
+
+            <div class="style-group">
+              <div class="style-row">
+                <div id="caption-box-background-color-field"></div>
+                <label id="caption-box-background-opacity-field"></label>
+              </div>
+            </div>
+
+            <div id="caption-box-background-border-divider"></div>
+
+            <div class="style-group-label">BORDER</div>
+            <div class="style-group">
+              <div class="style-row">
+                <label id="caption-box-border-width-field"></label>
+                <label id="caption-box-border-radius-field"></label>
+                <div id="caption-box-border-color-field"></div>
+              </div>
+            </div>
+
+            <div id="caption-box-border-position-divider"></div>
+
+            <div class="style-group-label">TEXT ALIGN</div>
+            <div class="style-group">
+              <div id="caption-align-group"></div>
+            </div>
+
+            <div class="style-group-label">POSITION</div>
+            <div class="style-group">
+              <div id="caption-position-row-group"></div>
+              <div id="caption-position-col-group"></div>
+            </div>
+
+            <div class="style-group">
+              <div class="style-row">
+                <label id="caption-offset-x-field"></label>
+                <label id="caption-offset-y-field"></label>
+              </div>
+            </div>
+
+          </div>
+          </div>
+
         </div>
-        <div class="caption-preview-box" contenteditable="false">kind of insane</div>
+
+        <div id="panel-captions-font" hidden>
+          <div id="caption-font-subpanel-header"></div>
+          <ul id="caption-font-list" class="font-list"></ul>
+        </div>
+
+        <div id="panel-captions-weight" hidden>
+          <div id="caption-weight-subpanel-header"></div>
+          <ul id="caption-weight-list" class="font-list"></ul>
+        </div>
+
+        <div id="panel-captions-style" hidden>
+          <div id="caption-style-subpanel-header"></div>
+          <ul id="caption-style-list" class="font-list"></ul>
+        </div>
       </div>
 
       <div id="panel-settings" class="context-panel" hidden>
@@ -427,6 +559,11 @@
 <script src="/static/api-export-project.js"></script>
 <script src="/static/api-list-presets.js"></script>
 <script src="/static/api-save-preset.js"></script>
+<script src="/static/caption-panel-style.js"></script>
+<script src="/static/caption-panel-font-family.js"></script>
+<script src="/static/caption-panel-font-weight.js"></script>
+<script src="/static/caption-panel-font-style.js"></script>
+<script src="/static/caption-panel-box.js"></script>
 <script src="/static/api-list-projects.js"></script>
 <script src="/static/api-delete-project.js"></script>
 <script src="/static/api-duplicate-project.js"></script>
