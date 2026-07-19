@@ -44,6 +44,7 @@ def test_text_preset_box_defaults():
     assert p.box_width_mode == "fit" and p.box_height_mode == "fit"
     assert p.box_width == 0 and p.box_height == 0
     assert p.box_background is False and p.box_background_color == "#000000"
+    assert p.box_background_opacity == 100
     assert p.box_border_width == 0 and p.box_border_color == "#FFFFFF" and p.box_border_radius == 0
 
 def test_text_preset_migrates_legacy_box_fields():

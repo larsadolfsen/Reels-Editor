@@ -36,6 +36,7 @@ class TextPreset(BaseModel):
     box_height: int = 0                # px; used when box_height_mode == "fixed"
     box_background: bool = False       # was `box`
     box_background_color: str = "#000000"   # was `box_color`
+    box_background_opacity: int = 100  # 0-100 percent; drives the Background row's Opacity field
     box_border_width: int = 0
     box_border_color: str = "#FFFFFF"
     box_border_radius: int = 0

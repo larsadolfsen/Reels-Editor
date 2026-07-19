@@ -20,6 +20,11 @@ window.Preview = (() => {
     return [...list].sort((a, b) => a.order - b.order);
   }
 
+  function hexToRgba(hex, opacityPercent) {
+    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacityPercent / 100})`;
+  }
+
   function clipDuration(c) {
     return c.out_point - c.in_point;
   }
@@ -114,7 +119,7 @@ window.Preview = (() => {
       div.style.webkitTextStroke = `${outlinePx}px ${preset.outline_color}`;
       div.style.padding = "0.15em 0.35em";
 
-      div.style.backgroundColor = preset.box_background ? preset.box_background_color : "transparent";
+      div.style.backgroundColor = preset.box_background ? hexToRgba(preset.box_background_color, preset.box_background_opacity) : "transparent";
       div.style.borderWidth = (preset.box_border_width / 1080 * stageW) + "px";
       div.style.borderStyle = preset.box_border_width > 0 ? "solid" : "none";
       div.style.borderColor = preset.box_border_color;

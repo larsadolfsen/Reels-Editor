@@ -79,6 +79,18 @@ def test_box_dialogue_present_when_background_enabled():
     assert "0:00:01.00" in line and "0:00:03.00" in line
     assert "\\p1" in line and "\\p0" in line
 
+def test_box_dialogue_partial_opacity_produces_intermediate_alpha():
+    # box_background_opacity is a percent (100 = fully opaque); ASS alpha is inverted
+    # (00 = opaque, FF = transparent), so 50% opacity should land roughly halfway (0x80),
+    # neither the fully-opaque "00" nor the fully-transparent "FF" the old binary logic used.
+    pr = TextPreset(name="Pop", box_background=True, box_background_color="#FF0000",
+                     box_background_opacity=50,
+                     box_width_mode="fixed", box_width=300, box_height_mode="fixed", box_height=100)
+    b = TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)
+    line = _box_dialogue(b, pr)
+    assert "\\1a&H80&" in line
+    assert "\\1a&H00&" not in line and "\\1a&HFF&" not in line
+
 def test_box_dialogue_pos_is_anchored_top_left():
     # The box's Style field names a style ("...box") that render_ass never defines in
     # [V4+ Styles], so libass falls back to undefined alignment behavior for \pos unless

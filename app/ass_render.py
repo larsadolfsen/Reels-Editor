@@ -69,7 +69,7 @@ def _box_dialogue(b, p: TextPreset) -> str | None:
     top = p.y - height / 2
     path = _rounded_rect_path(width, height, p.box_border_radius)
     fill_color = _ass_override_color(p.box_background_color)
-    fill_alpha = "00" if p.box_background else "FF"
+    fill_alpha = f"{round((100 - p.box_background_opacity) / 100 * 255):02X}" if p.box_background else "FF"
     border_color = _ass_override_color(p.box_border_color)
     border_alpha = "00" if p.box_border_width > 0 else "FF"
     fx = (f"\\an7\\pos({left:.0f},{top:.0f})\\bord{p.box_border_width}"

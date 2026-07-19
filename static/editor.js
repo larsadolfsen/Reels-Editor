@@ -116,15 +116,13 @@ function renderBoxPanel() {
     { label: "HEIGHT", unit: "PX", value: preset.box_height, min: 1, max: 1920,
       onChange: (v) => { preset.box_height = v; saveProject(); renderTextPreview(); } });
 
-  document.getElementById("text-box-background").checked = preset.box_background;
-  document.getElementById("text-box-background").onchange = () => {
-    preset.box_background = document.getElementById("text-box-background").checked;
-    saveProject(); renderTextPreview();
-  };
-
   UI.colorSwatch(document.getElementById("text-box-background-color-field"),
-    { label: "Background", value: preset.box_background_color,
-      onChange: (v) => { preset.box_background_color = v; saveProject(); renderTextPreview(); } });
+    { label: "Background", showLabel: false, value: preset.box_background_color,
+      onChange: (v) => { preset.box_background_color = v; preset.box_background = true; saveProject(); renderTextPreview(); } });
+
+  UI.numberField(document.getElementById("text-box-background-opacity-field"),
+    { label: "OPACITY", unit: "%", value: preset.box_background_opacity, min: 0, max: 100,
+      onChange: (v) => { preset.box_background_opacity = v; saveProject(); renderTextPreview(); } });
 
   UI.numberField(document.getElementById("text-box-border-width-field"),
     { label: "BORDER", unit: "PX", value: preset.box_border_width, min: 0, max: 40,
@@ -135,7 +133,7 @@ function renderBoxPanel() {
       onChange: (v) => { preset.box_border_radius = v; saveProject(); renderTextPreview(); } });
 
   UI.colorSwatch(document.getElementById("text-box-border-color-field"),
-    { label: "Border Color", value: preset.box_border_color,
+    { label: "Border Color", showLabel: false, value: preset.box_border_color,
       onChange: (v) => { preset.box_border_color = v; saveProject(); renderTextPreview(); } });
 }
 

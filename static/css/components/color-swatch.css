@@ -7,6 +7,13 @@
   width: 100%;
 }
 
+/* When a swatch shares a .style-row with other fields (e.g. numberFields), it should sit
+   at its natural (swatch-only) width rather than stretching to fill the row. */
+.style-row .color-swatch-row {
+  width: auto;
+  flex-shrink: 0;
+}
+
 .color-swatch {
   width: 28px;
   height: 28px;
