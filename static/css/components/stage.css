@@ -39,6 +39,11 @@
 .text-block--align-center { transform: translate(-50%, 0); }
 .text-block--align-right { transform: translate(-100%, 0); }
 
+.video-box {
+  position: absolute;
+  object-fit: cover;
+}
+
 #transport {
   display: flex;
   align-items: center;

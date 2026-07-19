@@ -1,5 +1,5 @@
-# Pure ffmpeg export-command builder: per-clip trim, scale/pad to 1080x1920, concat, optional ASS burn.
-# Exposes build_export_cmd, escape_filter_path. No subprocess here (see app.media).
+# Pure ffmpeg export-command builder: per-clip trim/scale/pad, concat, optional ASS burn or a
+# banded chain alternating ASS burn-in with video-box overlay filters (see app.timeline.banded_layers).
 from app.models import Project
 from app.timeline import ordered
 
@@ -9,7 +9,7 @@ def escape_filter_path(path: str) -> str:
 def _num(x: float) -> str:
     return f"{x:g}"
 
-def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None) -> list[str]:
+def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, bands: list[dict] | None = None) -> list[str]:
     clips = ordered(p.clips)
     cmd = ["ffmpeg", "-y"]
     parts = []
@@ -22,10 +22,35 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None) -> 
             f"[{i}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS[a{i}];")
     streams = "".join(f"[v{i}][a{i}]" for i in range(len(clips)))
     fc = "".join(parts) + f"{streams}concat=n={len(clips)}:v=1:a=1[vc][a]"
-    vmap = "[vc]"
-    if ass_path:
-        fc += f";[vc]ass='{escape_filter_path(ass_path)}':fontsdir='{escape_filter_path('static/fonts')}'[vo]"
-        vmap = "[vo]"
-    cmd += ["-filter_complex", fc, "-map", vmap, "-map", "[a]",
+
+    if bands is None:
+        vmap = "[vc]"
+        if ass_path:
+            fc += f";[vc]ass='{escape_filter_path(ass_path)}':fontsdir='{escape_filter_path('static/fonts')}'[vo]"
+            vmap = "[vo]"
+        cmd += ["-filter_complex", fc, "-map", vmap, "-map", "[a]",
+                "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-c:a", "aac", out_path]
+        return cmd
+
+    current = "[vc]"
+    next_input_index = len(clips)
+    for step, band in enumerate(bands):
+        if band["kind"] == "ass":
+            out_label = f"[ass{step}]"
+            fc += f";{current}ass='{escape_filter_path(band['path'])}':fontsdir='{escape_filter_path('static/fonts')}'{out_label}"
+            current = out_label
+        else:
+            v = band["video_box"]
+            cmd += ["-i", v.file_path]
+            end = v.start + (v.out_point - v.in_point)
+            out_label = f"[ov{step}]"
+            fc += (f";[{next_input_index}:v]trim=start={_num(v.in_point)}:end={_num(v.out_point)},"
+                   f"setpts=PTS-STARTPTS+{_num(v.start)}/TB,scale={v.width}:{v.height}[box{step}]"
+                   f";{current}[box{step}]overlay=x={v.x}:y={v.y}:"
+                   f"enable='between(t\\,{_num(v.start)}\\,{_num(end)})'{out_label}")
+            current = out_label
+            next_input_index += 1
+
+    cmd += ["-filter_complex", fc, "-map", current, "-map", "[a]",
             "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-c:a", "aac", out_path]
     return cmd

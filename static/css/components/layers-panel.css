@@ -1,0 +1,35 @@
+/* LAYERS panel: drag-and-drop reorderable list of text blocks + video boxes by z_index. */
+/* Exposes .layers-list/.layers-list-row/.layers-list-row-type/.layers-list-row-label. Depends on tokens.css. */
+.layers-list { list-style: none; margin: 0; padding: 0; }
+
+.layers-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: 3px;
+  margin-bottom: var(--space-1);
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  cursor: grab;
+}
+.layers-list-row:hover { border-color: var(--border-hover-color); }
+.layers-list-row.dragging { opacity: 0.4; }
+
+.layers-list-row-type {
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.layers-list-row-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-size: 12.5px;
+}
