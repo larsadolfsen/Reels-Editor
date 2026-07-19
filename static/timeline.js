@@ -1,5 +1,5 @@
 // Timeline strip: pure row-position math (mirrors app/timeline.py) + rendering for
-// toolbar (zoom/time readout)/ruler/playhead/playhead-handle box/TEXT/CAPTIONS/VIDEO/AUDIO
+// toolbar (zoom/time readout)/ruler/playhead/playhead-handle box/TEXT/CAPTIONS/VIDEO BOX/VIDEO/AUDIO
 // rows into the DOM ids defined in index.html. The AUDIO row is a static dummy waveform
 // (no audio-track feature yet). The playhead-handle box (#slice-btn) tracks the playhead
 // and holds two icons: a grip-vertical handle (dragged in editor.js to scrub the playhead)
@@ -22,6 +22,9 @@ window.Timeline = (() => {
   }
   function sequenceDuration(clips) {
     return clips.reduce((sum, c) => sum + clipDuration(c), 0);
+  }
+  function videoBoxEnd(v) {
+    return v.start + (v.out_point - v.in_point);
   }
 
   function groupWords(words, max = 4) {
@@ -92,6 +95,7 @@ window.Timeline = (() => {
     const clips = ordered(project.clips || []);
     let d = sequenceDuration(clips);
     for (const b of project.text_blocks || []) d = Math.max(d, b.end);
+    for (const v of project.video_boxes || []) d = Math.max(d, videoBoxEnd(v));
     for (const w of (project.captions || {}).words || []) d = Math.max(d, w.t_end);
     return Math.max(d, 1);
   }
@@ -165,6 +169,14 @@ window.Timeline = (() => {
       const isSel = !!selected && selected.type === "text" && selected.item.id === b.id;
       addBlock(textTrack, b.start * PX_PER_SEC, (b.end - b.start) * PX_PER_SEC, b.heading, isSel,
         () => onSelect({ type: "text", item: b }));
+    }
+
+    const videoBoxTrack = clearTrack("row-videobox");
+    for (const v of project.video_boxes || []) {
+      const isSel = !!selected && selected.type === "video-box" && selected.item.id === v.id;
+      const name = v.file_path.split(/[\\/]/).pop();
+      addBlock(videoBoxTrack, v.start * PX_PER_SEC, (videoBoxEnd(v) - v.start) * PX_PER_SEC, name, isSel,
+        () => onSelect({ type: "video-box", item: v }));
     }
 
     const capTrack = clearTrack("row-captions");
