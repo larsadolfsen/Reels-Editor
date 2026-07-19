@@ -89,6 +89,7 @@ function ensureTextBlock() {
 
 function renderTextPreview() {
   Preview.renderText(project, project.text_presets, Preview.currentTimelineTime());
+  VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
 }
 
 async function renderTextPanel() {
@@ -256,6 +257,7 @@ function renderTimeline() {
 
 function showPanel(type) {
   if (type !== "text") Preview.setSelectedTextBlock(null, null);
+  if (type !== "video-box") VideoBoxPreview.setSelectedVideoBox(null, null);
   document.getElementById("style-panel").hidden = false;
   ["files", "video", "text", "captions", "video-box", "layers", "settings", "export", "projects"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;
@@ -337,6 +339,9 @@ async function onTimelineSelect({ type, item, groupIndex }) {
   } else if (type === "caption") {
     document.querySelector(".caption-preview-box").textContent = item.map((w) => w.text).join(" ");
     showPanel("captions");
+  } else if (type === "video-box") {
+    showPanel("video-box");
+    VideoBoxPanel.render(item.id);
   }
   renderTimeline();
 }
@@ -449,16 +454,16 @@ function openExportPanel() {
 }
 
 function openVideoBoxPanel() {
-  selected = { type: "video-box" };
+  selected = { type: "video-box", item: null };
   showPanel("video-box");
-  if (window.VideoBoxPanel) VideoBoxPanel.render();
+  VideoBoxPanel.render(null);
   renderTimeline();
 }
 
 function openLayersPanel() {
   selected = { type: "layers" };
   showPanel("layers");
-  if (window.LayersPanel) LayersPanel.render();
+  LayersPanel.render();
   renderTimeline();
 }
 
@@ -494,6 +499,63 @@ Preview.setOnStageTextActivate((blockId) => {
   if (selected && selected.type === "text") return; // already the active panel, nothing to do
   openTextPanel();
 });
+
+// Converts a video box into a main-sequence ClipLayer at `dropTime` (drag-to-stitch): if the
+// drop point lands inside an existing clip, that clip splits into two (same media, trimmed
+// halves) with the new clip inserted between them; otherwise it inserts at the nearest clip
+// boundary. Keeps the box's in_point/out_point; position/size/z_index are dropped (meaningless
+// for a full-frame sequence clip). Mutates project.clips/project.video_boxes in place.
+function stitchVideoBoxIntoSequence(box, dropTime) {
+  const ordered = [...project.clips].sort((a, b) => a.order - b.order);
+  let acc = 0;
+  let splitClip = null;
+  let splitAt = 0;
+  let insertOrder = ordered.length; // default: past the end of the sequence
+
+  for (const c of ordered) {
+    const d = c.out_point - c.in_point;
+    if (dropTime < acc + d) {
+      splitClip = c;
+      splitAt = c.in_point + (dropTime - acc);
+      insertOrder = c.order;
+      break;
+    }
+    acc += d;
+  }
+
+  // Dropping essentially at a clip's own start point needs no split — just insert before it.
+  if (splitClip && Math.abs(splitAt - splitClip.in_point) < 0.01) {
+    insertOrder = splitClip.order;
+    for (const c of project.clips) if (c.order >= insertOrder) c.order += 1;
+    splitClip = null;
+  } else if (splitClip) {
+    for (const c of project.clips) if (c.order > splitClip.order) c.order += 2;
+    const secondHalf = {
+      id: crypto.randomUUID().replaceAll("-", ""),
+      media_id: splitClip.media_id,
+      file_path: splitClip.file_path,
+      in_point: splitAt,
+      out_point: splitClip.out_point,
+      order: splitClip.order + 2,
+    };
+    splitClip.out_point = splitAt;
+    project.clips.push(secondHalf);
+    insertOrder = splitClip.order + 1;
+  } else {
+    for (const c of project.clips) if (c.order >= insertOrder) c.order += 1;
+  }
+
+  project.clips.push({
+    id: crypto.randomUUID().replaceAll("-", ""),
+    media_id: box.media_id,
+    file_path: box.file_path,
+    in_point: box.in_point,
+    out_point: box.out_point,
+    order: insertOrder,
+  });
+
+  project.video_boxes = project.video_boxes.filter((v) => v.id !== box.id);
+}
 
 async function moveClip(a, b) {
   const t = a.order;
@@ -632,6 +694,24 @@ document.getElementById("playhead-grip").addEventListener("mousedown", (e) => {
   };
   document.addEventListener("mousemove", onMouseMove);
   document.addEventListener("mouseup", onMouseUp);
+});
+
+document.getElementById("row-video").addEventListener("dragover", (e) => e.preventDefault());
+document.getElementById("row-video").addEventListener("drop", async (e) => {
+  e.preventDefault();
+  const boxId = e.dataTransfer.getData("text/video-box-id");
+  if (!boxId) return;
+  const box = project.video_boxes.find((v) => v.id === boxId);
+  if (!box) return;
+  const rect = document.getElementById("row-video").getBoundingClientRect();
+  const dropTime = Timeline.timeAtX(project.clips, rect, e.clientX);
+  stitchVideoBoxIntoSequence(box, dropTime);
+  await saveProject();
+  Preview.load(project);
+  renderTimeline();
+  if (selected && selected.type === "video-box" && selected.item && selected.item.id === boxId) {
+    openFilesPanel(); // the selected box no longer exists — fall back to a safe default panel
+  }
 });
 
 function nudgeTime(delta) {

@@ -173,10 +173,13 @@ window.Timeline = (() => {
 
     const videoBoxTrack = clearTrack("row-videobox");
     for (const v of project.video_boxes || []) {
-      const isSel = !!selected && selected.type === "video-box" && selected.item.id === v.id;
+      const isSel = !!selected && selected.type === "video-box" && !!selected.item && selected.item.id === v.id;
       const name = v.file_path.split(/[\\/]/).pop();
       addBlock(videoBoxTrack, v.start * PX_PER_SEC, (videoBoxEnd(v) - v.start) * PX_PER_SEC, name, isSel,
         () => onSelect({ type: "video-box", item: v }));
+      const el = videoBoxTrack.lastElementChild;
+      el.draggable = true;
+      el.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/video-box-id", v.id));
     }
 
     const capTrack = clearTrack("row-captions");
