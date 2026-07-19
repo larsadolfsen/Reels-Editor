@@ -74,3 +74,12 @@ def test_bands_empty_list_maps_straight_from_concat():
     assert fc.rstrip().endswith("[vc][a]")
     map_indices = [i for i, x in enumerate(cmd) if x == "-map"]
     assert cmd[map_indices[0] + 1] == "[vc]"
+
+def test_build_audio_cmd_one_atrim_per_clip_and_vn():
+    from app.ffmpeg_cmd import build_audio_cmd
+    cmd = build_audio_cmd(proj(), "out.wav")
+    assert cmd[:1] == ["ffmpeg"] and cmd[-1] == "out.wav"
+    i = cmd.index("-filter_complex"); fc = cmd[i + 1]
+    assert fc.count("atrim=") == 2
+    assert "-vn" in cmd
+    assert cmd[cmd.index("-map") + 1] == "[a]"
