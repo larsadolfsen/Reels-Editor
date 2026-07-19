@@ -1,0 +1,46 @@
+/* One project row: inline-editable name, last-edited meta text, optional duplicate/delete icon buttons. */
+/* Plus the shared list-reset used by both the picker's list and the in-editor PROJECTS panel's list. */
+/* Exposes .project-list-row-list/.project-list-row/.project-list-row-name/.project-list-row-meta/.project-list-row-action. Depends on tokens.css, button-group.css. */
+.project-list-row-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.project-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: 3px;
+  margin-bottom: var(--space-1);
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  cursor: pointer;
+}
+.project-list-row:hover { border-color: var(--border-hover-color); }
+.project-list-row.selected { border-color: var(--accent); }
+
+.project-list-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-size: 12.5px;
+}
+.project-list-row-name[contenteditable="true"]:focus {
+  outline: none;
+  white-space: normal;
+  text-overflow: clip;
+}
+
+.project-list-row-meta {
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+  font-size: 9.5px;
+  color: var(--text-dim);
+}
+
+.project-list-row-action { flex-shrink: 0; }
