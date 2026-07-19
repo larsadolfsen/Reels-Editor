@@ -134,6 +134,7 @@ async function renderCaptionPanel() {
   document.getElementById("panel-captions-font").hidden = true;
   document.getElementById("panel-captions-weight").hidden = true;
   document.getElementById("panel-captions-style").hidden = true;
+  document.getElementById("panel-captions-words").hidden = true;
   document.getElementById("panel-captions-main").hidden = false;
 
   const track = ensureCaptionTrack();
@@ -144,6 +145,7 @@ async function renderCaptionPanel() {
   await CaptionPanel.renderFontWeight();
   CaptionPanel.renderFontStyle();
   CaptionPanel.renderBox();
+  CaptionPanel.renderWords();
 
   renderCaptionPreview();
 }
