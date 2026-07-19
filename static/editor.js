@@ -24,7 +24,7 @@ function defaultTextPreset(id) {
   return {
     id,
     name: "Default", font: "Public Sans", size_px: 96, color: "#FFFFFF",
-    outline_color: "#000000", outline_px: 4, bold: false, italic: false, underline: false,
+    outline_color: "#000000", outline_px: 4, weight: 400, italic: false, underline: false,
     box_width_mode: "fit", box_height_mode: "fit", box_width: 0, box_height: 0,
     box_background: false, box_background_color: "#000000",
     box_border_width: 0, box_border_color: "#FFFFFF", box_border_radius: 0,
@@ -66,6 +66,7 @@ function renderTextPreview() {
 
 function renderTextPanel() {
   document.getElementById("panel-text-font").hidden = true;
+  document.getElementById("panel-text-weight").hidden = true;
   document.getElementById("panel-text-style").hidden = true;
   document.getElementById("panel-text-main").hidden = false;
 
@@ -73,6 +74,7 @@ function renderTextPanel() {
   const preset = ensureTextPreset(block.preset_id);
 
   TextPanel.renderFontFamily();
+  TextPanel.renderFontWeight();
   TextPanel.renderFontStyle();
   TextPanel.renderStyle();
   renderBoxPanel();

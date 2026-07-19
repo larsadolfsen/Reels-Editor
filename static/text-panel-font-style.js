@@ -14,7 +14,6 @@ window.TextPanel = window.TextPanel || {};
       renderTextPreview();
     });
   }
-  wireTextStyleToggle("text-bold", "bold");
   wireTextStyleToggle("text-italic", "italic");
   wireTextStyleToggle("text-underline", "underline");
 
@@ -53,7 +52,6 @@ window.TextPanel = window.TextPanel || {};
   window.TextPanel.renderFontStyle = function renderFontStyle() {
     const preset = ensureTextPreset(ensureTextBlock().preset_id);
 
-    document.getElementById("text-bold").setAttribute("aria-pressed", String(preset.bold));
     document.getElementById("text-italic").setAttribute("aria-pressed", String(preset.italic));
     document.getElementById("text-underline").setAttribute("aria-pressed", String(preset.underline));
 

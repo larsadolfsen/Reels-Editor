@@ -224,10 +224,11 @@
           </div>
 
           <div class="style-group">
+            <div id="text-weight-row"></div>
+          </div>
+
+          <div class="style-group">
             <div class="style-row">
-              <button class="icon-btn" id="text-bold" type="button" aria-pressed="false" title="Bold">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
-              </button>
               <button class="icon-btn" id="text-italic" type="button" aria-pressed="false" title="Italic">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
               </button>
@@ -325,6 +326,11 @@
           <ul id="text-font-list" class="font-list"></ul>
         </div>
 
+        <div id="panel-text-weight" hidden>
+          <div id="text-weight-subpanel-header"></div>
+          <ul id="text-weight-list" class="font-list"></ul>
+        </div>
+
         <div id="panel-text-style" hidden>
           <div id="text-style-subpanel-header"></div>
           <ul id="text-style-list" class="font-list"></ul>
@@ -351,8 +357,10 @@
 <script src="/static/api-export-project.js"></script>
 <script src="/static/api-list-presets.js"></script>
 <script src="/static/api-save-preset.js"></script>
+<script src="/static/api-list-font-weights.js"></script>
 <script src="/static/text-panel-font-family.js"></script>
 <script src="/static/text-panel-font-style.js"></script>
+<script src="/static/text-panel-font-weight.js"></script>
 <script src="/static/text-panel-style.js"></script>
 <script src="/static/text-panel-align.js"></script>
 <script src="/static/text-panel-position.js"></script>
