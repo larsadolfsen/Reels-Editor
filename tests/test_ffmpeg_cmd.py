@@ -21,3 +21,12 @@ def test_ass_burn_appended_when_given():
 
 def test_escape_filter_path():
     assert escape_filter_path("C:\\tmp\\s.ass") == "C\\:/tmp/s.ass"
+
+def test_ass_burn_includes_fontsdir_pointing_at_static_fonts():
+    fc = build_export_cmd(proj(), "out.mp4", ass_path="C:/tmp/subs.ass")[
+        build_export_cmd(proj(), "out.mp4", ass_path="C:/tmp/subs.ass").index("-filter_complex") + 1]
+    assert ":fontsdir='static/fonts'" in fc
+
+def test_no_fontsdir_when_no_ass_path():
+    fc = build_export_cmd(proj(), "out.mp4")[build_export_cmd(proj(), "out.mp4").index("-filter_complex") + 1]
+    assert "fontsdir" not in fc

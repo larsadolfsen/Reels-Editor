@@ -21,14 +21,23 @@ def test_json_round_trip():
                 captions=CaptionTrack(words=[CaptionWord(text="hi", t_start=0.1, t_end=0.4)]))
     assert Project.model_validate_json(p.model_dump_json()) == p
 
-def test_text_preset_style_flags_default_false():
+def test_text_preset_weight_defaults_400():
     p = TextPreset(name="Pop")
-    assert (p.bold, p.italic, p.underline) == (False, False, False)
+    assert p.weight == 400
+    assert (p.italic, p.underline) == (False, False)
     assert p.font == "Public Sans"
 
-def test_text_preset_style_flags_round_trip():
-    p = TextPreset(name="Pop", bold=True, italic=True, underline=True, font="JetBrains Mono")
+def test_text_preset_weight_round_trip():
+    p = TextPreset(name="Pop", weight=700, italic=True, underline=True, font="JetBrains Mono")
     assert TextPreset.model_validate_json(p.model_dump_json()) == p
+
+def test_text_preset_migrates_legacy_bold_field():
+    p = TextPreset.model_validate({"name": "Pop", "bold": True})
+    assert p.weight == 700
+
+def test_text_preset_migrates_legacy_bold_false_field():
+    p = TextPreset.model_validate({"name": "Pop", "bold": False})
+    assert p.weight == 400
 
 def test_text_preset_position_grid_defaults():
     p = TextPreset(name="Pop")

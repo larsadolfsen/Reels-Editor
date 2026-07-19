@@ -24,7 +24,7 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None) -> 
     fc = "".join(parts) + f"{streams}concat=n={len(clips)}:v=1:a=1[vc][a]"
     vmap = "[vc]"
     if ass_path:
-        fc += f";[vc]ass='{escape_filter_path(ass_path)}'[vo]"
+        fc += f";[vc]ass='{escape_filter_path(ass_path)}':fontsdir='{escape_filter_path('static/fonts')}'[vo]"
         vmap = "[vo]"
     cmd += ["-filter_complex", fc, "-map", vmap, "-map", "[a]",
             "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-c:a", "aac", out_path]

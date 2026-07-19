@@ -27,7 +27,7 @@ class TextPreset(BaseModel):
     color: str = "#FFFFFF"
     outline_color: str = "#000000"
     outline_px: int = 4
-    bold: bool = False
+    weight: int = 400              # 400 | 500 | 600 | 700 — replaces the old `bold: bool`
     italic: bool = False
     underline: bool = False
     box_width_mode: str = "fit"        # "fit" | "fixed"
@@ -58,6 +58,9 @@ class TextPreset(BaseModel):
             data["box_background"] = data.pop("box")
             if "box_color" in data:
                 data["box_background_color"] = data.pop("box_color")
+        if isinstance(data, dict) and "bold" in data and "weight" not in data:
+            data = dict(data)
+            data["weight"] = 700 if data.pop("bold") else 400
         return data
 
 class TextBlockLayer(BaseModel):

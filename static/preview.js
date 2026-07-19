@@ -158,7 +158,7 @@ window.Preview = (() => {
       div.style.color = preset.color;
       div.style.textAlign = preset.align;
       div.style.fontFamily = `"${preset.font}", sans-serif`;
-      div.style.fontWeight = preset.bold ? "700" : "400";
+      div.style.fontWeight = String(preset.weight);
       div.style.fontStyle = preset.italic ? "italic" : "normal";
       div.style.textDecoration = preset.underline ? "underline" : "none";
 

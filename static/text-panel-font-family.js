@@ -28,8 +28,15 @@ window.TextPanel = window.TextPanel || {};
   async function selectFont(fontName) {
     const preset = ensureTextPreset(ensureTextBlock().preset_id);
     preset.font = fontName;
+    const weights = await Api.listFontWeights(fontName);
+    if (!weights.some((w) => w.value === preset.weight)) {
+      preset.weight = weights.reduce((closest, w) =>
+        Math.abs(w.value - preset.weight) < Math.abs(closest.value - preset.weight) ? w : closest
+      ).value;
+    }
     await saveProject();
     renderFontFamily();
+    await TextPanel.renderFontWeight();
     renderFontList();
     closeFontPanel();
   }

@@ -44,3 +44,26 @@ def test_create_preset_same_id_updates(tmp_path, monkeypatch):
     result = list_presets()
     assert len(result) == 1
     assert result[0].usage_count == 3
+
+def test_list_font_weights_public_sans_has_all_four():
+    from app.main import list_font_weights
+    result = list_font_weights("Public Sans")
+    assert result == [
+        {"value": 400, "label": "Regular"},
+        {"value": 500, "label": "Medium"},
+        {"value": 600, "label": "SemiBold"},
+        {"value": 700, "label": "Bold"},
+    ]
+
+def test_list_font_weights_jetbrains_mono_has_no_semibold():
+    from app.main import list_font_weights
+    result = list_font_weights("JetBrains Mono")
+    assert result == [
+        {"value": 400, "label": "Regular"},
+        {"value": 500, "label": "Medium"},
+        {"value": 700, "label": "Bold"},
+    ]
+
+def test_list_font_weights_unknown_font_returns_empty_list_not_500():
+    from app.main import list_font_weights
+    assert list_font_weights("Nonexistent Font") == []
