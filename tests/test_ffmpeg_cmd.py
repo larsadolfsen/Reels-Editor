@@ -1,5 +1,5 @@
 # Tests for app.ffmpeg_cmd: pure construction of the trim+concat+burn export command.
-from app.models import Project, ClipLayer, VideoBoxLayer
+from app.models import Project, ClipLayer, VideoBoxLayer, MediaItem
 from app.ffmpeg_cmd import build_export_cmd, escape_filter_path
 
 def proj():
@@ -101,3 +101,38 @@ def test_caption_ass_path_chained_after_bands():
 def test_no_caption_ass_path_leaves_vmap_unchanged():
     cmd = build_export_cmd(proj(), "out.mp4")
     assert "vcap" not in cmd[cmd.index("-filter_complex") + 1]
+
+def test_video_only_clip_gets_synthesized_silent_audio():
+    p = Project(name="r",
+                media_library=[MediaItem(id="m0", file_path="a.mp4", duration=2, has_audio=False)],
+                clips=[ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=2, order=0)])
+    cmd = build_export_cmd(p, "out.mp4")
+    assert "anullsrc=channel_layout=stereo:sample_rate=44100" in cmd
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "atrim=start=0:end=2,asetpts=PTS-STARTPTS[a0]" in fc
+    assert "concat=n=1:v=1:a=1" in fc
+
+def test_mixed_audio_clips_input_indices_do_not_collide():
+    p = Project(name="r", media_library=[
+        MediaItem(id="m0", file_path="a.mp4", duration=2, has_audio=False),
+        MediaItem(id="m1", file_path="b.mp4", duration=2, has_audio=True),
+    ], clips=[
+        ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=2, order=0),
+        ClipLayer(media_id="m1", file_path="b.mp4", in_point=0, out_point=2, order=1),
+    ])
+    cmd = build_export_cmd(p, "out.mp4")
+    # input order must be: clip0 video/audio file, then the synthesized silence for clip0,
+    # then clip1's file (which supplies both its own video and audio streams)
+    ia, ilavfi, ib = cmd.index("a.mp4"), cmd.index("anullsrc=channel_layout=stereo:sample_rate=44100"), cmd.index("b.mp4")
+    assert ia < ilavfi < ib
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "[0:v]trim=start=0:end=2" in fc      # clip0 video reads real input 0
+    assert "[1:a]atrim=start=0:end=2,asetpts=PTS-STARTPTS[a0]" in fc  # clip0 audio reads synthesized input 1
+    assert "[2:v]trim=start=0:end=2" in fc      # clip1 video reads real input 2
+    assert "[2:a]atrim=start=0:end=2,asetpts=PTS-STARTPTS[a1]" in fc  # clip1 audio reads its own input 2
+
+def test_clip_with_no_media_library_entry_defaults_to_has_audio():
+    # proj() in this file builds clips with media_id referencing MediaItems that don't exist
+    # in an empty media_library — must not raise, must behave as if has_audio=True (today's behavior).
+    cmd = build_export_cmd(proj(), "out.mp4")
+    assert "anullsrc" not in " ".join(cmd)

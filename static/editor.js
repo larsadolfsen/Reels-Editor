@@ -643,9 +643,9 @@ async function addClip() {
   if (!path) return;
   const probeResult = await Api.probeMedia(path);
   if (!probeResult) { alert("probe failed"); return; }
-  const { duration } = probeResult;
+  const { duration, has_audio } = probeResult;
   const mediaId = crypto.randomUUID().replaceAll("-", "");
-  project.media_library.push({ id: mediaId, file_path: path, duration });
+  project.media_library.push({ id: mediaId, file_path: path, duration, has_audio });
 
   const id = crypto.randomUUID().replaceAll("-", "");
   clipDurations[id] = duration;

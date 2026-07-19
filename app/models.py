@@ -11,6 +11,7 @@ class MediaItem(BaseModel):
     id: str = Field(default_factory=new_id)
     file_path: str
     duration: float
+    has_audio: bool = True
 
 class ClipLayer(BaseModel):
     id: str = Field(default_factory=new_id)

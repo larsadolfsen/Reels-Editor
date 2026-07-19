@@ -1,5 +1,5 @@
-# Media helpers: ffprobe duration probing, safe local file serving, native file picker.
-# Exposes ffprobe_cmd, probe_duration, media_response, run_export, pick_file. Depends on ffprobe on PATH and tkinter.
+# Media helpers: ffprobe duration probing, audio stream detection, safe local file serving, native file picker.
+# Exposes ffprobe_cmd, probe_duration, has_audio_stream, media_response, run_export, pick_file. Depends on ffprobe on PATH and tkinter.
 import os
 import shutil
 import subprocess
@@ -41,6 +41,13 @@ def probe_duration(path: str) -> float:
     cmd, env = _resolve_cmd(ffprobe_cmd(path), _refreshed_path())
     out = subprocess.run(cmd, capture_output=True, text=True, check=True, env=env)
     return float(out.stdout.strip())
+
+def has_audio_stream(path: str) -> bool:
+    cmd = ["ffprobe", "-v", "error", "-select_streams", "a",
+           "-show_entries", "stream=codec_type", "-of", "csv=p=0", path]
+    resolved, env = _resolve_cmd(cmd, _refreshed_path())
+    out = subprocess.run(resolved, capture_output=True, text=True, check=True, env=env)
+    return bool(out.stdout.strip())
 
 def media_response(path: str) -> FileResponse:
     p = Path(path)

@@ -1,5 +1,5 @@
-# Pure ffmpeg export-command builder: per-clip trim/scale/pad, concat, optional ASS burn or a
-# banded chain alternating ASS burn-in with video-box overlay filters (see app.timeline.banded_layers).
+# Pure ffmpeg export-command builder: per-clip trim/scale/pad, concat with silent-audio synthesis for
+# video-only clips, optional ASS burn or banded chain alternating ASS burn-in with video-box overlays.
 from app.models import Project
 from app.timeline import ordered
 
@@ -11,15 +11,28 @@ def _num(x: float) -> str:
 
 def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, bands: list[dict] | None = None, caption_ass_path: str | None = None) -> list[str]:
     clips = ordered(p.clips)
+    media_by_id = {m.id: m for m in p.media_library}
     cmd = ["ffmpeg", "-y"]
     parts = []
+    input_index = 0
     for i, c in enumerate(clips):
+        v_idx = input_index
         cmd += ["-i", c.file_path]
+        input_index += 1
         parts.append(
-            f"[{i}:v]trim=start={_num(c.in_point)}:end={_num(c.out_point)},setpts=PTS-STARTPTS,"
+            f"[{v_idx}:v]trim=start={_num(c.in_point)}:end={_num(c.out_point)},setpts=PTS-STARTPTS,"
             f"scale={p.width}:{p.height}:force_original_aspect_ratio=decrease,"
-            f"pad={p.width}:{p.height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={p.fps}[v{i}];"
-            f"[{i}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS[a{i}];")
+            f"pad={p.width}:{p.height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={p.fps}[v{i}];")
+        media = media_by_id.get(c.media_id)
+        has_audio = media.has_audio if media else True
+        if has_audio:
+            parts.append(f"[{v_idx}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS[a{i}];")
+        else:
+            a_idx = input_index
+            cmd += ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"]
+            input_index += 1
+            duration = c.out_point - c.in_point
+            parts.append(f"[{a_idx}:a]atrim=start=0:end={_num(duration)},asetpts=PTS-STARTPTS[a{i}];")
     streams = "".join(f"[v{i}][a{i}]" for i in range(len(clips)))
     fc = "".join(parts) + f"{streams}concat=n={len(clips)}:v=1:a=1[vc][a]"
 
@@ -36,7 +49,7 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
         return cmd
 
     current = "[vc]"
-    next_input_index = len(clips)
+    next_input_index = input_index
     for step, band in enumerate(bands):
         if band["kind"] == "ass":
             out_label = f"[ass{step}]"

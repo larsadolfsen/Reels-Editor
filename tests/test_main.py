@@ -1,7 +1,7 @@
 # Tests for app.main's export route: confirms ASS subtitles are rendered to a file and
 # burned into the ffmpeg command when a project has text blocks, and skipped otherwise.
 from unittest.mock import patch
-from app.main import export_project, list_presets, create_preset
+from app.main import export_project, list_presets, create_preset, probe
 from app.models import Project, TextBlockLayer, TextPreset, MediaItem
 
 def test_export_writes_ass_file_and_burns_it_in(tmp_path, monkeypatch):
@@ -110,3 +110,9 @@ def test_duplicate_project_route_deep_copies_nested_data(tmp_path, monkeypatch):
     dup = route_duplicate_project(a.id)
     dup.media_library[0].file_path = "changed.mp4"
     assert a.media_library[0].file_path == "a.mp4"
+
+def test_probe_route_includes_has_audio():
+    with patch("app.main.media.probe_duration", return_value=5.0), \
+         patch("app.main.media.has_audio_stream", return_value=False):
+        result = probe("c.mp4")
+    assert result == {"duration": 5.0, "has_audio": False}
