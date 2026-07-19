@@ -178,6 +178,10 @@ async function renderTextPanel() {
     onMoveEnd: (delta) => handleBoxMoveEnd(preset, delta),
     onEdit: (heading) => { block.heading = heading; },
     onEditEnd: async (heading) => { block.heading = heading; renderTextPreview(); await saveProject(); },
+    // preview.js already tracks the active selection itself (Preview.getActiveFormatSelection());
+    // this is just a pass-through hook in case a future panel needs to react live to selection
+    // changes. FONT accordion controls read the selection on demand instead, so no-op for now.
+    onSelectionChange: () => {},
   });
 }
 
