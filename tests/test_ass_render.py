@@ -161,3 +161,18 @@ def test_wrapped_lines_and_size_fixed_dimensions_used_as_is():
     b = TextBlockLayer(heading="hello", preset_id=pr.id, start=0, end=2)
     text, width, height = _wrapped_lines_and_size(b, pr)
     assert (width, height) == (200, 80)
+
+def test_wrapped_lines_and_size_fill_mode_same_as_fixed():
+    pr = TextPreset(name="Pop", size_px=48, box_width_mode="fill", box_width=200,
+                     box_height_mode="fill", box_height=80)
+    b = TextBlockLayer(heading="hello", preset_id=pr.id, start=0, end=2)
+    text, width, height = _wrapped_lines_and_size(b, pr)
+    assert (width, height) == (200, 80)
+
+def test_box_dialogue_present_with_fill_mode():
+    pr = TextPreset(name="Pop", box_background=True, box_background_color="#FF0000",
+                     box_width_mode="fill", box_width=300, box_height_mode="fill", box_height=100)
+    b = TextBlockLayer(heading="H", preset_id=pr.id, start=1.0, end=3.0)
+    line = _box_dialogue(b, pr)
+    assert line is not None
+    assert "\\p1" in line and "\\p0" in line

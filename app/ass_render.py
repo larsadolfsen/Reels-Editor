@@ -60,13 +60,15 @@ def _wrapped_lines_and_size(b, p: TextPreset, weight: int | None = None) -> tupl
     measure = pil_font_measurer(p.font, p.size_px, weight)
     pad_x = BOX_PAD_X_EM * p.size_px * 2
     pad_y = BOX_PAD_Y_EM * p.size_px * 2
-    if p.box_width_mode == "fixed":
+    width_fixed = p.box_width_mode in ("fixed", "fill")
+    height_fixed = p.box_height_mode in ("fixed", "fill")
+    if width_fixed:
         text = wrap_text(b.heading, measure, max(1, p.box_width - pad_x))
     else:
         text = b.heading
     lines = text.split("\n")
-    width = p.box_width if p.box_width_mode == "fixed" else max(measure(line) for line in lines) + pad_x
-    height = p.box_height if p.box_height_mode == "fixed" else len(lines) * p.size_px * LINE_HEIGHT + pad_y
+    width = p.box_width if width_fixed else max(measure(line) for line in lines) + pad_x
+    height = p.box_height if height_fixed else len(lines) * p.size_px * LINE_HEIGHT + pad_y
     return text, width, height
 
 def _box_dialogue(b, p: TextPreset, weight: int | None = None) -> str | None:
