@@ -1,5 +1,5 @@
 # Tests for app.ass_render: ASS time/color helpers and text-block dialogue generation.
-from app.models import Project, TextBlockLayer, TextPreset, CaptionTrack, CaptionWord
+from app.models import Project, TextBlockLayer, TextPreset, CaptionTrack, CaptionWord, FormatRun
 from app.ass_render import ass_time, hex_to_ass, render_ass
 
 def w(t, a, b): return CaptionWord(text=t, t_start=a, t_end=b)
@@ -320,3 +320,40 @@ def test_block_dialogue_run_preserves_unstyled_text_around_it():
     out = render_ass(p, {pr.id: pr})
     line = next(l for l in out.splitlines() if l.startswith("Dialogue:") and "TODAY" in l)
     assert "BIG " in line and "NEWS" in line and " TODAY" in line
+
+def test_no_highlight_runs_emits_no_highlight_dialogues():
+    pr = TextPreset(name="Pop")
+    run = FormatRun(start=0, end=3, color="#FF0000")  # not highlighted
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG NEWS", preset_id=pr.id, start=0, end=2,
+                                                        formatting_runs=[run])])
+    out = render_ass(p, {pr.id: pr})
+    assert "hl0" not in out
+
+def test_highlighted_run_on_single_line_emits_one_rectangle():
+    pr = TextPreset(name="Pop", x=100, y=200, size_px=50, box_width_mode="fit")
+    run = FormatRun(start=0, end=3, highlight=True, highlight_color="#00FF00")
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG NEWS", preset_id=pr.id, start=0, end=2,
+                                                        formatting_runs=[run])])
+    out = render_ass(p, {pr.id: pr})
+    highlight_lines = [l for l in out.splitlines() if "hl0" in l]
+    assert len(highlight_lines) == 1
+    assert "\\p1" in highlight_lines[0]
+
+def test_highlighted_run_spanning_two_wrapped_lines_emits_two_rectangles():
+    pr = TextPreset(name="Pop", x=0, y=0, size_px=20, box_width_mode="fixed", box_width=90)
+    # Force a wrap between "BIG" and "NEWS TODAY" by constraining box_width tightly; the
+    # highlighted run covers "NEWS TODAY" which the fixed width should split across 2 lines.
+    run = FormatRun(start=4, end=14, highlight=True)  # "NEWS TODAY"
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG NEWS TODAY", preset_id=pr.id, start=0, end=2,
+                                                        formatting_runs=[run])])
+    out = render_ass(p, {pr.id: pr})
+    highlight_lines = [l for l in out.splitlines() if "hl" in l and l.startswith("Dialogue:")]
+    assert len(highlight_lines) == 2
+
+def test_highlighted_run_from_base_preset_default():
+    pr = TextPreset(name="Pop", highlight=True, highlight_color="#0000FF")
+    run = FormatRun(start=0, end=3)  # no per-run highlight override — falls through to preset default
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG NEWS", preset_id=pr.id, start=0, end=2,
+                                                        formatting_runs=[run])])
+    out = render_ass(p, {pr.id: pr})
+    assert any("hl0" in l for l in out.splitlines())
