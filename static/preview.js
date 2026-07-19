@@ -8,6 +8,10 @@
 // renderCaptions() groups project.captions.words via Timeline.groupWords (max_words_per_line),
 // finds the group active at the given timelineTime, and renders it as one .caption-block with a
 // per-word highlight color driven by preset.highlight_mode ("current_word" | "progressive_fill").
+// playClipAt() also prefetches the *next* clip's file into a hidden second <video> element
+// (preloadPlayer) as soon as the current clip starts, so the browser's HTTP cache is warm by the
+// time the real player.src swap happens at the join — smooths the visible stall that a cold
+// network fetch at the clip boundary otherwise causes.
 // Exposes window.Preview.{load, seek, renderText, renderCaptions, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
 // getActiveFormatSelection() -> {blockId, start, end} | null tracks the current non-collapsed
 // stage text selection (set via onSelectionChange, cleared on block switch or collapse), consumed
@@ -38,6 +42,15 @@ window.Preview = (() => {
   const timeEl = document.getElementById("time");
   const overlay = document.getElementById("overlay");
   const stage = document.getElementById("stage");
+  // Hidden second <video> used only to prefetch the next clip's file into the browser's HTTP
+  // cache while the current clip is still playing, so the real player.src swap at the clip
+  // boundary (playClipAt) hits a warm cache instead of a cold network fetch.
+  const preloadPlayer = document.createElement("video");
+  preloadPlayer.preload = "auto";
+  preloadPlayer.muted = true;
+  preloadPlayer.style.display = "none";
+  document.body.appendChild(preloadPlayer);
+  let preloadedIndex = -1;
 
   function ordered(list) {
     return [...list].sort((a, b) => a.order - b.order);
@@ -93,6 +106,14 @@ window.Preview = (() => {
       player.currentTime = c.in_point;
       player.play();
     };
+    maybePreloadNext(index);
+  }
+
+  function maybePreloadNext(index) {
+    const nextIndex = index + 1;
+    if (nextIndex >= clips.length || nextIndex === preloadedIndex) return;
+    preloadedIndex = nextIndex;
+    preloadPlayer.src = "/media?path=" + encodeURIComponent(clips[nextIndex].file_path);
   }
 
   function zeroClipDuration() {
@@ -140,6 +161,7 @@ window.Preview = (() => {
     activeIndex = -1;
     cancelVirtualPlayback();
     virtualTime = 0;
+    preloadedIndex = -1;
     if (clips.length > 0) {
       playClipAt(0);
     } else {
