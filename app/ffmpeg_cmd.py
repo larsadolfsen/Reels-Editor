@@ -77,10 +77,23 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
 
 def build_audio_cmd(p: Project, wav_path: str) -> list[str]:
     clips = ordered(p.clips)
+    media_by_id = {m.id: m for m in p.media_library}
     cmd = ["ffmpeg", "-y"]
     parts = []
+    input_index = 0
     for i, c in enumerate(clips):
-        cmd += ["-i", c.file_path]
-        parts.append(f"[{i}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS[a{i}];")
+        media = media_by_id.get(c.media_id)
+        has_audio = media.has_audio if media else True
+        if has_audio:
+            a_idx = input_index
+            cmd += ["-i", c.file_path]
+            input_index += 1
+            parts.append(f"[{a_idx}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS[a{i}];")
+        else:
+            a_idx = input_index
+            cmd += ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"]
+            input_index += 1
+            duration = c.out_point - c.in_point
+            parts.append(f"[{a_idx}:a]atrim=start=0:end={_num(duration)},asetpts=PTS-STARTPTS[a{i}];")
     fc = "".join(parts) + "".join(f"[a{i}]" for i in range(len(clips))) + f"concat=n={len(clips)}:v=0:a=1[a]"
     return cmd + ["-filter_complex", fc, "-map", "[a]", "-vn", "-ac", "1", "-ar", "16000", wav_path]

@@ -136,3 +136,36 @@ def test_clip_with_no_media_library_entry_defaults_to_has_audio():
     # in an empty media_library — must not raise, must behave as if has_audio=True (today's behavior).
     cmd = build_export_cmd(proj(), "out.mp4")
     assert "anullsrc" not in " ".join(cmd)
+
+def test_build_audio_cmd_video_only_clip_gets_synthesized_silent_audio():
+    from app.ffmpeg_cmd import build_audio_cmd
+    p = Project(name="r",
+                media_library=[MediaItem(id="m0", file_path="a.mp4", duration=2, has_audio=False)],
+                clips=[ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=2, order=0)])
+    cmd = build_audio_cmd(p, "out.wav")
+    assert "anullsrc=channel_layout=stereo:sample_rate=44100" in cmd
+    assert "a.mp4" not in cmd
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "atrim=start=0:end=2,asetpts=PTS-STARTPTS[a0]" in fc
+    assert "concat=n=1:v=0:a=1" in fc
+
+def test_build_audio_cmd_mixed_audio_clips_input_indices_do_not_collide():
+    from app.ffmpeg_cmd import build_audio_cmd
+    p = Project(name="r", media_library=[
+        MediaItem(id="m0", file_path="a.mp4", duration=2, has_audio=False),
+        MediaItem(id="m1", file_path="b.mp4", duration=2, has_audio=True),
+    ], clips=[
+        ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=2, order=0),
+        ClipLayer(media_id="m1", file_path="b.mp4", in_point=0, out_point=2, order=1),
+    ])
+    cmd = build_audio_cmd(p, "out.wav")
+    ilavfi, ib = cmd.index("anullsrc=channel_layout=stereo:sample_rate=44100"), cmd.index("b.mp4")
+    assert ilavfi < ib
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "[0:a]atrim=start=0:end=2,asetpts=PTS-STARTPTS[a0]" in fc
+    assert "[1:a]atrim=start=0:end=2,asetpts=PTS-STARTPTS[a1]" in fc
+
+def test_build_audio_cmd_clip_with_no_media_library_entry_defaults_to_has_audio():
+    from app.ffmpeg_cmd import build_audio_cmd
+    cmd = build_audio_cmd(proj(), "out.wav")
+    assert "anullsrc" not in " ".join(cmd)
