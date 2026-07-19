@@ -1,10 +1,14 @@
 // Preview stage playback: plays a project's clips back-to-back in timeline order, and composites
-// the text-block overlay on top (renderText). Text divs and video-box <video> elements (see
-// video-box-preview.js) are siblings inside #overlay and each set an explicit CSS z-index from
-// their model's z_index field, so browser stacking follows the project's cross-layer z-order.
+// the text-block overlay (renderText) and caption overlay (renderCaptions) on top. Text/caption
+// divs and video-box <video> elements (see video-box-preview.js) are siblings inside #overlay and
+// each set an explicit CSS z-index from their model's z_index field, so browser stacking follows
+// the project's cross-layer z-order.
 // In BOX FILL mode, renderText() also auto-computes and persists preset.size_px via
 // window.FontFit before laying out the div.
-// Exposes window.Preview.{load, seek, renderText, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// renderCaptions() groups project.captions.words via Timeline.groupWords (max_words_per_line),
+// finds the group active at the given timelineTime, and renders it as one .caption-block with a
+// per-word highlight color driven by preset.highlight_mode ("current_word" | "progressive_fill").
+// Exposes window.Preview.{load, seek, renderText, renderCaptions, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
 // When project.clips is empty, playback runs on an internal virtual clock (performance.now()-based)
 // instead of the <video> element's timeupdate/play/pause events, so text/caption-only projects
 // stay scrubbable/playable in preview. Preview.isPaused() abstracts over both modes for callers.
@@ -113,6 +117,7 @@ window.Preview = (() => {
     }
     timeEl.textContent = virtualTime.toFixed(1);
     if (textProject) renderText(textProject, textPresets, virtualTime);
+    if (textProject) renderCaptions(textProject, textPresets, virtualTime);
     if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], virtualTime);
     Timeline.tick(virtualTime);
     if (virtualPlaying) virtualRafId = requestAnimationFrame(virtualTick);
@@ -252,6 +257,61 @@ window.Preview = (() => {
     }
   }
 
+  function activeCaptionGroup(words, maxWords, timelineTime) {
+    const groups = Timeline.groupWords(words, maxWords);
+    return groups.find((g) => timelineTime >= g[0].t_start && timelineTime < g[g.length - 1].t_end) || null;
+  }
+
+  function renderCaptions(project, presets, timelineTime) {
+    overlay.querySelectorAll(".caption-block").forEach((el) => el.remove());
+    const track = project.captions;
+    if (!track || !track.words.length) return;
+    const preset = presets[track.preset_id];
+    if (!preset) return;
+
+    const group = activeCaptionGroup(track.words, preset.max_words_per_line, timelineTime);
+    if (!group) return;
+
+    let stageW = overlay.clientWidth || stage.clientWidth;
+    let stageH = overlay.clientHeight || stage.clientHeight;
+    if ((stageW === 0 || stageH === 0) && stageW !== 0) stageH = stageW * 16 / 9;
+
+    const div = document.createElement("div");
+    div.className = `caption-block text-block--align-${preset.align}`;
+    div.style.zIndex = String(track.z_index ?? 0);
+    div.style.left = (preset.x / 1080 * stageW) + "px";
+    div.style.top = (preset.y / 1920 * stageH) + "px";
+    div.style.textAlign = preset.align;
+    div.style.fontFamily = `"${preset.font}", sans-serif`;
+    div.style.fontWeight = String(preset.weight);
+    div.style.fontStyle = preset.italic ? "italic" : "normal";
+    div.style.textDecoration = preset.underline ? "underline" : "none";
+    div.style.fontSize = (preset.size_px / 1920 * stageH) + "px";
+    div.style.webkitTextStroke = `${preset.outline_px / 1920 * stageH}px ${preset.outline_color}`;
+    div.style.padding = "0.15em 0.35em";
+    div.style.backgroundColor = preset.box_background ? hexToRgba(preset.box_background_color, preset.box_background_opacity) : "transparent";
+    div.style.borderWidth = (preset.box_border_width / 1080 * stageW) + "px";
+    div.style.borderStyle = preset.box_border_width > 0 ? "solid" : "none";
+    div.style.borderColor = preset.box_border_color;
+    div.style.borderRadius = (preset.box_border_radius / 1080 * stageW) + "px";
+    div.style.pointerEvents = "none";
+
+    group.forEach((word, i) => {
+      const span = document.createElement("span");
+      let isHighlighted;
+      if (preset.highlight_mode === "progressive_fill") {
+        isHighlighted = timelineTime >= word.t_start;
+      } else {
+        isHighlighted = timelineTime >= word.t_start && timelineTime < word.t_end;
+      }
+      span.style.color = isHighlighted ? preset.highlight_color : preset.color;
+      span.textContent = word.text + (i < group.length - 1 ? " " : "");
+      div.appendChild(span);
+    });
+
+    overlay.appendChild(div);
+  }
+
   function setOnStageTextActivate(fn) {
     onStageTextActivate = fn || null;
   }
@@ -278,6 +338,7 @@ window.Preview = (() => {
     timeEl.textContent = timelineTime.toFixed(1);
 
     if (textProject) renderText(textProject, textPresets, timelineTime);
+    if (textProject) renderCaptions(textProject, textPresets, timelineTime);
     if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], timelineTime);
 
     if (player.currentTime >= c.out_point) {
@@ -291,6 +352,7 @@ window.Preview = (() => {
 
   new ResizeObserver(() => {
     if (textProject) renderText(textProject, textPresets, computeTimelineTime());
+    if (textProject) renderCaptions(textProject, textPresets, computeTimelineTime());
   }).observe(stage);
 
   function doPlay() {
@@ -340,6 +402,7 @@ window.Preview = (() => {
       virtualTime = Math.max(0, Math.min(t, zeroClipDuration()));
       timeEl.textContent = virtualTime.toFixed(1);
       if (textProject) renderText(textProject, textPresets, virtualTime);
+      if (textProject) renderCaptions(textProject, textPresets, virtualTime);
       if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], virtualTime);
       return;
     }
@@ -354,5 +417,5 @@ window.Preview = (() => {
     }
   }
 
-  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, isPaused, setSelectedTextBlock, setOnStageTextActivate };
+  return { load, locate, sequenceDuration, seek, renderText, renderCaptions, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, isPaused, setSelectedTextBlock, setOnStageTextActivate };
 })();
