@@ -49,7 +49,7 @@
           </button>
           <button id="play-pause" class="icon-btn" type="button" title="Play/Pause">
             <svg class="icon-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
-            <svg class="icon-pause" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            <svg class="icon-pause icon-hidden" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
           </button>
           <button id="step-forward" class="icon-btn" type="button" title="Step forward 0.1s">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5,4 16,12 5,20"/><rect x="18" y="4" width="2" height="16"/></svg>
@@ -110,7 +110,7 @@
     <aside id="style-panel">
       <button id="style-panel-collapse-toggle" class="icon-btn" title="Collapse panel" aria-pressed="false">
         <svg class="icon-panel-close" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m8 9 3 3-3 3"/></svg>
-        <svg class="icon-panel-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>
+        <svg class="icon-panel-open icon-hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>
       </button>
 
       <div id="panel-files" class="context-panel">
@@ -174,7 +174,7 @@
             <span class="context-panel-name">Theme</span>
             <button id="theme-toggle" type="button" aria-pressed="false" title="Toggle light/dark theme">
               <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-              <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+              <svg class="icon-moon icon-hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
             </button>
           </div>
         </div>
@@ -212,11 +212,11 @@
           </div>
 
           <div class="style-group">
-            <div class="style-row" style="align-items: center; gap: 6px;">
+            <div class="style-row" id="text-size-row">
               <button class="icon-btn" id="text-size-step-down" type="button" aria-label="Decrease font size" title="Decrease font size">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 12 4 4 4-4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>
               </button>
-              <label id="text-size-field" style="flex: 1;"></label>
+              <label id="text-size-field"></label>
               <button class="icon-btn" id="text-size-step-up" type="button" aria-label="Increase font size" title="Increase font size">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 11 4-4 4 4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>
               </button>

@@ -237,8 +237,8 @@ function setStylePanelCollapsed(collapsed) {
   const toggle = document.getElementById("style-panel-collapse-toggle");
   toggle.setAttribute("aria-pressed", String(collapsed));
   toggle.title = collapsed ? "Expand panel" : "Collapse panel";
-  toggle.querySelector(".icon-panel-close").style.display = collapsed ? "none" : "";
-  toggle.querySelector(".icon-panel-open").style.display = collapsed ? "" : "none";
+  toggle.querySelector(".icon-panel-close").classList.toggle("icon-hidden", collapsed);
+  toggle.querySelector(".icon-panel-open").classList.toggle("icon-hidden", !collapsed);
 }
 
 document.getElementById("style-panel-collapse-toggle").addEventListener("click", () => {
@@ -462,8 +462,8 @@ document.getElementById("safe-zones-toggle").addEventListener("click", () => {
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  document.querySelector("#theme-toggle .icon-sun").style.display = theme === "light" ? "none" : "";
-  document.querySelector("#theme-toggle .icon-moon").style.display = theme === "light" ? "" : "none";
+  document.querySelector("#theme-toggle .icon-sun").classList.toggle("icon-hidden", theme === "light");
+  document.querySelector("#theme-toggle .icon-moon").classList.toggle("icon-hidden", theme !== "light");
   document.getElementById("theme-toggle").setAttribute("aria-pressed", String(theme === "light"));
   localStorage.setItem("theme", theme);
 }

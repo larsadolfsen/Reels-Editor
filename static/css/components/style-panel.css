@@ -67,6 +67,9 @@
 
 .style-row-tight { justify-content: space-between; align-items: flex-end; }
 
+#text-size-row { gap: 6px; }
+#text-size-field { flex: 1; }
+
 .style-field {
   display: flex;
   flex-direction: column;

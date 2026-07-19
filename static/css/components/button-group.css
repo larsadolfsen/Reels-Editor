@@ -46,3 +46,5 @@
   color: var(--text);
   background: rgba(108, 135, 163, 0.12);
 }
+
+.icon-hidden { display: none; }
