@@ -699,6 +699,22 @@ async function exportProject() {
 
 document.getElementById("export").addEventListener("click", exportProject);
 
+document.getElementById("caption-auto-btn").addEventListener("click", async () => {
+  ensureCaptionTrack();
+  const btn = document.getElementById("caption-auto-btn");
+  btn.disabled = true;
+  btn.textContent = "Transcribing…";
+  try {
+    const res = await fetch(`/api/projects/${project.id}/transcribe`, { method: "POST" });
+    project = await res.json();
+    await renderCaptionPanel();
+    renderTimeline();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Auto-caption";
+  }
+});
+
 (async () => {
   setSafeZonesVisible(localStorage.getItem("safeZonesVisible") === "1");
   const storedTheme = localStorage.getItem("theme");
