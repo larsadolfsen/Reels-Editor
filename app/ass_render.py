@@ -1,4 +1,4 @@
-# Generates the ASS subtitle file burned into exports: text-block dialogues (+captions, Task 12).
+# Generates the ASS subtitle file burned into exports: text-block dialogues (+captions, Task 12). render_ass() accepts an optional text_blocks subset so app/main.py can render one ASS file per z-order band (see app.timeline.banded_layers).
 # Exposes render_ass, ass_time, hex_to_ass. Consumed by the export route; rendered by libass.
 from app.models import Project, TextPreset
 from app.font_metrics import wrap_text, pil_font_measurer, WEIGHT_LABELS, nearest_available_weight
@@ -100,8 +100,9 @@ def _block_dialogue(b, p: TextPreset, weight: int | None = None) -> str:
     text = text.replace("\n", "\\N")
     return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]},,0,0,0,,{{{fx}}}{text}"
 
-def render_ass(project: Project, presets: dict[str, TextPreset]) -> str:
-    used = {b.preset_id: presets[b.preset_id] for b in project.text_blocks}
+def render_ass(project: Project, presets: dict[str, TextPreset], text_blocks: list | None = None) -> str:
+    blocks = project.text_blocks if text_blocks is None else text_blocks
+    used = {b.preset_id: presets[b.preset_id] for b in blocks}
     header = ("[Script Info]\nScriptType: v4.00+\n"
               f"PlayResX: {project.width}\nPlayResY: {project.height}\nWrapStyle: 2\n\n"
               "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, "
@@ -109,7 +110,7 @@ def render_ass(project: Project, presets: dict[str, TextPreset]) -> str:
               "Alignment, MarginL, MarginR, MarginV, Encoding\n")
     styles = "\n".join(_style(f"P{p.id[:8]}", p, _resolved_weight(p)) for p in used.values())
     event_lines = []
-    for b in project.text_blocks:
+    for b in blocks:
         p = presets[b.preset_id]
         weight = _resolved_weight(p)
         box_line = _box_dialogue(b, p, weight)

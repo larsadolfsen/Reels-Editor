@@ -207,3 +207,26 @@ def test_box_dialogue_present_with_fill_mode():
     line = _box_dialogue(b, pr)
     assert line is not None
     assert "\\p1" in line and "\\p0" in line
+
+def test_render_ass_subset_only_renders_given_blocks():
+    pr1 = TextPreset(name="A")
+    pr2 = TextPreset(name="B")
+    b1 = TextBlockLayer(heading="FIRST", preset_id=pr1.id, start=0, end=2)
+    b2 = TextBlockLayer(heading="SECOND", preset_id=pr2.id, start=2, end=4)
+    p = Project(name="r", text_blocks=[b1, b2])
+    out = render_ass(p, {pr1.id: pr1, pr2.id: pr2}, text_blocks=[b1])
+    assert "FIRST" in out
+    assert "SECOND" not in out
+
+def test_render_ass_subset_none_matches_default_behavior():
+    pr = TextPreset(name="A")
+    b = TextBlockLayer(heading="ONLY", preset_id=pr.id, start=0, end=2)
+    p = Project(name="r", text_blocks=[b])
+    assert render_ass(p, {pr.id: pr}, text_blocks=None) == render_ass(p, {pr.id: pr})
+
+def test_render_ass_subset_empty_list_has_no_dialogue_lines():
+    pr = TextPreset(name="A")
+    b = TextBlockLayer(heading="ONLY", preset_id=pr.id, start=0, end=2)
+    p = Project(name="r", text_blocks=[b])
+    out = render_ass(p, {pr.id: pr}, text_blocks=[])
+    assert not any(l.startswith("Dialogue:") for l in out.splitlines())
