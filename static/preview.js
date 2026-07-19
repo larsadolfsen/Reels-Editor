@@ -1,6 +1,9 @@
 // Preview stage playback: plays a project's clips back-to-back in timeline order,
 // and composites the text-block overlay on top (renderText).
-// Exposes window.Preview.{load, seek, renderText, currentTimelineTime, play, pause, restart, setSelectedTextBlock, setOnStageTextActivate}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// Exposes window.Preview.{load, seek, renderText, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// When project.clips is empty, playback runs on an internal virtual clock (performance.now()-based)
+// instead of the <video> element's timeupdate/play/pause events, so text/caption-only projects
+// stay scrubbable/playable in preview. Preview.isPaused() abstracts over both modes for callers.
 window.Preview = (() => {
   let clips = [];
   let activeIndex = -1;
@@ -11,6 +14,12 @@ window.Preview = (() => {
   let editingBlockId = null;
   let editingDiv = null;
   let onStageTextActivate = null;
+  // Virtual clock driving playback when there are zero video clips (text/captions-only
+  // projects) — the video element has no src/timeupdate events to drive off of in that case.
+  let virtualTime = 0;
+  let virtualPlaying = false;
+  let virtualRafId = null;
+  let virtualLastTs = 0;
   const player = document.getElementById("player");
   const timeEl = document.getElementById("time");
   const overlay = document.getElementById("overlay");
@@ -53,13 +62,54 @@ window.Preview = (() => {
     };
   }
 
+  function zeroClipDuration() {
+    if (!textProject) return 0;
+    let maxEnd = 0;
+    for (const b of (textProject.text_blocks || [])) maxEnd = Math.max(maxEnd, b.end || 0);
+    if (textProject.captions && textProject.captions.words) {
+      for (const w of textProject.captions.words) maxEnd = Math.max(maxEnd, w.t_end || 0);
+    }
+    return maxEnd;
+  }
+
+  function cancelVirtualPlayback() {
+    if (virtualRafId) { cancelAnimationFrame(virtualRafId); virtualRafId = null; }
+    virtualPlaying = false;
+  }
+
+  function virtualTick(now) {
+    if (!virtualPlaying) return;
+    const dt = (now - virtualLastTs) / 1000;
+    virtualLastTs = now;
+    virtualTime += dt;
+    if (virtualTime >= zeroClipDuration()) {
+      virtualTime = zeroClipDuration();
+      virtualPlaying = false;
+      setPlayingIcon(false);
+    }
+    timeEl.textContent = virtualTime.toFixed(1);
+    if (textProject) renderText(textProject, textPresets, virtualTime);
+    Timeline.tick(virtualTime);
+    if (virtualPlaying) virtualRafId = requestAnimationFrame(virtualTick);
+  }
+
+  function startVirtualPlayback() {
+    virtualPlaying = true;
+    virtualLastTs = performance.now();
+    setPlayingIcon(true);
+    virtualRafId = requestAnimationFrame(virtualTick);
+  }
+
   function load(project) {
     clips = ordered(project.clips || []);
     activeIndex = -1;
+    cancelVirtualPlayback();
+    virtualTime = 0;
     if (clips.length > 0) {
       playClipAt(0);
     } else {
       player.removeAttribute("src");
+      timeEl.textContent = "0.0";
     }
   }
 
@@ -183,6 +233,7 @@ window.Preview = (() => {
   }
 
   function computeTimelineTime() {
+    if (clips.length === 0) return virtualTime;
     if (activeIndex < 0) return 0;
     const c = clips[activeIndex];
     let t = 0;
@@ -212,16 +263,30 @@ window.Preview = (() => {
   }).observe(stage);
 
   function doPlay() {
+    if (clips.length === 0) {
+      if (virtualTime >= zeroClipDuration()) virtualTime = 0;
+      startVirtualPlayback();
+      return;
+    }
     const atEnd = activeIndex >= 0 && activeIndex === clips.length - 1
       && player.currentTime >= clips[activeIndex].out_point;
     if (atEnd) playClipAt(0);
     else player.play();
   }
-  function doPause() { player.pause(); }
-  function doRestart() { playClipAt(0); }
+  function doPause() {
+    if (clips.length === 0) { cancelVirtualPlayback(); setPlayingIcon(false); return; }
+    player.pause();
+  }
+  function doRestart() {
+    if (clips.length === 0) { virtualTime = 0; startVirtualPlayback(); return; }
+    playClipAt(0);
+  }
+  function isPaused() {
+    return clips.length === 0 ? !virtualPlaying : player.paused;
+  }
 
   document.getElementById("play-pause").addEventListener("click", () => {
-    if (player.paused) doPlay(); else doPause();
+    if (isPaused()) doPlay(); else doPause();
   });
   document.getElementById("restart").addEventListener("click", doRestart);
 
@@ -240,6 +305,12 @@ window.Preview = (() => {
   player.addEventListener("pause", () => setPlayingIcon(false));
 
   function seek(t) {
+    if (clips.length === 0) {
+      virtualTime = Math.max(0, Math.min(t, zeroClipDuration()));
+      timeEl.textContent = virtualTime.toFixed(1);
+      if (textProject) renderText(textProject, textPresets, virtualTime);
+      return;
+    }
     const loc = locate(clips, t);
     if (!loc) return;
     if (loc.clip !== clips[activeIndex]) {
@@ -251,5 +322,5 @@ window.Preview = (() => {
     }
   }
 
-  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, setSelectedTextBlock, setOnStageTextActivate };
+  return { load, locate, sequenceDuration, seek, renderText, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, isPaused, setSelectedTextBlock, setOnStageTextActivate };
 })();
