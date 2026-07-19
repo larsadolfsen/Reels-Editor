@@ -1,6 +1,6 @@
 # Tests for app.models: entity construction, IDs, JSON round-trip.
 from datetime import datetime as _datetime
-from app.models import Project, ClipLayer, MediaItem, TextPreset, TextBlockLayer, CaptionTrack, CaptionWord
+from app.models import Project, ClipLayer, MediaItem, TextPreset, TextBlockLayer, CaptionTrack, CaptionWord, VideoBoxLayer
 
 def test_ids_are_unique():
     a, b = ClipLayer(media_id="m1", file_path="a.mp4", in_point=0, out_point=5, order=0), ClipLayer(media_id="m2", file_path="b.mp4", in_point=0, out_point=5, order=1)
@@ -12,6 +12,7 @@ def test_project_defaults():
     assert p.clips == [] and p.text_blocks == [] and p.captions is None
     assert p.media_library == []
     assert p.text_presets == {}
+    assert p.video_boxes == []
 
 def test_json_round_trip():
     p = Project(name="reel1",
@@ -89,3 +90,32 @@ def test_project_has_created_and_updated_at():
 def test_project_timestamps_round_trip():
     p = Project(name="reel1")
     assert Project.model_validate_json(p.model_dump_json()) == p
+
+def test_video_box_layer_defaults():
+    v = VideoBoxLayer(media_id="m1", file_path="a.mp4", out_point=5.0, height=1920)
+    assert v.in_point == 0.0
+    assert v.start == 0.0
+    assert (v.x, v.y, v.width) == (0, 0, 1080)
+    assert v.z_index == -1
+    assert len(v.id) == 32
+
+def test_video_box_layer_round_trip():
+    v = VideoBoxLayer(media_id="m1", file_path="a.mp4", in_point=1.0, out_point=5.0,
+                       start=2.0, x=10, y=20, width=400, height=711, z_index=3)
+    assert VideoBoxLayer.model_validate_json(v.model_dump_json()) == v
+
+def test_project_video_boxes_default_empty():
+    p = Project(name="reel1")
+    assert p.video_boxes == []
+
+def test_project_with_video_box_round_trip():
+    p = Project(name="reel1", video_boxes=[VideoBoxLayer(media_id="m1", file_path="a.mp4", out_point=5.0, height=1920)])
+    assert Project.model_validate_json(p.model_dump_json()) == p
+
+def test_text_block_layer_z_index_defaults_zero():
+    t = TextBlockLayer(heading="H", preset_id="x")
+    assert t.z_index == 0
+
+def test_caption_track_z_index_defaults_zero():
+    c = CaptionTrack()
+    assert c.z_index == 0

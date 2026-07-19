@@ -20,6 +20,19 @@ class ClipLayer(BaseModel):
     out_point: float        # seconds into source (exclusive end)
     order: int
 
+class VideoBoxLayer(BaseModel):
+    id: str = Field(default_factory=new_id)
+    media_id: str
+    file_path: str
+    in_point: float = 0.0    # seconds into source
+    out_point: float          # seconds into source (exclusive end)
+    start: float = 0.0        # timeline seconds; end is always derived (start + out_point - in_point)
+    x: int = 0                 # px, left edge on the 1080x1920 canvas
+    y: int = 0                 # px, top edge
+    width: int = 1080
+    height: int                # px; set from source aspect ratio at creation, kept locked on resize
+    z_index: int = -1          # new boxes default just below the default text z_index (0)
+
 class TextPreset(BaseModel):
     id: str = Field(default_factory=new_id)
     name: str
@@ -66,6 +79,7 @@ class TextBlockLayer(BaseModel):
     preset_id: str
     start: float = 0.0             # timeline seconds
     end: float = 3.0
+    z_index: int = 0
 
 class CaptionWord(BaseModel):
     id: str = Field(default_factory=new_id)
@@ -76,6 +90,7 @@ class CaptionWord(BaseModel):
 class CaptionTrack(BaseModel):
     id: str = Field(default_factory=new_id)
     words: list[CaptionWord] = []
+    z_index: int = 0
 
 class Project(BaseModel):
     id: str = Field(default_factory=new_id)
@@ -87,6 +102,7 @@ class Project(BaseModel):
     fps: int = 30
     media_library: list[MediaItem] = []
     clips: list[ClipLayer] = []
+    video_boxes: list[VideoBoxLayer] = []
     text_blocks: list[TextBlockLayer] = []
     text_presets: dict[str, TextPreset] = {}
     captions: CaptionTrack | None = None
