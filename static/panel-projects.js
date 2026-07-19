@@ -14,7 +14,7 @@ window.ProjectsPanel = window.ProjectsPanel || {};
     projects.forEach((p) => {
       const row = UI.projectListRow(p, {
         onOpen: () => { if (p.id !== currentProjectId) callbacks.onSwitch(p); },
-        onRename: async (name) => { await Api.renameProject(p.id, name); },
+        onRename: async (name) => { await Api.renameProject(p.id, name); await render(currentProjectId, callbacks); },
         onDelete: async () => {
           if (!confirm(`Delete "${p.name}"? This can't be undone.`)) return;
           await Api.deleteProject(p.id);
