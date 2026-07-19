@@ -5,8 +5,8 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from app.models import Project, TextPreset, ProjectSummary, new_id
-from app import store, media, ffmpeg_cmd, ass_render, timeline
+from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack
+from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
 DATA_DIR = Path("data")
@@ -72,6 +72,27 @@ def create_preset(preset: TextPreset) -> TextPreset:
     store.save_preset(preset, DATA_DIR)
     return preset
 
+@app.post("/api/projects/{pid}/transcribe")
+def transcribe_project(pid: str) -> Project:
+    p = store.load_project(pid, DATA_DIR)
+    out_dir = DATA_DIR / "exports"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    wav_path = out_dir / f"{p.id[:8]}-audio.wav"
+
+    media.run_export(ffmpeg_cmd.build_audio_cmd(p, str(wav_path)))
+    words = transcribe.transcribe_file(str(wav_path))
+
+    if p.captions:
+        p.captions.words = words
+    else:
+        preset = TextPreset(name="Caption", size_px=72, x=540, y=1520, align="center",
+                             highlight_color="#FFD400", highlight_mode="current_word", max_words_per_line=4)
+        p.text_presets[preset.id] = preset
+        p.captions = CaptionTrack(words=words, preset_id=preset.id)
+
+    store.save_project(p, DATA_DIR)
+    return p
+
 @app.get("/media")
 def media_file(path: str):
     return media.media_response(path)
@@ -82,6 +103,13 @@ def export_project(pid: str) -> dict:
     out_dir = DATA_DIR / "exports"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{p.name}-{p.id[:8]}.mp4"
+
+    caption_ass_path = None
+    if p.captions and p.captions.words:
+        caption_preset = p.text_presets.get(p.captions.preset_id) or TextPreset(name="Caption")
+        cap_file = out_dir / f"{p.name}-{p.id[:8]}-captions.ass"
+        cap_file.write_text(ass_render.render_caption_ass(p, caption_preset), encoding="utf-8")
+        caption_ass_path = str(cap_file)
 
     if p.video_boxes:
         bands = []
@@ -94,14 +122,14 @@ def export_project(pid: str) -> dict:
                 bands.append({"kind": "ass", "path": str(ass_file)})
             else:
                 bands.append({"kind": "video_box", "video_box": band["video_box"]})
-        cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), bands=bands)
+        cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), bands=bands, caption_ass_path=caption_ass_path)
     else:
         ass_path = None
         if p.text_blocks:
             ass_file = out_dir / f"{p.name}-{p.id[:8]}.ass"
             ass_file.write_text(ass_render.render_ass(p, p.text_presets), encoding="utf-8")
             ass_path = str(ass_file)
-        cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), ass_path)
+        cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), ass_path, caption_ass_path=caption_ass_path)
 
     media.run_export(cmd)
     return {"out_path": str(out_path)}
