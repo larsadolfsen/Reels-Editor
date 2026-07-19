@@ -29,6 +29,12 @@ window.TextPanel = window.TextPanel || {};
       const preset = ensureTextPreset(block.preset_id);
       const sel = Preview.getActiveFormatSelection();
       if (sel && sel.blockId === block.id) {
+        // A freshly created block (ensureTextBlock()'s plain object literal) has no
+        // formatting_runs key at all until upsertFormatRun first populates it, or until the
+        // project round-trips through the backend (Pydantic fills in the []  default) — guard
+        // the same way upsertFormatRun itself does, or this throws on the very first
+        // selection-based toggle.
+        block.formatting_runs = block.formatting_runs || [];
         const current = block.formatting_runs.find((r) => r.start === sel.start && r.end === sel.end);
         const currentValue = (current && current[prop] != null) ? current[prop] : preset[prop];
         upsertFormatRun(block, sel.start, sel.end, prop, !currentValue);
@@ -59,21 +65,29 @@ window.TextPanel = window.TextPanel || {};
 
   let currentSizeFieldSetValue = null;
 
-  document.getElementById("text-size-step-down").addEventListener("click", () => {
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
-    preset.size_px = stepFontSizePreset(preset.size_px, -1);
-    saveProject();
-    renderTextPreview();
-    if (currentSizeFieldSetValue) currentSizeFieldSetValue(preset.size_px);
-  });
+  function stepSize(direction) {
+    const block = ensureTextBlock();
+    const preset = ensureTextPreset(block.preset_id);
+    const sel = Preview.getActiveFormatSelection();
+    if (sel && sel.blockId === block.id) {
+      block.formatting_runs = block.formatting_runs || [];
+      const current = block.formatting_runs.find((r) => r.start === sel.start && r.end === sel.end);
+      const currentValue = (current && current.size_px != null) ? current.size_px : preset.size_px;
+      const newValue = stepFontSizePreset(currentValue, direction);
+      upsertFormatRun(block, sel.start, sel.end, "size_px", newValue);
+      saveProject();
+      renderTextPreview();
+      if (currentSizeFieldSetValue) currentSizeFieldSetValue(newValue);
+    } else {
+      preset.size_px = stepFontSizePreset(preset.size_px, direction);
+      saveProject();
+      renderTextPreview();
+      if (currentSizeFieldSetValue) currentSizeFieldSetValue(preset.size_px);
+    }
+  }
 
-  document.getElementById("text-size-step-up").addEventListener("click", () => {
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
-    preset.size_px = stepFontSizePreset(preset.size_px, 1);
-    saveProject();
-    renderTextPreview();
-    if (currentSizeFieldSetValue) currentSizeFieldSetValue(preset.size_px);
-  });
+  document.getElementById("text-size-step-down").addEventListener("click", () => stepSize(-1));
+  document.getElementById("text-size-step-up").addEventListener("click", () => stepSize(1));
 
   window.TextPanel.renderFontStyle = function renderFontStyle() {
     const preset = ensureTextPreset(ensureTextBlock().preset_id);
