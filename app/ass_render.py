@@ -172,6 +172,42 @@ def _tagged_text(b, p: TextPreset, text: str) -> str:
         out.append("\\N" if ch == "\n" else ch)
     return "".join(out)
 
+HIGHLIGHT_RADIUS = 4
+
+def _highlight_dialogues(b, p: TextPreset, weight: int | None = None) -> list[str]:
+    if not b.formatting_runs:
+        return []
+    weight = weight if weight is not None else _resolved_weight(p)
+    measure_range = _measure_range_for(b, p, weight)
+    _, _, _, line_spans = _wrapped_lines_and_size(b, p, weight)
+    out = []
+    for run_i, run in enumerate(b.formatting_runs):
+        highlighted = run.highlight if run.highlight is not None else p.highlight
+        if not highlighted:
+            continue
+        color = run.highlight_color or p.highlight_color
+        fill = _ass_override_color(color)
+        for line_i, (line_start, line_end) in enumerate(line_spans):
+            s, e = max(run.start, line_start), min(run.end, line_end)
+            if s >= e:
+                continue
+            line_width = measure_range(line_start, line_end)
+            if p.align == "left":
+                left_origin = p.x
+            elif p.align == "right":
+                left_origin = p.x - line_width
+            else:
+                left_origin = p.x - line_width / 2
+            x_offset = measure_range(line_start, s)
+            rect_width = measure_range(s, e)
+            rect_height = p.size_px * LINE_HEIGHT
+            top = p.y + line_i * rect_height
+            path = _rounded_rect_path(rect_width, rect_height, HIGHLIGHT_RADIUS)
+            fx = f"\\an7\\pos({left_origin + x_offset:.0f},{top:.0f})\\1a&H00&\\3a&HFF&\\1c{fill}\\p1"
+            out.append(f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},"
+                        f"P{p.id[:8]}hl{run_i}_{line_i},,0,0,0,,{{{fx}}}{path}{{\\p0}}")
+    return out
+
 def _block_dialogue(b, p: TextPreset, weight: int | None = None) -> str:
     fx = f"\\pos({p.x},{p.y})"
     if p.entrance == "fade_pop":
@@ -199,6 +235,7 @@ def render_ass(project: Project, presets: dict[str, TextPreset], text_blocks: li
         box_line = _box_dialogue(b, p, weight)
         if box_line:
             event_lines.append(box_line)
+        event_lines.extend(_highlight_dialogues(b, p, weight))
         event_lines.append(_block_dialogue(b, p, weight))
     events = ("\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
               + "\n".join(event_lines))
