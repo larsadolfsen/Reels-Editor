@@ -198,12 +198,12 @@ async function handleBoxMoveEnd(preset, { dx, dy }) {
 UI.accordionSection(document.getElementById("text-style-accordion"), document.getElementById("text-style-body"), { title: "STYLES", expanded: false });
 UI.accordionSection(document.getElementById("text-font-accordion"), document.getElementById("text-font-body"), { title: "FONT", expanded: false });
 UI.accordionSection(document.getElementById("text-box-accordion"), document.getElementById("text-box-body"), { title: "BOX", expanded: false });
-UI.accordionSection(document.getElementById("text-position-accordion"), document.getElementById("text-position-body"), { title: "POSITION", expanded: false });
 UI.accordionSection(document.getElementById("text-time-accordion"), document.getElementById("text-time-body"), { title: "TIME", expanded: false });
 
 UI.divider(document.getElementById("video-order-divider"));
 UI.divider(document.getElementById("text-box-width-height-divider"));
 UI.divider(document.getElementById("text-box-background-border-divider"));
+UI.divider(document.getElementById("text-box-border-position-divider"));
 
 function clampTrim(inP, outP, dur) {
   inP = Math.max(0, Math.min(inP, dur));
