@@ -215,7 +215,6 @@ window.Preview = (() => {
       div.style.whiteSpace = widthIsBoxed ? "pre-wrap" : "pre";
       div.style.boxSizing = "border-box";
 
-      const outlinePxScaled = preset.outline_px / 1920 * stageH;
       const runs = (block.formatting_runs && block.formatting_runs.length) ? block.formatting_runs : [];
       const heading = block.heading || "";
       const boundaries = [...new Set([0, heading.length, ...runs.flatMap((r) => [r.start, r.end])])].sort((a, b) => a - b);
@@ -229,10 +228,12 @@ window.Preview = (() => {
         span.textContent = heading.slice(segStart, segEnd);
         span.style.color = (run && run.color) || preset.color;
         span.style.fontFamily = `"${(run && run.font) || preset.font}", sans-serif`;
+        span.style.fontSize = ((run && run.size_px) || preset.size_px) / 1920 * stageH + "px";
         span.style.fontWeight = String((run && run.weight) || preset.weight);
         span.style.fontStyle = (run && run.italic != null ? run.italic : preset.italic) ? "italic" : "normal";
         span.style.textDecoration = (run && run.underline != null ? run.underline : preset.underline) ? "underline" : "none";
-        span.style.webkitTextStroke = `${outlinePxScaled}px ${(run && run.outline_color) || preset.outline_color}`;
+        const runOutlinePx = (run && run.outline_px != null ? run.outline_px : preset.outline_px) / 1920 * stageH;
+        span.style.webkitTextStroke = `${runOutlinePx}px ${(run && run.outline_color) || preset.outline_color}`;
         const highlighted = run && run.highlight != null ? run.highlight : preset.highlight;
         span.style.backgroundColor = highlighted ? ((run && run.highlight_color) || preset.highlight_color) : "transparent";
         div.appendChild(span);
