@@ -104,6 +104,13 @@ def export_project(pid: str) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{p.name}-{p.id[:8]}.mp4"
 
+    caption_ass_path = None
+    if p.captions and p.captions.words:
+        caption_preset = p.text_presets.get(p.captions.preset_id) or TextPreset(name="Caption")
+        cap_file = out_dir / f"{p.name}-{p.id[:8]}-captions.ass"
+        cap_file.write_text(ass_render.render_caption_ass(p, caption_preset), encoding="utf-8")
+        caption_ass_path = str(cap_file)
+
     if p.video_boxes:
         bands = []
         for i, band in enumerate(timeline.banded_layers(p)):
@@ -115,14 +122,14 @@ def export_project(pid: str) -> dict:
                 bands.append({"kind": "ass", "path": str(ass_file)})
             else:
                 bands.append({"kind": "video_box", "video_box": band["video_box"]})
-        cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), bands=bands)
+        cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), bands=bands, caption_ass_path=caption_ass_path)
     else:
         ass_path = None
         if p.text_blocks:
             ass_file = out_dir / f"{p.name}-{p.id[:8]}.ass"
             ass_file.write_text(ass_render.render_ass(p, p.text_presets), encoding="utf-8")
             ass_path = str(ass_file)
-        cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), ass_path)
+        cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), ass_path, caption_ass_path=caption_ass_path)
 
     media.run_export(cmd)
     return {"out_path": str(out_path)}

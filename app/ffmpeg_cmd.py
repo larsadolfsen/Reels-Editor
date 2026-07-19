@@ -9,7 +9,7 @@ def escape_filter_path(path: str) -> str:
 def _num(x: float) -> str:
     return f"{x:g}"
 
-def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, bands: list[dict] | None = None) -> list[str]:
+def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, bands: list[dict] | None = None, caption_ass_path: str | None = None) -> list[str]:
     clips = ordered(p.clips)
     cmd = ["ffmpeg", "-y"]
     parts = []
@@ -28,6 +28,9 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
         if ass_path:
             fc += f";[vc]ass='{escape_filter_path(ass_path)}':fontsdir='{escape_filter_path('static/fonts')}'[vo]"
             vmap = "[vo]"
+        if caption_ass_path:
+            fc += f";{vmap}ass='{escape_filter_path(caption_ass_path)}':fontsdir='{escape_filter_path('static/fonts')}'[vcap]"
+            vmap = "[vcap]"
         cmd += ["-filter_complex", fc, "-map", vmap, "-map", "[a]",
                 "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-c:a", "aac", out_path]
         return cmd
@@ -50,6 +53,10 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
                    f"enable='between(t\\,{_num(v.start)}\\,{_num(end)})'{out_label}")
             current = out_label
             next_input_index += 1
+
+    if caption_ass_path:
+        fc += f";{current}ass='{escape_filter_path(caption_ass_path)}':fontsdir='{escape_filter_path('static/fonts')}'[vcap]"
+        current = "[vcap]"
 
     cmd += ["-filter_complex", fc, "-map", current, "-map", "[a]",
             "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-c:a", "aac", out_path]

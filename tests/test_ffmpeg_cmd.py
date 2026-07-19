@@ -83,3 +83,21 @@ def test_build_audio_cmd_one_atrim_per_clip_and_vn():
     assert fc.count("atrim=") == 2
     assert "-vn" in cmd
     assert cmd[cmd.index("-map") + 1] == "[a]"
+
+def test_caption_ass_path_chained_as_final_filter_no_bands():
+    cmd = build_export_cmd(proj(), "out.mp4", ass_path="C:/tmp/subs.ass", caption_ass_path="C:/tmp/caps.ass")
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "[vo]ass='C\\:/tmp/caps.ass'" in fc
+    assert cmd[cmd.index("-map") + 1] == "[vcap]"
+
+def test_caption_ass_path_chained_after_bands():
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", in_point=0, out_point=3, start=0, width=200, height=200)
+    bands = [{"kind": "video_box", "video_box": box}]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands, caption_ass_path="C:/tmp/caps.ass")
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "ass='C\\:/tmp/caps.ass'" in fc
+    assert cmd[cmd.index("-map") + 1] == "[vcap]"
+
+def test_no_caption_ass_path_leaves_vmap_unchanged():
+    cmd = build_export_cmd(proj(), "out.mp4")
+    assert "vcap" not in cmd[cmd.index("-filter_complex") + 1]
