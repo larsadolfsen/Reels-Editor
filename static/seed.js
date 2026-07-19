@@ -1,6 +1,7 @@
-// Seeds a placeholder caption line so the timeline's CAPTIONS row has something to show
-// before real transcription (Task 10) exists. Text-block seeding is not needed here —
-// editor.js's ensureTextBlock()/ensureTextPreset() already create a real, style-panel-backed one.
+// Seeds a placeholder caption line (with its own preset_id, matching CaptionTrack's schema) so
+// the timeline's CAPTIONS row and CAPTIONS panel have something to show on a fresh project,
+// dev convenience alongside real Auto-caption transcription. Text-block seeding is not needed
+// here — editor.js's ensureTextBlock()/ensureTextPreset() already create a real, style-panel-backed one.
 // Exposes window.seedDefaults(project) -> project (mutates and returns project).
 function seedDefaults(project) {
   if (!project.captions) {
@@ -11,7 +12,8 @@ function seedDefaults(project) {
       t += 0.65;
       return w;
     });
-    project.captions = { id: crypto.randomUUID().replaceAll("-", ""), words };
+    project.captions = { id: crypto.randomUUID().replaceAll("-", ""), words, z_index: 0,
+      preset_id: crypto.randomUUID().replaceAll("-", "") };
   }
   return project;
 }
