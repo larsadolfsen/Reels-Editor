@@ -1,6 +1,9 @@
-// Preview stage playback: plays a project's clips back-to-back in timeline order,
-// and composites the text-block overlay on top (renderText). In BOX FILL mode, renderText()
-// also auto-computes and persists preset.size_px via window.FontFit before laying out the div.
+// Preview stage playback: plays a project's clips back-to-back in timeline order, and composites
+// the text-block overlay on top (renderText). Text divs and video-box <video> elements (see
+// video-box-preview.js) are siblings inside #overlay and each set an explicit CSS z-index from
+// their model's z_index field, so browser stacking follows the project's cross-layer z-order.
+// In BOX FILL mode, renderText() also auto-computes and persists preset.size_px via
+// window.FontFit before laying out the div.
 // Exposes window.Preview.{load, seek, renderText, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
 // When project.clips is empty, playback runs on an internal virtual clock (performance.now()-based)
 // instead of the <video> element's timeupdate/play/pause events, so text/caption-only projects
@@ -110,6 +113,7 @@ window.Preview = (() => {
     }
     timeEl.textContent = virtualTime.toFixed(1);
     if (textProject) renderText(textProject, textPresets, virtualTime);
+    if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], virtualTime);
     Timeline.tick(virtualTime);
     if (virtualPlaying) virtualRafId = requestAnimationFrame(virtualTick);
   }
@@ -138,7 +142,7 @@ window.Preview = (() => {
     textProject = project;
     textPresets = presets;
     const keepEditingDiv = editingDiv && overlay.contains(editingDiv);
-    overlay.innerHTML = "";
+    overlay.querySelectorAll(".text-block").forEach((el) => { if (el !== editingDiv) el.remove(); });
     if (keepEditingDiv) {
       overlay.appendChild(editingDiv); // preserve focus/caret across re-renders while typing
       // Re-appending a node (even the same one) drops browser focus silently — no blur event,
@@ -176,6 +180,7 @@ window.Preview = (() => {
 
       const div = document.createElement("div");
       div.className = `text-block text-block--align-${preset.align}`;
+      div.style.zIndex = String(block.z_index ?? 0);
       div.style.left = (preset.x / 1080 * stageW) + "px";
       div.style.top = (preset.y / 1920 * stageH) + "px";
       div.style.color = preset.color;
@@ -273,6 +278,7 @@ window.Preview = (() => {
     timeEl.textContent = timelineTime.toFixed(1);
 
     if (textProject) renderText(textProject, textPresets, timelineTime);
+    if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], timelineTime);
 
     if (player.currentTime >= c.out_point) {
       if (activeIndex + 1 < clips.length) {
@@ -334,6 +340,7 @@ window.Preview = (() => {
       virtualTime = Math.max(0, Math.min(t, zeroClipDuration()));
       timeEl.textContent = virtualTime.toFixed(1);
       if (textProject) renderText(textProject, textPresets, virtualTime);
+      if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], virtualTime);
       return;
     }
     const loc = locate(clips, t);
