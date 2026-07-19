@@ -64,7 +64,7 @@ function renderTextPreview() {
   Preview.renderText(project, project.text_presets, Preview.currentTimelineTime());
 }
 
-function renderTextPanel() {
+async function renderTextPanel() {
   document.getElementById("panel-text-font").hidden = true;
   document.getElementById("panel-text-weight").hidden = true;
   document.getElementById("panel-text-style").hidden = true;
@@ -74,7 +74,7 @@ function renderTextPanel() {
   const preset = ensureTextPreset(block.preset_id);
 
   TextPanel.renderFontFamily();
-  TextPanel.renderFontWeight();
+  await TextPanel.renderFontWeight();
   TextPanel.renderFontStyle();
   TextPanel.renderStyle();
   renderBoxPanel();
@@ -194,7 +194,7 @@ async function handleBoxMoveEnd(preset, { dx, dy }) {
   computeXY(preset);
   rebaseAnchorFromXY(preset);
   await saveProject();
-  renderTextPanel();
+  await renderTextPanel();
 }
 
 UI.accordionSection(document.getElementById("text-style-accordion"), document.getElementById("text-style-body"), { title: "STYLES", expanded: false });
@@ -288,7 +288,7 @@ function selectClip(c) {
   renderTimeline();
 }
 
-function onTimelineSelect({ type, item, groupIndex }) {
+async function onTimelineSelect({ type, item, groupIndex }) {
   selected = { type, item, groupIndex };
   if (type === "video") {
     const ordered = [...project.clips].sort((a, b) => a.order - b.order);
@@ -302,7 +302,7 @@ function onTimelineSelect({ type, item, groupIndex }) {
     renderVideoPanel(item);
   } else if (type === "text") {
     showPanel("text");
-    renderTextPanel();
+    await renderTextPanel();
   } else if (type === "caption") {
     document.querySelector(".caption-preview-box").textContent = item.map((w) => w.text).join(" ");
     showPanel("captions");
@@ -377,10 +377,10 @@ function openFilesPanel() {
   renderTimeline();
 }
 
-function openTextPanel() {
+async function openTextPanel() {
   selected = { type: "text" };
   showPanel("text");
-  renderTextPanel();
+  await renderTextPanel();
   renderTimeline();
 }
 
@@ -499,7 +499,7 @@ document.getElementById("export").addEventListener("click", exportProject);
   renderMediaList();
   Preview.load(project);
   await TextPanel.loadSavedPresets();
-  renderTextPanel();
+  await renderTextPanel();
   renderTimeline();
   openFilesPanel();
   setTimeout(() => renderTextPreview(), 100);
