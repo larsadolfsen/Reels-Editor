@@ -1,5 +1,6 @@
 # Data model for the editor: Project, clip/text/caption layers, savable text presets.
 # Exposes Pydantic models with uuid4 ids and JSON round-trip via pydantic.
+from datetime import datetime, timezone
 from uuid import uuid4
 from pydantic import BaseModel, Field, model_validator
 
@@ -78,6 +79,8 @@ class CaptionTrack(BaseModel):
 
 class Project(BaseModel):
     id: str = Field(default_factory=new_id)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     name: str
     width: int = 1080
     height: int = 1920
@@ -87,3 +90,9 @@ class Project(BaseModel):
     text_blocks: list[TextBlockLayer] = []
     text_presets: dict[str, TextPreset] = {}
     captions: CaptionTrack | None = None
+
+class ProjectSummary(BaseModel):
+    id: str
+    name: str
+    created_at: datetime
+    updated_at: datetime

@@ -1,4 +1,5 @@
 # Tests for app.models: entity construction, IDs, JSON round-trip.
+from datetime import datetime as _datetime
 from app.models import Project, ClipLayer, MediaItem, TextPreset, TextBlockLayer, CaptionTrack, CaptionWord
 
 def test_ids_are_unique():
@@ -79,3 +80,12 @@ def test_text_preset_usage_count_defaults_zero():
 def test_text_preset_usage_count_round_trips():
     p = TextPreset(name="Pop", usage_count=7)
     assert TextPreset.model_validate_json(p.model_dump_json()).usage_count == 7
+
+def test_project_has_created_and_updated_at():
+    p = Project(name="reel1")
+    assert isinstance(p.created_at, _datetime)
+    assert isinstance(p.updated_at, _datetime)
+
+def test_project_timestamps_round_trip():
+    p = Project(name="reel1")
+    assert Project.model_validate_json(p.model_dump_json()) == p
