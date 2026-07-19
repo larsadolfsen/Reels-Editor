@@ -1,6 +1,8 @@
 # Tests for app.ass_render: ASS time/color helpers and text-block dialogue generation.
-from app.models import Project, TextBlockLayer, TextPreset
+from app.models import Project, TextBlockLayer, TextPreset, CaptionTrack, CaptionWord
 from app.ass_render import ass_time, hex_to_ass, render_ass
+
+def w(t, a, b): return CaptionWord(text=t, t_start=a, t_end=b)
 
 def test_helpers():
     assert ass_time(83.456) == "0:01:23.45"
@@ -230,3 +232,60 @@ def test_render_ass_subset_empty_list_has_no_dialogue_lines():
     p = Project(name="r", text_blocks=[b])
     out = render_ass(p, {pr.id: pr}, text_blocks=[])
     assert not any(l.startswith("Dialogue:") for l in out.splitlines())
+
+def test_group_words_respects_max_words():
+    from app.ass_render import group_words
+    words = [w(str(i), i, i + 0.5) for i in range(6)]
+    groups = group_words(words, max_words=4)
+    assert [len(g) for g in groups] == [4, 2]
+
+def test_group_words_sorts_by_start_time():
+    from app.ass_render import group_words
+    words = [w("b", 1.0, 1.5), w("a", 0.0, 0.5)]
+    groups = group_words(words, max_words=4)
+    assert [x.text for x in groups[0]] == ["a", "b"]
+
+def test_group_words_empty():
+    from app.ass_render import group_words
+    assert group_words([], max_words=4) == []
+
+def test_progressive_fill_style_uses_highlight_as_primary():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Caption", color="#FFFFFF", highlight_color="#FFD400", highlight_mode="progressive_fill")
+    p = Project(name="r", captions=CaptionTrack(words=[w("hi", 1.0, 1.5)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    style = next(l for l in out.splitlines() if l.startswith("Style:"))
+    fields = style.split(",")
+    assert fields[3] == hex_to_ass("#FFD400")   # PrimaryColour
+    assert fields[4] == hex_to_ass("#FFFFFF")   # SecondaryColour
+
+def test_progressive_fill_emits_one_k_tagged_dialogue_per_group():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Caption", highlight_mode="progressive_fill", max_words_per_line=4)
+    p = Project(name="r", captions=CaptionTrack(
+        words=[w("Hello", 1.0, 1.5), w("world", 1.5, 2.2)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    line = next(l for l in out.splitlines() if "Hello" in l)
+    assert line.startswith("Dialogue: 0,0:00:01.00,0:00:02.20,Caption")
+    assert "{\\k50}Hello" in line and "{\\k70}world" in line
+
+def test_current_word_emits_one_dialogue_per_word_with_inline_override():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Caption", color="#FFFFFF", highlight_color="#FFD400", highlight_mode="current_word")
+    p = Project(name="r", captions=CaptionTrack(
+        words=[w("Hello", 1.0, 1.5), w("world", 1.5, 2.2)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    dialogues = [l for l in out.splitlines() if l.startswith("Dialogue:")]
+    assert len(dialogues) == 2
+    first = next(l for l in dialogues if l.startswith("Dialogue: 0,0:00:01.00,0:00:01.50"))
+    assert "{\\1c" in first and "Hello" in first and "world" in first
+    second = next(l for l in dialogues if l.startswith("Dialogue: 0,0:00:01.50,0:00:02.20"))
+    assert second.count("{\\1c") == 2
+
+def test_render_caption_ass_no_words_still_valid_header():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Caption")
+    p = Project(name="r", captions=CaptionTrack(words=[], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    assert "PlayResX: 1080" in out and "Style: Caption," in out
+    assert not [l for l in out.splitlines() if l.startswith("Dialogue:")]

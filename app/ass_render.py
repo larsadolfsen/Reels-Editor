@@ -1,6 +1,6 @@
-# Generates the ASS subtitle file burned into exports: text-block dialogues (+captions, Task 12). render_ass() accepts an optional text_blocks subset so app/main.py can render one ASS file per z-order band (see app.timeline.banded_layers).
-# Exposes render_ass, ass_time, hex_to_ass. Consumed by the export route; rendered by libass.
-from app.models import Project, TextPreset
+# Generates the ASS subtitle files burned into exports: text-block dialogues via render_ass() (accepts an optional text_blocks subset so app/main.py can render one ASS file per z-order band, see app.timeline.banded_layers), and karaoke caption dialogues via render_caption_ass().
+# Exposes render_ass, render_caption_ass, group_words, ass_time, hex_to_ass. Consumed by the export route; rendered by libass.
+from app.models import Project, TextPreset, CaptionWord
 from app.font_metrics import wrap_text, pil_font_measurer, WEIGHT_LABELS, nearest_available_weight
 
 BOX_PAD_X_EM = 0.35
@@ -117,6 +117,66 @@ def render_ass(project: Project, presets: dict[str, TextPreset], text_blocks: li
         if box_line:
             event_lines.append(box_line)
         event_lines.append(_block_dialogue(b, p, weight))
+    events = ("\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+              + "\n".join(event_lines))
+    return header + styles + events + "\n"
+
+CAPTION_STYLE_NAME = "Caption"
+
+def group_words(words: list[CaptionWord], max_words: int) -> list[list[CaptionWord]]:
+    sorted_words = sorted(words, key=lambda w: w.t_start)
+    return [sorted_words[i:i + max_words] for i in range(0, len(sorted_words), max_words)]
+
+def _caption_style(p: TextPreset, weight: int) -> str:
+    fontname = f"{p.font} {WEIGHT_LABELS[weight]}"
+    alignment = {"left": 7, "right": 9}.get(p.align, 8)
+    if p.highlight_mode == "progressive_fill":
+        primary, secondary = hex_to_ass(p.highlight_color), hex_to_ass(p.color)
+    else:
+        primary, secondary = hex_to_ass(p.color), hex_to_ass(p.color)
+    italic = -1 if p.italic else 0
+    underline = -1 if p.underline else 0
+    return (f"Style: {CAPTION_STYLE_NAME},{fontname},{p.size_px},{primary},{secondary},"
+            f"{hex_to_ass(p.outline_color)},&H00000000,"
+            f"0,{italic},{underline},0,100,100,0,0,1,{p.outline_px},0,{alignment},0,0,0,1")
+
+def _karaoke_dialogue(group: list[CaptionWord], p: TextPreset) -> str:
+    fx = f"\\pos({p.x},{p.y})"
+    body = "".join(f"{{\\k{max(1, round((w.t_end - w.t_start) * 100))}}}{w.text} " for w in group).rstrip()
+    start, end = group[0].t_start, group[-1].t_end
+    return f"Dialogue: 0,{ass_time(start)},{ass_time(end)},{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{body}"
+
+def _current_word_dialogues(group: list[CaptionWord], p: TextPreset) -> list[str]:
+    fx = f"\\pos({p.x},{p.y})"
+    highlight = _ass_override_color(p.highlight_color)
+    normal = _ass_override_color(p.color)
+    lines = []
+    for i, active in enumerate(group):
+        segments = []
+        for j, other in enumerate(group):
+            seg = other.text + (" " if j < len(group) - 1 else "")
+            segments.append(f"{{\\1c{highlight}}}{seg}{{\\1c{normal}}}" if j == i else seg)
+        body = "".join(segments)
+        lines.append(f"Dialogue: 0,{ass_time(active.t_start)},{ass_time(active.t_end)},"
+                      f"{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{body}")
+    return lines
+
+def render_caption_ass(project: Project, preset: TextPreset) -> str:
+    words = project.captions.words if project.captions else []
+    weight = _resolved_weight(preset)
+    header = ("[Script Info]\nScriptType: v4.00+\n"
+              f"PlayResX: {project.width}\nPlayResY: {project.height}\nWrapStyle: 2\n\n"
+              "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, "
+              "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
+              "Alignment, MarginL, MarginR, MarginV, Encoding\n")
+    styles = _caption_style(preset, weight)
+    groups = group_words(words, preset.max_words_per_line)
+    event_lines = []
+    for g in groups:
+        if preset.highlight_mode == "current_word":
+            event_lines.extend(_current_word_dialogues(g, preset))
+        else:
+            event_lines.append(_karaoke_dialogue(g, preset))
     events = ("\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
               + "\n".join(event_lines))
     return header + styles + events + "\n"

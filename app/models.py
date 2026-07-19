@@ -59,6 +59,9 @@ class TextPreset(BaseModel):
     y: int = 700                   # vertical px: always the top edge of the box
     entrance: str = "fade_pop"     # fade_pop|none
     usage_count: int = 0    # how many times this saved preset has been applied to a block; drives the STYLE accordion's "most used" list
+    highlight_color: str = "#FFD400"   # caption karaoke highlight color; unused by TextBlockLayer consumers
+    highlight_mode: str = "current_word"   # current_word | progressive_fill; unused by TextBlockLayer consumers
+    max_words_per_line: int = 4        # caption line-grouping size; unused by TextBlockLayer consumers
 
     @model_validator(mode="before")
     @classmethod
@@ -91,6 +94,7 @@ class CaptionTrack(BaseModel):
     id: str = Field(default_factory=new_id)
     words: list[CaptionWord] = []
     z_index: int = 0
+    preset_id: str = Field(default_factory=new_id)   # points at a TextPreset, same pattern as TextBlockLayer.preset_id
 
 class Project(BaseModel):
     id: str = Field(default_factory=new_id)
