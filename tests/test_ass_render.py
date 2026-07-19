@@ -21,23 +21,43 @@ def test_entrance_none_has_no_fad():
     p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
     assert "\\fad" not in render_ass(p, {pr.id: pr})
 
-def test_style_line_reflects_bold_italic_underline():
-    pr = TextPreset(name="Pop", bold=True, italic=True, underline=True)
+def test_style_line_bold_column_is_always_zero_regardless_of_weight():
+    # Bold-ness now lives entirely in which font face Fontname selects, not in ASS's
+    # synthetic-bold flag — setting both would double-bold a 700-weight face.
+    pr = TextPreset(name="Pop", weight=700, italic=True, underline=True)
     p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
     out = render_ass(p, {pr.id: pr})
     line = next(l for l in out.splitlines() if l.startswith("Style:"))
     fields = line.split(",")
     # Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,
     #         Bold,Italic,Underline,StrikeOut,...
-    assert fields[7:10] == ["-1", "-1", "-1"]
+    assert fields[7:10] == ["0", "-1", "-1"]
 
-def test_style_line_defaults_no_bold_italic_underline():
+def test_style_line_defaults_no_italic_underline():
     pr = TextPreset(name="Plain")
     p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
     out = render_ass(p, {pr.id: pr})
     line = next(l for l in out.splitlines() if l.startswith("Style:"))
     fields = line.split(",")
     assert fields[7:10] == ["0", "0", "0"]
+
+def test_style_line_fontname_includes_weight_label():
+    pr = TextPreset(name="Pop", font="Public Sans", weight=500)
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
+    out = render_ass(p, {pr.id: pr})
+    line = next(l for l in out.splitlines() if l.startswith("Style:"))
+    fields = line.split(",")
+    assert fields[1] == "Public Sans Medium"
+
+def test_style_line_fontname_includes_regular_label_at_default_weight():
+    # 400 gets its own generated "Regular" static file too, rather than a bare unsuffixed
+    # family name — uniform handling across all four weights, no special-casing 400.
+    pr = TextPreset(name="Pop", font="Public Sans")
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
+    out = render_ass(p, {pr.id: pr})
+    line = next(l for l in out.splitlines() if l.startswith("Style:"))
+    fields = line.split(",")
+    assert fields[1] == "Public Sans Regular"
 
 def test_multiline_heading_becomes_ass_hard_break():
     pr = TextPreset(name="Pop")

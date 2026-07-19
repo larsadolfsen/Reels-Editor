@@ -1,7 +1,7 @@
 # Generates the ASS subtitle file burned into exports: text-block dialogues (+captions, Task 12).
 # Exposes render_ass, ass_time, hex_to_ass. Consumed by the export route; rendered by libass.
 from app.models import Project, TextPreset
-from app.font_metrics import wrap_text, pil_font_measurer
+from app.font_metrics import wrap_text, pil_font_measurer, WEIGHT_LABELS
 
 BOX_PAD_X_EM = 0.35
 BOX_PAD_Y_EM = 0.15
@@ -41,15 +41,15 @@ def _n(v: float) -> str:
     return str(int(v)) if float(v).is_integer() else f"{v:.2f}"
 
 def _style(name: str, p: TextPreset) -> str:
-    bold = -1 if p.bold else 0
     italic = -1 if p.italic else 0
     underline = -1 if p.underline else 0
-    return (f"Style: {name},{p.font},{p.size_px},{hex_to_ass(p.color)},{hex_to_ass(p.color)},"
+    fontname = f"{p.font} {WEIGHT_LABELS[p.weight]}"
+    return (f"Style: {name},{fontname},{p.size_px},{hex_to_ass(p.color)},{hex_to_ass(p.color)},"
             f"{hex_to_ass(p.outline_color)},{hex_to_ass('#000000')},"
-            f"{bold},{italic},{underline},0,100,100,0,0,1,{p.outline_px},0,5,0,0,0,1")   # alignment 5 = center anchor, \pos places it
+            f"0,{italic},{underline},0,100,100,0,0,1,{p.outline_px},0,5,0,0,0,1")   # alignment 5 = center anchor, \pos places it; Bold always 0 — bold-ness lives in Fontname's face selection
 
 def _wrapped_lines_and_size(b, p: TextPreset) -> tuple[str, float, float]:
-    measure = pil_font_measurer(p.font, p.size_px)
+    measure = pil_font_measurer(p.font, p.size_px, p.weight)
     pad_x = BOX_PAD_X_EM * p.size_px * 2
     pad_y = BOX_PAD_Y_EM * p.size_px * 2
     if p.box_width_mode == "fixed":
