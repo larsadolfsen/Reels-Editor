@@ -8,17 +8,17 @@ window.TextPanel = window.TextPanel || {};
   let savedPresets = []; // the global preset library, fetched once on load and refreshed after every save/apply
 
   // Fields copied when saving/applying a saved style — everything TextPreset holds except
-  // identity (id/name), derived pixel coordinates (x/y, recomputed from
-  // pos_row/pos_col/offset_x/offset_y), and usage stats.
+  // identity (id/name) and usage stats. Position (x/y) is included, matching the pre-existing
+  // behavior of saved styles carrying a position.
   function styleFieldsOf(preset) {
     const { font, size_px, color, outline_color, outline_px, weight, italic, underline,
       box_width_mode, box_height_mode, box_width, box_height, box_background, box_background_color,
       box_border_width, box_border_color, box_border_radius, align, entrance,
-      pos_row, pos_col, offset_x, offset_y } = preset;
+      x, y } = preset;
     return { font, size_px, color, outline_color, outline_px, weight, italic, underline,
       box_width_mode, box_height_mode, box_width, box_height, box_background, box_background_color,
       box_border_width, box_border_color, box_border_radius, align, entrance,
-      pos_row, pos_col, offset_x, offset_y };
+      x, y };
   }
 
   async function saveCurrentStyleAsPreset() {

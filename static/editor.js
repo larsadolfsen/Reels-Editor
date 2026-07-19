@@ -14,9 +14,9 @@ function formatClipDuration(seconds) {
   return `${String(m).padStart(2, "0")}:${s}`;
 }
 
-// Position grid anchors (thirds of the 1080x1920 canvas) + a pixel offset on top.
-// pos_row/pos_col/offset_x/offset_y are UI-only conveniences layered over TextPreset.x/y,
-// persisted on the preset itself so the grid choice round-trips with the rest of the project.
+// Position grid anchors (thirds of the 1080x1920 canvas). Used only as a stateless one-shot
+// shortcut in the POSITION accordion's 3x3 grid — clicking a cell writes the computed value
+// straight into TextPreset.x/y with no persisted anchor selection.
 const POSITION_ANCHORS_X = { left: 162, mid: 540, right: 918 };
 const POSITION_ANCHORS_Y = { top: 288, mid: 960, btm: 1632 };
 
@@ -29,13 +29,7 @@ function defaultTextPreset(id) {
     box_background: false, box_background_color: "#000000", box_background_opacity: 100,
     box_border_width: 0, box_border_color: "#FFFFFF", box_border_radius: 0,
     align: "center", x: 540, y: 700, entrance: "fade_pop",
-    pos_row: "mid", pos_col: "mid", offset_x: 0, offset_y: 0,
   };
-}
-
-function computeXY(preset) {
-  preset.x = POSITION_ANCHORS_X[preset.pos_col] + preset.offset_x;
-  preset.y = POSITION_ANCHORS_Y[preset.pos_row] + preset.offset_y;
 }
 
 // Preset always lives at project.text_presets[id] — resolving through the same id used
@@ -162,37 +156,19 @@ async function handleBoxResizeEnd(preset, { width, height }) {
   renderBoxPanel();
 }
 
-function nearestAnchorKey(value, anchors) {
-  return Object.keys(anchors).reduce((best, key) =>
-    Math.abs(value - anchors[key]) < Math.abs(value - anchors[best]) ? key : best);
-}
-
-// Recomputes pos_row/pos_col from the preset's current x/y (after a free-pixel drag), then
-// rebases offset_x/offset_y to the remaining distance from that anchor cell — keeps the
-// anchor-grid model meaningful after a drag that isn't itself snapped.
-function rebaseAnchorFromXY(preset) {
-  preset.pos_row = nearestAnchorKey(preset.y, POSITION_ANCHORS_Y);
-  preset.pos_col = nearestAnchorKey(preset.x, POSITION_ANCHORS_X);
-  preset.offset_x = preset.x - POSITION_ANCHORS_X[preset.pos_col];
-  preset.offset_y = preset.y - POSITION_ANCHORS_Y[preset.pos_row];
-}
-
 function handleBoxMove(preset, { dx, dy }) {
   const scale = stageScale();
-  const previewPreset = { ...preset, offset_x: preset.offset_x + dx * scale, offset_y: preset.offset_y + dy * scale };
-  computeXY(previewPreset);
+  const previewPreset = { ...preset, x: preset.x + dx * scale, y: preset.y + dy * scale };
   const previewPresets = { ...project.text_presets, [preset.id]: previewPreset };
   Preview.renderText(project, previewPresets, Preview.currentTimelineTime());
 }
 
 async function handleBoxMoveEnd(preset, { dx, dy }) {
   const scale = stageScale();
-  // TextPreset.offset_x/offset_y are int fields (app/models.py) — round before persisting,
+  // TextPreset.x/y are int fields (app/models.py) — round before persisting,
   // else the PUT /api/projects/{id} save fails Pydantic validation (422) and the drag is lost.
-  preset.offset_x += Math.round(dx * scale);
-  preset.offset_y += Math.round(dy * scale);
-  computeXY(preset);
-  rebaseAnchorFromXY(preset);
+  preset.x += Math.round(dx * scale);
+  preset.y += Math.round(dy * scale);
   await saveProject();
   await renderTextPanel();
 }
