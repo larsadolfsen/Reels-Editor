@@ -198,11 +198,13 @@ window.Preview = (() => {
       div.style.borderColor = preset.box_border_color;
       div.style.borderRadius = (preset.box_border_radius / 1080 * stageW) + "px";
 
-      const boxW = preset.box_width_mode === "fixed" ? (preset.box_width / 1080 * stageW) + "px" : "";
-      const boxH = preset.box_height_mode === "fixed" ? (preset.box_height / 1920 * stageH) + "px" : "";
+      const widthIsBoxed = preset.box_width_mode === "fixed" || preset.box_width_mode === "fill";
+      const heightIsBoxed = preset.box_height_mode === "fixed" || preset.box_height_mode === "fill";
+      const boxW = widthIsBoxed ? (preset.box_width / 1080 * stageW) + "px" : "";
+      const boxH = heightIsBoxed ? (preset.box_height / 1920 * stageH) + "px" : "";
       div.style.width = boxW;
       div.style.height = boxH;
-      div.style.whiteSpace = preset.box_width_mode === "fixed" ? "pre-wrap" : "pre";
+      div.style.whiteSpace = widthIsBoxed ? "pre-wrap" : "pre";
       div.style.boxSizing = "border-box";
 
       div.textContent = block.heading;
