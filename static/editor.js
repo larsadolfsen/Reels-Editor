@@ -14,6 +14,9 @@ function showEditorShell() {
 }
 
 async function showPickerScreen() {
+  // Clear the current project so a stale beforeunload PUT can't resurrect a project that was
+  // just deleted (onDeletedCurrent routes here) or overwrite state after a fresh cold start.
+  project = null;
   document.getElementById("app").hidden = true;
   const pickerEl = document.getElementById("project-picker");
   pickerEl.hidden = false;
