@@ -1,7 +1,7 @@
 # Tests for app.timeline: pure sequence math over ordered, trimmed clips.
 import pytest
-from app.models import ClipLayer
-from app.timeline import ordered, clip_duration, sequence_duration, locate
+from app.models import ClipLayer, VideoBoxLayer, TextBlockLayer, Project
+from app.timeline import ordered, clip_duration, sequence_duration, locate, video_box_end, banded_layers
 
 def c(i, o, order): return ClipLayer(media_id=f"m{order}", file_path=f"{order}.mp4", in_point=i, out_point=o, order=order)
 
@@ -19,3 +19,36 @@ def test_locate_maps_timeline_to_source():
 
 def test_locate_out_of_range():
     with pytest.raises(ValueError): locate([c(0, 2, 0)], 2.5)
+
+def test_video_box_end_derived_from_trim():
+    v = VideoBoxLayer(media_id="m1", file_path="a.mp4", in_point=1.0, out_point=4.0, start=2.0, height=1920)
+    assert video_box_end(v) == 5.0  # 2.0 + (4.0 - 1.0)
+
+def test_banded_layers_no_video_boxes_is_one_text_band():
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="A", preset_id="p1", z_index=0)])
+    bands = banded_layers(p)
+    assert len(bands) == 1
+    assert bands[0]["kind"] == "text"
+    assert bands[0]["text_blocks"] == p.text_blocks
+
+def test_banded_layers_no_text_no_video_boxes_is_empty():
+    p = Project(name="r")
+    assert banded_layers(p) == []
+
+def test_banded_layers_video_box_between_two_text_blocks():
+    low = TextBlockLayer(heading="LOW", preset_id="p1", z_index=0)
+    high = TextBlockLayer(heading="HIGH", preset_id="p2", z_index=10)
+    box = VideoBoxLayer(media_id="m1", file_path="a.mp4", out_point=5.0, height=1920, z_index=5)
+    p = Project(name="r", text_blocks=[low, high], video_boxes=[box])
+    bands = banded_layers(p)
+    assert [b["kind"] for b in bands] == ["text", "video_box", "text"]
+    assert bands[0]["text_blocks"] == [low]
+    assert bands[1]["video_box"] == box
+    assert bands[2]["text_blocks"] == [high]
+
+def test_banded_layers_video_box_below_all_text():
+    text = TextBlockLayer(heading="A", preset_id="p1", z_index=0)
+    box = VideoBoxLayer(media_id="m1", file_path="a.mp4", out_point=5.0, height=1920, z_index=-1)
+    p = Project(name="r", text_blocks=[text], video_boxes=[box])
+    bands = banded_layers(p)
+    assert [b["kind"] for b in bands] == ["video_box", "text"]
