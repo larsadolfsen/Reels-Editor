@@ -90,7 +90,7 @@ async function renderTextPanel() {
     onMove: (delta) => handleBoxMove(preset, delta),
     onMoveEnd: (delta) => handleBoxMoveEnd(preset, delta),
     onEdit: (heading) => { block.heading = heading; },
-    onEditEnd: async (heading) => { block.heading = heading; await saveProject(); },
+    onEditEnd: async (heading) => { block.heading = heading; renderTextPreview(); await saveProject(); },
   });
 }
 
@@ -98,7 +98,7 @@ function renderBoxPanel() {
   const preset = ensureTextPreset(ensureTextBlock().preset_id);
 
   UI.buttonGroup(document.getElementById("text-box-size-mode-group"),
-    [{ value: "fit", label: "FIT" }, { value: "fixed", label: "FREE" }],
+    [{ value: "fit", label: "FIT" }, { value: "fixed", label: "FREE" }, { value: "fill", label: "FILL" }],
     preset.box_width_mode,
     (value) => {
       preset.box_width_mode = value;
@@ -106,7 +106,9 @@ function renderBoxPanel() {
       saveProject(); renderTextPreview(); renderBoxPanel();
     });
 
-  const boxSizeFieldsHidden = preset.box_width_mode !== "fixed";
+  // WIDTH/HEIGHT fields are needed by both FREE (manual fixed size) and FILL (fixed size that
+  // auto-fits text) — only FIT (box sizes to content) has no use for them.
+  const boxSizeFieldsHidden = preset.box_width_mode === "fit";
   document.getElementById("text-box-width-field").hidden = boxSizeFieldsHidden;
   document.getElementById("text-box-height-field").hidden = boxSizeFieldsHidden;
 
@@ -154,11 +156,16 @@ function handleBoxResize(preset, { width, height }) {
 
 async function handleBoxResizeEnd(preset, { width, height }) {
   const scale = stageScale();
-  preset.box_width_mode = "fixed";
-  preset.box_height_mode = "fixed";
+  // Dragging a handle from FIT means "give this an explicit size" (switches to FREE), but
+  // dragging while already in FILL should stay in FILL — autofit is only ever an explicit
+  // opt-in via the SIZE button group, never a side effect of a resize drag.
+  const wasFill = preset.box_width_mode === "fill";
+  preset.box_width_mode = wasFill ? "fill" : "fixed";
+  preset.box_height_mode = wasFill ? "fill" : "fixed";
   preset.box_width = Math.round(width * scale);
   preset.box_height = Math.round(height * scale);
   await saveProject();
+  renderTextPreview(); // re-triggers FILL's refit against the new box dimensions
   renderBoxPanel();
 }
 
