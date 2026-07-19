@@ -448,6 +448,14 @@ async function openProjectsPanel() {
       await openProject(created);
     }),
     onDeletedCurrent: () => showPickerScreen(),
+    onRenamedCurrent: (name) => {
+      // panel-projects.js's Api.renameProject call already persisted the rename to disk against
+      // a fresh server-fetched copy — it never touches this in-memory `project`. Without this,
+      // the next saveProject() (any subsequent edit, a switch-away flush, or beforeunload) would
+      // overwrite the on-disk rename with the still-stale in-memory name.
+      project.name = name;
+      document.title = `${project.name} – Reels Editor`;
+    },
   });
   renderTimeline();
 }

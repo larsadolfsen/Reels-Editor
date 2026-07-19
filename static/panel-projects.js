@@ -2,7 +2,10 @@
 // Project". Exposes window.ProjectsPanel.render(currentProjectId, callbacks). Depends on Api
 // (listProjects/renameProject/deleteProject/duplicateProject/createProject via callbacks.onCreateRequested)
 // and UI.projectListRow. Never navigates or saves the currently-open project itself — that's
-// editor.js's job (confirm+flush-save wraps onSwitch/onCreateRequested there).
+// editor.js's job (confirm+flush-save wraps onSwitch/onCreateRequested there). Renaming the
+// currently-open row calls callbacks.onRenamedCurrent(name) so editor.js can update its
+// in-memory project — Api.renameProject persists against a fresh server-fetched copy and never
+// touches that in-memory object, so without this the next autosave would revert the rename.
 window.ProjectsPanel = window.ProjectsPanel || {};
 
 (() => {
@@ -14,7 +17,11 @@ window.ProjectsPanel = window.ProjectsPanel || {};
     projects.forEach((p) => {
       const row = UI.projectListRow(p, {
         onOpen: () => { if (p.id !== currentProjectId) callbacks.onSwitch(p); },
-        onRename: async (name) => { await Api.renameProject(p.id, name); await render(currentProjectId, callbacks); },
+        onRename: async (name) => {
+          await Api.renameProject(p.id, name);
+          if (p.id === currentProjectId) callbacks.onRenamedCurrent(name);
+          await render(currentProjectId, callbacks);
+        },
         onDelete: async () => {
           if (!confirm(`Delete "${p.name}"? This can't be undone.`)) return;
           await Api.deleteProject(p.id);
