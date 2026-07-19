@@ -1,5 +1,6 @@
 // Preview stage playback: plays a project's clips back-to-back in timeline order,
-// and composites the text-block overlay on top (renderText).
+// and composites the text-block overlay on top (renderText). In BOX FILL mode, renderText()
+// also auto-computes and persists preset.size_px via window.FontFit before laying out the div.
 // Exposes window.Preview.{load, seek, renderText, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
 // When project.clips is empty, playback runs on an internal virtual clock (performance.now()-based)
 // instead of the <video> element's timeupdate/play/pause events, so text/caption-only projects
@@ -20,6 +21,7 @@ window.Preview = (() => {
   let virtualPlaying = false;
   let virtualRafId = null;
   let virtualLastTs = 0;
+  const fitCache = new Map(); // blockId -> { key: string, size: number }
   const player = document.getElementById("player");
   const timeEl = document.getElementById("time");
   const overlay = document.getElementById("overlay");
@@ -32,6 +34,25 @@ window.Preview = (() => {
   function hexToRgba(hex, opacityPercent) {
     const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
     return `rgba(${r}, ${g}, ${b}, ${opacityPercent / 100})`;
+  }
+
+  function fitCacheKey(preset, heading) {
+    return JSON.stringify([heading, preset.box_width, preset.box_height, preset.font, preset.bold, preset.italic]);
+  }
+
+  function maybeRefitFillText(block, preset) {
+    if (preset.box_width_mode !== "fill") return;
+    const key = fitCacheKey(preset, block.heading || "");
+    const cached = fitCache.get(block.id);
+    if (cached && cached.key === key) {
+      preset.size_px = cached.size;
+      return;
+    }
+    const measurerFactory = (size) =>
+      FontFit.canvasMeasurer(preset.font, size, { bold: preset.bold, italic: preset.italic });
+    const { size } = FontFit.fitFontSize(block.heading || "", measurerFactory, preset.box_width, preset.box_height);
+    preset.size_px = size;
+    fitCache.set(block.id, { key, size });
   }
 
   function clipDuration(c) {
@@ -150,6 +171,8 @@ window.Preview = (() => {
       const preset = presets[block.preset_id];
       if (!preset) continue;
       if (keepEditingDiv && block.id === editingBlockId) continue; // already re-attached above, leave untouched
+
+      maybeRefitFillText(block, preset);
 
       const div = document.createElement("div");
       div.className = "text-block text-block--align-" + preset.align;
