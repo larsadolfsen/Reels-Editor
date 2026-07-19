@@ -8,7 +8,11 @@
 // renderCaptions() groups project.captions.words via Timeline.groupWords (max_words_per_line),
 // finds the group active at the given timelineTime, and renders it as one .caption-block with a
 // per-word highlight color driven by preset.highlight_mode ("current_word" | "progressive_fill").
-// Exposes window.Preview.{load, seek, renderText, renderCaptions, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// Exposes window.Preview.{load, seek, renderText, renderCaptions, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// getActiveFormatSelection() -> {blockId, start, end} | null tracks the current non-collapsed
+// stage text selection (set via onSelectionChange, cleared on block switch or collapse), consumed
+// by the FONT accordion (text-panel-font-style.js/text-panel-font-weight.js) to decide whether a
+// control change writes a per-range FormatRun or the block's base preset.
 // When project.clips is empty, playback runs on an internal virtual clock (performance.now()-based)
 // instead of the <video> element's timeupdate/play/pause events, so text/caption-only projects
 // stay scrubbable/playable in preview. Preview.isPaused() abstracts over both modes for callers.
@@ -22,6 +26,7 @@ window.Preview = (() => {
   let editingBlockId = null;
   let editingDiv = null;
   let onStageTextActivate = null;
+  let activeFormatSelection = null;
   // Virtual clock driving playback when there are zero video clips (text/captions-only
   // projects) — the video element has no src/timeupdate events to drive off of in that case.
   let virtualTime = 0;
@@ -244,6 +249,11 @@ window.Preview = (() => {
         onEditStart: () => {
           editingBlockId = block.id;
           editingDiv = div;
+          // Entering edit mode only happens on a plain (non-drag) click, which collapses any
+          // prior text selection — clear the tracked format-range selection so FONT accordion
+          // controls fall back to editing the base preset again (matches getActiveFormatSelection's
+          // documented "cleared ... or the selection collapses" contract).
+          if (activeFormatSelection && activeFormatSelection.blockId === block.id) activeFormatSelection = null;
           // If this block isn't the currently-selected one, ask the caller (editor.js) to
           // switch the right panel to TEXT and fully select it, on this same click.
           if (block.id !== selectedTextBlockId && onStageTextActivate) onStageTextActivate(block.id);
@@ -260,6 +270,10 @@ window.Preview = (() => {
         },
         onMove: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMove) boxResizeCallbacks.onMove(delta); },
         onMoveEnd: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMoveEnd) boxResizeCallbacks.onMoveEnd(delta); },
+        onSelectionChange: (offsets) => {
+          activeFormatSelection = { blockId: block.id, start: offsets.start, end: offsets.end };
+          if (boxResizeCallbacks && boxResizeCallbacks.onSelectionChange) boxResizeCallbacks.onSelectionChange(activeFormatSelection);
+        },
       });
       if (block.id === selectedTextBlockId && boxResizeCallbacks) {
         UI.resizeHandles(div, {
@@ -331,9 +345,14 @@ window.Preview = (() => {
   }
 
   function setSelectedTextBlock(blockId, callbacks) {
+    if (blockId !== selectedTextBlockId) activeFormatSelection = null;
     selectedTextBlockId = blockId;
     boxResizeCallbacks = callbacks || null;
     if (textProject) renderText(textProject, textPresets, computeTimelineTime());
+  }
+
+  function getActiveFormatSelection() {
+    return activeFormatSelection;
   }
 
   function computeTimelineTime() {
@@ -431,5 +450,5 @@ window.Preview = (() => {
     }
   }
 
-  return { load, locate, sequenceDuration, seek, renderText, renderCaptions, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, isPaused, setSelectedTextBlock, setOnStageTextActivate };
+  return { load, locate, sequenceDuration, seek, renderText, renderCaptions, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection };
 })();

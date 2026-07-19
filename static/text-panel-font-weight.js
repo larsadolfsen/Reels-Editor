@@ -1,7 +1,9 @@
 // TEXT panel FONT accordion: font-weight row + drill-down subpanel. Pure UI over
-// TextPreset.weight. Exposes window.TextPanel.renderFontWeight(). No bundler — reaches
-// directly into editor.js's globals (ensureTextBlock, ensureTextPreset, saveProject,
-// renderTextPreview), same pattern as text-panel-font-family.js.
+// TextPreset.weight, unless a stage text selection is active (Preview.getActiveFormatSelection()),
+// in which case selecting a weight writes/updates a per-range FormatRun instead (mirrors
+// text-panel-font-style.js's upsertFormatRun). Exposes window.TextPanel.renderFontWeight().
+// No bundler — reaches directly into editor.js's globals (ensureTextBlock, ensureTextPreset,
+// saveProject, renderTextPreview), same pattern as text-panel-font-family.js.
 window.TextPanel = window.TextPanel || {};
 
 (() => {
@@ -19,9 +21,27 @@ window.TextPanel = window.TextPanel || {};
     document.getElementById("panel-text-main").hidden = false;
   }
 
+  // Mirrors text-panel-font-style.js's upsertFormatRun: runs never overlap, so an exact-range
+  // re-edit updates the existing run in place instead of pushing a duplicate.
+  function upsertFormatRun(block, start, end, field, value) {
+    block.formatting_runs = block.formatting_runs || [];
+    let run = block.formatting_runs.find((r) => r.start === start && r.end === end);
+    if (!run) {
+      run = { start, end };
+      block.formatting_runs.push(run);
+    }
+    run[field] = value;
+  }
+
   async function selectWeight(weightValue) {
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
-    preset.weight = weightValue;
+    const block = ensureTextBlock();
+    const preset = ensureTextPreset(block.preset_id);
+    const sel = Preview.getActiveFormatSelection();
+    if (sel && sel.blockId === block.id) {
+      upsertFormatRun(block, sel.start, sel.end, "weight", weightValue);
+    } else {
+      preset.weight = weightValue;
+    }
     await saveProject();
     renderTextPreview();
     renderFontWeight();
