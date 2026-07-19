@@ -161,3 +161,34 @@ def test_wrapped_lines_and_size_fixed_dimensions_used_as_is():
     b = TextBlockLayer(heading="hello", preset_id=pr.id, start=0, end=2)
     text, width, height = _wrapped_lines_and_size(b, pr)
     assert (width, height) == (200, 80)
+
+def test_style_alignment_reflects_text_align():
+    left = TextPreset(name="L", align="left")
+    center = TextPreset(name="C", align="center")
+    right = TextPreset(name="R", align="right")
+    for pr, expected in [(left, "7"), (center, "8"), (right, "9")]:
+        p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
+        out = render_ass(p, {pr.id: pr})
+        line = next(l for l in out.splitlines() if l.startswith("Style:"))
+        assert line.split(",")[18] == expected, f"align={pr.align} expected alignment {expected}"
+
+def test_box_dialogue_left_edge_for_align_left():
+    pr = TextPreset(name="L", align="left", x=100, y=200, box_background=True,
+                     box_width_mode="fixed", box_width=300, box_height_mode="fixed", box_height=100)
+    b = TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)
+    line = _box_dialogue(b, pr)
+    assert "\\pos(100,200)" in line
+
+def test_box_dialogue_left_edge_for_align_right():
+    pr = TextPreset(name="R", align="right", x=900, y=200, box_background=True,
+                     box_width_mode="fixed", box_width=300, box_height_mode="fixed", box_height=100)
+    b = TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)
+    line = _box_dialogue(b, pr)
+    assert "\\pos(600,200)" in line   # left = x - width = 900 - 300
+
+def test_box_dialogue_left_edge_for_align_center_unchanged():
+    pr = TextPreset(name="C", align="center", x=540, y=200, box_background=True,
+                     box_width_mode="fixed", box_width=300, box_height_mode="fixed", box_height=100)
+    b = TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)
+    line = _box_dialogue(b, pr)
+    assert "\\pos(390,200)" in line   # left = x - width/2 = 540 - 150

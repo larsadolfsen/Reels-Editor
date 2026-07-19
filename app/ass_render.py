@@ -51,9 +51,10 @@ def _style(name: str, p: TextPreset, weight: int | None = None) -> str:
     italic = -1 if p.italic else 0
     underline = -1 if p.underline else 0
     fontname = f"{p.font} {WEIGHT_LABELS[weight]}"
-    return (f"Style: {name},{fontname},{p.size_px},{hex_to_ass(p.color)},{hex_to_ass(p.color)},"
+    alignment = {"left": 7, "right": 9}.get(p.align, 8)   # ASS numpad: 7/8/9 = top-left/top-center/top-right;
+    return (f"Style: {name},{fontname},{p.size_px},{hex_to_ass(p.color)},{hex_to_ass(p.color)},"          # also drives multi-line text justification, matching `align`
             f"{hex_to_ass(p.outline_color)},{hex_to_ass('#000000')},"
-            f"0,{italic},{underline},0,100,100,0,0,1,{p.outline_px},0,5,0,0,0,1")   # alignment 5 = center anchor, \pos places it; Bold always 0 — bold-ness lives in Fontname's face selection
+            f"0,{italic},{underline},0,100,100,0,0,1,{p.outline_px},0,{alignment},0,0,0,1")   # Bold always 0 — bold-ness lives in Fontname's face selection
 
 def _wrapped_lines_and_size(b, p: TextPreset, weight: int | None = None) -> tuple[str, float, float]:
     weight = weight if weight is not None else _resolved_weight(p)
@@ -73,8 +74,13 @@ def _box_dialogue(b, p: TextPreset, weight: int | None = None) -> str | None:
     if not p.box_background and p.box_border_width <= 0:
         return None
     _, width, height = _wrapped_lines_and_size(b, p, weight)
-    left = p.x - width / 2
-    top = p.y - height / 2
+    if p.align == "left":
+        left = p.x
+    elif p.align == "right":
+        left = p.x - width
+    else:
+        left = p.x - width / 2
+    top = p.y
     path = _rounded_rect_path(width, height, p.box_border_radius)
     fill_color = _ass_override_color(p.box_background_color)
     fill_alpha = f"{round((100 - p.box_background_opacity) / 100 * 255):02X}" if p.box_background else "FF"
