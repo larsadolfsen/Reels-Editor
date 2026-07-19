@@ -35,6 +35,12 @@
   white-space: pre;
 }
 
+.caption-block {
+  position: absolute;
+  white-space: pre;
+  box-sizing: border-box;
+}
+
 .text-block--align-left { transform: translate(0, 0); }
 .text-block--align-center { transform: translate(-50%, 0); }
 .text-block--align-right { transform: translate(-100%, 0); }
