@@ -1,5 +1,5 @@
 # Tests for app.ffmpeg_cmd: pure construction of the trim+concat+burn export command.
-from app.models import Project, ClipLayer
+from app.models import Project, ClipLayer, VideoBoxLayer
 from app.ffmpeg_cmd import build_export_cmd, escape_filter_path
 
 def proj():
@@ -30,3 +30,47 @@ def test_ass_burn_includes_fontsdir_pointing_at_static_fonts():
 def test_no_fontsdir_when_no_ass_path():
     fc = build_export_cmd(proj(), "out.mp4")[build_export_cmd(proj(), "out.mp4").index("-filter_complex") + 1]
     assert "fontsdir" not in fc
+
+def test_bands_none_matches_legacy_ass_path_behavior():
+    cmd_legacy = build_export_cmd(proj(), "out.mp4", ass_path="C:/tmp/subs.ass")
+    cmd_bands_none = build_export_cmd(proj(), "out.mp4", ass_path="C:/tmp/subs.ass", bands=None)
+    assert cmd_legacy == cmd_bands_none
+
+def test_bands_with_single_video_box_adds_input_and_overlay():
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", in_point=0, out_point=3,
+                         start=1.0, x=100, y=200, width=300, height=500, z_index=5)
+    bands = [{"kind": "video_box", "video_box": box}]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    assert "pip.mp4" in cmd
+    i = cmd.index("-filter_complex"); fc = cmd[i + 1]
+    assert "trim=start=0:end=3" in fc
+    assert "scale=300:500" in fc
+    assert "overlay=x=100:y=200" in fc
+    assert "between(t\\,1\\,4)" in fc  # end = start(1.0) + (out_point(3) - in_point(0)) = 4.0
+
+def test_bands_ass_then_video_box_then_ass_alternates_filter_chain():
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", out_point=2, start=0, height=1920, z_index=5)
+    bands = [
+        {"kind": "ass", "path": "C:/tmp/band0.ass"},
+        {"kind": "video_box", "video_box": box},
+        {"kind": "ass", "path": "C:/tmp/band1.ass"},
+    ]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "band0.ass" in fc and "band1.ass" in fc
+    assert fc.index("band0.ass") < fc.index("overlay=") < fc.index("band1.ass")
+
+def test_bands_final_map_uses_last_band_output():
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", out_point=2, start=0, height=1920, z_index=5)
+    bands = [{"kind": "video_box", "video_box": box}]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    map_indices = [i for i, x in enumerate(cmd) if x == "-map"]
+    assert cmd[map_indices[0] + 1] == "[ov0]"
+    assert cmd[map_indices[1] + 1] == "[a]"
+
+def test_bands_empty_list_maps_straight_from_concat():
+    cmd = build_export_cmd(proj(), "out.mp4", bands=[])
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert fc.rstrip().endswith("[vc][a]")
+    map_indices = [i for i, x in enumerate(cmd) if x == "-map"]
+    assert cmd[map_indices[0] + 1] == "[vc]"

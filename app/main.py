@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.models import Project, TextPreset, ProjectSummary, new_id
-from app import store, media, ffmpeg_cmd, ass_render
+from app import store, media, ffmpeg_cmd, ass_render, timeline
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
 DATA_DIR = Path("data")
@@ -82,12 +82,27 @@ def export_project(pid: str) -> dict:
     out_dir = DATA_DIR / "exports"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{p.name}-{p.id[:8]}.mp4"
-    ass_path = None
-    if p.text_blocks:
-        ass_file = out_dir / f"{p.name}-{p.id[:8]}.ass"
-        ass_file.write_text(ass_render.render_ass(p, p.text_presets), encoding="utf-8")
-        ass_path = str(ass_file)
-    cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), ass_path)
+
+    if p.video_boxes:
+        bands = []
+        for i, band in enumerate(timeline.banded_layers(p)):
+            if band["kind"] == "text":
+                ass_file = out_dir / f"{p.name}-{p.id[:8]}-band{i}.ass"
+                ass_file.write_text(
+                    ass_render.render_ass(p, p.text_presets, text_blocks=band["text_blocks"]),
+                    encoding="utf-8")
+                bands.append({"kind": "ass", "path": str(ass_file)})
+            else:
+                bands.append({"kind": "video_box", "video_box": band["video_box"]})
+        cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), bands=bands)
+    else:
+        ass_path = None
+        if p.text_blocks:
+            ass_file = out_dir / f"{p.name}-{p.id[:8]}.ass"
+            ass_file.write_text(ass_render.render_ass(p, p.text_presets), encoding="utf-8")
+            ass_path = str(ass_file)
+        cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), ass_path)
+
     media.run_export(cmd)
     return {"out_path": str(out_path)}
 
