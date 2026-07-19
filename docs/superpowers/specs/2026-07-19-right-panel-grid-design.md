@@ -35,7 +35,7 @@ Dividers (`UI.divider`) stay full-width (span 8) horizontal rules.
 ## Implementation notes
 
 - `.style-row` changes from `display: flex; gap: var(--space-2)` to `display: grid; grid-template-columns: repeat(8, 28px); gap: 8px;`. `.style-field`'s `flex: 1` rule is removed since widths become explicit.
-- Column spans are applied as CSS utility classes (`.col-1` … `.col-8`, each just `grid-column: span N`), not inline styles — keeps the span visible in markup/component calls without repeating `grid-column: span N` strings everywhere.
+- Column spans are applied as CSS utility classes (`.col-1` … `.col-8`, each just `grid-column: span N`), not inline styles — required by this codebase's no-inline-styles convention (`CLAUDE.md`), and keeps the span visible in markup/component calls without repeating `grid-column: span N` strings everywhere.
 - Shared components need a new option to set their own span, since they currently size themselves via flex:
   - `UI.numberField` — new `span` option (default 8 if omitted).
   - `UI.colorSwatch` — new `span` option controlling the label's span; the swatch itself is always span 1 (its 28px width already matches one column exactly, per the earlier icon-btn-size fix).
