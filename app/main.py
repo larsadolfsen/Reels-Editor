@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.models import Project, TextPreset
 from app import store, media, ffmpeg_cmd, ass_render
+from app.font_metrics import available_weights, WEIGHT_LABELS
 
 DATA_DIR = Path("data")
 app = FastAPI()
@@ -36,6 +37,10 @@ def probe(path: str) -> dict:
 @app.get("/api/pick-file")
 def pick_file() -> dict:
     return {"path": media.pick_file()}
+
+@app.get("/api/fonts/{name}/weights")
+def list_font_weights(name: str) -> list[dict]:
+    return [{"value": w, "label": WEIGHT_LABELS[w]} for w in available_weights(name)]
 
 @app.get("/api/presets")
 def list_presets() -> list[TextPreset]:
