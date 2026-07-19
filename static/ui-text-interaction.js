@@ -1,8 +1,10 @@
-// Reusable stage interaction: click-to-edit a contentEditable element. Mirrors ui-resize-handles.js's
-// shape (a standalone interaction handler preview.js mounts/unmounts per-element via a callback object).
+// Reusable stage interaction: click-to-edit a contentEditable element, click-drag over glyphs to
+// perform a native text selection (reported via onSelectionChange, for rich-text range formatting),
+// or click-drag over empty box padding to move the element. Mirrors ui-resize-handles.js's shape (a
+// standalone interaction handler preview.js mounts/unmounts per-element via a callback object).
 window.UI = window.UI || {};
 
-window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput, onEditEnd, onMove, onMoveEnd } = {}) {
+window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput, onEditEnd, onMove, onMoveEnd, onSelectionChange } = {}) {
   function enterEditMode() {
     if (div.contentEditable === "true") return;
     div.contentEditable = "true";
@@ -22,6 +24,26 @@ window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput
   div.addEventListener("mousedown", (e) => {
     if (e.target.closest(".resize-handle")) return; // let resize handles work unmodified
     if (div.contentEditable === "true") return; // already editing, let native caret placement work
+
+    if (UI.rangeContainsPoint(div, e.clientX, e.clientY)) {
+      // Landed on a glyph: let the browser's native text-selection drag run completely
+      // unmodified (no preventDefault, no custom mousemove tracking) and classify the
+      // outcome on mouseup — a real drag produces a non-collapsed selection (format-range
+      // intent), a plain click leaves it collapsed (edit intent, same as before).
+      const onMouseUp = () => {
+        document.removeEventListener("mouseup", onMouseUp);
+        const offsets = UI.textSelectionOffsets(div);
+        if (offsets && offsets.end > offsets.start) {
+          if (onSelectionChange) onSelectionChange(offsets);
+        } else {
+          enterEditMode();
+        }
+      };
+      document.addEventListener("mouseup", onMouseUp);
+      return;
+    }
+
+    // Landed on empty box padding: box-move drag, unchanged from Phase 1.
     e.preventDefault();
     const startX = e.clientX, startY = e.clientY;
     let moved = false;
