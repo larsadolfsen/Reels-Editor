@@ -41,13 +41,9 @@ class TextPreset(BaseModel):
     box_border_color: str = "#FFFFFF"
     box_border_radius: int = 0
     align: str = "center"          # left|center|right
-    x: int = 540                   # anchor on 1080x1920 canvas
-    y: int = 700
+    x: int = 540                   # horizontal px: left/center/right edge of the box, per `align`
+    y: int = 700                   # vertical px: always the top edge of the box
     entrance: str = "fade_pop"     # fade_pop|none
-    pos_row: str = "mid"           # top|mid|btm — UI position-grid anchor row, x/y derives from this + offset
-    pos_col: str = "mid"           # left|mid|right
-    offset_x: int = 0
-    offset_y: int = 0
     usage_count: int = 0    # how many times this saved preset has been applied to a block; drives the STYLE accordion's "most used" list
 
     @model_validator(mode="before")

@@ -39,9 +39,14 @@ def test_text_preset_migrates_legacy_bold_false_field():
     p = TextPreset.model_validate({"name": "Pop", "bold": False})
     assert p.weight == 400
 
-def test_text_preset_position_grid_defaults():
-    p = TextPreset(name="Pop")
-    assert (p.pos_row, p.pos_col, p.offset_x, p.offset_y) == ("mid", "mid", 0, 0)
+def test_text_preset_position_grid_fields_removed():
+    p = TextPreset.model_validate({"name": "Pop", "pos_row": "top", "pos_col": "left",
+                                    "offset_x": 10, "offset_y": -5})
+    assert not hasattr(p, "pos_row")
+    assert not hasattr(p, "pos_col")
+    assert not hasattr(p, "offset_x")
+    assert not hasattr(p, "offset_y")
+    assert (p.x, p.y) == (540, 700)
 
 def test_media_item_round_trip():
     m = MediaItem(file_path="clip.mp4", duration=13.2)
