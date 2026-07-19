@@ -119,3 +119,15 @@ def test_text_block_layer_z_index_defaults_zero():
 def test_caption_track_z_index_defaults_zero():
     c = CaptionTrack()
     assert c.z_index == 0
+
+def test_text_preset_highlight_and_grouping_defaults():
+    from app.models import TextPreset
+    p = TextPreset(name="Caption")
+    assert p.highlight_color == "#FFD400"
+    assert p.highlight_mode == "current_word"
+    assert p.max_words_per_line == 4
+
+def test_caption_track_has_preset_id():
+    from app.models import CaptionTrack, CaptionWord
+    t = CaptionTrack(words=[CaptionWord(text="hi", t_start=0.0, t_end=0.5)])
+    assert isinstance(t.preset_id, str) and len(t.preset_id) == 32
