@@ -188,18 +188,11 @@ window.Preview = (() => {
       div.style.zIndex = String(block.z_index ?? 0);
       div.style.left = (preset.x / 1080 * stageW) + "px";
       div.style.top = (preset.y / 1920 * stageH) + "px";
-      div.style.color = preset.color;
       div.style.textAlign = preset.align;
-      div.style.fontFamily = `"${preset.font}", sans-serif`;
-      div.style.fontWeight = String(preset.weight);
-      div.style.fontStyle = preset.italic ? "italic" : "normal";
-      div.style.textDecoration = preset.underline ? "underline" : "none";
 
       const sizePx = preset.size_px / 1920 * stageH;
       div.style.fontSize = sizePx + "px";
 
-      const outlinePx = preset.outline_px / 1920 * stageH;
-      div.style.webkitTextStroke = `${outlinePx}px ${preset.outline_color}`;
       div.style.padding = "0.15em 0.35em";
 
       div.style.backgroundColor = preset.box_background ? hexToRgba(preset.box_background_color, preset.box_background_opacity) : "transparent";
@@ -217,8 +210,29 @@ window.Preview = (() => {
       div.style.whiteSpace = widthIsBoxed ? "pre-wrap" : "pre";
       div.style.boxSizing = "border-box";
 
-      div.textContent = block.heading;
-      if (!block.heading) { div.style.minWidth = "40px"; div.style.minHeight = "1em"; } // stay clickable while empty
+      const outlinePxScaled = preset.outline_px / 1920 * stageH;
+      const runs = (block.formatting_runs && block.formatting_runs.length) ? block.formatting_runs : [];
+      const heading = block.heading || "";
+      const boundaries = [...new Set([0, heading.length, ...runs.flatMap((r) => [r.start, r.end])])].sort((a, b) => a - b);
+      div.textContent = "";
+      for (let i = 0; i < boundaries.length - 1; i++) {
+        const segStart = boundaries[i], segEnd = boundaries[i + 1];
+        if (segStart >= segEnd) continue;
+        const run = runs.find((r) => r.start <= segStart && segEnd <= r.end);
+        const span = document.createElement("span");
+        span.className = "text-run";
+        span.textContent = heading.slice(segStart, segEnd);
+        span.style.color = (run && run.color) || preset.color;
+        span.style.fontFamily = `"${(run && run.font) || preset.font}", sans-serif`;
+        span.style.fontWeight = String((run && run.weight) || preset.weight);
+        span.style.fontStyle = (run && run.italic != null ? run.italic : preset.italic) ? "italic" : "normal";
+        span.style.textDecoration = (run && run.underline != null ? run.underline : preset.underline) ? "underline" : "none";
+        span.style.webkitTextStroke = `${outlinePxScaled}px ${(run && run.outline_color) || preset.outline_color}`;
+        const highlighted = run && run.highlight != null ? run.highlight : preset.highlight;
+        span.style.backgroundColor = highlighted ? ((run && run.highlight_color) || preset.highlight_color) : "transparent";
+        div.appendChild(span);
+      }
+      if (!heading) { div.style.minWidth = "40px"; div.style.minHeight = "1em"; } // stay clickable while empty
       overlay.appendChild(div);
 
       // Always clickable/editable, regardless of which right-panel section is open (not just
