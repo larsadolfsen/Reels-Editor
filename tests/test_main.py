@@ -63,3 +63,7 @@ def test_list_font_weights_jetbrains_mono_has_no_semibold():
         {"value": 500, "label": "Medium"},
         {"value": 700, "label": "Bold"},
     ]
+
+def test_list_font_weights_unknown_font_returns_empty_list_not_500():
+    from app.main import list_font_weights
+    assert list_font_weights("Nonexistent Font") == []

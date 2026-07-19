@@ -1,7 +1,7 @@
 # Generates the ASS subtitle file burned into exports: text-block dialogues (+captions, Task 12).
 # Exposes render_ass, ass_time, hex_to_ass. Consumed by the export route; rendered by libass.
 from app.models import Project, TextPreset
-from app.font_metrics import wrap_text, pil_font_measurer, WEIGHT_LABELS
+from app.font_metrics import wrap_text, pil_font_measurer, WEIGHT_LABELS, nearest_available_weight
 
 BOX_PAD_X_EM = 0.35
 BOX_PAD_Y_EM = 0.15
@@ -40,16 +40,24 @@ def _rounded_rect_path(width: float, height: float, radius: float) -> str:
 def _n(v: float) -> str:
     return str(int(v)) if float(v).is_integer() else f"{v:.2f}"
 
-def _style(name: str, p: TextPreset) -> str:
+def _resolved_weight(p: TextPreset) -> int:
+    """The preset's weight, clamped to one this font actually has a static file for — a preset
+    can end up with a weight its font doesn't support (e.g. stale data, or a font swap that didn't
+    re-clamp weight), and both the Fontname string and the measurer must agree on an available one."""
+    return nearest_available_weight(p.font, p.weight)
+
+def _style(name: str, p: TextPreset, weight: int | None = None) -> str:
+    weight = weight if weight is not None else _resolved_weight(p)
     italic = -1 if p.italic else 0
     underline = -1 if p.underline else 0
-    fontname = f"{p.font} {WEIGHT_LABELS[p.weight]}"
+    fontname = f"{p.font} {WEIGHT_LABELS[weight]}"
     return (f"Style: {name},{fontname},{p.size_px},{hex_to_ass(p.color)},{hex_to_ass(p.color)},"
             f"{hex_to_ass(p.outline_color)},{hex_to_ass('#000000')},"
             f"0,{italic},{underline},0,100,100,0,0,1,{p.outline_px},0,5,0,0,0,1")   # alignment 5 = center anchor, \pos places it; Bold always 0 — bold-ness lives in Fontname's face selection
 
-def _wrapped_lines_and_size(b, p: TextPreset) -> tuple[str, float, float]:
-    measure = pil_font_measurer(p.font, p.size_px, p.weight)
+def _wrapped_lines_and_size(b, p: TextPreset, weight: int | None = None) -> tuple[str, float, float]:
+    weight = weight if weight is not None else _resolved_weight(p)
+    measure = pil_font_measurer(p.font, p.size_px, weight)
     pad_x = BOX_PAD_X_EM * p.size_px * 2
     pad_y = BOX_PAD_Y_EM * p.size_px * 2
     if p.box_width_mode == "fixed":
@@ -61,10 +69,10 @@ def _wrapped_lines_and_size(b, p: TextPreset) -> tuple[str, float, float]:
     height = p.box_height if p.box_height_mode == "fixed" else len(lines) * p.size_px * LINE_HEIGHT + pad_y
     return text, width, height
 
-def _box_dialogue(b, p: TextPreset) -> str | None:
+def _box_dialogue(b, p: TextPreset, weight: int | None = None) -> str | None:
     if not p.box_background and p.box_border_width <= 0:
         return None
-    _, width, height = _wrapped_lines_and_size(b, p)
+    _, width, height = _wrapped_lines_and_size(b, p, weight)
     left = p.x - width / 2
     top = p.y - height / 2
     path = _rounded_rect_path(width, height, p.box_border_radius)
@@ -76,11 +84,11 @@ def _box_dialogue(b, p: TextPreset) -> str | None:
           f"\\1a&H{fill_alpha}&\\3a&H{border_alpha}&\\1c{fill_color}\\3c{border_color}\\p1")
     return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]}box,,0,0,0,,{{{fx}}}{path}{{\\p0}}"
 
-def _block_dialogue(b, p: TextPreset) -> str:
+def _block_dialogue(b, p: TextPreset, weight: int | None = None) -> str:
     fx = f"\\pos({p.x},{p.y})"
     if p.entrance == "fade_pop":
         fx += "\\fad(200,0)\\fscx80\\fscy80\\t(0,200,\\fscx100\\fscy100)"
-    text, _, _ = _wrapped_lines_and_size(b, p)
+    text, _, _ = _wrapped_lines_and_size(b, p, weight)
     text = text.replace("\n", "\\N")
     return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]},,0,0,0,,{{{fx}}}{text}"
 
@@ -91,14 +99,15 @@ def render_ass(project: Project, presets: dict[str, TextPreset]) -> str:
               "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, "
               "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
               "Alignment, MarginL, MarginR, MarginV, Encoding\n")
-    styles = "\n".join(_style(f"P{p.id[:8]}", p) for p in used.values())
+    styles = "\n".join(_style(f"P{p.id[:8]}", p, _resolved_weight(p)) for p in used.values())
     event_lines = []
     for b in project.text_blocks:
         p = presets[b.preset_id]
-        box_line = _box_dialogue(b, p)
+        weight = _resolved_weight(p)
+        box_line = _box_dialogue(b, p, weight)
         if box_line:
             event_lines.append(box_line)
-        event_lines.append(_block_dialogue(b, p))
+        event_lines.append(_block_dialogue(b, p, weight))
     events = ("\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
               + "\n".join(event_lines))
     return header + styles + events + "\n"

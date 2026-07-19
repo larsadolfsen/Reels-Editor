@@ -59,6 +59,17 @@ def test_style_line_fontname_includes_regular_label_at_default_weight():
     fields = line.split(",")
     assert fields[1] == "Public Sans Regular"
 
+def test_font_weight_mismatch_clamps_to_nearest_available_weight():
+    # JetBrains Mono has no 600 (SemiBold) static file — weight=600 must not raise (KeyError from
+    # the measurer) and must not reference a nonexistent "SemiBold" face in Fontname (which would
+    # silently fall back to a system font in libass, the exact bug this feature eliminates).
+    pr = TextPreset(name="Pop", font="JetBrains Mono", weight=600)
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
+    out = render_ass(p, {pr.id: pr})
+    line = next(l for l in out.splitlines() if l.startswith("Style:"))
+    fields = line.split(",")
+    assert fields[1] == "JetBrains Mono Medium"        # clamped to 500, not the missing 600 "SemiBold"
+
 def test_multiline_heading_becomes_ass_hard_break():
     pr = TextPreset(name="Pop")
     p = Project(name="r", text_blocks=[TextBlockLayer(heading="LINE ONE\nLINE TWO", preset_id=pr.id, start=0, end=2)])

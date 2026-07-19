@@ -22,7 +22,14 @@ FONT_WEIGHT_PATHS = {
 }
 
 def available_weights(font_name: str) -> list[int]:
-    return sorted(FONT_WEIGHT_PATHS[font_name].keys())
+    return sorted(FONT_WEIGHT_PATHS.get(font_name, {}).keys())
+
+def nearest_available_weight(font_name: str, weight: int) -> int:
+    """Clamp an arbitrary weight to the closest one this font actually has a static file for,
+    so callers picking a Fontname/measurer never reference a missing weight (falls back to a
+    system font in libass, or KeyErrors the measurer)."""
+    weights = available_weights(font_name)
+    return min(weights, key=lambda w: abs(w - weight))
 
 def wrap_text(text: str, measure_width: Callable[[str], float], max_width_px: float) -> str:
     out_lines = []

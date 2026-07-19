@@ -52,3 +52,20 @@ def test_pil_font_measurer_bold_weight_is_wider_than_regular():
     regular = pil_font_measurer("Public Sans", 96, weight=400)
     bold = pil_font_measurer("Public Sans", 96, weight=700)
     assert bold("Weight Test") > regular("Weight Test")
+
+from app.font_metrics import nearest_available_weight
+
+def test_nearest_available_weight_returns_exact_match_when_available():
+    assert nearest_available_weight("Public Sans", 600) == 600
+
+def test_nearest_available_weight_clamps_to_nearest_when_missing():
+    # JetBrains Mono has [400, 500, 700] (no 600); 600 is equidistant from 500 and 700
+    # (both 100 away) — min()'s key-based tie-break keeps the first-encountered candidate,
+    # and available_weights() returns them sorted ascending, so 500 wins the tie.
+    assert nearest_available_weight("JetBrains Mono", 600) == 500
+
+def test_nearest_available_weight_clamps_low_weight_to_lowest_available():
+    assert nearest_available_weight("JetBrains Mono", 100) == 400
+
+def test_available_weights_unknown_font_returns_empty_list():
+    assert available_weights("Nonexistent Font") == []
