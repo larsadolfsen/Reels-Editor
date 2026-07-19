@@ -32,8 +32,10 @@ window.TextPanel = window.TextPanel || {};
   }
 
   async function applySavedPreset(saved) {
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
+    const block = ensureTextBlock();
+    const preset = ensureTextPreset(block.preset_id);
     Object.assign(preset, styleFieldsOf(saved));
+    block.formatting_runs = [];   // a saved preset is "reset to this whole look" — clears any per-range overrides
     saved.usage_count = (saved.usage_count || 0) + 1;
     await Api.savePreset(saved);
     await saveProject();
