@@ -152,7 +152,7 @@ window.Preview = (() => {
       if (keepEditingDiv && block.id === editingBlockId) continue; // already re-attached above, leave untouched
 
       const div = document.createElement("div");
-      div.className = "text-block";
+      div.className = "text-block text-block--align-" + preset.align;
       div.style.left = (preset.x / 1080 * stageW) + "px";
       div.style.top = (preset.y / 1920 * stageH) + "px";
       div.style.color = preset.color;
