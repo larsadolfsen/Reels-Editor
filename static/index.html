@@ -21,6 +21,8 @@
 <link rel="stylesheet" href="/static/css/components/save-indicator.css">
 <link rel="stylesheet" href="/static/css/components/project-list-row.css">
 <link rel="stylesheet" href="/static/css/components/project-picker.css">
+<link rel="stylesheet" href="/static/css/components/video-box-panel.css">
+<link rel="stylesheet" href="/static/css/components/layers-panel.css">
 </head><body>
 <div id="app">
   <main>
@@ -87,6 +89,7 @@
             <div class="row-label" id="ruler-label"></div>
             <div class="row-label" id="label-text">TEXT</div>
             <div class="row-label" id="label-captions">CAPTIONS</div>
+            <div class="row-label" id="label-videobox">VIDEO BOX</div>
             <div class="row-label" id="label-video">VIDEO</div>
             <div class="row-label" id="label-audio">AUDIO</div>
           </div>
@@ -99,6 +102,9 @@
               </div>
               <div class="timeline-row" data-row="captions">
                 <div class="row-track" id="row-captions"></div>
+              </div>
+              <div class="timeline-row" data-row="videobox">
+                <div class="row-track" id="row-videobox"></div>
               </div>
               <div class="timeline-row" data-row="video">
                 <div class="row-track" id="row-video"></div>
@@ -198,6 +204,53 @@
           <button id="project-create" class="new-project-btn"><span class="icon">+</span><span class="label">NEW PROJECT</span></button>
         </div>
         <ul id="project-list" class="project-list-row-list"></ul>
+      </div>
+
+      <div id="panel-video-box" class="context-panel" hidden>
+        <div class="style-panel-header">VIDEO BOX</div>
+        <div class="style-group">
+          <button id="video-box-add" type="button"><span class="icon">+</span><span class="label">ADD VIDEO BOX</span></button>
+        </div>
+        <div id="video-box-picker" hidden>
+          <ul id="video-box-picker-list" class="font-list"></ul>
+        </div>
+        <div id="video-box-detail" hidden>
+          <div id="video-box-name" class="context-panel-name"></div>
+
+          <div class="style-group-label">TRIM</div>
+          <div class="style-group">
+            <div class="style-row">
+              <label id="video-box-in-field"></label>
+              <label id="video-box-out-field"></label>
+            </div>
+          </div>
+
+          <div class="style-group-label">TIME</div>
+          <div class="style-group">
+            <label id="video-box-start-field"></label>
+          </div>
+
+          <div class="style-group-label">SIZE &amp; POSITION</div>
+          <div class="style-group">
+            <div class="style-row">
+              <label id="video-box-x-field"></label>
+              <label id="video-box-y-field"></label>
+            </div>
+            <div class="style-row">
+              <label id="video-box-width-field"></label>
+              <label id="video-box-height-field"></label>
+            </div>
+          </div>
+
+          <div class="style-group">
+            <button id="video-box-delete" type="button">Delete video box</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-layers" class="context-panel" hidden>
+        <div class="style-panel-header">LAYERS</div>
+        <ul id="layers-list" class="layers-list"></ul>
       </div>
 
       <div id="panel-text" class="context-panel" hidden>
@@ -361,6 +414,7 @@
 <script src="/static/ui-sub-panel-header.js"></script>
 <script src="/static/ui-divider.js"></script>
 <script src="/static/ui-resize-handles.js"></script>
+<script src="/static/ui-video-box-drag.js"></script>
 <script src="/static/ui-icon-rail.js"></script>
 <script src="/static/ui-button.js"></script>
 <script src="/static/ui-save-indicator.js"></script>
@@ -390,6 +444,9 @@
 <script src="/static/panel-projects.js"></script>
 <script src="/static/ui-text-interaction.js"></script>
 <script src="/static/font-fit.js"></script>
+<script src="/static/video-box-preview.js"></script>
+<script src="/static/panel-video-box.js"></script>
+<script src="/static/panel-layers.js"></script>
 <script src="/static/preview.js"></script>
 <script src="/static/timeline.js"></script>
 <script src="/static/editor.js"></script>

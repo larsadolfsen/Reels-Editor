@@ -257,7 +257,7 @@ function renderTimeline() {
 function showPanel(type) {
   if (type !== "text") Preview.setSelectedTextBlock(null, null);
   document.getElementById("style-panel").hidden = false;
-  ["files", "video", "text", "captions", "settings", "export", "projects"].forEach((t) => {
+  ["files", "video", "text", "captions", "video-box", "layers", "settings", "export", "projects"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;
   });
 }
@@ -391,6 +391,16 @@ const PANEL_NAV_ITEMS = [
     icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 9.17a3 3 0 1 0 0 5.66"/><path d="M17 9.17a3 3 0 1 0 0 5.66"/><rect x="2" y="5" width="20" height="14" rx="2"/></svg>`,
   },
   {
+    value: "video-box",
+    label: "VIDEO BOX",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="12" y="12" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg>`,
+  },
+  {
+    value: "layers",
+    label: "LAYERS",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="1"/><rect x="7" y="7" width="14" height="14" rx="1"/></svg>`,
+  },
+  {
     value: "settings",
     label: "SETTINGS",
     icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`,
@@ -438,6 +448,20 @@ function openExportPanel() {
   renderTimeline();
 }
 
+function openVideoBoxPanel() {
+  selected = { type: "video-box" };
+  showPanel("video-box");
+  if (window.VideoBoxPanel) VideoBoxPanel.render();
+  renderTimeline();
+}
+
+function openLayersPanel() {
+  selected = { type: "layers" };
+  showPanel("layers");
+  if (window.LayersPanel) LayersPanel.render();
+  renderTimeline();
+}
+
 async function openProjectsPanel() {
   selected = { type: "projects" };
   showPanel("projects");
@@ -460,7 +484,7 @@ async function openProjectsPanel() {
   renderTimeline();
 }
 
-const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel };
+const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, layers: openLayersPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel };
 
 UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (value) => PANEL_NAV_HANDLERS[value]());
 
