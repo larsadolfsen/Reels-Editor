@@ -46,6 +46,39 @@ def wrap_text(text: str, measure_width: Callable[[str], float], max_width_px: fl
         out_lines.append(line)
     return "\n".join(out_lines)
 
+def wrap_text_runs(text: str, measure_range: Callable[[int, int], float], max_width_px: float) -> tuple[str, list[tuple[int, int]]]:
+    """Like wrap_text, but measures each candidate line via measure_range(start, end) — character
+    offsets into `text` — instead of a single whole-string measurer, so a line spanning multiple
+    differently-styled FormatRuns is measured accurately. Line-break decisions still only ever
+    happen at spaces (never mid-word), so the greedy algorithm itself is unchanged from wrap_text;
+    only what gets measured changes. Returns the wrapped text (word-break spaces become \\n, same
+    as wrap_text) plus each output line's (start, end) offsets into the original `text`."""
+    out_lines: list[str] = []
+    spans: list[tuple[int, int]] = []
+    offset = 0
+    for paragraph in text.split("\n"):
+        words = paragraph.split(" ")
+        word_starts = []
+        pos = offset
+        for word in words:
+            word_starts.append(pos)
+            pos += len(word) + 1  # +1 accounts for the space (or the paragraph's trailing \n)
+        line_start = word_starts[0]
+        line_end = line_start + len(words[0])
+        for i in range(1, len(words)):
+            candidate_end = word_starts[i] + len(words[i])
+            if measure_range(line_start, candidate_end) <= max_width_px:
+                line_end = candidate_end
+            else:
+                out_lines.append(text[line_start:line_end])
+                spans.append((line_start, line_end))
+                line_start = word_starts[i]
+                line_end = word_starts[i] + len(words[i])
+        out_lines.append(text[line_start:line_end])
+        spans.append((line_start, line_end))
+        offset += len(paragraph) + 1  # +1 accounts for the \n joining this paragraph to the next
+    return "\n".join(out_lines), spans
+
 def pil_font_measurer(font_name: str, size_px: int, weight: int = 400) -> Callable[[str], float]:
     path = FONT_WEIGHT_PATHS[font_name][weight]
     pil_font = ImageFont.truetype(path, size_px)

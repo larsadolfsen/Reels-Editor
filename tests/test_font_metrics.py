@@ -1,5 +1,5 @@
 # Tests for app.font_metrics: pure word-wrap logic + the Pillow/fontTools measurement adapter.
-from app.font_metrics import wrap_text, pil_font_measurer
+from app.font_metrics import wrap_text, pil_font_measurer, wrap_text_runs
 
 def _char_width_measurer(px_per_char):
     return lambda text: len(text) * px_per_char
@@ -69,3 +69,39 @@ def test_nearest_available_weight_clamps_low_weight_to_lowest_available():
 
 def test_available_weights_unknown_font_returns_empty_list():
     assert available_weights("Nonexistent Font") == []
+
+def test_wrap_text_runs_matches_wrap_text_for_uniform_width():
+    text = "one two three"
+    measure = _char_width_measurer(10)
+    range_measure = lambda s, e: measure(text[s:e])
+    wrapped, spans = wrap_text_runs(text, range_measure, max_width_px=80)
+    assert wrapped == wrap_text(text, measure, max_width_px=80) == "one two\nthree"
+    assert [text[s:e] for s, e in spans] == ["one two", "three"]
+
+def test_wrap_text_runs_spans_cover_original_offsets_exactly():
+    text = "aa bb cc dd"
+    range_measure = lambda s, e: (e - s) * 10  # 10px/char, ignores which chars
+    wrapped, spans = wrap_text_runs(text, range_measure, max_width_px=59)  # fits "aa bb" (5 chars=50px) not "aa bb cc" (8=80px)
+    assert wrapped == "aa bb\ncc dd"
+    assert spans == [(0, 5), (6, 11)]  # (6,11) skips the space at offset 5, matches "cc dd"
+
+def test_wrap_text_runs_preserves_hard_breaks_with_offsets():
+    text = "one two\nthree"
+    range_measure = lambda s, e: (e - s) * 10
+    wrapped, spans = wrap_text_runs(text, range_measure, max_width_px=1000)
+    assert wrapped == "one two\nthree"
+    assert [text[s:e] for s, e in spans] == ["one two", "three"]
+
+def test_wrap_text_runs_mixed_widths_wraps_earlier_than_uniform():
+    # Simulates a bold run over "two" (offsets 4-7) that's 3x wider per-char than the rest —
+    # a uniform 10px/char measurer would fit "one two" (7 chars=70px) under 75px, but the
+    # widened "two" (90px alone) pushes the true width past it, forcing an earlier break before "two".
+    text = "one two three"
+    def range_measure(s, e):
+        width = 0
+        for i in range(s, e):
+            width += 30 if 4 <= i < 7 else 10
+        return width
+    wrapped, spans = wrap_text_runs(text, range_measure, max_width_px=75)
+    assert wrapped == "one\ntwo\nthree"
+    assert [text[s:e] for s, e in spans] == ["one", "two", "three"]
