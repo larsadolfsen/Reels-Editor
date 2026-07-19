@@ -103,7 +103,7 @@ function renderBoxPanel() {
     (value) => {
       preset.box_width_mode = value;
       preset.box_height_mode = value;
-      saveProject(); renderTextPreview(); renderBoxPanel();
+      renderTextPreview(); saveProject(); renderBoxPanel();
     });
 
   // WIDTH/HEIGHT fields are needed by both FREE (manual fixed size) and FILL (fixed size that
@@ -114,11 +114,11 @@ function renderBoxPanel() {
 
   UI.numberField(document.getElementById("text-box-width-field"),
     { label: "WIDTH", unit: "PX", value: preset.box_width, min: 1, max: 1080,
-      onChange: (v) => { preset.box_width = v; saveProject(); renderTextPreview(); } });
+      onChange: (v) => { preset.box_width = v; renderTextPreview(); saveProject(); } });
 
   UI.numberField(document.getElementById("text-box-height-field"),
     { label: "HEIGHT", unit: "PX", value: preset.box_height, min: 1, max: 1920,
-      onChange: (v) => { preset.box_height = v; saveProject(); renderTextPreview(); } });
+      onChange: (v) => { preset.box_height = v; renderTextPreview(); saveProject(); } });
 
   UI.colorSwatch(document.getElementById("text-box-background-color-field"),
     { label: "Background", showLabel: false, value: preset.box_background_color,
@@ -164,8 +164,8 @@ async function handleBoxResizeEnd(preset, { width, height }) {
   preset.box_height_mode = wasFill ? "fill" : "fixed";
   preset.box_width = Math.round(width * scale);
   preset.box_height = Math.round(height * scale);
+  renderTextPreview(); // re-triggers FILL's refit against the new box dimensions, must run before save so the fitted size_px persists
   await saveProject();
-  renderTextPreview(); // re-triggers FILL's refit against the new box dimensions
   renderBoxPanel();
 }
 

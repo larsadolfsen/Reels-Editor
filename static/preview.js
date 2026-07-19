@@ -37,7 +37,7 @@ window.Preview = (() => {
   }
 
   function fitCacheKey(preset, heading) {
-    return JSON.stringify([heading, preset.box_width, preset.box_height, preset.font, preset.bold, preset.italic]);
+    return JSON.stringify([heading, preset.box_width, preset.box_height, preset.font, preset.weight, preset.italic]);
   }
 
   function maybeRefitFillText(block, preset) {
@@ -49,7 +49,7 @@ window.Preview = (() => {
       return;
     }
     const measurerFactory = (size) =>
-      FontFit.canvasMeasurer(preset.font, size, { bold: preset.bold, italic: preset.italic });
+      FontFit.canvasMeasurer(preset.font, size, { weight: preset.weight, italic: preset.italic });
     const { size } = FontFit.fitFontSize(block.heading || "", measurerFactory, preset.box_width, preset.box_height);
     preset.size_px = size;
     fitCache.set(block.id, { key, size });

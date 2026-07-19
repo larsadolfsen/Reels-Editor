@@ -22,12 +22,11 @@ window.FontFit = (() => {
   }
 
   let sharedCanvas = null;
-  function canvasMeasurer(fontFamily, sizePx, { bold = false, italic = false } = {}) {
+  function canvasMeasurer(fontFamily, sizePx, { weight = 400, italic = false } = {}) {
     if (!sharedCanvas) sharedCanvas = document.createElement("canvas");
     const ctx = sharedCanvas.getContext("2d");
-    const weight = bold ? "bold " : "";
     const style = italic ? "italic " : "";
-    ctx.font = `${style}${weight}${sizePx}px "${fontFamily}"`;
+    ctx.font = `${style}${weight} ${sizePx}px "${fontFamily}"`;
     return (text) => ctx.measureText(text).width;
   }
 
