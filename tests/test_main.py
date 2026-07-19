@@ -2,7 +2,7 @@
 # burned into the ffmpeg command when a project has text blocks, and skipped otherwise.
 from unittest.mock import patch
 from app.main import export_project, list_presets, create_preset
-from app.models import Project, TextBlockLayer, TextPreset
+from app.models import Project, TextBlockLayer, TextPreset, MediaItem
 
 def test_export_writes_ass_file_and_burns_it_in(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
@@ -67,3 +67,46 @@ def test_list_font_weights_jetbrains_mono_has_no_semibold():
 def test_list_font_weights_unknown_font_returns_empty_list_not_500():
     from app.main import list_font_weights
     assert list_font_weights("Nonexistent Font") == []
+
+def test_list_projects_route_sorted_newest_updated_first(tmp_path, monkeypatch):
+    from app import store
+    from app.main import list_projects as route_list_projects
+    from app.models import ProjectSummary
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    a = Project(name="a")
+    store.save_project(a, tmp_path)
+    b = Project(name="b")
+    store.save_project(b, tmp_path)  # saved after a -> newer updated_at
+    result = route_list_projects()
+    assert [r.id for r in result] == [b.id, a.id]
+    assert isinstance(result[0], ProjectSummary)
+
+def test_delete_project_route_removes_file(tmp_path, monkeypatch):
+    from app import store
+    from app.main import delete_project as route_delete_project, list_projects as route_list_projects
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    a = Project(name="a")
+    store.save_project(a, tmp_path)
+    route_delete_project(a.id)
+    assert route_list_projects() == []
+
+def test_duplicate_project_route_creates_new_id_and_copy_suffix(tmp_path, monkeypatch):
+    from app import store
+    from app.main import duplicate_project as route_duplicate_project
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    a = Project(name="Reel A")
+    store.save_project(a, tmp_path)
+    dup = route_duplicate_project(a.id)
+    assert dup.id != a.id
+    assert dup.name == "Reel A copy"
+    assert store.load_project(dup.id, tmp_path).id == dup.id
+
+def test_duplicate_project_route_deep_copies_nested_data(tmp_path, monkeypatch):
+    from app import store
+    from app.main import duplicate_project as route_duplicate_project
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    a = Project(name="Reel A", media_library=[MediaItem(file_path="a.mp4", duration=1.0)])
+    store.save_project(a, tmp_path)
+    dup = route_duplicate_project(a.id)
+    dup.media_library[0].file_path = "changed.mp4"
+    assert a.media_library[0].file_path == "a.mp4"

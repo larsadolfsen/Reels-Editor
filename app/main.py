@@ -1,10 +1,11 @@
 # FastAPI composition root: mounts static UI and wires API routes to modules.
 # No feature logic lives here. Run: uvicorn app.main:app --reload
+from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from app.models import Project, TextPreset
+from app.models import Project, TextPreset, ProjectSummary, new_id
 from app import store, media, ffmpeg_cmd, ass_render
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
@@ -29,6 +30,26 @@ def get_project(pid: str) -> Project:
 def put_project(pid: str, p: Project) -> Project:
     store.save_project(p, DATA_DIR)
     return p
+
+@app.get("/api/projects")
+def list_projects() -> list[ProjectSummary]:
+    projects = sorted(store.list_projects(DATA_DIR), key=lambda p: p.updated_at, reverse=True)
+    return [ProjectSummary(id=p.id, name=p.name, created_at=p.created_at, updated_at=p.updated_at) for p in projects]
+
+@app.delete("/api/projects/{pid}", status_code=204)
+def delete_project(pid: str) -> None:
+    store.delete_project(pid, DATA_DIR)
+
+@app.post("/api/projects/{pid}/duplicate")
+def duplicate_project(pid: str) -> Project:
+    p = store.load_project(pid, DATA_DIR)
+    dup = p.model_copy(deep=True, update={
+        "id": new_id(),
+        "name": f"{p.name} copy",
+        "created_at": datetime.now(timezone.utc),
+    })
+    store.save_project(dup, DATA_DIR)
+    return dup
 
 @app.get("/api/probe")
 def probe(path: str) -> dict:
