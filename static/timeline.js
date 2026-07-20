@@ -193,5 +193,5 @@ window.Timeline = (() => {
     });
   }
 
-  return { render, groupWords, timeAtX, tick };
+  return { render, groupWords, timeAtX, tick, PX_PER_SEC };
 })();

@@ -805,7 +805,8 @@ player.addEventListener("pause", () => { cancelAnimationFrame(tickRaf); tickRaf 
 
 document.getElementById("timeline-ruler").addEventListener("click", (e) => {
   const rect = e.currentTarget.getBoundingClientRect();
-  const t = Timeline.timeAtX(project.clips, rect, e.clientX);
+  let t = Timeline.timeAtX(project.clips, rect, e.clientX);
+  if (!e.altKey) t = Timeline.snapTime(t, Timeline.collectBoundaries(project), 8, Timeline.PX_PER_SEC);
   Preview.seek(t);
 });
 
@@ -813,14 +814,15 @@ document.getElementById("timeline-ruler").addEventListener("click", (e) => {
 // but re-invoked continuously; Timeline.tick keeps the handle box anchored during the drag.
 document.getElementById("playhead-grip").addEventListener("mousedown", (e) => {
   e.preventDefault();
-  const seekFromEvent = (clientX) => {
+  const seekFromEvent = (evt) => {
     const rect = document.getElementById("timeline-ruler").getBoundingClientRect();
-    const t = Timeline.timeAtX(project.clips, rect, clientX);
+    let t = Timeline.timeAtX(project.clips, rect, evt.clientX);
+    if (!evt.altKey) t = Timeline.snapTime(t, Timeline.collectBoundaries(project), 8, Timeline.PX_PER_SEC);
     Preview.seek(t);
     Timeline.tick(Preview.currentTimelineTime());
   };
-  seekFromEvent(e.clientX);
-  const onMouseMove = (moveEvent) => seekFromEvent(moveEvent.clientX);
+  seekFromEvent(e);
+  const onMouseMove = (moveEvent) => seekFromEvent(moveEvent);
   const onMouseUp = () => {
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
