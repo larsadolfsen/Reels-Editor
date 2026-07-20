@@ -196,3 +196,10 @@
   align-items: center;
   justify-content: center;
 }
+
+#video-delete {
+  width: 100%;
+  margin-top: var(--space-3);
+  color: var(--danger, #e5484d);
+  border-color: var(--danger, #e5484d);
+}
