@@ -3,7 +3,6 @@
 let project = null;
 let selected = null; // currently selected clip/text/caption; drives which right-panel section (VIDEO/TEXT/CAPTIONS) is open
 const clipDurations = {}; // clip.id -> source duration (seconds), populated on add-clip
-let selectedMediaId = null; // MEDIA panel row highlight only — independent of timeline `selected`
 const player = document.getElementById("player");
 
 const AVAILABLE_FONTS = ["Public Sans", "JetBrains Mono"]; // the only vendored font families (static/fonts/)
@@ -34,17 +33,11 @@ async function openProject(target) {
   if (JSON.stringify(project) !== before) await saveProject();
   showEditorShell();
   document.title = project.name ? `${project.name} – Reels Editor` : "Reels Editor";
-  renderMediaList();
+  MediaPanel.render();
   Preview.load(project);
   await renderTextPanel();
   renderTimeline();
   openFilesPanel();
-}
-
-function formatClipDuration(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = (seconds % 60).toFixed(1).padStart(4, "0");
-  return `${String(m).padStart(2, "0")}:${s}`;
 }
 
 // Position grid anchors (thirds of the 1080x1920 canvas). Used only as a stateless one-shot
@@ -457,41 +450,6 @@ async function onTimelineSelect({ type, item, groupIndex }) {
   renderTimeline();
 }
 
-function renderMediaList() {
-  const list = document.getElementById("clip-list");
-  list.innerHTML = "";
-  project.media_library.forEach((m) => {
-    const li = document.createElement("li");
-    li.draggable = true; // drag onto the timeline's VIDEO row to place this file as a clip
-    li.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/media-id", m.id));
-    if (selectedMediaId === m.id) {
-      li.classList.add("selected");
-    }
-
-    const thumb = document.createElement("div");
-    thumb.className = "clip-thumb";
-    li.appendChild(thumb);
-
-    const info = document.createElement("div");
-    info.className = "clip-info";
-    const name = document.createElement("span");
-    name.className = "clip-name";
-    name.textContent = m.file_path.split(/[\\/]/).pop();
-    const duration = document.createElement("span");
-    duration.className = "clip-duration";
-    duration.textContent = formatClipDuration(m.duration);
-    info.appendChild(name);
-    info.appendChild(duration);
-    li.appendChild(info);
-
-    li.addEventListener("click", () => {
-      selectedMediaId = selectedMediaId === m.id ? null : m.id;
-      renderMediaList();
-    });
-    list.appendChild(li);
-  });
-}
-
 const PANEL_NAV_ITEMS = [
   {
     value: "files",
@@ -708,7 +666,7 @@ async function addClip() {
     order: project.clips.length,
   });
   await saveProject();
-  renderMediaList();
+  MediaPanel.render();
   Preview.load(project);
   renderTimeline();
 }

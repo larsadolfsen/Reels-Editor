@@ -43,6 +43,7 @@ static/
   video-box-preview.js   # stage preview for video-box (PiP) layers: one <video> per visible box in #overlay, drag/resize wiring, muted always
   panel-projects.js      # PROJECTS context-panel section: project list (open/rename/delete/duplicate) + "+ New Project"
   panel-video-box.js     # VIDEO BOX context-panel section: add-from-media-library picker, trim/time/position/size fields, delete
+  panel-media.js          # FILES/MEDIA context-panel section: media-library list (thumbnail, name, duration), click-to-select (extracted from editor.js 2026-07-20)
   panel-layers.js        # LAYERS context-panel section: drag-and-drop reorderable z-order list of text blocks + video boxes
   panel-export.js        # EXPORT context-panel section: FILENAME text input + QUALITY (HIGH/MEDIUM) button group, above the export button (added 2026-07-20)
   ui-icon-rail.js         # UI.iconRail: left-panel icon rail nav, single-select
@@ -152,7 +153,8 @@ Foundational — every other feature below builds on these.
 - `app/main.py` — `GET /api/probe` (-> `{duration, has_audio}`), `GET /api/pick-file`, `GET /media`.
 - `static/api-pick-file.js` — `Api.pickFile()`: `GET /api/pick-file`.
 - `static/api-probe-media.js` — `Api.probeMedia(path)`: `GET /api/probe` -> `{duration, has_audio}` or `null`.
-- `static/editor.js` — `addClip()` pushes a `MediaItem` into `project.media_library` alongside the `ClipLayer` (carrying `media_id`) added to `project.clips`. `renderMediaList()` renders `project.media_library` as display-only thumbnail+name+duration rows (`formatClipDuration`, mm:ss.s) into `#clip-list`, click-to-toggle a row's highlight via module-level `selectedMediaId` — purely local state, independent of timeline `selected` and with zero side effects on player/timeline/VIDEO panel. `setPanelCollapsed(bool)` toggles the MEDIA panel's `#panel.collapsed` (72px icon rail) and persists to `localStorage` (`panelCollapsed`).
+- `static/editor.js` — `addClip()` pushes a `MediaItem` into `project.media_library` alongside the `ClipLayer` (carrying `media_id`) added to `project.clips`, then calls `MediaPanel.render()`. `setPanelCollapsed(bool)` toggles the MEDIA panel's `#panel.collapsed` (72px icon rail) and persists to `localStorage` (`panelCollapsed`).
+- `static/panel-media.js` — `MediaPanel.render()` (extracted from `editor.js` 2026-07-20): renders `project.media_library` as display-only thumbnail+name+duration rows (`formatClipDuration`, mm:ss.s) into `#clip-list`, click-to-toggle a row's highlight via module-local `selectedMediaId` — purely local state, independent of timeline `selected` and with zero side effects on player/timeline/VIDEO panel; also wires `draggable`/`dragstart` for drag-to-timeline.
 - `static/css/components/panel.css` — left MEDIA panel: display-only clip rows (thumbnail + name/duration, click-to-select) + `.collapsed` state (72px icon rail: import button + thumbnails only).
 
 ### Project management (multi-project)
