@@ -417,7 +417,6 @@ async function deleteClip(clipId) {
   if (wasInside) {
     const newTotal = Preview.sequenceDuration(project.clips);
     Preview.seek(newTotal > 0 ? Math.min(start, Math.max(0, newTotal - 0.001)) : 0);
-    renderTimeline();
   }
 }
 
