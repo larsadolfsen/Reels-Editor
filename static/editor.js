@@ -383,6 +383,41 @@ function renderVideoPanel(c) {
   downBtn.disabled = idx === -1 || idx === ordered.length - 1;
   upBtn.onclick = async () => { await moveClip(c, ordered[idx - 1]); renderVideoPanel(c); };
   downBtn.onclick = async () => { await moveClip(c, ordered[idx + 1]); renderVideoPanel(c); };
+
+  document.getElementById("video-delete").onclick = () => deleteClip(c.id);
+}
+
+// Removes a clip from the sequence: renumbers the remaining clips' `order` so no gaps appear,
+// drops its clipDurations cache entry, clears selection back to a neutral panel, and if the
+// playhead was inside the deleted clip's timeline range, seeks it to that clip's former start
+// (clamped to the shorter post-delete sequence duration).
+async function deleteClip(clipId) {
+  const c = project.clips.find((x) => x.id === clipId);
+  if (!c) return;
+
+  const ordered = [...project.clips].sort((a, b) => a.order - b.order);
+  let start = 0;
+  for (const clip of ordered) {
+    if (clip.id === c.id) break;
+    start += clip.out_point - clip.in_point;
+  }
+  const wasInside = (() => {
+    const t = parseFloat(document.getElementById("time").textContent) || 0;
+    return t >= start && t < start + (c.out_point - c.in_point);
+  })();
+
+  project.clips = project.clips.filter((x) => x.id !== clipId);
+  project.clips.sort((a, b) => a.order - b.order).forEach((x, i) => { x.order = i; });
+  delete clipDurations[clipId];
+
+  await saveProject();
+  Preview.load(project);
+  openFilesPanel();
+
+  if (wasInside) {
+    const newTotal = Preview.sequenceDuration(project.clips);
+    Preview.seek(newTotal > 0 ? Math.min(start, Math.max(0, newTotal - 0.001)) : 0);
+  }
 }
 
 function selectClip(c) {
@@ -769,7 +804,8 @@ player.addEventListener("pause", () => { cancelAnimationFrame(tickRaf); tickRaf 
 
 document.getElementById("timeline-ruler").addEventListener("click", (e) => {
   const rect = e.currentTarget.getBoundingClientRect();
-  const t = Timeline.timeAtX(project.clips, rect, e.clientX);
+  let t = Timeline.timeAtX(project.clips, rect, e.clientX);
+  if (!e.altKey) t = Timeline.snapTime(t, Timeline.collectBoundaries(project), 8, Timeline.PX_PER_SEC);
   Preview.seek(t);
 });
 
@@ -777,14 +813,15 @@ document.getElementById("timeline-ruler").addEventListener("click", (e) => {
 // but re-invoked continuously; Timeline.tick keeps the handle box anchored during the drag.
 document.getElementById("playhead-grip").addEventListener("mousedown", (e) => {
   e.preventDefault();
-  const seekFromEvent = (clientX) => {
+  const seekFromEvent = (evt) => {
     const rect = document.getElementById("timeline-ruler").getBoundingClientRect();
-    const t = Timeline.timeAtX(project.clips, rect, clientX);
+    let t = Timeline.timeAtX(project.clips, rect, evt.clientX);
+    if (!evt.altKey) t = Timeline.snapTime(t, Timeline.collectBoundaries(project), 8, Timeline.PX_PER_SEC);
     Preview.seek(t);
     Timeline.tick(Preview.currentTimelineTime());
   };
-  seekFromEvent(e.clientX);
-  const onMouseMove = (moveEvent) => seekFromEvent(moveEvent.clientX);
+  seekFromEvent(e);
+  const onMouseMove = (moveEvent) => seekFromEvent(moveEvent);
   const onMouseUp = () => {
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
@@ -840,4 +877,5 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowRight") { e.preventDefault(); nudgeTime(0.1); }
   else if (e.key === "ArrowUp") { e.preventDefault(); if (Preview.isPaused()) Preview.play(); else Preview.pause(); }
   else if (e.key === "ArrowDown") { e.preventDefault(); Preview.restart(); }
+  else if (e.key === "Delete" && selected && selected.type === "video") { e.preventDefault(); deleteClip(selected.item.id); }
 });
