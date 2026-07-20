@@ -1,4 +1,4 @@
-// VIDEO context-panel section: trim/order/delete for the selected clip. Exposes
+// VIDEO context-panel section: trim/order/fill-mode/delete for the selected clip. Exposes
 // window.VideoPanel.render()/select()/deleteClip()/moveClip().
 window.VideoPanel = window.VideoPanel || {};
 
@@ -37,6 +37,15 @@ window.VideoPanel = window.VideoPanel || {};
     downBtn.disabled = idx === -1 || idx === ordered.length - 1;
     upBtn.onclick = async () => { await moveClip(c, ordered[idx - 1]); render(c); };
     downBtn.onclick = async () => { await moveClip(c, ordered[idx + 1]); render(c); };
+
+    UI.buttonGroup(document.getElementById("video-fill-mode-group"),
+      [{ value: "fit", label: "FIT", span: 4 }, { value: "fill", label: "FILL", span: 4 }],
+      c.fill_mode,
+      async (v) => {
+        c.fill_mode = v;
+        await saveProject();
+        Preview.load(project);
+      });
 
     document.getElementById("video-delete").onclick = () => deleteClip(c.id);
   }

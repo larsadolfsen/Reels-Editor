@@ -3,6 +3,9 @@
 // divs and video-box <video> elements (see video-box-preview.js) are siblings inside #overlay and
 // each set an explicit CSS z-index from their model's z_index field, so browser stacking follows
 // the project's cross-layer z-order.
+// applyFillModeClass(clip) toggles #player's .fill-mode-fill class (stage.css) to switch between
+// FIT (object-fit: contain) and FILL (object-fit: cover) per ClipLayer.fill_mode; called from both
+// playClipAt and seek's clip-switch branch, the two places player.src changes for a new clip.
 // In BOX FILL mode, renderText() also auto-computes and persists preset.size_px via
 // window.FontFit before laying out the div.
 // renderCaptions() groups project.captions.words via Timeline.groupWords (max_words_per_line),
@@ -101,12 +104,19 @@ window.Preview = (() => {
   function playClipAt(index) {
     activeIndex = index;
     const c = clips[index];
+    applyFillModeClass(c);
     player.src = "/media?path=" + encodeURIComponent(c.file_path);
     player.onloadedmetadata = () => {
       player.currentTime = c.in_point;
       player.play();
     };
     maybePreloadNext(index);
+  }
+
+  // Toggles the CSS class stage.css uses to switch #player between letterboxed (FIT,
+  // object-fit: contain) and cropped-to-fill (FILL, object-fit: cover) per ClipLayer.fill_mode.
+  function applyFillModeClass(clip) {
+    player.classList.toggle("fill-mode-fill", clip.fill_mode === "fill");
   }
 
   function maybePreloadNext(index) {
@@ -466,6 +476,7 @@ window.Preview = (() => {
     if (!loc) return;
     if (loc.clip !== clips[activeIndex]) {
       activeIndex = clips.indexOf(loc.clip);
+      applyFillModeClass(loc.clip);
       player.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
       player.onloadedmetadata = () => { player.currentTime = loc.src; };
     } else {
