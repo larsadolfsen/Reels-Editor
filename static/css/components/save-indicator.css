@@ -16,6 +16,7 @@
 }
 
 .save-indicator.is-saving .save-indicator-dot { background: var(--accent); }
+.save-indicator.is-failed .save-indicator-dot { background: var(--danger); }
 
 .save-indicator-label {
   font-family: var(--font-ui);
@@ -23,4 +24,14 @@
   letter-spacing: 0.04em;
   color: var(--text-dim);
   text-align: center;
+}
+
+.save-indicator.is-failed .save-indicator-label {
+  color: var(--danger);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.save-indicator.is-faded .save-indicator-label {
+  opacity: 0;
 }

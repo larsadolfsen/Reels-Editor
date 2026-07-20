@@ -306,8 +306,13 @@ const saveIndicator = UI.saveIndicator(document.getElementById("save-indicator")
 
 async function saveProject() {
   saveIndicator.setSaving();
-  await Api.saveProject(project);
-  saveIndicator.setSaved();
+  try {
+    await Api.saveProject(project);
+    saveIndicator.setSaved();
+  } catch (err) {
+    console.error("saveProject failed", err);
+    saveIndicator.setFailed(() => saveProject());
+  }
 }
 
 function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
@@ -559,6 +564,7 @@ function openSettingsPanel() {
 function openExportPanel() {
   selected = { type: "export" };
   showPanel("export");
+  ExportPanel.render();
   renderTimeline();
 }
 
