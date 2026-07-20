@@ -181,6 +181,42 @@
 .clip-info .clip-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .clip-info .clip-duration { font-family: var(--font-ui); font-size: 9.5px; color: var(--text-dim); margin-top: 2px; }
 
+.clip-name-input {
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  background: var(--bg-1);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  padding: 1px 3px;
+}
+
+.clip-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  opacity: 0;
+}
+#clip-list li:hover .clip-actions { opacity: 1; }
+
+.clip-usage-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-soft);
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: 9.5px;
+  line-height: 1;
+}
+
 #panel-export #export { width: 100%; }
 
 /* TEXT ALIGN's buttons are icons, not text — the group's 28px grid tracks would otherwise

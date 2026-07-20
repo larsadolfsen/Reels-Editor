@@ -1,5 +1,6 @@
-# Pure ffmpeg export-command builder: per-clip trim/scale/pad, concat with silent-audio synthesis for
-# video-only clips, optional ASS burn or banded chain alternating ASS burn-in with video-box overlays.
+# Pure ffmpeg export-command builder: per-clip trim/scale/pad-or-crop (branched on ClipLayer.fill_mode:
+# "fit" letterboxes, "fill" center-crops), concat with silent-audio synthesis for video-only clips,
+# optional ASS burn or banded chain alternating ASS burn-in with video-box overlays.
 # CRF is derived from Project.export_quality ("high" -> 18, "medium" -> 23, default 18).
 from app.models import Project
 from app.timeline import ordered
@@ -26,10 +27,17 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
         v_idx = input_index
         cmd += ["-i", c.file_path]
         input_index += 1
-        parts.append(
-            f"[{v_idx}:v]trim=start={_num(c.in_point)}:end={_num(c.out_point)},setpts=PTS-STARTPTS,"
-            f"scale={p.width}:{p.height}:force_original_aspect_ratio=decrease,"
-            f"pad={p.width}:{p.height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={p.fps}[v{i}];")
+        trim_prefix = f"[{v_idx}:v]trim=start={_num(c.in_point)}:end={_num(c.out_point)},setpts=PTS-STARTPTS,"
+        suffix = f",setsar=1,fps={p.fps}[v{i}];"
+        if c.fill_mode == "fill":
+            scale_segment = (
+                f"scale={p.width}:{p.height}:force_original_aspect_ratio=increase,"
+                f"crop={p.width}:{p.height}")
+        else:
+            scale_segment = (
+                f"scale={p.width}:{p.height}:force_original_aspect_ratio=decrease,"
+                f"pad={p.width}:{p.height}:(ow-iw)/2:(oh-ih)/2")
+        parts.append(trim_prefix + scale_segment + suffix)
         media = media_by_id.get(c.media_id)
         has_audio = media.has_audio if media else True
         if has_audio:

@@ -10,8 +10,17 @@ def new_id() -> str:
 class MediaItem(BaseModel):
     id: str = Field(default_factory=new_id)
     file_path: str
+    name: str = ""
     duration: float
     has_audio: bool = True
+
+    @property
+    def display_name(self) -> str:
+        """Return name if non-empty, else the basename of file_path."""
+        if self.name.strip():
+            return self.name
+        # Split on both / and \ to handle cross-platform paths
+        return self.file_path.replace("\\", "/").split("/")[-1]
 
 class ClipLayer(BaseModel):
     id: str = Field(default_factory=new_id)
@@ -20,6 +29,7 @@ class ClipLayer(BaseModel):
     in_point: float = 0.0   # seconds into source
     out_point: float        # seconds into source (exclusive end)
     order: int
+    fill_mode: str = "fit"  # "fit" (letterbox, default) or "fill" (center-crop, no padding)
 
 class VideoBoxLayer(BaseModel):
     id: str = Field(default_factory=new_id)

@@ -6,6 +6,10 @@ def test_ids_are_unique():
     a, b = ClipLayer(media_id="m1", file_path="a.mp4", in_point=0, out_point=5, order=0), ClipLayer(media_id="m2", file_path="b.mp4", in_point=0, out_point=5, order=1)
     assert a.id != b.id and len(a.id) == 32
 
+def test_clip_layer_fill_mode_defaults_to_fit():
+    c = ClipLayer(media_id="m1", file_path="a.mp4", in_point=0, out_point=5, order=0)
+    assert c.fill_mode == "fit"
+
 def test_project_defaults():
     p = Project(name="reel1")
     assert (p.width, p.height, p.fps) == (1080, 1920, 30)
@@ -154,3 +158,35 @@ def test_text_block_formatting_runs_round_trip():
 def test_text_preset_highlight_defaults_off():
     p = TextPreset(name="Pop")
     assert p.highlight is False
+
+def test_media_item_name_defaults_empty():
+    m = MediaItem(file_path="clip.mp4", duration=5.0)
+    assert m.name == ""
+
+def test_media_item_display_name_uses_custom_name():
+    m = MediaItem(file_path="clip.mp4", name="My Video", duration=5.0)
+    assert m.display_name == "My Video"
+
+def test_media_item_display_name_falls_back_to_file_path_basename():
+    m = MediaItem(file_path="path/to/my-clip.mp4", duration=5.0)
+    assert m.display_name == "my-clip.mp4"
+
+def test_media_item_display_name_handles_backslashes():
+    m = MediaItem(file_path="path\\to\\my-clip.mp4", duration=5.0)
+    assert m.display_name == "my-clip.mp4"
+
+def test_media_item_display_name_ignores_whitespace_only_name():
+    m = MediaItem(file_path="path/to/clip.mp4", name="   ", duration=5.0)
+    assert m.display_name == "clip.mp4"
+
+def test_media_item_old_json_without_name_field_loads():
+    # Ensure backwards compatibility: old JSON dicts without "name" can still be loaded
+    old_dict = {"id": "m1", "file_path": "a.mp4", "duration": 4.5, "has_audio": True}
+    m = MediaItem(**old_dict)
+    assert m.name == ""
+    assert m.file_path == "a.mp4"
+    assert m.duration == 4.5
+
+def test_media_item_name_round_trip():
+    m = MediaItem(file_path="clip.mp4", name="Custom Name", duration=5.0)
+    assert MediaItem.model_validate_json(m.model_dump_json()).name == "Custom Name"

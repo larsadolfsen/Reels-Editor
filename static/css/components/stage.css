@@ -26,6 +26,7 @@
 }
 
 #player { width: 100%; height: 100%; object-fit: contain; }
+#player.fill-mode-fill { object-fit: cover; }
 #overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 
 .text-block {

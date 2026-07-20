@@ -31,6 +31,20 @@ def test_no_fontsdir_when_no_ass_path():
     fc = build_export_cmd(proj(), "out.mp4")[build_export_cmd(proj(), "out.mp4").index("-filter_complex") + 1]
     assert "fontsdir" not in fc
 
+def test_fill_mode_branches_scale_pad_vs_crop_per_clip():
+    p = Project(name="r", clips=[
+        ClipLayer(media_id="m1", file_path="fit.mp4", in_point=0, out_point=2, order=0, fill_mode="fit"),
+        ClipLayer(media_id="m2", file_path="fill.mp4", in_point=0, out_point=2, order=1, fill_mode="fill"),
+    ])
+    cmd = build_export_cmd(p, "out.mp4")
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    parts = fc.split(";")
+    fit_part = next(seg for seg in parts if "[v0]" in seg)
+    fill_part = next(seg for seg in parts if "[v1]" in seg)
+    assert "force_original_aspect_ratio=decrease" in fit_part and "pad=1080:1920" in fit_part
+    assert "force_original_aspect_ratio=increase" in fill_part and "crop=1080:1920" in fill_part
+    assert "pad=" not in fill_part
+
 def test_bands_none_matches_legacy_ass_path_behavior():
     cmd_legacy = build_export_cmd(proj(), "out.mp4", ass_path="C:/tmp/subs.ass")
     cmd_bands_none = build_export_cmd(proj(), "out.mp4", ass_path="C:/tmp/subs.ass", bands=None)

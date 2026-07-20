@@ -3,7 +3,6 @@
 let project = null;
 let selected = null; // currently selected clip/text/caption; drives which right-panel section (VIDEO/TEXT/CAPTIONS) is open
 const clipDurations = {}; // clip.id -> source duration (seconds), populated on add-clip
-let selectedMediaId = null; // MEDIA panel row highlight only — independent of timeline `selected`
 const player = document.getElementById("player");
 
 const AVAILABLE_FONTS = ["Public Sans", "JetBrains Mono"]; // the only vendored font families (static/fonts/)
@@ -34,17 +33,11 @@ async function openProject(target) {
   if (JSON.stringify(project) !== before) await saveProject();
   showEditorShell();
   document.title = project.name ? `${project.name} – Reels Editor` : "Reels Editor";
-  renderMediaList();
+  MediaPanel.render();
   Preview.load(project);
   await renderTextPanel();
   renderTimeline();
   openFilesPanel();
-}
-
-function formatClipDuration(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = (seconds % 60).toFixed(1).padStart(4, "0");
-  return `${String(m).padStart(2, "0")}:${s}`;
 }
 
 // Position grid anchors (thirds of the 1080x1920 canvas). Used only as a stateless one-shot
@@ -356,82 +349,6 @@ document.getElementById("style-panel-collapse-toggle").addEventListener("click",
   setStylePanelCollapsed(!stylePanelCollapsed);
 });
 
-function renderVideoPanel(c) {
-  const dur = clipDurations[c.id] ?? c.out_point;
-  document.getElementById("video-name").textContent = c.file_path.split(/[\\/]/).pop();
-
-  async function applyTrim(inP, outP) {
-    const t = clampTrim(inP, outP, dur);
-    c.in_point = t.in_point; c.out_point = t.out_point;
-    await saveProject();
-    Preview.load(project);
-    renderTimeline();
-    renderVideoPanel(c);
-  }
-
-  UI.numberField(document.getElementById("video-in-field"),
-    { label: "IN", unit: "SEC", value: c.in_point, step: 0.1, span: 4,
-      onChange: (v) => applyTrim(v, c.out_point) });
-
-  UI.numberField(document.getElementById("video-out-field"),
-    { label: "OUT", unit: "SEC", value: c.out_point, step: 0.1, span: 4,
-      onChange: (v) => applyTrim(c.in_point, v) });
-
-  document.getElementById("video-set-in").onclick = () => applyTrim(player.currentTime, c.out_point);
-  document.getElementById("video-set-out").onclick = () => applyTrim(c.in_point, player.currentTime);
-
-  const ordered = [...project.clips].sort((a, b) => a.order - b.order);
-  const idx = ordered.findIndex((x) => x.id === c.id);
-  const upBtn = document.getElementById("video-move-up");
-  const downBtn = document.getElementById("video-move-down");
-  upBtn.disabled = idx <= 0;
-  downBtn.disabled = idx === -1 || idx === ordered.length - 1;
-  upBtn.onclick = async () => { await moveClip(c, ordered[idx - 1]); renderVideoPanel(c); };
-  downBtn.onclick = async () => { await moveClip(c, ordered[idx + 1]); renderVideoPanel(c); };
-
-  document.getElementById("video-delete").onclick = () => deleteClip(c.id);
-}
-
-// Removes a clip from the sequence: renumbers the remaining clips' `order` so no gaps appear,
-// drops its clipDurations cache entry, clears selection back to a neutral panel, and if the
-// playhead was inside the deleted clip's timeline range, seeks it to that clip's former start
-// (clamped to the shorter post-delete sequence duration).
-async function deleteClip(clipId) {
-  const c = project.clips.find((x) => x.id === clipId);
-  if (!c) return;
-
-  const ordered = [...project.clips].sort((a, b) => a.order - b.order);
-  let start = 0;
-  for (const clip of ordered) {
-    if (clip.id === c.id) break;
-    start += clip.out_point - clip.in_point;
-  }
-  const wasInside = (() => {
-    const t = parseFloat(document.getElementById("time").textContent) || 0;
-    return t >= start && t < start + (c.out_point - c.in_point);
-  })();
-
-  project.clips = project.clips.filter((x) => x.id !== clipId);
-  project.clips.sort((a, b) => a.order - b.order).forEach((x, i) => { x.order = i; });
-  delete clipDurations[clipId];
-
-  await saveProject();
-  Preview.load(project);
-  openFilesPanel();
-
-  if (wasInside) {
-    const newTotal = Preview.sequenceDuration(project.clips);
-    Preview.seek(newTotal > 0 ? Math.min(start, Math.max(0, newTotal - 0.001)) : 0);
-  }
-}
-
-function selectClip(c) {
-  selected = { type: "video", item: c };
-  showPanel("video");
-  renderVideoPanel(c);
-  renderTimeline();
-}
-
 async function onTimelineSelect({ type, item, groupIndex }) {
   selected = { type, item, groupIndex };
   if (type === "video") {
@@ -443,7 +360,7 @@ async function onTimelineSelect({ type, item, groupIndex }) {
     }
     Preview.seek(start);
     showPanel("video");
-    renderVideoPanel(item);
+    VideoPanel.render(item);
   } else if (type === "text") {
     showPanel("text");
     await renderTextPanel();
@@ -455,41 +372,6 @@ async function onTimelineSelect({ type, item, groupIndex }) {
     VideoBoxPanel.render(item.id);
   }
   renderTimeline();
-}
-
-function renderMediaList() {
-  const list = document.getElementById("clip-list");
-  list.innerHTML = "";
-  project.media_library.forEach((m) => {
-    const li = document.createElement("li");
-    li.draggable = true; // drag onto the timeline's VIDEO row to place this file as a clip
-    li.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/media-id", m.id));
-    if (selectedMediaId === m.id) {
-      li.classList.add("selected");
-    }
-
-    const thumb = document.createElement("div");
-    thumb.className = "clip-thumb";
-    li.appendChild(thumb);
-
-    const info = document.createElement("div");
-    info.className = "clip-info";
-    const name = document.createElement("span");
-    name.className = "clip-name";
-    name.textContent = m.file_path.split(/[\\/]/).pop();
-    const duration = document.createElement("span");
-    duration.className = "clip-duration";
-    duration.textContent = formatClipDuration(m.duration);
-    info.appendChild(name);
-    info.appendChild(duration);
-    li.appendChild(info);
-
-    li.addEventListener("click", () => {
-      selectedMediaId = selectedMediaId === m.id ? null : m.id;
-      renderMediaList();
-    });
-    list.appendChild(li);
-  });
 }
 
 const PANEL_NAV_ITEMS = [
@@ -652,6 +534,7 @@ function insertClipIntoSequence(source, dropTime) {
       in_point: splitAt,
       out_point: splitClip.out_point,
       order: splitClip.order + 2,
+      fill_mode: splitClip.fill_mode,
     };
     splitClip.out_point = splitAt;
     project.clips.push(secondHalf);
@@ -667,6 +550,7 @@ function insertClipIntoSequence(source, dropTime) {
     in_point: source.in_point,
     out_point: source.out_point,
     order: insertOrder,
+    fill_mode: source.fill_mode || "fit",
   };
   project.clips.push(newClip);
   return newClip;
@@ -677,15 +561,6 @@ function insertClipIntoSequence(source, dropTime) {
 function stitchVideoBoxIntoSequence(box, dropTime) {
   insertClipIntoSequence(box, dropTime);
   project.video_boxes = project.video_boxes.filter((v) => v.id !== box.id);
-}
-
-async function moveClip(a, b) {
-  const t = a.order;
-  a.order = b.order;
-  b.order = t;
-  await saveProject();
-  Preview.load(project);
-  renderTimeline();
 }
 
 async function addClip() {
@@ -708,7 +583,7 @@ async function addClip() {
     order: project.clips.length,
   });
   await saveProject();
-  renderMediaList();
+  MediaPanel.render();
   Preview.load(project);
   renderTimeline();
 }
@@ -883,5 +758,5 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowRight") { e.preventDefault(); nudgeTime(0.1); }
   else if (e.key === "ArrowUp") { e.preventDefault(); if (Preview.isPaused()) Preview.play(); else Preview.pause(); }
   else if (e.key === "ArrowDown") { e.preventDefault(); Preview.restart(); }
-  else if (e.key === "Delete" && selected && selected.type === "video") { e.preventDefault(); deleteClip(selected.item.id); }
+  else if (e.key === "Delete" && selected && selected.type === "video") { e.preventDefault(); VideoPanel.deleteClip(selected.item.id); }
 });
