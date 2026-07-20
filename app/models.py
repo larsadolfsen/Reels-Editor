@@ -29,6 +29,7 @@ class ClipLayer(BaseModel):
     in_point: float = 0.0   # seconds into source
     out_point: float        # seconds into source (exclusive end)
     order: int
+    fill_mode: str = "fit"  # "fit" (letterbox, default) or "fill" (center-crop, no padding)
 
 class VideoBoxLayer(BaseModel):
     id: str = Field(default_factory=new_id)
