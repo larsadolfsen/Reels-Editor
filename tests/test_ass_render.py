@@ -249,6 +249,20 @@ def test_group_words_empty():
     from app.ass_render import group_words
     assert group_words([], max_words=4) == []
 
+def test_group_words_expands_multi_word_entries():
+    from app.ass_render import group_words
+    words = [w("talks about this", 0.0, 3.0)]
+    groups = group_words(words, max_words=4)
+    assert len(groups) == 1
+    assert [x.text for x in groups[0]] == ["talks", "about", "this"]
+
+def test_group_words_expansion_still_respects_max_words():
+    from app.ass_render import group_words
+    # "a b c" expands to 3 words; combined with 2 more single-word entries that's 5 total
+    words = [w("a b c", 0.0, 1.5), w("d", 1.5, 2.0), w("e", 2.0, 2.5)]
+    groups = group_words(words, max_words=4)
+    assert [len(g) for g in groups] == [4, 1]
+
 def test_progressive_fill_style_uses_highlight_as_primary():
     from app.ass_render import render_caption_ass
     pr = TextPreset(name="Caption", color="#FFFFFF", highlight_color="#FFD400", highlight_mode="progressive_fill")
@@ -281,6 +295,15 @@ def test_current_word_emits_one_dialogue_per_word_with_inline_override():
     assert "{\\1c" in first and "Hello" in first and "world" in first
     second = next(l for l in dialogues if l.startswith("Dialogue: 0,0:00:01.50,0:00:02.20"))
     assert second.count("{\\1c") == 2
+
+def test_render_caption_ass_expands_multi_word_entry_into_karaoke_segments():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Caption", highlight_mode="progressive_fill", max_words_per_line=4)
+    p = Project(name="r", captions=CaptionTrack(words=[w("talks about this", 0.0, 3.0)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    line = next(l for l in out.splitlines() if "talks" in l)
+    assert line.count("{\\k") == 3
+    assert "talks" in line and "about" in line and "this" in line
 
 def test_render_caption_ass_no_words_still_valid_header():
     from app.ass_render import render_caption_ass

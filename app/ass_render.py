@@ -3,6 +3,7 @@
 from typing import Callable
 from app.models import Project, TextPreset, CaptionWord
 from app.font_metrics import wrap_text, wrap_text_runs, pil_font_measurer, WEIGHT_LABELS, nearest_available_weight
+from app.caption_word_estimate import estimate_word_timings
 
 BOX_PAD_X_EM = 0.35
 BOX_PAD_Y_EM = 0.15
@@ -244,7 +245,8 @@ def render_ass(project: Project, presets: dict[str, TextPreset], text_blocks: li
 CAPTION_STYLE_NAME = "Caption"
 
 def group_words(words: list[CaptionWord], max_words: int) -> list[list[CaptionWord]]:
-    sorted_words = sorted(words, key=lambda w: w.t_start)
+    expanded = [w for word in words for w in estimate_word_timings(word)]
+    sorted_words = sorted(expanded, key=lambda w: w.t_start)
     return [sorted_words[i:i + max_words] for i in range(0, len(sorted_words), max_words)]
 
 def _caption_style(p: TextPreset, weight: int) -> str:
