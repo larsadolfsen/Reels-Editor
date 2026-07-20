@@ -201,6 +201,22 @@
 }
 #clip-list li:hover .clip-actions { opacity: 1; }
 
+.clip-usage-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-soft);
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: 9.5px;
+  line-height: 1;
+}
+
 #panel-export #export { width: 100%; }
 
 /* TEXT ALIGN's buttons are icons, not text — the group's 28px grid tracks would otherwise

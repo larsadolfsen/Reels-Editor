@@ -1,5 +1,6 @@
 // FILES/MEDIA context-panel section: media-library list (thumbnail, name, duration),
-// click-to-select, hover-reveal inline rename (pencil icon; trash icon added in a later task).
+// click-to-select, hover-reveal inline rename (pencil icon) and remove (trash icon, disabled
+// with a usage-count chip when the media item is referenced by any ClipLayer).
 // Exposes window.MediaPanel.render().
 window.MediaPanel = window.MediaPanel || {};
 
@@ -87,6 +88,34 @@ window.MediaPanel = window.MediaPanel || {};
         startRename(m, name);
       });
       actions.appendChild(renameBtn);
+
+      const count = project.clips.filter((c) => c.media_id === m.id).length;
+      if (count > 0) {
+        const chip = document.createElement("span");
+        chip.className = "clip-usage-chip";
+        chip.textContent = String(count);
+        actions.appendChild(chip);
+      }
+
+      const trashBtn = document.createElement("button");
+      trashBtn.type = "button";
+      trashBtn.className = "icon-btn clip-action";
+      if (count > 0) {
+        trashBtn.disabled = true;
+        trashBtn.title = `used by ${count} clip${count === 1 ? "" : "s"}`;
+      } else {
+        trashBtn.title = "Remove";
+      }
+      trashBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+      trashBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (count > 0) return;
+        project.media_library = project.media_library.filter((x) => x.id !== m.id);
+        await saveProject();
+        render();
+      });
+      actions.appendChild(trashBtn);
+
       li.appendChild(actions);
 
       li.addEventListener("click", () => {
