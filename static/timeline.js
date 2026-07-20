@@ -28,7 +28,8 @@ window.Timeline = (() => {
   }
 
   function groupWords(words, max = 4) {
-    const sorted = [...words].sort((a, b) => a.t_start - b.t_start);
+    const expanded = words.flatMap((word) => Timeline.estimateWordTimings(word));
+    const sorted = expanded.sort((a, b) => a.t_start - b.t_start);
     const groups = [];
     for (let i = 0; i < sorted.length; i += max) groups.push(sorted.slice(i, i + max));
     return groups;
