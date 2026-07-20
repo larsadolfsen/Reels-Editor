@@ -55,19 +55,19 @@ window.CaptionPanel = window.CaptionPanel || {};
     document.getElementById("caption-size-step-up").disabled = sizeFieldDisabled;
 
     currentSizeFieldSetValue = UI.numberField(document.getElementById("caption-size-field"),
-      { label: "SIZE", unit: "PX", value: preset.size_px, min: 24, max: 200, disabled: sizeFieldDisabled,
+      { label: "SIZE", unit: "PX", value: preset.size_px, min: 24, max: 200, disabled: sizeFieldDisabled, span: 6,
         onChange: (v) => { preset.size_px = v; saveProject(); renderCaptionPreview(); } });
 
     UI.colorSwatch(document.getElementById("caption-color-field"),
-      { label: "Color", value: preset.color,
+      { label: "Color", value: preset.color, span: 8,
         onChange: (v) => { preset.color = v; saveProject(); renderCaptionPreview(); } });
 
     UI.colorSwatch(document.getElementById("caption-outline-color-field"),
-      { label: "Outline", value: preset.outline_color,
+      { label: "Outline", value: preset.outline_color, span: 8,
         onChange: (v) => { preset.outline_color = v; saveProject(); renderCaptionPreview(); } });
 
     UI.numberField(document.getElementById("caption-outline-px-field"),
-      { label: "WIDTH", unit: "PX", value: preset.outline_px, min: 0, max: 20,
+      { label: "WIDTH", unit: "PX", value: preset.outline_px, min: 0, max: 20, span: 8,
         onChange: (v) => { preset.outline_px = v; saveProject(); renderCaptionPreview(); } });
   };
 })();

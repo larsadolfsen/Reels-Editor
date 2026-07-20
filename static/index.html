@@ -135,7 +135,7 @@
         <div class="style-panel-header">VIDEO</div>
 
         <div class="style-group">
-          <div id="video-name" class="context-panel-name"></div>
+          <div id="video-name" class="context-panel-name col-8"></div>
         </div>
 
         <div class="style-group-label">TRIM</div>
@@ -147,8 +147,8 @@
         </div>
         <div class="style-group">
           <div class="style-row">
-            <button id="video-set-in">Set in</button>
-            <button id="video-set-out">Set out</button>
+            <button class="col-4" id="video-set-in">Set in</button>
+            <button class="col-4" id="video-set-out">Set out</button>
           </div>
         </div>
 
@@ -157,8 +157,8 @@
         <div class="style-group-label">ORDER</div>
         <div class="style-group">
           <div class="style-row">
-            <button id="video-move-up">&#9650; Move up</button>
-            <button id="video-move-down">&#9660; Move down</button>
+            <button class="col-4" id="video-move-up">&#9650; Move up</button>
+            <button class="col-4" id="video-move-down">&#9660; Move down</button>
           </div>
         </div>
       </div>
@@ -168,51 +168,51 @@
           <div class="style-panel-header">CAPTIONS</div>
 
           <div class="style-group">
-            <button id="caption-auto-btn" type="button">Auto-caption</button>
-            <p id="caption-empty-state" class="context-panel-name">No captions yet — click Auto-caption to transcribe this reel's audio.</p>
+            <button id="caption-auto-btn" class="col-8" type="button">Auto-caption</button>
+            <p id="caption-empty-state" class="context-panel-name col-8">No captions yet — click Auto-caption to transcribe this reel's audio.</p>
           </div>
 
           <div id="caption-style-accordion"></div>
           <div id="caption-style-body">
             <div class="style-group">
-              <button id="caption-style-save" type="button">+ Save current style</button>
+              <button id="caption-style-save" class="col-8" type="button">+ Save current style</button>
             </div>
             <div class="style-group">
-              <ul id="caption-style-most-used" class="font-list"></ul>
+              <ul id="caption-style-most-used" class="font-list col-8"></ul>
             </div>
             <div class="style-group">
-              <div id="caption-style-browse-row"></div>
+              <div id="caption-style-browse-row" class="col-8"></div>
             </div>
           </div>
 
           <div id="caption-font-accordion">
           <div id="caption-font-body">
             <div class="style-group">
-              <div id="caption-font-row"></div>
+              <div id="caption-font-row" class="col-8"></div>
             </div>
 
             <div class="style-group">
               <div class="style-row" id="caption-size-row">
-                <button class="icon-btn" id="caption-size-step-down" type="button" aria-label="Decrease font size" title="Decrease font size">
+                <button class="icon-btn col-1" id="caption-size-step-down" type="button" aria-label="Decrease font size" title="Decrease font size">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 12 4 4 4-4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>
                 </button>
                 <label id="caption-size-field"></label>
-                <button class="icon-btn" id="caption-size-step-up" type="button" aria-label="Increase font size" title="Increase font size">
+                <button class="icon-btn col-1" id="caption-size-step-up" type="button" aria-label="Increase font size" title="Increase font size">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 11 4-4 4 4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>
                 </button>
               </div>
             </div>
 
             <div class="style-group">
-              <div id="caption-weight-row"></div>
+              <div id="caption-weight-row" class="col-8"></div>
             </div>
 
             <div class="style-group">
               <div class="style-row">
-                <button class="icon-btn" id="caption-italic" type="button" aria-pressed="false" title="Italic">
+                <button class="icon-btn col-1" id="caption-italic" type="button" aria-pressed="false" title="Italic">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
                 </button>
-                <button class="icon-btn" id="caption-underline" type="button" aria-pressed="false" title="Underline">
+                <button class="icon-btn col-1" id="caption-underline" type="button" aria-pressed="false" title="Underline">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
                 </button>
               </div>
@@ -304,7 +304,7 @@
           </div>
 
           <div class="style-group">
-            <div id="caption-words-row"></div>
+            <div id="caption-words-row" class="col-8"></div>
           </div>
 
         </div>
@@ -336,8 +336,8 @@
         <div class="style-group-label">APPEARANCE</div>
         <div class="style-group">
           <div class="style-row">
-            <span class="context-panel-name">Theme</span>
-            <button id="theme-toggle" type="button" aria-pressed="false" title="Toggle light/dark theme">
+            <span class="context-panel-name col-6">Theme</span>
+            <button id="theme-toggle" class="col-2" type="button" aria-pressed="false" title="Toggle light/dark theme">
               <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
               <svg class="icon-moon icon-hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
             </button>
@@ -348,7 +348,7 @@
       <div id="panel-export" class="context-panel" hidden>
         <div class="style-panel-header">EXPORT</div>
         <div class="style-group">
-          <button id="export">EXPORT &middot; 1080&times;1920</button>
+          <button id="export" class="col-8">EXPORT &middot; 1080&times;1920</button>
         </div>
         <div id="export-result"></div>
       </div>
@@ -356,7 +356,7 @@
       <div id="panel-projects" class="context-panel" hidden>
         <div class="style-panel-header">PROJECTS</div>
         <div class="style-group">
-          <button id="project-create" class="new-project-btn"><span class="icon">+</span><span class="label">NEW PROJECT</span></button>
+          <button id="project-create" class="new-project-btn col-8"><span class="icon">+</span><span class="label">NEW PROJECT</span></button>
         </div>
         <ul id="project-list" class="project-list-row-list"></ul>
       </div>
@@ -364,7 +364,7 @@
       <div id="panel-video-box" class="context-panel" hidden>
         <div class="style-panel-header">VIDEO BOX</div>
         <div class="style-group">
-          <button id="video-box-add" type="button"><span class="icon">+</span><span class="label">ADD VIDEO BOX</span></button>
+          <button id="video-box-add" type="button" class="col-8"><span class="icon">+</span><span class="label">ADD VIDEO BOX</span></button>
         </div>
         <div id="video-box-picker" hidden>
           <ul id="video-box-picker-list" class="font-list"></ul>
@@ -398,7 +398,7 @@
           </div>
 
           <div class="style-group">
-            <button id="video-box-delete" type="button">Delete video box</button>
+            <button id="video-box-delete" type="button" class="col-8">Delete video box</button>
           </div>
         </div>
       </div>
@@ -415,44 +415,44 @@
         <div id="text-style-accordion"></div>
         <div id="text-style-body">
           <div class="style-group">
-            <button id="text-style-save" type="button">+ Save current style</button>
+            <button id="text-style-save" class="col-8" type="button">+ Save current style</button>
           </div>
           <div class="style-group">
-            <ul id="text-style-most-used" class="font-list"></ul>
+            <ul id="text-style-most-used" class="font-list col-8"></ul>
           </div>
           <div class="style-group">
-            <div id="text-style-browse-row"></div>
+            <div id="text-style-browse-row" class="col-8"></div>
           </div>
         </div>
 
         <div id="text-font-accordion">
         <div id="text-font-body">
           <div class="style-group">
-            <div id="text-font-row"></div>
+            <div id="text-font-row" class="col-8"></div>
           </div>
 
           <div class="style-group">
             <div class="style-row" id="text-size-row">
-              <button class="icon-btn" id="text-size-step-down" type="button" aria-label="Decrease font size" title="Decrease font size">
+              <button class="icon-btn col-1" id="text-size-step-down" type="button" aria-label="Decrease font size" title="Decrease font size">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 12 4 4 4-4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>
               </button>
               <label id="text-size-field"></label>
-              <button class="icon-btn" id="text-size-step-up" type="button" aria-label="Increase font size" title="Increase font size">
+              <button class="icon-btn col-1" id="text-size-step-up" type="button" aria-label="Increase font size" title="Increase font size">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 11 4-4 4 4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>
               </button>
             </div>
           </div>
 
           <div class="style-group">
-            <div id="text-weight-row"></div>
+            <div id="text-weight-row" class="col-8"></div>
           </div>
 
           <div class="style-group">
             <div class="style-row">
-              <button class="icon-btn" id="text-italic" type="button" aria-pressed="false" title="Italic">
+              <button class="icon-btn col-1" id="text-italic" type="button" aria-pressed="false" title="Italic">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
               </button>
-              <button class="icon-btn" id="text-underline" type="button" aria-pressed="false" title="Underline">
+              <button class="icon-btn col-1" id="text-underline" type="button" aria-pressed="false" title="Underline">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
               </button>
             </div>

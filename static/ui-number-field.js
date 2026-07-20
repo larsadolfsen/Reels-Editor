@@ -7,9 +7,9 @@ window.UI = window.UI || {};
 // onChange(number) fires on typing and on stepper clicks. Returns a setValue(v) updater.
 // disabled (default false) disables the input and both stepper buttons — used e.g. by the
 // TEXT panel's SIZE (PX) field when BOX's SIZE mode is FILL (size is computed, not typed).
-window.UI.numberField = function numberField(container, { label, unit, value, step = 1, min, max, decimals, disabled = false, onChange }) {
+window.UI.numberField = function numberField(container, { label, unit, value, step = 1, min, max, decimals, disabled = false, span = 8, onChange }) {
   container.innerHTML = "";
-  container.classList.add("style-field");
+  container.classList.add("style-field", `col-${span}`);
   container.textContent = unit ? `${label} (${unit})` : label;
 
   const format = (v) => (decimals !== undefined ? v.toFixed(decimals) : v);
