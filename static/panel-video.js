@@ -66,6 +66,7 @@ window.VideoPanel = window.VideoPanel || {};
 
     await saveProject();
     Preview.load(project);
+    MediaPanel.render();
     openFilesPanel();
 
     if (wasInside) {
