@@ -81,25 +81,25 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
     }
 
     UI.numberField(document.getElementById("video-box-in-field"),
-      { label: "IN", unit: "SEC", value: box.in_point, step: 0.1,
+      { label: "IN", unit: "SEC", value: box.in_point, step: 0.1, span: 4,
         onChange: (v) => applyTrim(v, box.out_point) });
     UI.numberField(document.getElementById("video-box-out-field"),
-      { label: "OUT", unit: "SEC", value: box.out_point, step: 0.1,
+      { label: "OUT", unit: "SEC", value: box.out_point, step: 0.1, span: 4,
         onChange: (v) => applyTrim(box.in_point, v) });
 
     UI.numberField(document.getElementById("video-box-start-field"),
-      { label: "START", unit: "SEC", value: box.start, step: 0.1, min: 0,
+      { label: "START", unit: "SEC", value: box.start, step: 0.1, min: 0, span: 8,
         onChange: async (v) => { box.start = v; await saveProject(); renderTimeline(); } });
 
     UI.numberField(document.getElementById("video-box-x-field"),
-      { label: "X", unit: "PX", value: box.x, min: 0, max: 1080,
+      { label: "X", unit: "PX", value: box.x, min: 0, max: 1080, span: 4,
         onChange: async (v) => { box.x = v; await saveProject(); renderTimeline(); VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime()); } });
     UI.numberField(document.getElementById("video-box-y-field"),
-      { label: "Y", unit: "PX", value: box.y, min: 0, max: 1920,
+      { label: "Y", unit: "PX", value: box.y, min: 0, max: 1920, span: 4,
         onChange: async (v) => { box.y = v; await saveProject(); VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime()); } });
 
     UI.numberField(document.getElementById("video-box-width-field"),
-      { label: "WIDTH", unit: "PX", value: box.width, min: 1, max: 1080,
+      { label: "WIDTH", unit: "PX", value: box.width, min: 1, max: 1080, span: 4,
         onChange: async (v) => {
           const { width, height } = applyAspectLock(box, { width: v, height: box.height });
           box.width = width; box.height = height;
@@ -107,7 +107,7 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
           VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
         } });
     UI.numberField(document.getElementById("video-box-height-field"),
-      { label: "HEIGHT", unit: "PX", value: box.height, min: 1, max: 1920,
+      { label: "HEIGHT", unit: "PX", value: box.height, min: 1, max: 1920, span: 4,
         onChange: async (v) => {
           const { width, height } = applyAspectLock(box, { width: box.width, height: v });
           box.width = width; box.height = height;

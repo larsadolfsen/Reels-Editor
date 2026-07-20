@@ -71,6 +71,10 @@
   align-items: center;
 }
 
+/* A .style-row nested directly in a .style-group has no col-N of its own, so it collapses
+   to a single 28px track; span it across the whole grid so its own grid can then place its children. */
+.style-group > .style-row { grid-column: 1 / -1; }
+
 .col-1 { grid-column: span 1; }
 .col-2 { grid-column: span 2; }
 .col-3 { grid-column: span 3; }
