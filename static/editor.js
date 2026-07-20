@@ -534,6 +534,7 @@ function insertClipIntoSequence(source, dropTime) {
       in_point: splitAt,
       out_point: splitClip.out_point,
       order: splitClip.order + 2,
+      fill_mode: splitClip.fill_mode,
     };
     splitClip.out_point = splitAt;
     project.clips.push(secondHalf);
@@ -549,6 +550,7 @@ function insertClipIntoSequence(source, dropTime) {
     in_point: source.in_point,
     out_point: source.out_point,
     order: insertOrder,
+    fill_mode: source.fill_mode || "fit",
   };
   project.clips.push(newClip);
   return newClip;
