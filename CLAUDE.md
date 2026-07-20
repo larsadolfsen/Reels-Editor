@@ -260,9 +260,9 @@ Shared preset library (distinct from a block's live working style) used by both 
 
 Framework-free presentational helpers, one function per file, attached to `window.UI`. (Formerly grouped in a single `ui-components.js`, split per the one-function-per-file convention.)
 
-- `static/ui-button-group.js` — `UI.buttonGroup(container, options, activeValue, onSelect)`: single-select toggle-button row.
-- `static/ui-number-field.js` — `UI.numberField(container, {label, unit, value, step, min, max, decimals, disabled, onChange})`: labeled number input + custom stepper (native OS spin control is unstylable).
-- `static/ui-color-swatch.js` — `UI.colorSwatch(container, {label, value, onChange, showLabel})`: small square color-picker swatch with label.
+- `static/ui-button-group.js` — `UI.buttonGroup(container, options, activeValue, onSelect, {containerSpan})`: single-select toggle-button row. Each option may set `span` (default 1) for its own `.col-{span}` width; `containerSpan` (default 8) sets the container's `.col-{containerSpan}`.
+- `static/ui-number-field.js` — `UI.numberField(container, {label, unit, value, step, min, max, decimals, disabled, span, onChange})`: labeled number input + custom stepper (native OS spin control is unstylable). `span` (default 8) applies `.col-{span}` to the container.
+- `static/ui-color-swatch.js` — `UI.colorSwatch(container, {label, value, onChange, showLabel, span})`: small square color-picker swatch with label. `span` (default `showLabel ? 8 : 1`) applies `.col-{span}` to the container; internally the swatch itself is `.col-1` and the label `.col-7`.
 - `static/ui-accordion.js` — `UI.accordion(header, body, {expanded})`: wires an existing header/body pair.
 - `static/ui-accordion-section.js` — `UI.accordionSection(container, body, {title, expanded})`: builds the header for `UI.accordion` — the base of every TEXT/CAPTIONS panel accordion.
 - `static/ui-divider.js` — `UI.divider(container)`: plain static separator line.
@@ -271,5 +271,5 @@ Framework-free presentational helpers, one function per file, attached to `windo
 - `static/ui-icon-rail.js` — `UI.iconRail(container, items, activeValue, onSelect)`: vertical icon+label nav rail, used for `#panel-nav`.
 - `static/ui-button.js` — `UI.button(el, {variant})`: icon/outline/accent variant styling on an existing `<button>`.
 - `static/css/components/` — `button-group.css`, `number-field.css`, `color-swatch.css`, `accordion.css`, `divider.css`, `settings-row.css`, `sub-panel.css`, `icon-rail.css`, `button.css`, `resize-handles.css` — one stylesheet per component above, same naming.
-- `static/css/components/style-panel.css` — `#style-panel` (right aside, 320px, hidden by default): close button + every `.context-panel` section listed under its owning feature above. Matches the north-star mockup (`docs/superpowers/specs/assets/2026-07-10-design-foundation-mockup.html`); preset swatches (CLEAN/BOXED/POP/MINIMAL) from the mockup deliberately not built yet.
+- `static/css/components/style-panel.css` — `#style-panel` (right aside, 320px, hidden by default, padding `18px 20px`): close button + every `.context-panel` section listed under its owning feature above. Built on an 8-column grid foundation: `.style-group`/`.style-row` are `grid-template-columns: repeat(8, 28px)` with 8px gap, `.col-1`…`.col-8` utility classes size/position children, and a nested `.style-group > .style-row` spans the full grid (`grid-column: 1 / -1`) so its own children can place themselves. Matches the north-star mockup (`docs/superpowers/specs/assets/2026-07-10-design-foundation-mockup.html`); preset swatches (CLEAN/BOXED/POP/MINIMAL) from the mockup deliberately not built yet.
 - `static/css/tokens.css` — `:root` design tokens (colors, fonts, spacing, radius) + `@font-face`; every other stylesheet builds on this.

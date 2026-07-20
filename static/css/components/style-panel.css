@@ -85,7 +85,6 @@
 .col-8 { grid-column: span 8; }
 
 #text-size-row { gap: 6px; }
-#text-size-field { flex: 1; }
 
 .style-field {
   display: flex;
@@ -184,10 +183,12 @@
 
 #panel-export #export { width: 100%; }
 
-/* TEXT ALIGN's buttons are icons, not text — override .btn-group's stretched 1fr columns/padding
-   so they render as plain 28x28 .icon-btn squares instead. Scoped to this one group; other
-   button-group uses (POSITION row/col, BOX size mode, etc.) keep the default text-label sizing. */
-#text-align-group button {
+/* TEXT ALIGN's buttons are icons, not text — the group's 28px grid tracks would otherwise
+   stretch/pad them like text-label buttons, so pin them to plain 28x28 .icon-btn squares with
+   the SVG centered. Scoped to TEXT's and CAPTIONS' identical align groups; other button-group
+   uses (POSITION row/col, BOX size mode, etc.) keep the default text-label sizing. */
+#text-align-group button,
+#caption-align-group button {
   width: 28px;
   height: 28px;
   padding: 0;
