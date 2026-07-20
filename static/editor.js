@@ -365,11 +365,11 @@ function renderVideoPanel(c) {
   }
 
   UI.numberField(document.getElementById("video-in-field"),
-    { label: "IN", unit: "SEC", value: c.in_point, step: 0.1,
+    { label: "IN", unit: "SEC", value: c.in_point, step: 0.1, span: 4,
       onChange: (v) => applyTrim(v, c.out_point) });
 
   UI.numberField(document.getElementById("video-out-field"),
-    { label: "OUT", unit: "SEC", value: c.out_point, step: 0.1,
+    { label: "OUT", unit: "SEC", value: c.out_point, step: 0.1, span: 4,
       onChange: (v) => applyTrim(c.in_point, v) });
 
   document.getElementById("video-set-in").onclick = () => applyTrim(player.currentTime, c.out_point);
