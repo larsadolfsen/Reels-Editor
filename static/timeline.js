@@ -159,7 +159,8 @@ window.Timeline = (() => {
     let acc = 0;
     for (const c of clips) {
       const d = clipDuration(c);
-      const name = c.file_path.split(/[\\/]/).pop();
+      const media = project.media_library.find((m) => m.id === c.media_id);
+      const name = (media && (media.name || media.file_path.split(/[\\/]/).pop())) || c.file_path.split(/[\\/]/).pop();
       const isSel = !!selected && selected.type === "video" && selected.item.id === c.id;
       addBlock(videoTrack, acc * PX_PER_SEC, d * PX_PER_SEC, name, isSel, () => onSelect({ type: "video", item: c }));
       acc += d;

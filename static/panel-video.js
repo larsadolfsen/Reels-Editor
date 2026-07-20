@@ -5,7 +5,9 @@ window.VideoPanel = window.VideoPanel || {};
 (() => {
   function render(c) {
     const dur = clipDurations[c.id] ?? c.out_point;
-    document.getElementById("video-name").textContent = c.file_path.split(/[\\/]/).pop();
+    const media = project.media_library.find((m) => m.id === c.media_id);
+    document.getElementById("video-name").textContent =
+      (media && (media.name || media.file_path.split(/[\\/]/).pop())) || c.file_path.split(/[\\/]/).pop();
 
     async function applyTrim(inP, outP) {
       const t = clampTrim(inP, outP, dur);
