@@ -1,5 +1,6 @@
 # FastAPI composition root: mounts static UI and wires API routes to modules.
 # No feature logic lives here. Run: uvicorn app.main:app --reload
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import FastAPI
@@ -11,6 +12,26 @@ from app.font_metrics import available_weights, WEIGHT_LABELS
 
 DATA_DIR = Path("data")
 app = FastAPI()
+
+_UNSAFE_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')
+
+def sanitize_export_filename(name: str) -> str:
+    """Strip path separators and other filesystem-unsafe characters from a user-supplied
+    export filename. Pure/testable without touching the filesystem."""
+    name = _UNSAFE_FILENAME_CHARS.sub("", name).strip().strip(".")
+    if name.lower().endswith(".mp4"):
+        name = name[:-4]
+    return name
+
+def resolve_export_path(out_dir: Path, stem: str) -> Path:
+    """Pick a non-colliding .mp4 path under out_dir for the given filename stem,
+    appending -2, -3, ... if the plain name is already taken."""
+    candidate = out_dir / f"{stem}.mp4"
+    n = 2
+    while candidate.exists():
+        candidate = out_dir / f"{stem}-{n}.mp4"
+        n += 1
+    return candidate
 
 @app.get("/")
 def index():
@@ -102,7 +123,9 @@ def export_project(pid: str) -> dict:
     p = store.load_project(pid, DATA_DIR)
     out_dir = DATA_DIR / "exports"
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"{p.name}-{p.id[:8]}.mp4"
+    default_stem = f"{p.name}-{p.id[:8]}"
+    stem = sanitize_export_filename(p.export_filename) if p.export_filename else ""
+    out_path = resolve_export_path(out_dir, stem or default_stem)
 
     caption_ass_path = None
     if p.captions and p.captions.words:

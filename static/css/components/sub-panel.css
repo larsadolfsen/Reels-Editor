@@ -1,5 +1,5 @@
 /* Drill-down sub-panel: back-arrow + title header, plus the font-selection list it hosts. */
-/* Exposes .sub-panel-header/.sub-panel-back/.sub-panel-title/.font-list/.font-list-row/.font-list-row-name/.font-list-checkmark/.font-list-divider/.font-weight-row-content/.font-weight-row-preview. Depends on tokens.css, button.css, divider.css. */
+/* Exposes .sub-panel-header/.sub-panel-back/.sub-panel-title/.font-list/.font-list-row/.font-list-row-name/.font-list-row-time/.font-list-checkmark/.font-list-divider/.font-weight-row-content/.font-weight-row-preview. Depends on tokens.css, button.css, divider.css. */
 .sub-panel-header {
   display: flex;
   align-items: center;
@@ -56,6 +56,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.font-list-row-time {
+  width: 52px;
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: var(--space-1);
+  text-align: center;
 }
 
 .font-list-checkmark {

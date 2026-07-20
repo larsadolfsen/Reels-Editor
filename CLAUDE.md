@@ -42,6 +42,7 @@ static/
   panel-projects.js      # PROJECTS context-panel section: project list (open/rename/delete/duplicate) + "+ New Project"
   panel-video-box.js     # VIDEO BOX context-panel section: add-from-media-library picker, trim/time/position/size fields, delete
   panel-layers.js        # LAYERS context-panel section: drag-and-drop reorderable z-order list of text blocks + video boxes
+  panel-export.js        # EXPORT context-panel section: FILENAME text input + QUALITY (HIGH/MEDIUM) button group, above the export button (added 2026-07-20)
   ui-icon-rail.js         # UI.iconRail: left-panel icon rail nav, single-select
   ui-button.js             # UI.button: generic button variant styling (icon/outline/accent) applied to existing <button> elements
   ui-button-group.js       # UI.buttonGroup: single-select toggle-button row (ex ui-components.js, split per one-function-per-file convention)
@@ -52,7 +53,7 @@ static/
   ui-divider.js            # UI.divider: plain static 1px separator line
   ui-settings-row.js       # UI.settingsRow: clickable label/value/chevron row that opens a drill-down
   ui-sub-panel-header.js   # UI.subPanelHeader: back-arrow + title header for drill-down sub-panels
-  ui-save-indicator.js     # UI.saveIndicator: "Saving…/Saved" dot+label in #panel-brand, setSaving()/setSaved()
+  ui-save-indicator.js     # UI.saveIndicator: "Saving…/Saved/Save failed — retry" dot+label in #panel-brand, setSaving()/setSaved()/setFailed(retryFn); in-flight-save counting + 2s fade-to-icon on Saved (added 2026-07-20)
   ui-project-list-row.js   # UI.projectListRow: one project row (inline-editable name, meta, optional duplicate/delete) — shared by picker + PROJECTS panel
   ui-project-picker.js     # UI.projectPicker: full-screen cold-start project picker (list + "+ NEW PROJECT")
   ui-resize-handles.js    # generic 8-handle drag-resize overlay for any positioned element (text box + video box)
@@ -85,7 +86,7 @@ static/
   caption-panel-font-style.js   # CAPTIONS panel FONT accordion: size/italic/underline/color/outline, same pattern as text-panel-font-style.js but against the caption track's preset
   caption-panel-box.js          # CAPTIONS panel BOX accordion: size mode/background/border + TEXT ALIGN/POSITION (combines editor.js's renderBoxPanel() with text-panel-align.js/text-panel-position.js), against the caption track's preset
   caption-panel-highlight.js    # CAPTIONS panel HIGHLIGHT accordion: karaoke mode toggle, highlight color, max words per line — captions-only, no TEXT-panel equivalent
-  caption-panel-words.js        # CAPTIONS panel "Caption words" drill-down: every transcribed word, inline-editable text (empty text deletes the word), timing shown but not editable
+  caption-panel-words.js        # CAPTIONS panel "Caption words" drill-down: every transcribed word, inline-editable text (empty text deletes the word) and inline-editable start/end timing (number inputs, validated via clampWordTiming(), added 2026-07-20)
   seed.js                 # seeds a project with a sample caption line on first load so the CAPTIONS timeline row isn't empty (dev convenience; text block seeding removed — editor.js's ensureTextBlock() already creates a real, style-panel-backed one)
   css/
     tokens.css            # :root custom properties (colors, fonts, spacing, radius) + @font-face — single source of truth
@@ -225,7 +226,7 @@ Shared preset library (distinct from a block's live working style) used by both 
 - `app/main.py` — `POST /api/projects/{pid}/transcribe`.
 - `static/caption-panel-font-family.js` / `caption-panel-font-weight.js` / `caption-panel-font-style.js` / `caption-panel-box.js` — mirrors of the equivalent `text-panel-*.js` files, pointed at the caption track's preset via `ensureCaptionTrack()`/`ensureCaptionPreset()` (editor.js).
 - `static/caption-panel-highlight.js` — `CaptionPanel.renderHighlight()`: MODE (`current_word`/`progressive_fill`), highlight color, max words per line — captions-only, no TEXT-panel equivalent.
-- `static/caption-panel-words.js` — `CaptionPanel.renderWords()`: "Caption words" drill-down, every `CaptionWord` sorted by `t_start` with inline-editable text (empty text deletes the word); timing display-only.
+- `static/caption-panel-words.js` — `CaptionPanel.renderWords()`: "Caption words" drill-down, every `CaptionWord` sorted by `t_start` with inline-editable text (empty text deletes the word) and inline-editable `t_start`/`t_end` (number inputs, one decimal; a pure `clampWordTiming()` helper clamps `t_start >= 0` and rejects the edit — reverting the field, no save — unless `t_start < t_end`; a valid commit saves and re-renders both the stage caption preview and the timeline CAPTIONS row).
 - `static/timeline.js` — `groupWords(words, max)` (shared with preview.js, not duplicated).
 - `static/preview.js` — `Preview.renderCaptions(project, presets, timelineTime)`: groups words via `Timeline.groupWords`, finds the group covering `timelineTime`, renders one `.caption-block` div with one `<span>` per word colored by `highlight_mode`.
 - `app/ass_render.py` — `group_words(words, max_words)` (pure), `render_caption_ass(project, preset)`: standalone ASS script — one `Caption` style + karaoke dialogue, `progressive_fill` via native `\k` sweep, `current_word` via per-word `\1c` override.
@@ -241,15 +242,16 @@ Shared preset library (distinct from a block's live working style) used by both 
 
 ### Export pipeline
 
-- `app/ffmpeg_cmd.py` — `build_export_cmd` (per-clip trim/scale/pad, concat, optional ASS burn-in with `fontsdir=static/fonts`), `escape_filter_path`, `build_audio_cmd(project, wav_path)` (audio-only concat for transcription; **known gap:** still assumes every clip has audio — a video-only clip breaks transcription's audio export). Phase 6 (2026-07-20): synthesizes silent audio (`anullsrc`) for clips whose `MediaItem.has_audio` is `False`, tracked via a running `input_index` counter so interleaved silence inputs don't collide with real ones. Also accepts `caption_ass_path`: chains one more `ass` filter as the always-final stage after any text-block/video-box output, so captions always render on top.
+- `app/ffmpeg_cmd.py` — `build_export_cmd` (per-clip trim/scale/pad, concat, optional ASS burn-in with `fontsdir=static/fonts`), `escape_filter_path`, `build_audio_cmd(project, wav_path)` (audio-only concat for transcription; **known gap:** still assumes every clip has audio — a video-only clip breaks transcription's audio export). Phase 6 (2026-07-20): synthesizes silent audio (`anullsrc`) for clips whose `MediaItem.has_audio` is `False`, tracked via a running `input_index` counter so interleaved silence inputs don't collide with real ones. Also accepts `caption_ass_path`: chains one more `ass` filter as the always-final stage after any text-block/video-box output, so captions always render on top. Also (2026-07-20): `-crf` is derived from `Project.export_quality` via `_crf_for()` (`"high"` -> 18, `"medium"` -> 23, default 18) at both mp4-output call sites; `-preset fast` is unchanged.
 - `app/ass_render.py` — `render_ass(project, presets)` (full ASS file), `ass_time`, `hex_to_ass`. See Text blocks and Captions above for block/caption-specific rendering detail.
 - `app/font_metrics.py` — `pil_font_measurer(font_name, size_px, weight)`, `FONT_WEIGHT_PATHS`, `WEIGHT_LABELS`, `available_weights(font_name)` — measures the static per-weight `.ttf` files for export-path PIL measurement.
 - `scripts/generate_font_weights.py` — one-off dev script baking those static per-weight `.ttf` files from the vendored variable fonts.
 - `app/media.py` — `run_export` (runs the ffmpeg command, raises `RuntimeError` with stderr on failure).
-- `app/main.py` — `POST /api/projects/{id}/export`, `GET /api/fonts/{name}/weights`.
+- `app/main.py` — `POST /api/projects/{id}/export`, `GET /api/fonts/{name}/weights`. `Project.export_filename`/`export_quality` (added 2026-07-20) drive the output filename/CRF: `sanitize_export_filename(name)` (strips filesystem-unsafe characters, trims dots/whitespace, drops a redundant `.mp4`) and `resolve_export_path(out_dir, stem)` (appends `-2`, `-3`, … on collision) are pure helpers in `app/main.py`; `export_project` uses `p.export_filename` when set, else falls back to the pre-existing `{name}-{id[:8]}` stem. The `.ass` sidecar file paths are unaffected (still `{name}-{id[:8]}`-derived).
 - `static/api-export-project.js` — `Api.exportProject(projectId)`: `POST /api/projects/{id}/export` -> `{ok, out_path}` or error.
 - `static/api-list-font-weights.js` — `Api.listFontWeights(fontName)`: `GET /api/fonts/{name}/weights`.
-- `static/editor.js` — `openExportPanel()` opens `#panel-export` (the `#export`/`exportProject()`/`#export-result` wiring).
+- `static/panel-export.js` — `ExportPanel.render()` (added 2026-07-20): the `#panel-export` context section's FILENAME (text input, placeholder = derived default `{name}-{id[:8]}`) and QUALITY (`UI.buttonGroup` HIGH/MEDIUM) rows, mutating `project.export_filename`/`export_quality` and calling `saveProject()`.
+- `static/editor.js` — `openExportPanel()` opens `#panel-export` (calls `ExportPanel.render()`, plus the existing `#export`/`exportProject()`/`#export-result` wiring).
 - `static/fonts/` — vendored variable woff2 + generated static per-weight `.ttf` files.
 
 ### Settings & safe zones

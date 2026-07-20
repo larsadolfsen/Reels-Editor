@@ -169,3 +169,36 @@ def test_build_audio_cmd_clip_with_no_media_library_entry_defaults_to_has_audio(
     from app.ffmpeg_cmd import build_audio_cmd
     cmd = build_audio_cmd(proj(), "out.wav")
     assert "anullsrc" not in " ".join(cmd)
+
+def test_default_quality_uses_crf_18():
+    cmd = build_export_cmd(proj(), "out.mp4")
+    assert cmd[cmd.index("-crf") + 1] == "18"
+
+def test_high_quality_uses_crf_18():
+    p = proj()
+    p.export_quality = "high"
+    cmd = build_export_cmd(p, "out.mp4")
+    assert cmd[cmd.index("-crf") + 1] == "18"
+
+def test_medium_quality_uses_crf_23():
+    p = proj()
+    p.export_quality = "medium"
+    cmd = build_export_cmd(p, "out.mp4")
+    assert cmd[cmd.index("-crf") + 1] == "23"
+
+def test_unknown_quality_defaults_to_crf_18():
+    p = proj()
+    p.export_quality = "ultra"
+    cmd = build_export_cmd(p, "out.mp4")
+    assert cmd[cmd.index("-crf") + 1] == "18"
+
+def test_preset_fast_unchanged():
+    cmd = build_export_cmd(proj(), "out.mp4")
+    assert cmd[cmd.index("-preset") + 1] == "fast"
+
+def test_medium_quality_crf_applies_in_bands_branch():
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", out_point=2, start=0, height=1920, z_index=5)
+    p = proj()
+    p.export_quality = "medium"
+    cmd = build_export_cmd(p, "out.mp4", bands=[{"kind": "video_box", "video_box": box}])
+    assert cmd[cmd.index("-crf") + 1] == "23"

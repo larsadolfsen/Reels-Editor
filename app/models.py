@@ -131,6 +131,8 @@ class Project(BaseModel):
     text_blocks: list[TextBlockLayer] = []
     text_presets: dict[str, TextPreset] = {}
     captions: CaptionTrack | None = None
+    export_filename: str = ""
+    export_quality: str = "high"
 
 class ProjectSummary(BaseModel):
     id: str

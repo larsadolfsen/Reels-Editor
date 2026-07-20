@@ -1,5 +1,5 @@
 // CAPTIONS panel: "Caption words" drill-down — every transcribed word, inline-editable text
-// (empty text deletes the word), timing not editable (per the design spec's v1 scope).
+// (empty text deletes the word) and inline-editable start/end timing (seconds, one decimal).
 // Exposes window.CaptionPanel.renderWords().
 window.CaptionPanel = window.CaptionPanel || {};
 
@@ -16,10 +16,14 @@ window.CaptionPanel = window.CaptionPanel || {};
     renderCaptionPreview();
   }
 
-  function formatWordTime(t) {
-    const m = Math.floor(t / 60);
-    const s = (t % 60).toFixed(1).padStart(4, "0");
-    return `${String(m).padStart(2, "0")}:${s}`;
+  // Pure validation: t_start clamped to >= 0, and t_start must be < t_end.
+  // Returns the clamped {t_start, t_end} when valid, or null when invalid
+  // (caller should revert the field to the previously-stored value).
+  function clampWordTiming(t_start, t_end) {
+    if (Number.isNaN(t_start) || Number.isNaN(t_end)) return null;
+    const clampedStart = Math.max(0, t_start);
+    if (!(clampedStart < t_end)) return null;
+    return { t_start: clampedStart, t_end };
   }
 
   async function commitWordEdit(word, newText) {
@@ -33,6 +37,14 @@ window.CaptionPanel = window.CaptionPanel || {};
     renderCaptionPreview();
   }
 
+  async function commitWordTiming(word, newStart, newEnd) {
+    word.t_start = newStart;
+    word.t_end = newEnd;
+    await saveProject();
+    renderCaptionPreview();
+    renderTimeline();
+  }
+
   function renderWordsList() {
     const listEl = document.getElementById("caption-words-list");
     listEl.innerHTML = "";
@@ -41,10 +53,35 @@ window.CaptionPanel = window.CaptionPanel || {};
       const li = document.createElement("li");
       li.className = "font-list-row";
 
-      const timeEl = document.createElement("span");
-      timeEl.className = "font-list-row-name";
-      timeEl.textContent = formatWordTime(word.t_start);
-      li.appendChild(timeEl);
+      const startInput = document.createElement("input");
+      startInput.type = "number";
+      startInput.step = "0.1";
+      startInput.className = "font-list-row-time";
+      startInput.value = word.t_start.toFixed(1);
+      startInput.addEventListener("change", () => {
+        const result = clampWordTiming(parseFloat(startInput.value), word.t_end);
+        if (!result) {
+          startInput.value = word.t_start.toFixed(1);
+          return;
+        }
+        commitWordTiming(word, result.t_start, result.t_end).then(renderWordsList);
+      });
+      li.appendChild(startInput);
+
+      const endInput = document.createElement("input");
+      endInput.type = "number";
+      endInput.step = "0.1";
+      endInput.className = "font-list-row-time";
+      endInput.value = word.t_end.toFixed(1);
+      endInput.addEventListener("change", () => {
+        const result = clampWordTiming(word.t_start, parseFloat(endInput.value));
+        if (!result) {
+          endInput.value = word.t_end.toFixed(1);
+          return;
+        }
+        commitWordTiming(word, result.t_start, result.t_end).then(renderWordsList);
+      });
+      li.appendChild(endInput);
 
       const input = document.createElement("input");
       input.type = "text";
