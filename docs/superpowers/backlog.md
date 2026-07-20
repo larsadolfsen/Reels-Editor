@@ -13,6 +13,17 @@ Running list of things to do, picked one at a time. Add items as they come up (i
 - [ ] **Export progress** — [design](specs/2026-07-20-export-progress-design.md): export becomes a background job (`app/export_jobs.py`), ffmpeg `-progress` parsed to a percent, `GET /api/exports/{job_id}` polled by a progress bar in the EXPORT panel
 - [ ] **Caption word-timing editing** — [design](specs/2026-07-20-caption-word-timing-design.md): `t_start`/`t_end` become validated number fields in the existing Caption-words drill-down
 - [ ] **Right panel 8-column grid** — [depth doc](specs/2026-07-19-right-panel-grid-design.md) · [plan](plans/2026-07-19-right-panel-grid.md): redesign `#style-panel`'s content layout onto a fixed 8-column/28px/8px-gap grid so every control aligns to consistent column boundaries; brainstormed and planned (8 tasks), ready to execute
+- [ ] **Right panel tabs** — [design](specs/2026-07-20-right-panel-tabs-design.md): replace the accordions with four icon tabs (Style 🖌 / Design ✏ / Box ▣ / Time ⏱) on every panel (fitting tabs only); caption HIGHLIGHT moves into Design; a new Closed-caption tab lists all caption words inline
+- [ ] **Insert model** — [design](specs/2026-07-20-insert-model-design.md): left-rail buttons insert items (TEXT adds a block, CAPTIONS creates the track), timeline clicks open the item's panel; timeline + buttons stay as a second entry point
+- [ ] **Delete clip** — [design](specs/2026-07-20-delete-clip-design.md): remove a clip from the timeline (panel button + Delete key) — currently impossible
+- [ ] **Media library management** — [design](specs/2026-07-20-media-library-management-design.md): rename items (`MediaItem.name`), in-use indicator, remove unused items
+- [ ] **Clip speed control** — [design](specs/2026-07-20-clip-speed-design.md): `ClipLayer.speed` 0.5×–2×, speed-aware timeline math, setpts/atempo export, `playbackRate` preview
+- [ ] **Image/photo clips** — [design](specs/2026-07-20-image-clips-design.md): stills as clips with a chosen duration (`MediaItem.kind="image"`, `-loop 1` export, `<img>` preview via the virtual clock)
+- [ ] **Crop-to-fill** — [design](specs/2026-07-20-crop-to-fill-design.md): per-clip FIT (pad) vs FILL (center crop) — `ClipLayer.fill_mode`, `object-fit` preview
+- [ ] **Copy/duplicate items** — [design](specs/2026-07-20-copy-duplicate-design.md): Ctrl+D + panel button duplicates the selected clip or text block (block copy needs multi-text-block first)
+- [ ] **Export settings** — [design](specs/2026-07-20-export-settings-design.md): output filename + HIGH/MEDIUM quality preset (`Project.export_filename`/`export_quality`)
+- [ ] **Snap playhead** — [design](specs/2026-07-20-snap-playhead-design.md): ruler seek snaps to clip/block/caption boundaries, Alt bypass
+- [ ] **Autosave indicator** — [design](specs/2026-07-20-autosave-indicator-design.md): Saving…/Saved/Save-failed-retry chip in the timeline toolbar (failed saves are silent today)
 
 ## Done
 

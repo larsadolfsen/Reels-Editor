@@ -34,6 +34,13 @@ Nothing persisted. In-memory job dict keyed by `new_id()`.
 - `sequence_duration` in `app/timeline.py` for the denominator.
 - Existing `#export` / `#export-result` wiring and panel section.
 
+## Tasks
+
+1. `app/export_jobs.py` registry (+ lifecycle tests with injected executor).
+2. `run_export` `on_progress` callback + pure `percent_from_progress_line()` (+ tests).
+3. Route changes: POST returns `{job_id}`, new `GET /api/exports/{job_id}` (+ route tests).
+4. Frontend: `api-export-status.js` + `export-progress.js` poller + progress-bar UI in `#panel-export`.
+
 ## Testing
 
 - `export_jobs.py`: unit tests for the registry lifecycle (start → progress updates → done/failed, unknown id) with the runner stubbed — no threads needed if `start_job` accepts an injectable executor, or use a synchronous fake.

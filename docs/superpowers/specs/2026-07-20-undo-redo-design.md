@@ -29,6 +29,11 @@ Nothing persisted. In-memory: two arrays of JSON strings + one cap constant.
 - `saveProject()` as the sole capture/restore chokepoint.
 - The existing global keydown handler + focus guard in `editor.js`.
 
+## Tasks
+
+1. `static/undo-history.js` — the pure two-stack state machine (record/undo/redo/reset, dedupe, cap 50).
+2. `editor.js` integration: capture in `saveProject()`, restore + full re-render, Ctrl+Z/Y/Shift+Z wiring with the extended focus guard, `reset()` on project switch.
+
 ## Testing
 
 `UndoHistory` is a pure state machine but the repo has no JS test runner — stated untested layer per convention. Mitigation: keep *all* logic (two-stack semantics, dedupe, cap) in `undo-history.js` with zero DOM/fetch so it stays trivially readable; manual verification checklist = edit → undo restores prior state on stage/timeline/panel; redo re-applies; new edit after undo clears redo; 50-cap doesn't error; history resets on project switch; Ctrl+Z inside a text field does native text undo, not project undo.

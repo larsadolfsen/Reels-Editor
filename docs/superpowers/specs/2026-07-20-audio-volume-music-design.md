@@ -44,6 +44,17 @@ The AUDIO timeline row is a fake waveform and there is no audio control at all. 
 - `input_index` bookkeeping pattern in `build_export_cmd`.
 - `UI.numberField`, `UI.button`, `open*Panel()` / context-panel section pattern.
 
+## Tasks
+
+1. Model: `ClipLayer.volume`/`muted`, `MediaItem.kind`, `MusicTrack` + `Project.music` (+ default/load tests).
+2. Export: per-clip volume filters (+ tests).
+3. Export: music input, trim, `amix` (+ index-bookkeeping tests).
+4. Preview: clip `volume`/`muted` + the synced music `<audio>` element.
+5. `app/waveform.py` peaks + cache + `GET /api/media/{id}/peaks` route (+ tests on the pure downsampler).
+6. Timeline AUDIO row: real per-clip waveforms + music waveform, zoom-aware.
+7. VIDEO panel VOLUME group (slider/field + mute).
+8. AUDIO context-panel section (`#panel-audio`, `selected.type="audio"`) + music import via the audio-filtered picker.
+
 ## Testing
 
 - `test_ffmpeg_cmd.py`: volume filter present per clip, muted → volume=0, music input + amix + trim present, absent when no music, index bookkeeping with mixed silent/real/music inputs.

@@ -41,6 +41,13 @@ No new entities or fields. Slice creates a standard `ClipLayer` via `new_id()`; 
 - The VIDEO panel's reorder logic for drop handling.
 - `ui-text-interaction.js`'s drag-vs-click classification pattern (pattern reuse, not code — different element/gesture).
 
+## Tasks
+
+1. `slice_clip()` in `app/timeline.py` + full pytest coverage.
+2. JS mirror `static/timeline-slice.js` + slice-button click/disabled-state wiring in `Timeline.tick()`.
+3. Zoom: `pxPerSecond` state through `timeline.js`'s position helpers + shared scroll container + playhead auto-scroll.
+4. Drag-to-reorder: gesture (threshold classify, transform, drop indicator) + `moveClipTo()` extraction from the VIDEO panel logic.
+
 ## Testing
 
 - `slice_clip()` fully pytest-covered in `tests/test_timeline.py`: mid-clip split (durations, orders, shared `media_id`, new id), boundary/ε no-op, empty-clips no-op, split of an already-trimmed clip.

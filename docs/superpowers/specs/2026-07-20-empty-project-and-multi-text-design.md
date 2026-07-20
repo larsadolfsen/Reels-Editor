@@ -49,6 +49,17 @@ No new entities or fields. `text_blocks` is already a list; each block already l
 - Selection/panel plumbing: `selected` state, `showPanel("text")`, `Preview.setSelectedTextBlock`, `UI.textInteraction` — all existing.
 - Icons: Lucide plus/trash paths, hand-inlined per convention.
 
+## Tasks
+
+1. Remove `seed.js` (file, script tag, call) + drop text-block auto-creation; empty-state rendering in the TEXT panel.
+2. Stale-video fix: `Preview.load()` clears the player + preload state for clipless projects.
+3. Extract `addTextBlock()` (shared with the insert-model item) + TEXT row + button entering on-stage edit.
+4. VIDEO row + button reusing the pick-file → probe → `addClip()` flow.
+5. Multi-block selection: `selectedTextBlockId` module state + `currentTextBlock()` accessor; audit every `text_blocks[0]` read in `editor.js`/`text-panel-*.js`.
+6. Per-block selection wiring from stage (`setOnStageTextActivate` carries the id) and timeline TEXT row.
+7. Delete text block: panel button + Delete key (focus-guarded), removes block + preset, clears selection.
+8. Multi-block `ass_render` test if missing + end-of-item visual checkpoint.
+
 ## Testing
 
 - Backend untouched except possibly none at all — `pytest` suite must stay green.
