@@ -422,6 +422,8 @@ function renderMediaList() {
   list.innerHTML = "";
   project.media_library.forEach((m) => {
     const li = document.createElement("li");
+    li.draggable = true; // drag onto the timeline's VIDEO row to place this file as a clip
+    li.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/media-id", m.id));
     if (selectedMediaId === m.id) {
       li.classList.add("selected");
     }
@@ -572,12 +574,12 @@ Preview.setOnStageTextActivate((blockId) => {
   openTextPanel();
 });
 
-// Converts a video box into a main-sequence ClipLayer at `dropTime` (drag-to-stitch): if the
+// Inserts a new main-sequence ClipLayer at `dropTime` from any source carrying
+// media_id/file_path/in_point/out_point (a video box or a media-library drag): if the
 // drop point lands inside an existing clip, that clip splits into two (same media, trimmed
 // halves) with the new clip inserted between them; otherwise it inserts at the nearest clip
-// boundary. Keeps the box's in_point/out_point; position/size/z_index are dropped (meaningless
-// for a full-frame sequence clip). Mutates project.clips/project.video_boxes in place.
-function stitchVideoBoxIntoSequence(box, dropTime) {
+// boundary. Mutates project.clips in place; returns the new clip.
+function insertClipIntoSequence(source, dropTime) {
   const ordered = [...project.clips].sort((a, b) => a.order - b.order);
   let acc = 0;
   let splitClip = null;
@@ -617,15 +619,22 @@ function stitchVideoBoxIntoSequence(box, dropTime) {
     for (const c of project.clips) if (c.order >= insertOrder) c.order += 1;
   }
 
-  project.clips.push({
+  const newClip = {
     id: crypto.randomUUID().replaceAll("-", ""),
-    media_id: box.media_id,
-    file_path: box.file_path,
-    in_point: box.in_point,
-    out_point: box.out_point,
+    media_id: source.media_id,
+    file_path: source.file_path,
+    in_point: source.in_point,
+    out_point: source.out_point,
     order: insertOrder,
-  });
+  };
+  project.clips.push(newClip);
+  return newClip;
+}
 
+// Drag-to-stitch: a video box dropped on the VIDEO row becomes a sequence clip and stops
+// being a box. Position/size/z_index are dropped (meaningless for a full-frame clip).
+function stitchVideoBoxIntoSequence(box, dropTime) {
+  insertClipIntoSequence(box, dropTime);
   project.video_boxes = project.video_boxes.filter((v) => v.id !== box.id);
 }
 
@@ -787,17 +796,29 @@ document.getElementById("playhead-grip").addEventListener("mousedown", (e) => {
 document.getElementById("row-video").addEventListener("dragover", (e) => e.preventDefault());
 document.getElementById("row-video").addEventListener("drop", async (e) => {
   e.preventDefault();
-  const boxId = e.dataTransfer.getData("text/video-box-id");
-  if (!boxId) return;
-  const box = project.video_boxes.find((v) => v.id === boxId);
-  if (!box) return;
   const rect = document.getElementById("row-video").getBoundingClientRect();
   const dropTime = Timeline.timeAtX(project.clips, rect, e.clientX);
-  stitchVideoBoxIntoSequence(box, dropTime);
+  const mediaId = e.dataTransfer.getData("text/media-id");
+  const boxId = e.dataTransfer.getData("text/video-box-id");
+  if (mediaId) {
+    const m = project.media_library.find((x) => x.id === mediaId);
+    if (!m) return;
+    const clip = insertClipIntoSequence(
+      { media_id: m.id, file_path: m.file_path, in_point: 0, out_point: m.duration },
+      dropTime,
+    );
+    clipDurations[clip.id] = m.duration;
+  } else if (boxId) {
+    const box = project.video_boxes.find((v) => v.id === boxId);
+    if (!box) return;
+    stitchVideoBoxIntoSequence(box, dropTime);
+  } else {
+    return;
+  }
   await saveProject();
   Preview.load(project);
   renderTimeline();
-  if (selected && selected.type === "video-box" && selected.item && selected.item.id === boxId) {
+  if (boxId && selected && selected.type === "video-box" && selected.item && selected.item.id === boxId) {
     openFilesPanel(); // the selected box no longer exists — fall back to a safe default panel
   }
 });
