@@ -102,7 +102,7 @@ window.TextPanel = window.TextPanel || {};
     document.getElementById("text-size-step-up").disabled = sizeFieldDisabled;
 
     currentSizeFieldSetValue = UI.numberField(document.getElementById("text-size-field"),
-      { label: "SIZE", unit: "PX", value: preset.size_px, min: 24, max: 200, disabled: sizeFieldDisabled,
+      { label: "SIZE", unit: "PX", value: preset.size_px, min: 24, max: 200, disabled: sizeFieldDisabled, span: 6,
         onChange: (v) => {
           const block = ensureTextBlock();
           const sel = Preview.getActiveFormatSelection();
@@ -116,7 +116,7 @@ window.TextPanel = window.TextPanel || {};
         } });
 
     UI.colorSwatch(document.getElementById("text-color-field"),
-      { label: "Color", value: preset.color,
+      { label: "Color", value: preset.color, span: 8,
         onChange: (v) => {
           const block = ensureTextBlock();
           const sel = Preview.getActiveFormatSelection();
@@ -130,7 +130,7 @@ window.TextPanel = window.TextPanel || {};
         } });
 
     UI.colorSwatch(document.getElementById("text-outline-color-field"),
-      { label: "Outline", value: preset.outline_color,
+      { label: "Outline", value: preset.outline_color, span: 8,
         onChange: (v) => {
           const block = ensureTextBlock();
           const sel = Preview.getActiveFormatSelection();
@@ -144,7 +144,7 @@ window.TextPanel = window.TextPanel || {};
         } });
 
     UI.numberField(document.getElementById("text-outline-px-field"),
-      { label: "WIDTH", unit: "PX", value: preset.outline_px, min: 0, max: 20,
+      { label: "WIDTH", unit: "PX", value: preset.outline_px, min: 0, max: 20, span: 8,
         onChange: (v) => {
           const block = ensureTextBlock();
           const sel = Preview.getActiveFormatSelection();
