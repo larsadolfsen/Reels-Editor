@@ -70,9 +70,12 @@ def test_whitespace_only_text_returns_empty_list():
     assert estimate_word_timings(w("   ", 0.0, 1.0)) == []
 
 def test_result_words_are_sequential_and_non_overlapping():
+    # Adjacent words leave a small gap proportional to the space character between them
+    # (the interpolation is over the space-joined normalized string, not word-only chars),
+    # so this checks non-overlap (<=), not exact adjacency (==).
     result = estimate_word_timings(w("one two three four", 10.0, 14.0))
     for a, b in zip(result, result[1:]):
-        assert a.t_end == b.t_start
+        assert a.t_end <= b.t_start
     assert result[0].t_start == 10.0
     assert result[-1].t_end == 14.0
 ```
