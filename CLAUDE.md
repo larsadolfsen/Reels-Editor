@@ -44,6 +44,7 @@ static/
   panel-projects.js      # PROJECTS context-panel section: project list (open/rename/delete/duplicate) + "+ New Project"
   panel-video-box.js     # VIDEO BOX context-panel section: add-from-media-library picker, trim/time/position/size fields, delete
   panel-media.js          # FILES/MEDIA context-panel section: media-library list (thumbnail, name, duration), click-to-select (extracted from editor.js 2026-07-20)
+  panel-video.js          # VIDEO context-panel section: trim/order/delete for the selected clip (extracted from editor.js 2026-07-20)
   panel-layers.js        # LAYERS context-panel section: drag-and-drop reorderable z-order list of text blocks + video boxes
   panel-export.js        # EXPORT context-panel section: FILENAME text input + QUALITY (HIGH/MEDIUM) button group, above the export button (added 2026-07-20)
   ui-icon-rail.js         # UI.iconRail: left-panel icon rail nav, single-select
@@ -184,7 +185,7 @@ Full-screen picker at cold start, plus an in-editor PROJECTS panel — open/rena
 ### Video clips (VIDEO panel: trim/order/delete)
 
 - `ClipLayer` in `app/models.py` — `media_id: str` required field linking to `MediaItem` (added 2026-07-15).
-- `static/editor.js` — `selectClip(c)`/`renderVideoPanel(c)` populate `#panel-video`'s trim (`UI.numberField`, reusing `clampTrim`) and reorder controls for the selected clip. `deleteClip(clipId)` (added 2026-07-20) removes the `ClipLayer`, renumbers the rest's `order` gap-free, drops the clip's `clipDurations` cache entry, and — only if the playhead was inside the deleted clip's range — reseeks it to the deleted clip's former start, clamped against the new (shorter) total duration; wired to both `#video-delete` (VIDEO panel, danger-styled) and a Delete-key handler guarded to `selected.type === "video"` with focus outside any form field. The `MediaItem` in `project.media_library` is untouched by deletion.
+- `static/panel-video.js` — `VideoPanel.select(c)`/`VideoPanel.render(c)` (extracted from `editor.js` 2026-07-20) populate `#panel-video`'s trim (`UI.numberField`, reusing `clampTrim`) and reorder controls for the selected clip. `VideoPanel.deleteClip(clipId)` removes the `ClipLayer`, renumbers the rest's `order` gap-free, drops the clip's `clipDurations` cache entry, and — only if the playhead was inside the deleted clip's range — reseeks it to the deleted clip's former start, clamped against the new (shorter) total duration; wired to both `#video-delete` (VIDEO panel, danger-styled) and `editor.js`'s Delete-key handler guarded to `selected.type === "video"` with focus outside any form field. `VideoPanel.moveClip(a, b)` swaps two clips' `order`. The `MediaItem` in `project.media_library` is untouched by deletion.
 - `static/css/components/style-panel.css` — `#panel-video` (TRIM in/out + ORDER move up/down + `#video-delete`, danger-styled via the `--danger` token in `tokens.css`).
 
 ### Video boxes (picture-in-picture)
