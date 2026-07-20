@@ -189,7 +189,7 @@ function renderBoxPanel() {
   const preset = ensureTextPreset(ensureTextBlock().preset_id);
 
   UI.buttonGroup(document.getElementById("text-box-size-mode-group"),
-    [{ value: "fit", label: "FIT" }, { value: "fixed", label: "FREE" }, { value: "fill", label: "FILL" }],
+    [{ value: "fit", label: "FIT", span: 3 }, { value: "fixed", label: "FREE", span: 2 }, { value: "fill", label: "FILL", span: 3 }],
     preset.box_width_mode,
     (value) => {
       preset.box_width_mode = value;
@@ -204,31 +204,31 @@ function renderBoxPanel() {
   document.getElementById("text-box-height-field").hidden = boxSizeFieldsHidden;
 
   UI.numberField(document.getElementById("text-box-width-field"),
-    { label: "WIDTH", unit: "PX", value: preset.box_width, min: 1, max: 1080,
+    { label: "WIDTH", unit: "PX", value: preset.box_width, min: 1, max: 1080, span: 4,
       onChange: (v) => { preset.box_width = v; renderTextPreview(); saveProject(); } });
 
   UI.numberField(document.getElementById("text-box-height-field"),
-    { label: "HEIGHT", unit: "PX", value: preset.box_height, min: 1, max: 1920,
+    { label: "HEIGHT", unit: "PX", value: preset.box_height, min: 1, max: 1920, span: 4,
       onChange: (v) => { preset.box_height = v; renderTextPreview(); saveProject(); } });
 
   UI.colorSwatch(document.getElementById("text-box-background-color-field"),
-    { label: "Background", showLabel: false, value: preset.box_background_color,
+    { label: "Background", showLabel: false, value: preset.box_background_color, span: 1,
       onChange: (v) => { preset.box_background_color = v; preset.box_background = true; saveProject(); renderTextPreview(); } });
 
   UI.numberField(document.getElementById("text-box-background-opacity-field"),
-    { label: "OPACITY", unit: "%", value: preset.box_background_opacity, min: 0, max: 100,
+    { label: "OPACITY", unit: "%", value: preset.box_background_opacity, min: 0, max: 100, span: 7,
       onChange: (v) => { preset.box_background_opacity = v; saveProject(); renderTextPreview(); } });
 
   UI.numberField(document.getElementById("text-box-border-width-field"),
-    { label: "BORDER", unit: "PX", value: preset.box_border_width, min: 0, max: 40,
+    { label: "BORDER", unit: "PX", value: preset.box_border_width, min: 0, max: 40, span: 4,
       onChange: (v) => { preset.box_border_width = v; saveProject(); renderTextPreview(); } });
 
   UI.numberField(document.getElementById("text-box-border-radius-field"),
-    { label: "RADIUS", unit: "PX", value: preset.box_border_radius, min: 0, max: 200,
+    { label: "RADIUS", unit: "PX", value: preset.box_border_radius, min: 0, max: 200, span: 3,
       onChange: (v) => { preset.box_border_radius = v; saveProject(); renderTextPreview(); } });
 
   UI.colorSwatch(document.getElementById("text-box-border-color-field"),
-    { label: "Border Color", showLabel: false, value: preset.box_border_color,
+    { label: "Border Color", showLabel: false, value: preset.box_border_color, span: 1,
       onChange: (v) => { preset.box_border_color = v; saveProject(); renderTextPreview(); } });
 }
 
