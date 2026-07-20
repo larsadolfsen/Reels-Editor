@@ -7,7 +7,7 @@
   background: var(--surface);
   border-left: 1px solid var(--border-soft);
   overflow-y: auto;
-  padding: 18px 16px;
+  padding: 18px 20px;
 }
 
 #style-panel[hidden] { display: none; }
@@ -48,7 +48,12 @@
   margin-bottom: var(--space-4);
 }
 
-.style-group { margin-bottom: var(--space-2); }
+.style-group {
+  display: grid;
+  grid-template-columns: repeat(8, 28px);
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
 .style-group:last-child { margin-bottom: 0; }
 
 .style-group-label {
@@ -60,12 +65,20 @@
 }
 
 .style-row {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(8, 28px);
   gap: var(--space-2);
+  align-items: center;
 }
 
-.style-row-tight { justify-content: space-between; align-items: flex-end; }
+.col-1 { grid-column: span 1; }
+.col-2 { grid-column: span 2; }
+.col-3 { grid-column: span 3; }
+.col-4 { grid-column: span 4; }
+.col-5 { grid-column: span 5; }
+.col-6 { grid-column: span 6; }
+.col-7 { grid-column: span 7; }
+.col-8 { grid-column: span 8; }
 
 #text-size-row { gap: 6px; }
 #text-size-field { flex: 1; }
@@ -78,7 +91,6 @@
   font-size: 9px;
   letter-spacing: 0.05em;
   color: var(--text-dim);
-  flex: 1;
 }
 
 .style-field[hidden] { display: none; }
@@ -102,9 +114,6 @@
   letter-spacing: 0.04em;
   color: var(--text-muted);
 }
-
-#position-row-group, #position-col-group { margin-bottom: 4px; }
-#position-row-group:last-child, #position-col-group:last-child { margin-bottom: 0; }
 
 .caption-placeholder { opacity: 0.7; }
 
@@ -174,10 +183,6 @@
 /* TEXT ALIGN's buttons are icons, not text — override .btn-group's stretched 1fr columns/padding
    so they render as plain 28x28 .icon-btn squares instead. Scoped to this one group; other
    button-group uses (POSITION row/col, BOX size mode, etc.) keep the default text-label sizing. */
-#text-align-group {
-  grid-auto-columns: min-content;
-  justify-content: start;
-}
 #text-align-group button {
   width: 28px;
   height: 28px;

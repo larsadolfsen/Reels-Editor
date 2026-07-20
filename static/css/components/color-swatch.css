@@ -1,17 +1,10 @@
 /* Color picker swatch: a small solid-fill square + label, one per row. */
 /* Exposes .color-swatch-row/.color-swatch/.color-swatch-label. Depends on tokens.css. */
 .color-swatch-row {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(8, 28px);
   gap: var(--space-2);
-  width: 100%;
-}
-
-/* When a swatch shares a .style-row with other fields (e.g. numberFields), it should sit
-   at its natural (swatch-only) width rather than stretching to fill the row. */
-.style-row .color-swatch-row {
-  width: auto;
-  flex-shrink: 0;
+  align-items: center;
 }
 
 .color-swatch {
