@@ -71,6 +71,8 @@ async function deleteSelectedTextBlock() {
   selectedTextBlockId = null;
   await saveProject();
   await renderTextPanel();
+  const next = currentTextBlock();
+  selected = next ? { type: "text", item: next } : { type: "files" };
   renderTimeline();
 }
 
