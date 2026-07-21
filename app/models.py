@@ -30,6 +30,7 @@ class ClipLayer(BaseModel):
     out_point: float        # seconds into source (exclusive end)
     order: int
     fill_mode: str = "fit"  # "fit" (letterbox, default) or "fill" (center-crop, no padding)
+    speed: float = 1.0      # playback speed multiplier (0.5-2.0); timeline duration = (out-in)/speed
 
 class VideoBoxLayer(BaseModel):
     id: str = Field(default_factory=new_id)

@@ -5,6 +5,22 @@ from app.timeline import ordered, clip_duration, sequence_duration, locate, vide
 
 def c(i, o, order): return ClipLayer(media_id=f"m{order}", file_path=f"{order}.mp4", in_point=i, out_point=o, order=order)
 
+def cs(i, o, order, speed): return ClipLayer(media_id=f"m{order}", file_path=f"{order}.mp4", in_point=i, out_point=o, order=order, speed=speed)
+
+def test_clip_duration_is_speed_scaled():
+    assert clip_duration(cs(0, 4, 0, 2.0)) == 2.0   # 4s source at 2x = 2s timeline
+    assert clip_duration(cs(0, 4, 0, 0.5)) == 8.0   # 4s source at 0.5x = 8s timeline
+    assert clip_duration(cs(0, 4, 0, 1.0)) == 4.0   # unchanged at 1x
+
+def test_sequence_duration_speed_scaled():
+    assert sequence_duration([cs(0, 4, 0, 2.0), cs(0, 4, 1, 1.0)]) == 6.0  # 2 + 4
+
+def test_locate_maps_timeline_to_source_with_speed():
+    clips = [cs(0, 4, 0, 2.0), cs(0, 4, 1, 1.0)]     # timeline durations 2 and 4
+    clip, src = locate(clips, 1.0);  assert (clip.order, src) == (0, 2.0)   # 1s timeline into 2x clip = 2s source
+    clip, src = locate(clips, 2.0);  assert (clip.order, src) == (1, 0.0)   # boundary -> next clip start
+    clip, src = locate(clips, 5.0);  assert (clip.order, src) == (1, 3.0)   # 3s into the 1x second clip
+
 def test_math():
     clips = [c(0, 4, 1), c(2, 5, 0)]         # unordered on purpose
     assert [x.order for x in ordered(clips)] == [0, 1]
