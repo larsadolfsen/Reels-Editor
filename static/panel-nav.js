@@ -49,11 +49,13 @@ const PANEL_NAV_ITEMS = [
   {
     value: "text",
     label: "TEXT",
+    badge: true,
     icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><path d="M9 20h6"/></svg>`,
   },
   {
     value: "captions",
     label: "CAPTIONS",
+    badge: true,
     icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 9.17a3 3 0 1 0 0 5.66"/><path d="M17 9.17a3 3 0 1 0 0 5.66"/><rect x="2" y="5" width="20" height="14" rx="2"/></svg>`,
   },
   {
@@ -181,4 +183,10 @@ function reRenderAfterRestore() {
 
 const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, layers: openLayersPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel };
 
-UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (value) => PANEL_NAV_HANDLERS[value]());
+// Rail = insert (creation). TEXT inserts a new block and drops into on-stage edit; the other
+// rail buttons open their panel (CAPTIONS's openCaptionsPanel already create-or-opens the track).
+// Opening an *existing* text block still happens via a timeline/stage click (onTimelineSelect).
+UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (value) => {
+  if (value === "text") { addTextBlockAndEdit(); return; }
+  PANEL_NAV_HANDLERS[value]();
+});

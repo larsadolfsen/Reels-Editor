@@ -20,6 +20,7 @@
   font-family: var(--font-ui);
   font-size: 9px;
   letter-spacing: 0.04em;
+  position: relative;
 }
 
 .icon-rail-btn:hover { color: var(--text-secondary); background: var(--bg-2); }
@@ -33,3 +34,21 @@
 .icon-rail-icon svg { width: 20px; height: 20px; }
 
 .icon-rail-label { text-transform: uppercase; }
+
+/* Small plus overlay marking an "insert" rail button (TEXT/CAPTIONS) vs a plain panel toggle. */
+.icon-rail-badge {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg-1);
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+}
