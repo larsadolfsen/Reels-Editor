@@ -141,38 +141,44 @@
           <div id="video-name" class="context-panel-name col-8"></div>
         </div>
 
-        <div class="style-group-label">TRIM</div>
-        <div class="style-group">
-          <div class="style-row">
-            <label id="video-in-field"></label>
-            <label id="video-out-field"></label>
-          </div>
-        </div>
-        <div class="style-group">
-          <div class="style-row">
-            <button class="col-4" id="video-set-in">Set in</button>
-            <button class="col-4" id="video-set-out">Set out</button>
-          </div>
-        </div>
+        <div id="video-tab-bar"></div>
 
-        <div id="video-order-divider"></div>
+        <div id="video-design-body">
+          <div class="style-group-label">FILL</div>
+          <div class="style-group">
+            <div id="video-fill-mode-group"></div>
+          </div>
 
-        <div class="style-group-label">ORDER</div>
-        <div class="style-group">
-          <div class="style-row">
-            <button class="col-4" id="video-move-up">&#9650; Move up</button>
-            <button class="col-4" id="video-move-down">&#9660; Move down</button>
+          <div class="style-group-label">SPEED</div>
+          <div class="style-group">
+            <div id="video-speed-field"></div>
           </div>
         </div>
 
-        <div class="style-group-label">FILL</div>
-        <div class="style-group">
-          <div id="video-fill-mode-group"></div>
-        </div>
+        <div id="video-time-body">
+          <div class="style-group-label">TRIM</div>
+          <div class="style-group">
+            <div class="style-row">
+              <label id="video-in-field"></label>
+              <label id="video-out-field"></label>
+            </div>
+          </div>
+          <div class="style-group">
+            <div class="style-row">
+              <button class="col-4" id="video-set-in">Set in</button>
+              <button class="col-4" id="video-set-out">Set out</button>
+            </div>
+          </div>
 
-        <div class="style-group-label">SPEED</div>
-        <div class="style-group">
-          <div id="video-speed-field"></div>
+          <div id="video-order-divider"></div>
+
+          <div class="style-group-label">ORDER</div>
+          <div class="style-group">
+            <div class="style-row">
+              <button class="col-4" id="video-move-up">&#9650; Move up</button>
+              <button class="col-4" id="video-move-down">&#9660; Move down</button>
+            </div>
+          </div>
         </div>
 
         <div class="style-group">
@@ -399,28 +405,34 @@
         <div id="video-box-detail" hidden>
           <div id="video-box-name" class="context-panel-name"></div>
 
-          <div class="style-group-label">TRIM</div>
-          <div class="style-group">
-            <div class="style-row">
-              <label id="video-box-in-field"></label>
-              <label id="video-box-out-field"></label>
+          <div id="video-box-tab-bar"></div>
+
+          <div id="video-box-box-body">
+            <div class="style-group-label">SIZE &amp; POSITION</div>
+            <div class="style-group">
+              <div class="style-row">
+                <label id="video-box-x-field"></label>
+                <label id="video-box-y-field"></label>
+              </div>
+              <div class="style-row">
+                <label id="video-box-width-field"></label>
+                <label id="video-box-height-field"></label>
+              </div>
+            </div>
+
+            <div class="style-group-label">TRIM</div>
+            <div class="style-group">
+              <div class="style-row">
+                <label id="video-box-in-field"></label>
+                <label id="video-box-out-field"></label>
+              </div>
             </div>
           </div>
 
-          <div class="style-group-label">TIME</div>
-          <div class="style-group">
-            <label id="video-box-start-field"></label>
-          </div>
-
-          <div class="style-group-label">SIZE &amp; POSITION</div>
-          <div class="style-group">
-            <div class="style-row">
-              <label id="video-box-x-field"></label>
-              <label id="video-box-y-field"></label>
-            </div>
-            <div class="style-row">
-              <label id="video-box-width-field"></label>
-              <label id="video-box-height-field"></label>
+          <div id="video-box-time-body">
+            <div class="style-group-label">TIME</div>
+            <div class="style-group">
+              <label id="video-box-start-field"></label>
             </div>
           </div>
 
