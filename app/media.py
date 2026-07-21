@@ -5,9 +5,11 @@
 import os
 import shutil
 import subprocess
+import tempfile
 import tkinter
 import winreg
 from tkinter import filedialog
+from typing import Callable
 from pathlib import Path
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
@@ -70,11 +72,29 @@ def media_response(path: str) -> FileResponse:
         raise HTTPException(404, f"not found: {path}")
     return FileResponse(p)
 
-def run_export(cmd: list[str]) -> None:
+def run_export(cmd: list[str], on_progress: Callable[[float], None] | None = None, total_duration: float = 0.0) -> None:
     resolved, env = _resolve_cmd(cmd, _refreshed_path())
-    proc = subprocess.run(resolved, capture_output=True, text=True, env=env)
-    if proc.returncode != 0:
-        raise RuntimeError(proc.stderr[-2000:])
+    use_progress = on_progress is not None and total_duration > 0
+    if use_progress:
+        resolved = [resolved[0], resolved[1], "-progress", "pipe:1", "-nostats", *resolved[2:]]
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stderr_file:
+        proc = subprocess.Popen(
+            resolved,
+            stdout=subprocess.PIPE if use_progress else subprocess.DEVNULL,
+            stderr=stderr_file,
+            env=env,
+            text=True,
+        )
+        if use_progress:
+            for line in proc.stdout:
+                percent = percent_from_progress_line(line, total_duration)
+                if percent is not None:
+                    on_progress(percent)
+            proc.stdout.close()
+        proc.wait()
+        if proc.returncode != 0:
+            stderr_file.seek(0)
+            raise RuntimeError(stderr_file.read()[-2000:])
 
 def pick_file() -> str | None:
     # Must stay a sync `def` route: FastAPI dispatches sync handlers to a worker thread,
