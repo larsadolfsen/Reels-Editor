@@ -10,6 +10,18 @@ def test_clip_layer_fill_mode_defaults_to_fit():
     c = ClipLayer(media_id="m1", file_path="a.mp4", in_point=0, out_point=5, order=0)
     assert c.fill_mode == "fit"
 
+def test_clip_layer_speed_defaults_to_one():
+    c = ClipLayer(media_id="m1", file_path="a.mp4", in_point=0, out_point=5, order=0)
+    assert c.speed == 1.0
+
+def test_clip_layer_speed_must_be_positive():
+    # gt=0 guards clip_duration's divide against a corrupt/hand-edited speed of 0 or negative
+    import pytest
+    from pydantic import ValidationError
+    for bad in (0, -1.5):
+        with pytest.raises(ValidationError):
+            ClipLayer(media_id="m1", file_path="a.mp4", in_point=0, out_point=5, order=0, speed=bad)
+
 def test_project_defaults():
     p = Project(name="reel1")
     assert (p.width, p.height, p.fps) == (1080, 1920, 30)
