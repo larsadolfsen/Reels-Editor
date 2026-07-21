@@ -52,7 +52,10 @@ async function saveProject(recordHistory = true) {
     saveIndicator.setSaved();
   } catch (err) {
     console.error("saveProject failed", err);
-    saveIndicator.setFailed(() => saveProject());
+    // Retry re-attempts the network persist only — lastSavedJson already reflects the current
+    // project from this failed attempt, so recording again would push a spurious undo entry
+    // (record() dedupes against the undo-stack top, not this state), making the next Ctrl+Z a no-op.
+    saveIndicator.setFailed(() => saveProject(false));
   }
 }
 
