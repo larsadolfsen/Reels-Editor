@@ -76,7 +76,9 @@ def run_export(cmd: list[str], on_progress: Callable[[float], None] | None = Non
     resolved, env = _resolve_cmd(cmd, _refreshed_path())
     use_progress = on_progress is not None and total_duration > 0
     if use_progress:
-        resolved = [resolved[0], resolved[1], "-progress", "pipe:1", "-nostats", *resolved[2:]]
+        # Insert right after the executable — global options only need to precede -i, and this
+        # avoids assuming cmd[1] is a standalone flag (e.g. "-y") rather than one taking a value.
+        resolved = [resolved[0], "-progress", "pipe:1", "-nostats", *resolved[1:]]
     with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stderr_file:
         proc = subprocess.Popen(
             resolved,
