@@ -8,6 +8,15 @@ def test_helpers():
     assert ass_time(83.456) == "0:01:23.45"
     assert hex_to_ass("#FFD400") == "&H0000D4FF"        # AABBGGRR, alpha 00
 
+def test_render_ass_two_blocks_both_render():
+    pr1 = TextPreset(name="a")
+    pr2 = TextPreset(name="b")
+    b1 = TextBlockLayer(heading="FIRST", preset_id=pr1.id, start=0, end=2)
+    b2 = TextBlockLayer(heading="SECOND", preset_id=pr2.id, start=2, end=4)
+    p = Project(name="r", text_blocks=[b1, b2])
+    out = render_ass(p, {pr1.id: pr1, pr2.id: pr2})
+    assert "FIRST" in out and "SECOND" in out
+
 def test_text_block_dialogue():
     pr = TextPreset(name="Pop", size_px=96, x=540, y=700)
     p = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG NEWS", preset_id=pr.id, start=1.0, end=4.0)])
