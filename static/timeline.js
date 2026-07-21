@@ -22,6 +22,8 @@ window.Timeline = (() => {
   const MAX_PX_PER_SEC = 200;
   const ZOOM_STEP = 1.5;
   let lastDuration = 1;
+  let lastProject = null;
+  let lastTimelineTime = 0;
   let pxPerSecond = null; // null = auto fit-to-width (the zoomed-out floor); a number once the user zooms in
 
   // Fit-to-width: the scale at which the whole sequence exactly fills the visible scroll
@@ -93,6 +95,7 @@ window.Timeline = (() => {
   // full render() does (rebuilding all block DOM nodes every animation frame would be
   // wasteful and can visibly jank).
   function tick(timelineTime) {
+    lastTimelineTime = timelineTime;
     document.getElementById("playhead").style.left = `${timelineTime * currentPxPerSecond()}px`;
     document.getElementById("timeline-time").textContent =
       `${formatTimeDeci(timelineTime)} / ${formatTimeDeci(lastDuration)}`;
@@ -106,6 +109,11 @@ window.Timeline = (() => {
     const playhead = document.getElementById("playhead");
     const left = parseFloat(playhead.style.left) || 0;
     btn.style.left = `${LABEL_WIDTH + left - scrollEl.scrollLeft}px`;
+
+    const sliceAction = document.getElementById("slice-action");
+    const clips = (lastProject && lastProject.clips) || [];
+    const disabled = Timeline.isSliceDisabled(clips, lastTimelineTime);
+    sliceAction.classList.toggle("disabled", disabled);
   }
 
   // Keeps the playhead within view during playback by nudging #timeline-scroll's scrollLeft
@@ -208,6 +216,8 @@ window.Timeline = (() => {
     const clips = ordered(project.clips || []);
     const duration = totalDuration(project);
     lastDuration = duration;
+    lastProject = project;
+    lastTimelineTime = timelineTime;
     const px = currentPxPerSecond();
     const contentWidth = duration * px;
     document.getElementById("timeline-content").style.width = `${contentWidth}px`;

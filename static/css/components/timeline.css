@@ -275,3 +275,12 @@
   pointer-events: none;
   z-index: 4;
 }
+
+/* Visual-only disabled state at clip boundaries / empty timeline (static/timeline.js's
+   updateSliceButton) — the click handler in timeline-slice.js already no-ops safely either
+   way, this just communicates it. */
+.slice-icon-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.slice-icon-btn.disabled:hover { background: none; }
