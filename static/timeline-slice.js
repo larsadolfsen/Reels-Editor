@@ -33,9 +33,11 @@ Timeline.sliceClip = function (clips, t, eps = 0.05) {
 };
 
 document.getElementById("slice-action").addEventListener("click", async () => {
-  const { newId } = Timeline.sliceClip(project.clips, Preview.currentTimelineTime());
+  const t = Preview.currentTimelineTime();
+  const { newId } = Timeline.sliceClip(project.clips, t);
   if (!newId) return;                 // boundary / empty timeline -> harmless no-op
   await saveProject();
   Preview.load(project);
-  renderTimeline();
+  Preview.seek(t);                    // Preview.load resets the clock to 0; seek back so the
+  renderTimeline();                   // playhead (blue line) stays where the cut was made
 });
