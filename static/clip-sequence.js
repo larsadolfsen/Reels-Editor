@@ -1,6 +1,7 @@
 // Sequence-mutation helpers for the main VIDEO clip track: inserting a new clip at a drop point
 // (splitting an existing clip if needed), converting a video box into a sequence clip, and
-// importing a new media file via the native file picker. Plain globals shared with editor.js's
+// importing a new media file via the native file picker (image imports default to a 3s clip
+// duration since MediaItem.duration is 0 for images). Plain globals shared with editor.js's
 // drag/drop wiring; reaches into editor.js's `project`/`clipDurations`/`saveProject` globals.
 
 // Inserts a new main-sequence ClipLayer at `dropTime` from any source carrying
@@ -71,23 +72,26 @@ function stitchVideoBoxIntoSequence(box, dropTime) {
   project.video_boxes = project.video_boxes.filter((v) => v.id !== box.id);
 }
 
+const DEFAULT_IMAGE_DURATION = 3.0;
+
 async function addClip() {
   const path = await Api.pickFile();
   if (!path) return;
   const probeResult = await Api.probeMedia(path);
   if (!probeResult) { alert("probe failed"); return; }
-  const { duration, has_audio } = probeResult;
+  const { duration, has_audio, kind } = probeResult;
   const mediaId = crypto.randomUUID().replaceAll("-", "");
-  project.media_library.push({ id: mediaId, file_path: path, duration, has_audio });
+  project.media_library.push({ id: mediaId, file_path: path, duration, has_audio, kind });
 
+  const clipDuration = kind === "image" ? DEFAULT_IMAGE_DURATION : duration;
   const id = crypto.randomUUID().replaceAll("-", "");
-  clipDurations[id] = duration;
+  clipDurations[id] = clipDuration;
   project.clips.push({
     id,
     media_id: mediaId,
     file_path: path,
     in_point: 0,
-    out_point: duration,
+    out_point: clipDuration,
     order: project.clips.length,
     speed: 1,
   });
