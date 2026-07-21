@@ -93,6 +93,7 @@ window.Preview = (() => {
   }
 
   function playClipAt(index, autoplay = true) {
+    ImageClipPlayback.stop();
     activeIndex = index;
     const c = clips[index];
     if (clipKind(c) === "image") {
