@@ -18,30 +18,39 @@
     return [...(project.clips || [])].sort((a, b) => a.order - b.order);
   }
 
-  // Cumulative-time boundary positions (content-space px), among every clip except the one
-  // being dragged. There are n+1 boundaries for n remaining clips (before the first, between
-  // each pair, after the last) — the index of the nearest one is exactly the drop index
-  // VideoPanel.moveClipTo expects.
-  function reorderBoundaries(excludeClipId) {
+  // Real on-screen boundary positions (content-space px) for the FULL clip sequence,
+  // dragged clip included — sibling blocks never reflow during the drag (only the dragged
+  // block itself moves, via CSS transform), so snapping must happen in that same, un-reflowed
+  // coordinate space. There are n+1 boundaries for n clips (before the first, between each
+  // pair, after the last).
+  function sequenceBoundaries() {
     const px = Timeline.PX_PER_SEC;
-    const rest = orderedClips().filter((c) => c.id !== excludeClipId);
     const bounds = [0];
     let acc = 0;
-    for (const c of rest) {
+    for (const c of orderedClips()) {
       acc += clipDuration(c);
       bounds.push(acc * px);
     }
     return bounds;
   }
 
+  // Finds the nearest full-sequence boundary to contentX, then translates its position among
+  // all n+1 boundaries into a drop index among the n-1 clips VideoPanel.moveClipTo will see
+  // once the dragged clip is removed (any boundary at or before the dragged clip's own start
+  // needs no adjustment; any boundary at or after its end shifts down by one, since removing
+  // the dragged clip closes that gap).
   function nearestReorderIndex(contentX, excludeClipId) {
-    const bounds = reorderBoundaries(excludeClipId);
-    let bestIndex = 0, bestDist = Infinity, bestX = bounds[0];
+    const bounds = sequenceBoundaries();
+    let bestBoundaryIndex = 0, bestDist = Infinity, bestX = bounds[0];
     bounds.forEach((b, i) => {
       const dist = Math.abs(b - contentX);
-      if (dist < bestDist) { bestDist = dist; bestIndex = i; bestX = b; }
+      if (dist < bestDist) { bestDist = dist; bestBoundaryIndex = i; bestX = b; }
     });
-    return { index: bestIndex, x: bestX };
+    const draggedIndex = orderedClips().findIndex((c) => c.id === excludeClipId);
+    const index = (draggedIndex !== -1 && bestBoundaryIndex > draggedIndex)
+      ? bestBoundaryIndex - 1
+      : bestBoundaryIndex;
+    return { index, x: bestX };
   }
 
   function getIndicator(row) {
