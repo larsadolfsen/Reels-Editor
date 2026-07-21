@@ -1,10 +1,30 @@
 // #panel-video-box context-panel section: add-from-media-library picker, trim/time/position/size
-// fields, drag-to-move/resize on stage (via VideoBoxPreview), delete. Exposes
-// window.VideoBoxPanel.render(selectedId). One video box selected at a time; multiple boxes
-// live in project.video_boxes (see app/models.py's VideoBoxLayer).
+// fields, drag-to-move/resize on stage (via VideoBoxPreview), delete. The detail view is split
+// into Box (SIZE & POSITION + TRIM) and Time (START) tab panes via UI.tabBar (Box default), with
+// Delete as an always-visible footer. Exposes window.VideoBoxPanel.render(selectedId). One video
+// box selected at a time; multiple boxes live in project.video_boxes (see app/models.py's VideoBoxLayer).
 window.VideoBoxPanel = window.VideoBoxPanel || {};
 
 (() => {
+  const VIDEO_BOX_TAB_ICON_BOX = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 7a24 24 0 0 1 0 10"/><path d="M4.5 7a24 24 0 0 0 0 10"/><path d="M7 19.5a24 24 0 0 0 10 0"/><path d="M7 4.5a24 24 0 0 1 10 0"/><rect x="17" y="17" width="5" height="5" rx="1"/><rect x="17" y="2" width="5" height="5" rx="1"/><rect x="2" y="17" width="5" height="5" rx="1"/><rect x="2" y="2" width="5" height="5" rx="1"/></svg>';
+  const VIDEO_BOX_TAB_ICON_TIME = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>';
+
+  const VIDEO_BOX_TABS = [
+    { value: "box", icon: VIDEO_BOX_TAB_ICON_BOX, label: "Box" },
+    { value: "time", icon: VIDEO_BOX_TAB_ICON_TIME, label: "Time" },
+  ];
+  const videoBoxTabPanes = {
+    box: document.getElementById("video-box-box-body"),
+    time: document.getElementById("video-box-time-body"),
+  };
+  let activeVideoBoxTab = "box";
+  function showVideoBoxTab(value) {
+    activeVideoBoxTab = value;
+    Object.entries(videoBoxTabPanes).forEach(([k, el]) => { el.hidden = k !== value; });
+  }
+  UI.tabBar(document.getElementById("video-box-tab-bar"), VIDEO_BOX_TABS, activeVideoBoxTab, showVideoBoxTab);
+  showVideoBoxTab(activeVideoBoxTab);
+
   function findMedia(box) {
     return project.media_library.find((m) => m.id === box.media_id);
   }

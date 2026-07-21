@@ -1,5 +1,6 @@
-// VIDEO context-panel section: trim/order/fill-mode/speed/delete for the selected clip. Exposes
-// window.VideoPanel.render()/select()/deleteClip()/moveClipTo(), plus the shared clampTrim()
+// VIDEO context-panel section: trim/order/fill-mode/speed/delete for the selected clip, split
+// into Design (FILL + SPEED) and Time (TRIM + ORDER) tab panes via UI.tabBar (Design default).
+// Exposes window.VideoPanel.render()/select()/deleteClip()/moveClipTo(), plus the shared clampTrim()
 // helper (also used by panel-video-box.js).
 window.VideoPanel = window.VideoPanel || {};
 
@@ -13,6 +14,25 @@ function clampTrim(inP, outP, dur) {
 UI.divider(document.getElementById("video-order-divider"));
 
 (() => {
+  const VIDEO_TAB_ICON_DESIGN = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>';
+  const VIDEO_TAB_ICON_TIME = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>';
+
+  const VIDEO_TABS = [
+    { value: "design", icon: VIDEO_TAB_ICON_DESIGN, label: "Design" },
+    { value: "time", icon: VIDEO_TAB_ICON_TIME, label: "Time" },
+  ];
+  const videoTabPanes = {
+    design: document.getElementById("video-design-body"),
+    time: document.getElementById("video-time-body"),
+  };
+  let activeVideoTab = "design";
+  function showVideoTab(value) {
+    activeVideoTab = value;
+    Object.entries(videoTabPanes).forEach(([k, el]) => { el.hidden = k !== value; });
+  }
+  UI.tabBar(document.getElementById("video-tab-bar"), VIDEO_TABS, activeVideoTab, showVideoTab);
+  showVideoTab(activeVideoTab);
+
   function render(c) {
     const dur = clipDurations[c.id] ?? c.out_point;
     const media = project.media_library.find((m) => m.id === c.media_id);
