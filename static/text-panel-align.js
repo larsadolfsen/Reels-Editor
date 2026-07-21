@@ -1,4 +1,4 @@
-// TEXT panel POSITION accordion: TEXT ALIGN button group. Exposes window.TextPanel.renderAlign().
+// TEXT panel Box tab: TEXT ALIGN button group. Exposes window.TextPanel.renderAlign().
 window.TextPanel = window.TextPanel || {};
 
 window.TextPanel.renderAlign = function renderAlign() {

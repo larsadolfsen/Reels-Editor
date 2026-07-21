@@ -1,4 +1,4 @@
-// TEXT panel POSITION accordion: absolute HORIZONTAL/VERTICAL pixel fields (TextPreset.x/y) +
+// TEXT panel Box tab: absolute HORIZONTAL/VERTICAL pixel fields (TextPreset.x/y) +
 // a stateless 3x3 anchor-grid shortcut. Exposes window.TextPanel.renderPosition(). Reaches into
 // editor.js's globals (currentTextBlock, ensureTextPreset, saveProject, renderTextPreview,
 // renderTextPanel, POSITION_ANCHORS_X, POSITION_ANCHORS_Y).

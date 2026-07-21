@@ -1,4 +1,4 @@
-// TEXT panel FONT accordion: font-weight row + drill-down subpanel. Pure UI over
+// TEXT panel Design tab: font-weight row + drill-down subpanel. Pure UI over
 // TextPreset.weight, unless a stage text selection is active (Preview.getActiveFormatSelection()),
 // in which case selecting a weight writes/updates a per-range FormatRun instead (mirrors
 // text-panel-font-style.js's upsertFormatRun). Exposes window.TextPanel.renderFontWeight().

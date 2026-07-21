@@ -1,5 +1,5 @@
-// CAPTIONS panel STYLE accordion: saved-style preset library, same global library TEXT's
-// STYLE accordion uses (GET/POST /api/presets) — a saved style can be applied to a text
+// CAPTIONS panel Style tab: saved-style preset library, same global library TEXT's
+// Style tab uses (GET/POST /api/presets) — a saved style can be applied to a text
 // block or a caption track interchangeably. Exposes window.CaptionPanel.renderStyle().
 window.CaptionPanel = window.CaptionPanel || {};
 

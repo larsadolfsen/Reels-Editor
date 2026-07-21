@@ -1,4 +1,4 @@
-// CAPTIONS panel FONT accordion: font-weight row + drill-down subpanel. Pure UI over the
+// CAPTIONS panel Design tab: font-weight row + drill-down subpanel. Pure UI over the
 // caption track's TextPreset.weight. Exposes window.CaptionPanel.renderFontWeight().
 window.CaptionPanel = window.CaptionPanel || {};
 

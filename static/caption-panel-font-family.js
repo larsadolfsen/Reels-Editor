@@ -1,4 +1,4 @@
-// CAPTIONS panel FONT accordion: font-family row + drill-down subpanel. Pure UI over the
+// CAPTIONS panel Design tab: font-family row + drill-down subpanel. Pure UI over the
 // caption track's TextPreset.font. Exposes window.CaptionPanel.renderFontFamily().
 window.CaptionPanel = window.CaptionPanel || {};
 
