@@ -2,6 +2,9 @@
 # "fit" letterboxes, "fill" center-crops), concat with silent-audio synthesis for video-only clips,
 # optional ASS burn or banded chain alternating ASS burn-in with video-box overlays.
 # CRF is derived from Project.export_quality ("high" -> 18, "medium" -> 23, default 18).
+# Per-clip ClipLayer.speed (!= 1.0) scales video pace via setpts=(PTS-STARTPTS)/speed and real audio
+# via atempo=speed (both in build_export_cmd and build_audio_cmd); synthesized silence duration is
+# scaled by 1/speed to match. At speed == 1.0 the emitted commands are byte-identical to the pre-speed baseline.
 from app.models import Project
 from app.timeline import ordered
 
@@ -27,7 +30,8 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
         v_idx = input_index
         cmd += ["-i", c.file_path]
         input_index += 1
-        trim_prefix = f"[{v_idx}:v]trim=start={_num(c.in_point)}:end={_num(c.out_point)},setpts=PTS-STARTPTS,"
+        setpts = f"(PTS-STARTPTS)/{_num(c.speed)}" if c.speed != 1.0 else "PTS-STARTPTS"
+        trim_prefix = f"[{v_idx}:v]trim=start={_num(c.in_point)}:end={_num(c.out_point)},setpts={setpts},"
         suffix = f",setsar=1,fps={p.fps}[v{i}];"
         if c.fill_mode == "fill":
             scale_segment = (
@@ -41,12 +45,13 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
         media = media_by_id.get(c.media_id)
         has_audio = media.has_audio if media else True
         if has_audio:
-            parts.append(f"[{v_idx}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS[a{i}];")
+            atempo = f",atempo={_num(c.speed)}" if c.speed != 1.0 else ""
+            parts.append(f"[{v_idx}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS{atempo}[a{i}];")
         else:
             a_idx = input_index
             cmd += ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"]
             input_index += 1
-            duration = c.out_point - c.in_point
+            duration = (c.out_point - c.in_point) / c.speed
             parts.append(f"[{a_idx}:a]atrim=start=0:end={_num(duration)},asetpts=PTS-STARTPTS[a{i}];")
     streams = "".join(f"[v{i}][a{i}]" for i in range(len(clips)))
     fc = "".join(parts) + f"{streams}concat=n={len(clips)}:v=1:a=1[vc][a]"
@@ -103,12 +108,13 @@ def build_audio_cmd(p: Project, wav_path: str) -> list[str]:
             a_idx = input_index
             cmd += ["-i", c.file_path]
             input_index += 1
-            parts.append(f"[{a_idx}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS[a{i}];")
+            atempo = f",atempo={_num(c.speed)}" if c.speed != 1.0 else ""
+            parts.append(f"[{a_idx}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS{atempo}[a{i}];")
         else:
             a_idx = input_index
             cmd += ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"]
             input_index += 1
-            duration = c.out_point - c.in_point
+            duration = (c.out_point - c.in_point) / c.speed
             parts.append(f"[{a_idx}:a]atrim=start=0:end={_num(duration)},asetpts=PTS-STARTPTS[a{i}];")
     fc = "".join(parts) + "".join(f"[a{i}]" for i in range(len(clips))) + f"concat=n={len(clips)}:v=0:a=1[a]"
     return cmd + ["-filter_complex", fc, "-map", "[a]", "-vn", "-ac", "1", "-ar", "16000", wav_path]

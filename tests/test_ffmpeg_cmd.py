@@ -216,3 +216,42 @@ def test_medium_quality_crf_applies_in_bands_branch():
     p.export_quality = "medium"
     cmd = build_export_cmd(p, "out.mp4", bands=[{"kind": "video_box", "video_box": box}])
     assert cmd[cmd.index("-crf") + 1] == "23"
+
+def test_speed_2x_video_setpts_and_audio_atempo():
+    p = Project(name="r",
+                media_library=[MediaItem(id="m0", file_path="a.mp4", duration=4, has_audio=True)],
+                clips=[ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=4, order=0, speed=2.0)])
+    fc = build_export_cmd(p, "out.mp4")[build_export_cmd(p, "out.mp4").index("-filter_complex") + 1]
+    assert "setpts=(PTS-STARTPTS)/2" in fc
+    assert "atempo=2" in fc
+
+def test_speed_half_video_setpts_and_audio_atempo():
+    p = Project(name="r",
+                media_library=[MediaItem(id="m0", file_path="a.mp4", duration=4, has_audio=True)],
+                clips=[ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=4, order=0, speed=0.5)])
+    fc = build_export_cmd(p, "out.mp4")[build_export_cmd(p, "out.mp4").index("-filter_complex") + 1]
+    assert "setpts=(PTS-STARTPTS)/0.5" in fc
+    assert "atempo=0.5" in fc
+
+def test_speed_1x_export_unchanged_no_atempo():
+    p = Project(name="r",
+                media_library=[MediaItem(id="m0", file_path="a.mp4", duration=4, has_audio=True)],
+                clips=[ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=4, order=0, speed=1.0)])
+    fc = build_export_cmd(p, "out.mp4")[build_export_cmd(p, "out.mp4").index("-filter_complex") + 1]
+    assert "setpts=PTS-STARTPTS," in fc     # the plain reset, not the /speed form
+    assert "atempo" not in fc
+
+def test_speed_scales_synthesized_silence_duration():
+    p = Project(name="r",
+                media_library=[MediaItem(id="m0", file_path="a.mp4", duration=4, has_audio=False)],
+                clips=[ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=4, order=0, speed=2.0)])
+    fc = build_export_cmd(p, "out.mp4")[build_export_cmd(p, "out.mp4").index("-filter_complex") + 1]
+    assert "atrim=start=0:end=2,asetpts=PTS-STARTPTS[a0]" in fc   # 4s source / 2x = 2s silence
+
+def test_build_audio_cmd_applies_atempo_for_speed():
+    from app.ffmpeg_cmd import build_audio_cmd
+    p = Project(name="r",
+                media_library=[MediaItem(id="m0", file_path="a.mp4", duration=4, has_audio=True)],
+                clips=[ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=4, order=0, speed=2.0)])
+    fc = build_audio_cmd(p, "out.wav")[build_audio_cmd(p, "out.wav").index("-filter_complex") + 1]
+    assert "atempo=2" in fc
