@@ -31,6 +31,8 @@ class ClipLayer(BaseModel):
     order: int
     fill_mode: str = "fit"  # "fit" (letterbox, default) or "fill" (center-crop, no padding)
     speed: float = Field(default=1.0, gt=0)  # playback speed multiplier (UI clamps 0.5-2.0); gt=0 guards clip_duration's divide. timeline duration = (out-in)/speed
+    volume: float = Field(default=1.0, ge=0.0, le=2.0)  # UI clamps 0.0-2.0; export volume=<v> filter, preview clamps to <=1.0 (HTML5 audio cap)
+    muted: bool = False
 
 class VideoBoxLayer(BaseModel):
     id: str = Field(default_factory=new_id)

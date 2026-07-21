@@ -202,3 +202,24 @@ def test_media_item_old_json_without_name_field_loads():
 def test_media_item_name_round_trip():
     m = MediaItem(file_path="clip.mp4", name="Custom Name", duration=5.0)
     assert MediaItem.model_validate_json(m.model_dump_json()).name == "Custom Name"
+
+def test_clip_layer_volume_and_muted_defaults():
+    from app.models import ClipLayer
+    c = ClipLayer(media_id="m1", file_path="a.mp4", out_point=2, order=0)
+    assert c.volume == 1.0
+    assert c.muted is False
+
+def test_clip_layer_volume_and_muted_round_trip():
+    from app.models import ClipLayer
+    c = ClipLayer(media_id="m1", file_path="a.mp4", out_point=2, order=0, volume=1.5, muted=True)
+    loaded = ClipLayer.model_validate_json(c.model_dump_json())
+    assert loaded.volume == 1.5
+    assert loaded.muted is True
+
+def test_clip_layer_old_saved_json_without_volume_fields_loads_with_defaults():
+    from app.models import ClipLayer
+    import json
+    old_json = json.dumps({"id": "x", "media_id": "m1", "file_path": "a.mp4", "out_point": 2, "order": 0})
+    loaded = ClipLayer.model_validate_json(old_json)
+    assert loaded.volume == 1.0
+    assert loaded.muted is False
