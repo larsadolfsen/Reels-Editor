@@ -87,7 +87,12 @@ async function duplicateTextBlock(blockId) {
     ...srcPreset, id: newPresetId,
     x: (srcPreset.x || 0) + 20, y: (srcPreset.y || 0) + 20,
   };
-  const copy = { ...src, id: crypto.randomUUID().replaceAll("-", ""), preset_id: newPresetId };
+  const copy = {
+    ...src,
+    id: crypto.randomUUID().replaceAll("-", ""),
+    preset_id: newPresetId,
+    formatting_runs: (src.formatting_runs || []).map((r) => ({ ...r })),
+  };
   project.text_blocks.push(copy);
   selectedTextBlockId = copy.id;
   selected = { type: "text", item: copy };
