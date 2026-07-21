@@ -8,6 +8,10 @@
 
 **Tech Stack:** Python `struct` module for raw PCM parsing (no numpy dependency — codebase has none), ffmpeg subprocess (mocked in tests), pytest; vanilla JS `<canvas>` 2D rendering (no chart library — codebase has no JS dependencies at all).
 
+> **Re-verified 2026-07-21 against current `main` — two things changed:**
+> 1. `app/main.py` now imports `from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs` (an unrelated background export-progress-job feature added `export_jobs`) — Task 2's import-line edit below has been updated to append `waveform` to this current line, not the shorter one originally assumed.
+> 2. `static/timeline.js` gained **real zoom** since this plan was written (`#zoom-in`/`#zoom-out` toolbar buttons now work; the old fixed `const PX_PER_SEC = 60` is gone, replaced by a zoom-aware `currentPxPerSecond()` function and a live `Timeline.PX_PER_SEC` getter). This plan's original "zoom is unwired, skip that check" note is now **wrong** — zoom is real, and Task 4 has been updated to pass the render-local `px` variable (not a module constant) into `TimelineAudioRow.render`, and to verify waveforms rescale correctly when zooming.
+
 ## Global Constraints
 
 **Requires Batch 1** (`MediaItem.kind`, `Project.music`) **merged first.** Independent of Batches 2-4.
@@ -208,13 +212,13 @@ Expected: FAIL — 404, route doesn't exist yet.
 
 - [ ] **Step 3: Add the route**
 
-In `app/main.py`, add `waveform` to the existing `from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe` import line:
+In `app/main.py`, add `waveform` to the existing import line — on current `main` this is `from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs` (the `export_jobs` name comes from an unrelated background export-progress-job feature; keep it):
 
 ```python
-from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, waveform
+from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform
 ```
 
-Then add the route near `GET /api/probe` (currently `app/main.py:75-77`):
+Then add the route near `GET /api/probe`:
 
 ```python
 @app.get("/api/media/{media_id}/peaks")
@@ -245,7 +249,7 @@ git commit -m "feat: add GET /api/media/{id}/peaks route"
 
 **Files:**
 - Create: `static/api-get-media-peaks.js`
-- Modify: `static/index.html` (add script tag alongside the other `api-*.js` tags, e.g. after line 627's `api-export-project.js`)
+- Modify: `static/index.html` (add script tag alongside the other `api-*.js` tags, right after the existing `api-export-project.js` tag — find it by name, its line number has drifted since this plan was written)
 
 **Interfaces:**
 - Produces: `window.Api.getMediaPeaks(mediaId, filePath) -> Promise<number[]>` — consumed by Task 4.
@@ -268,7 +272,7 @@ window.Api.getMediaPeaks = async function getMediaPeaks(mediaId, filePath) {
 
 - [ ] **Step 2: Add the script tag**
 
-In `static/index.html`, insert after the existing `<script src="/static/api-export-project.js"></script>` line (currently line 627):
+In `static/index.html`, insert after the existing `<script src="/static/api-export-project.js"></script>` line (its exact line number has drifted since this plan was written — find it by tag name):
 
 ```html
 <script src="/static/api-get-media-peaks.js"></script>
@@ -408,7 +412,15 @@ window.TimelineAudioRow = (() => {
 
 - [ ] **Step 2: Wire it into `timeline.js`, removing the old dummy generator**
 
-In `static/timeline.js`, delete `renderAudioTrack` (currently lines 73-94) entirely, and change the call site in `render()` (currently line 167):
+> **Re-verified 2026-07-21:** `static/timeline.js` gained real zoom since this plan was written.
+> `PX_PER_SEC` is no longer a fixed module constant — `render(project, timelineTime, selected,
+> onSelect, actions = {})` now computes a local `px = currentPxPerSecond()` per call (reflecting
+> the current zoom level) and uses `px` everywhere a fixed pixel scale used to be assumed. Pass
+> that same local `px`, not a constant, into `TimelineAudioRow.render` below — this also means
+> waveforms automatically rescale on every zoom-button click, since `render()` reruns and recomputes
+> `px` each time.
+
+In `static/timeline.js`, delete the `renderAudioTrack` function entirely, and change its call site inside `render()` — currently:
 
 ```javascript
     renderAudioTrack(contentWidth);
@@ -417,16 +429,16 @@ In `static/timeline.js`, delete `renderAudioTrack` (currently lines 73-94) entir
 to:
 
 ```javascript
-    TimelineAudioRow.render(project, PX_PER_SEC, () => renderTimeline());
+    TimelineAudioRow.render(project, px, () => renderTimeline());
 ```
 
-(`renderTimeline()` is the global wrapper in `static/editor.js:73-77` that re-invokes `Timeline.render(...)` with the current playhead/selection state — calling it as the `onReady` callback re-renders the whole timeline once a peaks fetch resolves, same as any other project-state change. This is safe to call repeatedly since `TimelineAudioRow`'s `peaksCache` makes every media id's fetch fire only once.)
+(`px` is the local variable `render()` already computes via `currentPxPerSecond()` earlier in the function — do not reintroduce a `PX_PER_SEC` constant. `renderTimeline()` is the global wrapper in `static/editor.js` that re-invokes `Timeline.render(...)` with the current playhead/selection state — calling it as the `onReady` callback re-renders the whole timeline once a peaks fetch resolves, same as any other project-state change. This is safe to call repeatedly since `TimelineAudioRow`'s `peaksCache` makes every media id's fetch fire only once.)
 
-Also remove the now-stale header comment line "The AUDIO row is a static dummy waveform (no audio-track feature yet)" from `static/timeline.js`'s top-of-file comment (currently line 3), replacing it with a one-line note that the AUDIO row now renders real per-clip + music waveforms via `TimelineAudioRow` (see that file for detail).
+Also remove the now-stale header comment line "The AUDIO row is a static dummy waveform (no audio-track feature yet)" from `static/timeline.js`'s top-of-file comment, replacing it with a one-line note that the AUDIO row now renders real per-clip + music waveforms via `TimelineAudioRow` (see that file for detail).
 
 - [ ] **Step 3: Add the script tag before `timeline.js`**
 
-In `static/index.html`, insert before the existing `<script src="/static/timeline.js"></script>` line (currently line 666):
+In `static/index.html`, insert before the existing `<script src="/static/timeline.js"></script>` line (its exact line number has drifted since this plan was written — find it by tag name; it must still load after `preview.js` and `preview-audio.js` per Batch 4):
 
 ```html
 <script src="/static/timeline-audio-row.js"></script>
@@ -469,7 +481,7 @@ In `static/css/components/timeline.css`, replace the "AUDIO row: dummy static wa
 Open a throwaway project with at least one clip that has real audio, one video-only clip (no audio track — confirm it draws a flat line), and (via the same console-based simulation as Batch 4 Task 4) a `project.music` entry. Confirm:
 - Each clip's waveform segment lines up with that clip's block in the VIDEO row above it (same x position and width).
 - Trimming a clip's IN/OUT (via the VIDEO panel) changes which portion of the waveform shows.
-- Zooming is not yet implemented (`#zoom-controls` buttons are still unwired per the codebase map) — skip that check; it's explicitly out of scope for this batch.
+- Zoom is implemented (`#zoom-in`/`#zoom-out` toolbar buttons) — click both and confirm the AUDIO row's waveforms rescale in lockstep with the VIDEO row's clip blocks above them, not just the blocks alone.
 - The music waveform renders behind/beneath the clip waveforms in the same row and is visually distinguishable (different color/opacity).
 - No console errors; peaks fetch happens once per media id (check Network tab — not once per render call).
 

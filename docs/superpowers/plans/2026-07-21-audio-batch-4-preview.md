@@ -8,6 +8,19 @@
 
 **Tech Stack:** Vanilla JS, HTML5 `<audio>`/`<video>` elements. No backend changes. No JS test framework exists in this repo (no jest/vitest) — this batch is UI wiring, verified manually per CLAUDE.md's "thin layer, verify manually" allowance, never on real project data (throwaway project only).
 
+> **Re-verified 2026-07-21 against current `main` — `static/preview.js` changed substantially:**
+> an unrelated image-clips feature landed a full `<video>`/`<img>` hand-off (module-level
+> `mediaById` Map, `imagePlayer`/`clipKind`/`isImageActive`, `window.ImageClipPlayback` for
+> per-clip image timing, a shared `renderOverlaysAt(timelineTime)` helper, and an `autoplay`
+> parameter on `playClipAt`). Every function this batch touches — `load`, `playClipAt`, `seek`,
+> `doPlay`/`doPause`/`doRestart`, the `timeupdate` listener — now has image-clip branches that
+> didn't exist when this plan was first written. Task 2 and Task 3 below have been rewritten
+> against the current file; do not use the original line-number citations as ground truth, only
+> the code shown. The core design is unchanged: `PreviewAudio` calls slot in at the same
+> conceptual points (load, play, pause, seek, sequence-end), and clip volume/mute
+> (`applyClipAudio`) only applies to the real `<video>` path — image clips have no audio track
+> (`has_audio` is always `False` for `MediaItem.kind == "image"`), so there's nothing to mute.
+
 ## Global Constraints
 
 **Requires Batch 1** (`ClipLayer.volume`/`muted`, `MusicTrack`/`Project.music`) **merged first.** Batches 2/3 (export) are independent of this batch and don't need to land first, but merging them first keeps export/preview visibly consistent.
@@ -22,7 +35,7 @@
 
 **Files:**
 - Create: `static/preview-audio.js`
-- Modify: `static/index.html` (add `<script src="/static/preview-audio.js"></script>` before the existing `preview.js` script tag, i.e. before line 665, alongside `preview-text.js`/`preview-captions.js` at lines 663-664)
+- Modify: `static/index.html` (add `<script src="/static/preview-audio.js"></script>` right before the existing `<script src="/static/preview.js"></script>` tag — on current `main` that's preceded by `preview-text.js`, `preview-captions.js`, and `image-clip-playback.js`, in that order; find the exact line by searching for the `preview.js` tag rather than trusting a line number, since other batches/features have shifted it since this plan was written)
 
 **Interfaces:**
 - Consumes: `Project.music: MusicTrack | null` (Batch 1) with fields `media_id`, `volume`, `muted`; `Project.media_library` to resolve `media_id` to a `file_path`.
@@ -82,13 +95,13 @@ window.PreviewAudio = (() => {
 
 - [ ] **Step 2: Add the script tag**
 
-In `static/index.html`, insert before the existing `<script src="/static/preview.js"></script>` line (currently line 665):
+In `static/index.html`, insert immediately before the existing `<script src="/static/preview.js"></script>` tag:
 
 ```html
 <script src="/static/preview-audio.js"></script>
 ```
 
-(so the full run of lines 663-665 becomes `preview-text.js`, `preview-captions.js`, `preview-audio.js`, `preview.js` — `preview.js` must load last since it will call `PreviewAudio.*` at parse time via top-level `player.addEventListener` wiring in Task 2).
+(`preview.js` must load after `preview-audio.js` since it calls `PreviewAudio.*` at parse time via top-level `player.addEventListener` wiring in Task 2 — it must also still load after `preview-text.js`, `preview-captions.js`, and `image-clip-playback.js`, which is already guaranteed as long as this new tag is inserted right before `preview.js`'s existing tag rather than at some other fixed position.)
 
 - [ ] **Step 3: Manual sanity check — file loads with no console errors**
 
@@ -103,39 +116,226 @@ git commit -m "feat: add PreviewAudio module for music playback"
 
 ---
 
-### Task 2: Wire `PreviewAudio` into `preview.js`'s playback lifecycle
+### Task 2: Clip `volume`/`muted` applied to the stage `<video>` (image clips excluded — no audio track)
 
 **Files:**
 - Modify: `static/preview.js`
 
 **Interfaces:**
-- Consumes: `window.PreviewAudio.{load, play, pause, seek}` (Task 1).
+- Consumes: `ClipLayer.volume: float`, `ClipLayer.muted: bool` (Batch 1); `applyFillModeClass(clip, el)` (existing, now takes an element parameter — see current code below); `clipKind(c)` (existing helper resolving a clip's `MediaItem.kind` via the module-level `mediaById` Map).
+- Produces: `applyClipAudio(clip)` — a new local helper in `preview.js`, called only from the non-image branches of `playClipAt` and `seek` (referenced by Task 3).
+
+- [ ] **Step 1: Add the `applyClipAudio` helper next to `applyFillModeClass`**
+
+In `static/preview.js`, right after the existing `applyFillModeClass` function:
+
+```javascript
+  // Toggles the CSS class stage.css uses to switch the given element between letterboxed (FIT,
+  // object-fit: contain) and cropped-to-fill (FILL, object-fit: cover) per ClipLayer.fill_mode.
+  function applyFillModeClass(clip, el = player) {
+    el.classList.toggle("fill-mode-fill", clip.fill_mode === "fill");
+  }
+
+  // Sets #player's volume/mute from the active clip's ClipLayer.volume/muted. HTML5 <video>
+  // volume caps at 1.0 — a volume > 1.0 (export's exact ffmpeg gain) is clamped here, same
+  // approximation the VOLUME UI documents. Only called for real video clips (see playClipAt/
+  // seek below) — image clips (MediaItem.kind === "image") never have an audio track, so there
+  // is nothing to mute/adjust.
+  function applyClipAudio(clip) {
+    player.volume = Math.max(0, Math.min(clip.volume ?? 1, 1));
+    player.muted = !!clip.muted;
+  }
+```
+
+(`applyFillModeClass` itself is shown only for placement context — its body is unchanged, don't modify it.)
+
+- [ ] **Step 2: Call it from `playClipAt`'s non-image branch**
+
+In `static/preview.js`, `playClipAt(index, autoplay = true)` currently reads:
+
+```javascript
+  function playClipAt(index, autoplay = true) {
+    ImageClipPlayback.stop();
+    activeIndex = index;
+    const c = clips[index];
+    if (clipKind(c) === "image") {
+      player.pause();
+      player.classList.add("stage-hidden");
+      imagePlayer.classList.remove("stage-hidden");
+      applyFillModeClass(c, imagePlayer);
+      imagePlayer.src = "/media?path=" + encodeURIComponent(c.file_path);
+      const onTick = (elapsed) => renderOverlaysAt(computeTimelineTime());
+      const onDone = () => {
+        if (activeIndex + 1 < clips.length) playClipAt(activeIndex + 1, true);
+        else setPlayingIcon(false);
+      };
+      if (autoplay) {
+        setPlayingIcon(true);
+        ImageClipPlayback.start(c, 0, { onTick, onDone });
+      } else {
+        ImageClipPlayback.start(c, 0, { onTick, onDone });
+        ImageClipPlayback.pause();
+        onTick(0);
+      }
+      return;
+    }
+    imagePlayer.classList.add("stage-hidden");
+    player.classList.remove("stage-hidden");
+    applyFillModeClass(c, player);
+    player.src = "/media?path=" + encodeURIComponent(c.file_path);
+    player.onloadedmetadata = () => {
+      player.currentTime = c.in_point;
+      player.playbackRate = c.speed || 1;
+      if (autoplay) player.play();
+    };
+    maybePreloadNext(index);
+  }
+```
+
+Change the image branch's `onDone` to also pause music when the sequence ends on an image clip, and add `applyClipAudio(c)` to the non-image (video) branch:
+
+```javascript
+  function playClipAt(index, autoplay = true) {
+    ImageClipPlayback.stop();
+    activeIndex = index;
+    const c = clips[index];
+    if (clipKind(c) === "image") {
+      player.pause();
+      player.classList.add("stage-hidden");
+      imagePlayer.classList.remove("stage-hidden");
+      applyFillModeClass(c, imagePlayer);
+      imagePlayer.src = "/media?path=" + encodeURIComponent(c.file_path);
+      const onTick = (elapsed) => renderOverlaysAt(computeTimelineTime());
+      const onDone = () => {
+        if (activeIndex + 1 < clips.length) playClipAt(activeIndex + 1, true);
+        else { setPlayingIcon(false); PreviewAudio.pause(); }
+      };
+      if (autoplay) {
+        setPlayingIcon(true);
+        ImageClipPlayback.start(c, 0, { onTick, onDone });
+      } else {
+        ImageClipPlayback.start(c, 0, { onTick, onDone });
+        ImageClipPlayback.pause();
+        onTick(0);
+      }
+      return;
+    }
+    imagePlayer.classList.add("stage-hidden");
+    player.classList.remove("stage-hidden");
+    applyFillModeClass(c, player);
+    applyClipAudio(c);
+    player.src = "/media?path=" + encodeURIComponent(c.file_path);
+    player.onloadedmetadata = () => {
+      player.currentTime = c.in_point;
+      player.playbackRate = c.speed || 1;
+      if (autoplay) player.play();
+    };
+    maybePreloadNext(index);
+  }
+```
+
+- [ ] **Step 3: Run the full pytest suite (regression check — this batch is JS-only)**
+
+Run: `.venv/Scripts/python -m pytest -q`
+Expected: All PASS.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add static/preview.js
+git commit -m "feat: apply clip volume/mute to the stage video (image clips excluded)"
+```
+
+---
+
+### Task 3: Wire `PreviewAudio` into `preview.js`'s full playback lifecycle (video + image clips, zero-clip virtual clock)
+
+**Files:**
+- Modify: `static/preview.js`
+
+**Interfaces:**
+- Consumes: `window.PreviewAudio.{load, play, pause, seek}` (Task 1); `isImageActive()`, `computeTimelineTime()`, `ImageClipPlayback.{resume, pause}` (existing).
 
 - [ ] **Step 1: Call `PreviewAudio.load` in `load(project)`**
 
-In `static/preview.js`, `load(project)` (currently lines 137-150):
+`load(project)` currently reads:
 
 ```javascript
   function load(project) {
     clips = ordered(project.clips || []);
+    mediaById = new Map((project.media_library || []).map((m) => [m.id, m]));
+    activeIndex = -1;
+    cancelVirtualPlayback();
+    virtualTime = 0;
+    preloadedIndex = -1;
+    if (clips.length > 0) {
+      playClipAt(0, false);
+    } else {
+      player.removeAttribute("src");
+      player.load();
+      imagePlayer.classList.add("stage-hidden");
+      player.classList.remove("stage-hidden");
+      timeEl.textContent = "0.0";
+    }
+  }
+```
+
+Add one `PreviewAudio.load(project)` call, right after `preloadedIndex = -1;`:
+
+```javascript
+  function load(project) {
+    clips = ordered(project.clips || []);
+    mediaById = new Map((project.media_library || []).map((m) => [m.id, m]));
     activeIndex = -1;
     cancelVirtualPlayback();
     virtualTime = 0;
     preloadedIndex = -1;
     PreviewAudio.load(project);
     if (clips.length > 0) {
-      playClipAt(0);
+      playClipAt(0, false);
     } else {
       player.removeAttribute("src");
       player.load();
+      imagePlayer.classList.add("stage-hidden");
+      player.classList.remove("stage-hidden");
       timeEl.textContent = "0.0";
     }
   }
 ```
 
-- [ ] **Step 2: Call `PreviewAudio.play`/`pause` alongside the existing play/pause controls**
+- [ ] **Step 2: Call `PreviewAudio.play`/`pause`/`seek` in `doPlay`/`doPause`/`doRestart`, including the image-clip branches**
 
-In `doPlay()` (currently lines 203-213):
+These three functions currently read:
+
+```javascript
+  function doPlay() {
+    if (clips.length === 0) {
+      if (virtualTime >= zeroClipDuration()) virtualTime = 0;
+      startVirtualPlayback();
+      return;
+    }
+    if (isImageActive()) {
+      ImageClipPlayback.resume();
+      setPlayingIcon(true);
+      return;
+    }
+    const atEnd = activeIndex >= 0 && activeIndex === clips.length - 1
+      && player.currentTime >= clips[activeIndex].out_point;
+    if (atEnd) playClipAt(0);
+    else player.play();
+  }
+  function doPause() {
+    if (clips.length === 0) { cancelVirtualPlayback(); setPlayingIcon(false); return; }
+    if (isImageActive()) { ImageClipPlayback.pause(); setPlayingIcon(false); return; }
+    player.pause();
+  }
+  function doRestart() {
+    if (clips.length === 0) { virtualTime = 0; startVirtualPlayback(); return; }
+    playClipAt(0);
+  }
+```
+
+Change to:
 
 ```javascript
   function doPlay() {
@@ -146,6 +346,13 @@ In `doPlay()` (currently lines 203-213):
       PreviewAudio.play();
       return;
     }
+    if (isImageActive()) {
+      ImageClipPlayback.resume();
+      setPlayingIcon(true);
+      PreviewAudio.seek(computeTimelineTime());
+      PreviewAudio.play();
+      return;
+    }
     const atEnd = activeIndex >= 0 && activeIndex === clips.length - 1
       && player.currentTime >= clips[activeIndex].out_point;
     if (atEnd) playClipAt(0);
@@ -153,21 +360,12 @@ In `doPlay()` (currently lines 203-213):
     PreviewAudio.seek(computeTimelineTime());
     PreviewAudio.play();
   }
-```
-
-In `doPause()` (currently lines 214-217):
-
-```javascript
   function doPause() {
     PreviewAudio.pause();
     if (clips.length === 0) { cancelVirtualPlayback(); setPlayingIcon(false); return; }
+    if (isImageActive()) { ImageClipPlayback.pause(); setPlayingIcon(false); return; }
     player.pause();
   }
-```
-
-In `doRestart()` (currently lines 218-221):
-
-```javascript
   function doRestart() {
     PreviewAudio.seek(0);
     if (clips.length === 0) { virtualTime = 0; startVirtualPlayback(); PreviewAudio.play(); return; }
@@ -176,29 +374,47 @@ In `doRestart()` (currently lines 218-221):
   }
 ```
 
-- [ ] **Step 3: Call `PreviewAudio.seek` in `seek(t)`**
+- [ ] **Step 3: Call `PreviewAudio.seek` in `seek(t)`, covering the zero-clip, image-clip, and video-clip branches**
 
-In `seek(t)` (currently lines 245-265), add a `PreviewAudio.seek(t)` call at the top so it fires for both the zero-clip and real-clip branches:
+`seek(t)` currently reads:
 
 ```javascript
   function seek(t) {
-    PreviewAudio.seek(t);
     if (clips.length === 0) {
       virtualTime = Math.max(0, Math.min(t, zeroClipDuration()));
-      timeEl.textContent = virtualTime.toFixed(1);
-      if (textProject) renderText(textProject, textPresets, virtualTime);
-      if (textProject) renderCaptions(textProject, textPresets, virtualTime);
-      if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], virtualTime);
+      renderOverlaysAt(virtualTime);
       return;
     }
     const loc = locate(clips, t);
     if (!loc) return;
-    if (loc.clip !== clips[activeIndex]) {
-      activeIndex = clips.indexOf(loc.clip);
-      applyFillModeClass(loc.clip);
-      applyClipAudio(loc.clip);
-      player.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
-      player.onloadedmetadata = () => { player.currentTime = loc.src; player.playbackRate = loc.clip.speed || 1; };
+    const newIndex = clips.indexOf(loc.clip);
+    if (newIndex !== activeIndex) {
+      if (isImageActive()) ImageClipPlayback.stop(); else player.pause();
+      activeIndex = newIndex;
+      if (clipKind(loc.clip) === "image") {
+        player.classList.add("stage-hidden");
+        imagePlayer.classList.remove("stage-hidden");
+        applyFillModeClass(loc.clip, imagePlayer);
+        imagePlayer.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
+        const elapsed = loc.src - loc.clip.in_point;
+        const onTick = (e) => renderOverlaysAt(computeTimelineTime());
+        const onDone = () => {
+          if (activeIndex + 1 < clips.length) playClipAt(activeIndex + 1, true);
+          else setPlayingIcon(false);
+        };
+        ImageClipPlayback.start(loc.clip, elapsed, { onTick, onDone });
+        ImageClipPlayback.pause();
+        renderOverlaysAt(computeTimelineTime());
+      } else {
+        imagePlayer.classList.add("stage-hidden");
+        player.classList.remove("stage-hidden");
+        applyFillModeClass(loc.clip, player);
+        player.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
+        player.onloadedmetadata = () => { player.currentTime = loc.src; player.playbackRate = loc.clip.speed || 1; };
+      }
+    } else if (isImageActive()) {
+      ImageClipPlayback.seekTo(loc.src - loc.clip.in_point);
+      renderOverlaysAt(computeTimelineTime());
     } else {
       player.currentTime = loc.src;
       player.playbackRate = loc.clip.speed || 1;
@@ -206,13 +422,84 @@ In `seek(t)` (currently lines 245-265), add a `PreviewAudio.seek(t)` call at the
   }
 ```
 
-(`applyClipAudio` is added in Task 3 below — this step references it so the two tasks compose; if executing Task 2 before Task 3, this line will just be a forward reference resolved once Task 3 lands. Since tasks in this plan run in order within the same batch, implement Task 3 immediately after this step, before running any tests.)
-
-- [ ] **Step 4: Pause music when playback reaches the sequence end**
-
-In the `timeupdate` listener (currently lines 179-196), the existing branch that pauses when the last clip ends:
+Add a `PreviewAudio.seek(t)` call at the top (fires for every branch), the same `onDone` music-pause fix as Task 2's image branch, and `applyClipAudio(loc.clip)` in the video (non-image) clip-switch branch:
 
 ```javascript
+  function seek(t) {
+    PreviewAudio.seek(t);
+    if (clips.length === 0) {
+      virtualTime = Math.max(0, Math.min(t, zeroClipDuration()));
+      renderOverlaysAt(virtualTime);
+      return;
+    }
+    const loc = locate(clips, t);
+    if (!loc) return;
+    const newIndex = clips.indexOf(loc.clip);
+    if (newIndex !== activeIndex) {
+      if (isImageActive()) ImageClipPlayback.stop(); else player.pause();
+      activeIndex = newIndex;
+      if (clipKind(loc.clip) === "image") {
+        player.classList.add("stage-hidden");
+        imagePlayer.classList.remove("stage-hidden");
+        applyFillModeClass(loc.clip, imagePlayer);
+        imagePlayer.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
+        const elapsed = loc.src - loc.clip.in_point;
+        const onTick = (e) => renderOverlaysAt(computeTimelineTime());
+        const onDone = () => {
+          if (activeIndex + 1 < clips.length) playClipAt(activeIndex + 1, true);
+          else { setPlayingIcon(false); PreviewAudio.pause(); }
+        };
+        ImageClipPlayback.start(loc.clip, elapsed, { onTick, onDone });
+        ImageClipPlayback.pause();
+        renderOverlaysAt(computeTimelineTime());
+      } else {
+        imagePlayer.classList.add("stage-hidden");
+        player.classList.remove("stage-hidden");
+        applyFillModeClass(loc.clip, player);
+        applyClipAudio(loc.clip);
+        player.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
+        player.onloadedmetadata = () => { player.currentTime = loc.src; player.playbackRate = loc.clip.speed || 1; };
+      }
+    } else if (isImageActive()) {
+      ImageClipPlayback.seekTo(loc.src - loc.clip.in_point);
+      renderOverlaysAt(computeTimelineTime());
+    } else {
+      player.currentTime = loc.src;
+      player.playbackRate = loc.clip.speed || 1;
+    }
+  }
+```
+
+- [ ] **Step 4: Pause music when video-clip playback reaches the sequence end**
+
+The `timeupdate` listener currently reads:
+
+```javascript
+  player.addEventListener("timeupdate", () => {
+    if (activeIndex < 0 || isImageActive()) return;
+    const c = clips[activeIndex];
+    const timelineTime = computeTimelineTime();
+    renderOverlaysAt(timelineTime);
+
+    if (player.currentTime >= c.out_point) {
+      if (activeIndex + 1 < clips.length) {
+        playClipAt(activeIndex + 1);
+      } else {
+        player.pause();
+      }
+    }
+  });
+```
+
+Add `PreviewAudio.pause()` to the sequence-end branch:
+
+```javascript
+  player.addEventListener("timeupdate", () => {
+    if (activeIndex < 0 || isImageActive()) return;
+    const c = clips[activeIndex];
+    const timelineTime = computeTimelineTime();
+    renderOverlaysAt(timelineTime);
+
     if (player.currentTime >= c.out_point) {
       if (activeIndex + 1 < clips.length) {
         playClipAt(activeIndex + 1);
@@ -221,9 +508,36 @@ In the `timeupdate` listener (currently lines 179-196), the existing branch that
         PreviewAudio.pause();
       }
     }
+  });
 ```
 
-And in `virtualTick` (currently lines 112-128), the branch that stops at `zeroClipDuration()`:
+(The image-clip equivalents were already covered in Task 2 Step 2 and this task's Step 3 — both `playClipAt`'s and `seek`'s image-branch `onDone` callbacks.)
+
+- [ ] **Step 5: Pause music when the zero-clip virtual clock reaches its end**
+
+`virtualTick` currently reads (unaffected by the image-clips feature — this function is unchanged from this plan's original assumption):
+
+```javascript
+  function virtualTick(now) {
+    if (!virtualPlaying) return;
+    const dt = (now - virtualLastTs) / 1000;
+    virtualLastTs = now;
+    virtualTime += dt;
+    if (virtualTime >= zeroClipDuration()) {
+      virtualTime = zeroClipDuration();
+      virtualPlaying = false;
+      setPlayingIcon(false);
+    }
+    timeEl.textContent = virtualTime.toFixed(1);
+    if (textProject) renderText(textProject, textPresets, virtualTime);
+    if (textProject) renderCaptions(textProject, textPresets, virtualTime);
+    if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], virtualTime);
+    Timeline.tick(virtualTime);
+    if (virtualPlaying) virtualRafId = requestAnimationFrame(virtualTick);
+  }
+```
+
+Add `PreviewAudio.pause()` right after `setPlayingIcon(false);`:
 
 ```javascript
   function virtualTick(now) {
@@ -246,65 +560,16 @@ And in `virtualTick` (currently lines 112-128), the branch that stops at `zeroCl
   }
 ```
 
-- [ ] **Step 5: Commit** (after Task 3 is also implemented, so the file is left in a working state — see Task 3 Step 3 for the combined commit)
-
----
-
-### Task 3: Clip `volume`/`muted` applied to the stage `<video>`
-
-**Files:**
-- Modify: `static/preview.js`
-
-**Interfaces:**
-- Consumes: `ClipLayer.volume: float`, `ClipLayer.muted: bool` (Batch 1).
-- Produces: `applyClipAudio(clip)` — a new local helper in `preview.js`, called from both `playClipAt` and `seek`'s clip-switch branch (referenced by Task 2 Step 3).
-
-- [ ] **Step 1: Add the `applyClipAudio` helper next to `applyFillModeClass`**
-
-In `static/preview.js`, right after `applyFillModeClass` (currently lines 84-88):
-
-```javascript
-  // Sets #player's volume/mute from the active clip's ClipLayer.volume/muted. HTML5 <video>
-  // volume caps at 1.0 — a volume > 1.0 (export's exact ffmpeg gain) is clamped here, same
-  // approximation the VOLUME UI documents. Called everywhere player.src changes for a new clip.
-  function applyClipAudio(clip) {
-    player.volume = Math.max(0, Math.min(clip.volume ?? 1, 1));
-    player.muted = !!clip.muted;
-  }
-```
-
-- [ ] **Step 2: Call it from `playClipAt`**
-
-In `playClipAt(index)` (currently lines 71-82):
-
-```javascript
-  function playClipAt(index) {
-    activeIndex = index;
-    const c = clips[index];
-    applyFillModeClass(c);
-    applyClipAudio(c);
-    player.src = "/media?path=" + encodeURIComponent(c.file_path);
-    player.onloadedmetadata = () => {
-      player.currentTime = c.in_point;
-      player.playbackRate = c.speed || 1;
-      player.play();
-    };
-    maybePreloadNext(index);
-  }
-```
-
-(The call inside `seek`'s clip-switch branch was already added in Task 2 Step 3.)
-
-- [ ] **Step 3: Run the full pytest suite (regression check — this batch is JS-only, but confirms nothing backend broke)**
+- [ ] **Step 6: Run the full pytest suite (regression check — this batch is JS-only)**
 
 Run: `.venv/Scripts/python -m pytest -q`
-Expected: All PASS (no backend files touched this batch).
+Expected: All PASS.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add static/preview.js
-git commit -m "feat: apply clip volume/mute and sync music playback in preview"
+git commit -m "feat: sync music playback with video/image/zero-clip preview lifecycle"
 ```
 
 ---

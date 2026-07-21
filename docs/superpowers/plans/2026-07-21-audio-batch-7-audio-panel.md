@@ -8,24 +8,42 @@
 
 **Tech Stack:** Vanilla JS, existing `UI.numberField`/`UI.button` components, existing native-file-picker/probe flow.
 
+> **Re-verified 2026-07-21 against current `main`:** an unrelated image-clips feature already
+> extended `pick_file()`'s dialog filter list to cover images (it now offers "Media files"
+> video+image, "Video files", "Image files", and "All files" groups, with a combined title). Task
+> 1 below has been rewritten so the default (`kind="video"`) branch preserves that exact current
+> filetypes list byte-for-byte, and only adds a new `kind="audio"` branch alongside it — do not
+> use the simpler pre-image-feature filetypes list this plan originally assumed. Separately,
+> `Api.probeMedia`'s response now also includes a `kind` field (`"video"`/`"image"`, from the
+> `/api/probe` route's image detection) — `panel-audio.js`'s `importMusicFile()` (Task 4) ignores
+> it and hardcodes `kind: "audio"` on the pushed `MediaItem`, since the probe route has no concept
+> of audio files at all; this is intentional, not an oversight.
+
 ## Global Constraints
 
 **Requires Batch 1** (`MediaItem.kind`, `MusicTrack`/`Project.music`) **merged first.** Batch 5 (peaks route) is not required but pairs naturally — once music is imported here, Batch 5's waveform row picks it up automatically since it already reads `project.music`.
 
 - Importing a music file: probe it (`Api.probeMedia`, existing), push a `MediaItem` with `kind: "audio"` into `project.media_library`, create the `MusicTrack` on `project.music`. If a `MusicTrack` already exists, "ADD MUSIC" isn't shown — "Replace" swaps `media_id` (and re-probes), "Remove" clears `project.music` (leaves the `MediaItem` in the library, mirroring how removing a video clip doesn't delete its `MediaItem` — see `VideoPanel.deleteClip`'s doc comment in `static/panel-video.js`).
 - One music track only (v1) — no "add another" affordance once one exists.
-- `pick_file`'s existing video-picker behavior (default `kind="video"`) must be unchanged — every existing call site (`Api.pickFile()` with no argument) keeps working exactly as before.
+- `pick_file`'s existing default (`kind="video"`) behavior must be unchanged — every existing call site (`Api.pickFile()` with no argument) keeps working exactly as before, including its current video+image filetypes list.
+
+> **Re-verified 2026-07-21:** `static/editor.js`'s `PANEL_NAV_ITEMS`/`PANEL_NAV_HANDLERS`/
+> `showPanel`/`renderTimeline`/`openVideoBoxPanel` and `static/index.html`'s `#panel-video-box`
+> section are structurally unchanged from this plan's assumptions — only line numbers have
+> drifted (other features added code above these spots). All code snippets below still match
+> current `main` verbatim; find each insertion point by the quoted surrounding code, not by the
+> "currently line N" citations, which are approximate.
 
 ---
 
 ### Task 1: `pick_file` accepts an audio filter
 
 **Files:**
-- Modify: `app/media.py:64-76` (`pick_file`)
+- Modify: `app/media.py` (`pick_file`)
 - Test: `tests/test_media.py`
 
 **Interfaces:**
-- Produces: `_filedialog_options(kind: str) -> tuple[str, list[tuple[str, str]]]` (pure, new — testable without tkinter), `pick_file(kind: str = "video") -> str | None` (kind now optional, defaults preserve today's behavior).
+- Produces: `_filedialog_options(kind: str) -> tuple[str, list[tuple[str, str]]]` (pure, new — testable without tkinter), `pick_file(kind: str = "video") -> str | None` (kind now optional, defaults preserve today's behavior byte-for-byte).
 
 - [ ] **Step 1: Write the failing test for the pure options helper**
 
@@ -34,15 +52,20 @@ Add to `tests/test_media.py`:
 ```python
 from app.media import _filedialog_options
 
-def test_filedialog_options_video_default():
+def test_filedialog_options_video_default_matches_current_media_filter():
     title, filetypes = _filedialog_options("video")
     assert title == "Choose a clip"
-    assert filetypes[0] == ("Video files", "*.mp4 *.mov *.mkv")
+    assert filetypes == [
+        ("Media files", "*.mp4 *.mov *.mkv *.jpg *.jpeg *.png *.webp"),
+        ("Video files", "*.mp4 *.mov *.mkv"),
+        ("Image files", "*.jpg *.jpeg *.png *.webp"),
+        ("All files", "*.*"),
+    ]
 
 def test_filedialog_options_audio():
     title, filetypes = _filedialog_options("audio")
     assert title == "Choose a music file"
-    assert filetypes[0] == ("Audio files", "*.mp3 *.wav *.m4a *.aac *.ogg *.flac")
+    assert filetypes == [("Audio files", "*.mp3 *.wav *.m4a *.aac *.ogg *.flac"), ("All files", "*.*")]
 
 def test_filedialog_options_unknown_kind_falls_back_to_video():
     title, filetypes = _filedialog_options("bogus")
@@ -54,17 +77,46 @@ def test_filedialog_options_unknown_kind_falls_back_to_video():
 Run: `.venv/Scripts/python -m pytest tests/test_media.py -k filedialog_options -v`
 Expected: FAIL — `_filedialog_options` doesn't exist yet.
 
-- [ ] **Step 3: Extract the pure helper and use it in `pick_file`**
+- [ ] **Step 3: Extract the pure helper and use it in `pick_file`, preserving the current default filetypes exactly**
 
-In `app/media.py`, replace `pick_file` (currently lines 64-76):
+`app/media.py`'s `pick_file` currently reads:
+
+```python
+def pick_file() -> str | None:
+    # Must stay a sync `def` route: FastAPI dispatches sync handlers to a worker thread,
+    # so this blocking Tk dialog runs off the main thread. Switching the /api/pick-file
+    # route to `async def` would run this on the event loop and freeze the server.
+    root = tkinter.Tk()
+    root.withdraw()
+    root.attributes("-topmost", True)
+    path = filedialog.askopenfilename(
+        title="Choose a clip",
+        filetypes=[
+            ("Media files", "*.mp4 *.mov *.mkv *.jpg *.jpeg *.png *.webp"),
+            ("Video files", "*.mp4 *.mov *.mkv"),
+            ("Image files", "*.jpg *.jpeg *.png *.webp"),
+            ("All files", "*.*"),
+        ],
+    )
+    root.destroy()
+    return path or None
+```
+
+Replace it with:
 
 ```python
 def _filedialog_options(kind: str) -> tuple[str, list[tuple[str, str]]]:
     """Pure: dialog title + filetypes for the native file picker, by import kind.
-    Unknown kind falls back to the video picker (today's only behavior, preserved)."""
+    Unknown kind falls back to the video/image picker (today's only behavior, preserved
+    byte-for-byte from the pre-audio-import version of pick_file)."""
     if kind == "audio":
         return "Choose a music file", [("Audio files", "*.mp3 *.wav *.m4a *.aac *.ogg *.flac"), ("All files", "*.*")]
-    return "Choose a clip", [("Video files", "*.mp4 *.mov *.mkv"), ("All files", "*.*")]
+    return "Choose a clip", [
+        ("Media files", "*.mp4 *.mov *.mkv *.jpg *.jpeg *.png *.webp"),
+        ("Video files", "*.mp4 *.mov *.mkv"),
+        ("Image files", "*.jpg *.jpeg *.png *.webp"),
+        ("All files", "*.*"),
+    ]
 
 def pick_file(kind: str = "video") -> str | None:
     # Must stay a sync `def` route: FastAPI dispatches sync handlers to a worker thread,
@@ -87,17 +139,28 @@ Expected: PASS
 - [ ] **Step 5: Run the full media test file**
 
 Run: `.venv/Scripts/python -m pytest tests/test_media.py -v`
-Expected: All PASS (no regressions).
+Expected: All PASS (no regressions — in particular, the existing `is_image_path`/`run_export`/progress-parsing tests from the image-clips and export-progress-job features are untouched by this change).
 
 - [ ] **Step 6: Update the file header comment**
 
-In `app/media.py`, extend the header comment (currently line 1-2) to mention the kind parameter:
+`app/media.py`'s header comment currently reads:
 
 ```python
-# Media helpers: ffprobe duration probing, audio stream detection, safe local file serving, native file picker.
-# Exposes ffprobe_cmd, probe_duration, has_audio_stream, media_response, run_export, pick_file
-# (kind="video"|"audio" selects the dialog's file-type filter for video clips vs. music imports).
-# Depends on ffprobe on PATH and tkinter.
+# Media helpers: ffprobe duration probing, audio stream detection, extension-based image detection,
+# safe local file serving, native file picker, and parsing ffmpeg -progress output into a percent.
+# Exposes ffprobe_cmd, probe_duration, has_audio_stream, is_image_path, media_response, run_export,
+# percent_from_progress_line, pick_file. Depends on ffprobe/ffmpeg on PATH and tkinter.
+```
+
+Extend the third line to mention the new `kind` parameter:
+
+```python
+# Media helpers: ffprobe duration probing, audio stream detection, extension-based image detection,
+# safe local file serving, native file picker, and parsing ffmpeg -progress output into a percent.
+# Exposes ffprobe_cmd, probe_duration, has_audio_stream, is_image_path, media_response, run_export,
+# percent_from_progress_line, pick_file (kind="video"|"audio" selects the dialog's file-type
+# filter — video defaults to the existing video+image picker, audio filters to music files for
+# the AUDIO panel's music import). Depends on ffprobe/ffmpeg on PATH and tkinter.
 ```
 
 - [ ] **Step 7: Commit**

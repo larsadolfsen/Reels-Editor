@@ -8,6 +8,14 @@
 
 **Tech Stack:** Pure Python string building, pytest with the existing `tests/test_ffmpeg_cmd.py` command-string-assertion pattern (no real ffmpeg invocation — nothing here touches subprocess).
 
+> **Re-verified 2026-07-21 against current `main`:** an unrelated image-clips feature landed
+> above this code (per-clip `-loop 1 -t <duration>` handling for `MediaItem.kind == "image"`,
+> plus an `is_image`-branched `setpts`), which shifted line numbers throughout `app/ffmpeg_cmd.py`
+> (the `if has_audio:` block below is now around line 59, not 47). The exact code inside that
+> block — and the `proj()` test fixture in `tests/test_ffmpeg_cmd.py` — is byte-identical to what
+> this plan assumed, so every code snippet and old/new string below still applies verbatim; only
+> the line-number citations are approximate. Match by the quoted code, not the line number.
+
 ## Global Constraints
 
 **Requires Batch 1 merged** (`ClipLayer.volume`/`muted` fields must exist).

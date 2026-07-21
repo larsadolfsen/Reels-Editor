@@ -20,6 +20,19 @@ Reuse section).
 **Tech Stack:** FastAPI/Pydantic backend, vanilla JS frontend (no build
 step), ffmpeg/ffprobe subprocess calls, pytest with mocked subprocess.
 
+> **Re-verified 2026-07-21 against current `main`:** this plan set was written before two
+> unrelated features merged into `main` — image/photo clips (`MediaItem.kind` already exists,
+> `static/preview.js` gained a full `<video>`/`<img>` hand-off) and background export-progress
+> jobs (`app/main.py`'s export route now returns a `job_id` via a new `export_jobs` module;
+> `static/timeline.js` also independently gained real zoom). Every batch plan below has been
+> checked against current `main` and updated inline (each has its own "Re-verified 2026-07-21"
+> note where something material changed): Batch 1's `MediaItem.kind` task now documents an
+> existing field instead of adding one; Batch 4's preview wiring was substantially rewritten for
+> the image-clip hand-off; Batch 5's waveform row uses the new zoom-aware `px` variable instead
+> of a fixed constant; Batch 7's `pick_file` change preserves the current (image-aware) default
+> filetypes list. Batches 2, 3, and 6 needed no substantive changes — only stale line-number
+> citations, which their code snippets already route around (match by quoted code).
+
 ## Global Constraints
 
 - `ClipLayer.volume: float = 1.0` (0.0–2.0) and `ClipLayer.muted: bool = False` — defaults preserve existing saved-project behavior.
