@@ -8,12 +8,18 @@
 
 **Tech Stack:** Pydantic v2, pytest.
 
+> **Re-verified 2026-07-21 against current `main`:** this branch was cut before two unrelated
+> features merged — image/photo clips and background export-progress jobs. The image-clips
+> feature already added `MediaItem.kind: str = "video"` (values `"video"`/`"image"`), so Task 2
+> below only extends that field's documented values rather than adding it. `ClipLayer` and
+> `Project` are otherwise unchanged from this plan's assumptions — Tasks 1 and 3 apply as written.
+
 ## Global Constraints
 
 (See [master plan](2026-07-21-audio-subsystem-master.md) for the full list — this batch touches only the model-level constraints below.)
 
 - `ClipLayer.volume: float = 1.0` (0.0–2.0) and `ClipLayer.muted: bool = False` — defaults preserve existing saved-project behavior.
-- `MediaItem.kind: str = "video"` — `"audio"` for imported music files.
+- `MediaItem.kind: str = "video"` **(field already exists on `main`, values `"video"`/`"image"`)** — this batch adds `"audio"` as a third value for imported music files.
 - `MusicTrack(id: str, media_id: str, volume: float = 0.3, muted: bool = False)`, `Project.music: MusicTrack | None = None`.
 
 ---
@@ -91,68 +97,63 @@ git commit -m "feat: add ClipLayer.volume/muted fields"
 
 ---
 
-### Task 2: `MediaItem.kind`
+### Task 2: `MediaItem.kind` gains `"audio"`
+
+> **Re-verified 2026-07-21 against current `main`:** an unrelated image-clips feature already
+> landed `MediaItem.kind: str = "video"` (values `"video"`/`"image"`) before this branch existed.
+> This task is now "add the `"audio"` value to an existing field," not "add the field" — the
+> code and tests below reflect that; do not re-add the field itself.
 
 **Files:**
-- Modify: `app/models.py:10-23` (`MediaItem` class)
+- Modify: `app/models.py` (the `kind` field's inline comment only — the field itself already exists)
 - Test: `tests/test_models.py`
 
 **Interfaces:**
-- Produces: `MediaItem.kind: str` (default `"video"`, or `"audio"`) — consumed by Batch 2/3 (export, to know which media are audio-only) and Batch 7 (AUDIO panel picker, to filter/label music files).
+- Produces: nothing new — `MediaItem.kind: str` already exists and already accepts any string value; this task only documents `"audio"` as a third supported value and proves it round-trips. Consumed by Batch 2/3 (export, to know which media are audio-only) and Batch 7 (AUDIO panel picker, to filter/label music files).
 
 - [ ] **Step 1: Write the failing test**
 
 Add to `tests/test_models.py`:
 
 ```python
-def test_media_item_kind_defaults_to_video():
-    from app.models import MediaItem
-    m = MediaItem(file_path="a.mp4", duration=2)
-    assert m.kind == "video"
-
-def test_media_item_kind_audio_round_trip():
+def test_media_item_kind_accepts_audio():
     from app.models import MediaItem
     m = MediaItem(file_path="song.mp3", duration=120, kind="audio")
     loaded = MediaItem.model_validate_json(m.model_dump_json())
     assert loaded.kind == "audio"
-
-def test_media_item_old_saved_json_without_kind_loads_as_video():
-    from app.models import MediaItem
-    import json
-    old_json = json.dumps({"id": "x", "file_path": "a.mp4", "duration": 2})
-    loaded = MediaItem.model_validate_json(old_json)
-    assert loaded.kind == "video"
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+(`kind` already defaults to `"video"` and already round-trips any string value with no validation — so this test technically passes without any code change. It's still worth running once to confirm that assumption holds on the current codebase before moving on, rather than trusting the read above blindly.)
 
-Run: `.venv/Scripts/python -m pytest tests/test_models.py -k media_item_kind -v`
-Expected: FAIL — `kind` not defined on `MediaItem`.
+- [ ] **Step 2: Run the test to confirm it already passes**
 
-- [ ] **Step 3: Add the field**
+Run: `.venv/Scripts/python -m pytest tests/test_models.py -k media_item_kind_accepts_audio -v`
+Expected: PASS (no code change needed — `kind: str` has no enum/validator restricting its values).
 
-In `app/models.py`, `MediaItem` (around line 15, after `has_audio`):
+- [ ] **Step 3: Update the field's inline comment to document `"audio"`**
+
+In `app/models.py`, `MediaItem`'s `kind` field currently reads:
 
 ```python
-class MediaItem(BaseModel):
-    id: str = Field(default_factory=new_id)
-    file_path: str
-    name: str = ""
-    duration: float
-    has_audio: bool = True
-    kind: str = "video"  # "video" | "audio" — "audio" for imported music files (mp3/wav/m4a/aac/ogg/flac), decided at import time from the file extension
+    kind: str = "video"  # "video" or "image"
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+Change the comment only:
 
-Run: `.venv/Scripts/python -m pytest tests/test_models.py -k media_item_kind -v`
-Expected: PASS
+```python
+    kind: str = "video"  # "video" | "image" | "audio" — "audio" for imported music files (mp3/wav/m4a/aac/ogg/flac), decided at import time from the file extension
+```
+
+- [ ] **Step 4: Run the full model test file**
+
+Run: `.venv/Scripts/python -m pytest tests/test_models.py -v`
+Expected: All PASS (no regressions — this step only touched a comment).
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add app/models.py tests/test_models.py
-git commit -m "feat: add MediaItem.kind field"
+git commit -m "docs: document MediaItem.kind='audio' for music imports"
 ```
 
 ---
@@ -267,7 +268,7 @@ git commit -m "feat: add MusicTrack entity and Project.music field"
 
 - [ ] **Step 1: Add the new fields to the map's entity list**
 
-In `CLAUDE.md` under "### Data model & persistence", extend the `app/models.py` bullet to mention `MusicTrack`, and under "### Media library & import" note `MediaItem.kind`. Keep it to one clause each, matching the existing terse style (e.g. `MusicTrack(id, media_id, volume, muted)` and `MediaItem.kind: str = "video"` one-liners) — this map entry will be superseded by fuller detail as Batches 2-7 land, so don't over-describe behavior that doesn't exist yet.
+Before editing, make sure this branch's `CLAUDE.md` is current — `main` has moved since this plan was written (image/photo-clips and background export-progress-job features both landed and both updated the map), so diff against `main`'s current `CLAUDE.md` rather than trusting this worktree's copy. Then, under "### Data model & persistence", extend the `app/models.py` bullet to mention `MusicTrack`, and under "### Media library & import" note that `MediaItem.kind` gained an `"audio"` value (the field itself is already documented there for `"video"`/`"image"`). Keep it to one clause each, matching the existing terse style (e.g. `MusicTrack(id, media_id, volume, muted)` one-liner) — this map entry will be superseded by fuller detail as Batches 2-7 land, so don't over-describe behavior that doesn't exist yet.
 
 - [ ] **Step 2: Commit**
 

@@ -14,7 +14,14 @@
 
 - Volume UI range: 0–200% (matches `ClipLayer.volume`'s 0.0–2.0 model range, Batch 1).
 - No inline `style="..."` — icon SVGs go directly in `index.html` markup (existing convention), any sizing/spacing via CSS classes only.
-- Reuse `UI.numberField` exactly as the adjacent SPEED field uses it (`static/panel-video.js:60-67`).
+- Reuse `UI.numberField` exactly as the adjacent SPEED field uses it in `static/panel-video.js`'s `render(c)`.
+
+> **Re-verified 2026-07-21 against current `main`:** `static/panel-video.js` and the `#panel-video`
+> section of `static/index.html` are structurally unchanged from this plan's assumptions — the
+> SPEED field, and the `video-delete`/`video-duplicate` handlers right after it, read exactly as
+> quoted below (the only unrelated change in that file is `moveClip` having been renamed to
+> `moveClipTo(clipId, newIndex)` for a drag-to-reorder feature, which doesn't affect this batch).
+> Insert by matching the quoted code, not by trusting exact line numbers.
 
 ---
 

@@ -8,6 +8,16 @@
 
 **Tech Stack:** Pure Python string building, pytest with the existing command-string-assertion pattern.
 
+> **Re-verified 2026-07-21 against current `main`:** same image-clips-feature line-number drift
+> noted in Batch 2 applies here too — the `fc = "".join(parts) + f"{streams}concat=...[vc][a]"`
+> line is now around line 69, not 57, but its exact text is unchanged, as is `build_export_cmd`'s
+> `bands is None` branch and the bands branch's final `-map` lines. All code snippets below match
+> current `main` verbatim; match by quoted code, not the stated line number. Separately: `main`
+> also gained a background export-progress-job feature (`app/main.py`'s `export_project` route now
+> returns `{"job_id": ...}` via a new `app/export_jobs` module instead of running synchronously)
+> — that's a route-layer change only and does not touch `build_export_cmd`'s filter-graph
+> construction this batch tests directly, so it requires no changes here.
+
 ## Global Constraints
 
 **Requires Batch 1** (`MusicTrack`/`Project.music`) **and Batch 2** (per-clip volume filters, for the pattern this batch follows) **merged first.**
