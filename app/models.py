@@ -131,6 +131,13 @@ class CaptionTrack(BaseModel):
     z_index: int = 0
     preset_id: str = Field(default_factory=new_id)   # points at a TextPreset, same pattern as TextBlockLayer.preset_id
 
+class MusicTrack(BaseModel):
+    id: str = Field(default_factory=new_id)
+    media_id: str          # links to a MediaItem with kind="audio" in project.media_library
+    volume: float = Field(default=0.3, ge=0.0, le=2.0)
+    muted: bool = False
+    # Timing is fixed: starts at timeline t=0, cut at reel end. No loop/trim/start-offset in v1.
+
 class Project(BaseModel):
     id: str = Field(default_factory=new_id)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -145,6 +152,7 @@ class Project(BaseModel):
     text_blocks: list[TextBlockLayer] = []
     text_presets: dict[str, TextPreset] = {}
     captions: CaptionTrack | None = None
+    music: MusicTrack | None = None
     export_filename: str = ""
     export_quality: str = "high"
 

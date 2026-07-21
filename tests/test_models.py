@@ -239,3 +239,31 @@ def test_media_item_kind_accepts_audio():
     m = MediaItem(file_path="song.mp3", duration=120, kind="audio")
     loaded = MediaItem.model_validate_json(m.model_dump_json())
     assert loaded.kind == "audio"
+
+def test_music_track_defaults():
+    from app.models import MusicTrack
+    t = MusicTrack(media_id="m1")
+    assert t.volume == 0.3
+    assert t.muted is False
+    assert isinstance(t.id, str) and t.id
+
+def test_project_music_defaults_to_none():
+    from app.models import Project
+    p = Project(name="r")
+    assert p.music is None
+
+def test_project_music_round_trip():
+    from app.models import Project, MusicTrack
+    p = Project(name="r", music=MusicTrack(media_id="m1", volume=0.5, muted=True))
+    loaded = Project.model_validate_json(p.model_dump_json())
+    assert loaded.music is not None
+    assert loaded.music.media_id == "m1"
+    assert loaded.music.volume == 0.5
+    assert loaded.music.muted is True
+
+def test_project_old_saved_json_without_music_loads_as_none():
+    from app.models import Project
+    import json
+    old_json = json.dumps({"id": "x", "name": "r"})
+    loaded = Project.model_validate_json(old_json)
+    assert loaded.music is None
