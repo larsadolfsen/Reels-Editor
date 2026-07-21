@@ -202,3 +202,13 @@ def test_media_item_old_json_without_name_field_loads():
 def test_media_item_name_round_trip():
     m = MediaItem(file_path="clip.mp4", name="Custom Name", duration=5.0)
     assert MediaItem.model_validate_json(m.model_dump_json()).name == "Custom Name"
+
+def test_media_item_kind_defaults_to_video():
+    from app.models import MediaItem
+    m = MediaItem(file_path="a.mp4", duration=2.0)
+    assert m.kind == "video"
+
+def test_media_item_kind_accepts_image():
+    from app.models import MediaItem
+    m = MediaItem(file_path="a.jpg", duration=0.0, has_audio=False, kind="image")
+    assert m.kind == "image"

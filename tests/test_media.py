@@ -1,7 +1,7 @@
 # Tests for app.media: ffprobe command construction, duration parsing, and -progress line parsing.
 from unittest.mock import patch
 import pytest
-from app.media import ffprobe_cmd, probe_duration, has_audio_stream, percent_from_progress_line, run_export
+from app.media import ffprobe_cmd, probe_duration, has_audio_stream, percent_from_progress_line, run_export, is_image_path
 
 def test_ffprobe_cmd():
     assert ffprobe_cmd("c.mp4") == ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -99,3 +99,13 @@ def test_run_export_raises_with_stderr_on_failure(monkeypatch):
     monkeypatch.setattr("app.media.subprocess.Popen", fake_popen)
     with pytest.raises(RuntimeError, match="boom: bad codec"):
         run_export(["ffmpeg", "-y", "out.mp4"])
+
+def test_is_image_path_true_for_known_image_extensions():
+    assert is_image_path("C:/photos/a.jpg") is True
+    assert is_image_path("C:/photos/a.JPEG") is True
+    assert is_image_path("C:/photos/a.png") is True
+    assert is_image_path("C:/photos/a.webp") is True
+
+def test_is_image_path_false_for_video_extensions():
+    assert is_image_path("C:/clips/a.mp4") is False
+    assert is_image_path("C:/clips/a.mov") is False

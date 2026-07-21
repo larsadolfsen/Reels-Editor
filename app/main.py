@@ -74,7 +74,9 @@ def duplicate_project(pid: str) -> Project:
 
 @app.get("/api/probe")
 def probe(path: str) -> dict:
-    return {"duration": media.probe_duration(path), "has_audio": media.has_audio_stream(path)}
+    if media.is_image_path(path):
+        return {"duration": 0.0, "has_audio": False, "kind": "image"}
+    return {"duration": media.probe_duration(path), "has_audio": media.has_audio_stream(path), "kind": "video"}
 
 @app.get("/api/pick-file")
 def pick_file() -> dict:
