@@ -1,0 +1,30 @@
+/* Horizontal row of icon tab buttons at the top of a context-panel section, replacing the
+   old stacked accordions. Exposes .tab-bar/.tab-bar-btn. Depends on tokens.css. Built by
+   static/ui-tab-bar.js (UI.tabBar). */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: var(--space-3);
+}
+
+.tab-bar-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.tab-bar-btn svg { width: 18px; height: 18px; }
+
+.tab-bar-btn:hover { color: var(--text-secondary); }
+
+.tab-bar-btn[aria-selected="true"] {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}

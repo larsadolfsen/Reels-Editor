@@ -2,6 +2,7 @@
 # (clips including a video-only one, a formatted text block with box, captions with
 # karaoke highlight, a video box) and asserts the whole pipeline runs without raising.
 from unittest.mock import patch
+from app import export_jobs
 from app.main import export_project
 from app.models import (
     Project, MediaItem, ClipLayer, TextPreset, TextBlockLayer, FormatRun,
@@ -10,6 +11,7 @@ from app.models import (
 
 def test_export_smoke_all_layer_types_combined(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
 
     text_preset = TextPreset(name="Heading", box_background=True, box_border_width=4, highlight=False)
     caption_preset = TextPreset(name="Captions", highlight_mode="progressive_fill")
@@ -48,7 +50,9 @@ def test_export_smoke_all_layer_types_combined(tmp_path, monkeypatch):
          patch("app.main.media.run_export") as run_export:
         result = export_project(p.id)
 
-    assert "out_path" in result
+    assert "job_id" in result
+    job = export_jobs.get_job(result["job_id"])
+    assert job["status"] == "done"
     cmd = run_export.call_args[0][0]
     assert cmd[0] == "ffmpeg"
     assert "anullsrc=channel_layout=stereo:sample_rate=44100" in cmd  # clip m1 has no audio

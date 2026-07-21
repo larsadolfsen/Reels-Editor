@@ -3,13 +3,24 @@
 // editor.js's project/saveProject/renderTimeline and Preview globals. Depends on Preview.locate.
 window.Timeline = window.Timeline || {};
 
+// True when slicing at timeline-time t would be a no-op: the playhead is outside every clip
+// (including the empty-timeline case, since Preview.locate returns null for an empty list) or
+// within eps source-seconds of a clip boundary. Drives both sliceClip's own no-op guard below
+// and the slice button's visual disabled state (static/timeline.js's updateSliceButton).
+Timeline.isSliceDisabled = function (clips, t, eps = 0.05) {
+  const loc = Preview.locate(clips, t);
+  if (!loc) return true;
+  const c = loc.clip, s = loc.src;
+  return Math.abs(s - c.in_point) < eps || Math.abs(c.out_point - s) < eps;
+};
+
 // Splits the clip under timeline-time t at that point. Mutates `clips` in place; returns { clips, newId }.
 // No-op (newId null) when t is in no clip or within eps (source-seconds) of a boundary.
 Timeline.sliceClip = function (clips, t, eps = 0.05) {
   const loc = Preview.locate(clips, t);
   if (!loc) return { clips, newId: null };
   const c = loc.clip, s = loc.src;
-  if (Math.abs(s - c.in_point) < eps || Math.abs(c.out_point - s) < eps) return { clips, newId: null };
+  if (Timeline.isSliceDisabled(clips, t, eps)) return { clips, newId: null };
   clips.forEach((o) => { if (o.order > c.order) o.order += 1; });
   const newId = crypto.randomUUID().replaceAll("-", "");
   clips.push({

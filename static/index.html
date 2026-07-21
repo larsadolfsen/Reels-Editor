@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="/static/css/components/number-field.css">
 <link rel="stylesheet" href="/static/css/components/style-panel.css">
 <link rel="stylesheet" href="/static/css/components/icon-rail.css">
+<link rel="stylesheet" href="/static/css/components/tab-bar.css">
 <link rel="stylesheet" href="/static/css/components/color-swatch.css">
 <link rel="stylesheet" href="/static/css/components/accordion.css">
 <link rel="stylesheet" href="/static/css/components/settings-row.css">
@@ -23,6 +24,7 @@
 <link rel="stylesheet" href="/static/css/components/project-picker.css">
 <link rel="stylesheet" href="/static/css/components/video-box-panel.css">
 <link rel="stylesheet" href="/static/css/components/layers-panel.css">
+<link rel="stylesheet" href="/static/css/components/export-progress.css">
 </head><body>
 <div id="app">
   <main>
@@ -38,6 +40,7 @@
       <section id="stage-wrap">
         <div id="stage">
           <video id="player"></video>
+          <img id="image-player" class="stage-hidden">
           <div id="overlay"></div>
           <div id="safe-zones" hidden>
             <div class="safe-zone safe-zone-top"><span>FOLLOWING / FOR YOU</span></div>
@@ -379,6 +382,9 @@
         <div class="style-group">
           <button id="export" class="col-8">EXPORT &middot; 1080&times;1920</button>
         </div>
+        <div id="export-progress" class="export-progress" hidden>
+          <div id="export-progress-fill" class="export-progress-fill"></div>
+        </div>
         <div id="export-result"></div>
       </div>
 
@@ -447,7 +453,7 @@
         </div>
 
         <div id="text-accordions">
-        <div id="text-style-accordion"></div>
+        <div id="text-tab-bar"></div>
         <div id="text-style-body">
           <div class="style-group">
             <button id="text-style-save" class="col-8" type="button">+ Save current style</button>
@@ -460,7 +466,6 @@
           </div>
         </div>
 
-        <div id="text-font-accordion">
         <div id="text-font-body">
           <div class="style-group">
             <div id="text-font-row" class="col-8"></div>
@@ -505,9 +510,7 @@
             <label id="text-outline-px-field"></label>
           </div>
         </div>
-        </div>
 
-        <div id="text-box-accordion">
         <div id="text-box-body">
 
           <div class="style-group-label">SIZE</div>
@@ -562,9 +565,7 @@
           </div>
 
         </div>
-        </div>
 
-        <div id="text-time-accordion"></div>
         <div id="text-time-body">
           <div class="style-group">
             <div class="style-row">
@@ -616,6 +617,7 @@
 <script src="/static/ui-resize-handles.js"></script>
 <script src="/static/ui-video-box-drag.js"></script>
 <script src="/static/ui-icon-rail.js"></script>
+<script src="/static/ui-tab-bar.js"></script>
 <script src="/static/ui-button.js"></script>
 <script src="/static/ui-save-indicator.js"></script>
 <script src="/static/ui-project-list-row.js"></script>
@@ -625,6 +627,7 @@
 <script src="/static/api-pick-file.js"></script>
 <script src="/static/api-probe-media.js"></script>
 <script src="/static/api-export-project.js"></script>
+<script src="/static/api-export-status.js"></script>
 <script src="/static/api-list-presets.js"></script>
 <script src="/static/api-save-preset.js"></script>
 <script src="/static/caption-panel-style.js"></script>
@@ -660,13 +663,16 @@
 <script src="/static/clip-sequence.js"></script>
 <script src="/static/panel-layers.js"></script>
 <script src="/static/panel-export.js"></script>
+<script src="/static/export-progress.js"></script>
 <script src="/static/preview-text.js"></script>
 <script src="/static/preview-captions.js"></script>
+<script src="/static/image-clip-playback.js"></script>
 <script src="/static/preview.js"></script>
 <script src="/static/timeline.js"></script>
 <script src="/static/caption-word-estimate.js"></script>
 <script src="/static/timeline-snap.js"></script>
 <script src="/static/timeline-slice.js"></script>
+<script src="/static/timeline-clip-drag.js"></script>
 <script src="/static/undo-history.js"></script>
 <script src="/static/editor.js"></script>
 </body></html>

@@ -1,6 +1,7 @@
-# Tests for app.media: ffprobe command construction and duration parsing.
+# Tests for app.media: ffprobe command construction, duration parsing, and -progress line parsing.
 from unittest.mock import patch
-from app.media import ffprobe_cmd, probe_duration, has_audio_stream
+import pytest
+from app.media import ffprobe_cmd, probe_duration, has_audio_stream, percent_from_progress_line, run_export, is_image_path
 
 def test_ffprobe_cmd():
     assert ffprobe_cmd("c.mp4") == ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -20,3 +21,91 @@ def test_has_audio_stream_false_when_ffprobe_reports_no_stream():
     with patch("app.media.subprocess.run") as r:
         r.return_value.stdout = ""
         assert has_audio_stream("c.mp4") is False
+
+def test_percent_from_progress_line_parses_out_time_us():
+    assert percent_from_progress_line("out_time_us=2000000", 10.0) == 20.0
+
+def test_percent_from_progress_line_ignores_non_out_time_keys():
+    assert percent_from_progress_line("frame=120", 10.0) is None
+    assert percent_from_progress_line("progress=continue", 10.0) is None
+
+def test_percent_from_progress_line_clamps_to_100():
+    assert percent_from_progress_line("out_time_us=999999999", 10.0) == 100.0
+
+def test_percent_from_progress_line_handles_non_numeric_value():
+    assert percent_from_progress_line("out_time_us=N/A", 10.0) is None
+
+def test_percent_from_progress_line_returns_none_for_zero_duration():
+    assert percent_from_progress_line("out_time_us=2000000", 0.0) is None
+
+class _FakeStdout:
+    def __init__(self, lines):
+        self._lines = iter(lines)
+    def __iter__(self):
+        return self
+    def __next__(self):
+        return next(self._lines)
+    def close(self):
+        pass
+
+def test_run_export_streams_progress_and_calls_on_progress(monkeypatch):
+    calls = []
+
+    class FakeProc:
+        def __init__(self):
+            self.stdout = _FakeStdout(["out_time_us=1000000\n", "out_time_us=2000000\n", "progress=end\n"])
+            self.returncode = 0
+        def wait(self):
+            pass
+
+    def fake_popen(cmd, **kwargs):
+        assert "-progress" in cmd
+        assert "pipe:1" in cmd
+        return FakeProc()
+
+    monkeypatch.setattr("app.media.subprocess.Popen", fake_popen)
+    run_export(["ffmpeg", "-y", "-i", "a.mp4", "out.mp4"], on_progress=calls.append, total_duration=10.0)
+    assert calls == [10.0, 20.0]
+
+def test_run_export_without_progress_args_skips_progress_flags(monkeypatch):
+    class FakeProc:
+        stdout = None
+        returncode = 0
+        def wait(self):
+            pass
+
+    captured_cmd = {}
+
+    def fake_popen(cmd, **kwargs):
+        captured_cmd["cmd"] = cmd
+        return FakeProc()
+
+    monkeypatch.setattr("app.media.subprocess.Popen", fake_popen)
+    run_export(["ffmpeg", "-y", "-i", "a.mp4", "out.mp4"])
+    assert "-progress" not in captured_cmd["cmd"]
+
+def test_run_export_raises_with_stderr_on_failure(monkeypatch):
+    class FakeProc:
+        stdout = None
+        returncode = 1
+        def wait(self):
+            pass
+
+    def fake_popen(cmd, stderr, **kwargs):
+        stderr.write("boom: bad codec")
+        stderr.seek(0)
+        return FakeProc()
+
+    monkeypatch.setattr("app.media.subprocess.Popen", fake_popen)
+    with pytest.raises(RuntimeError, match="boom: bad codec"):
+        run_export(["ffmpeg", "-y", "out.mp4"])
+
+def test_is_image_path_true_for_known_image_extensions():
+    assert is_image_path("C:/photos/a.jpg") is True
+    assert is_image_path("C:/photos/a.JPEG") is True
+    assert is_image_path("C:/photos/a.png") is True
+    assert is_image_path("C:/photos/a.webp") is True
+
+def test_is_image_path_false_for_video_extensions():
+    assert is_image_path("C:/clips/a.mp4") is False
+    assert is_image_path("C:/clips/a.mov") is False

@@ -1,22 +1,24 @@
 # Right Panel Tabs — Design
 
-**Status:** brainstormed 2026-07-20, ready for a build session to write its implementation plan. No open questions.
+**Status:** brainstormed 2026-07-20, re-verified against current code and re-confirmed with user 2026-07-21 (panels had grown since the original brainstorm — VIDEO gained FILL/SPEED, VIDEO BOX panel didn't exist in the original mapping). Ready for a build session to write its implementation plan. No open questions.
 
 ## What / Why
 
 Replace the right panel's stacked accordions with **four icon tabs at the top of the panel**: **Style** (Lucide paintbrush), **Design** (pencil), **Box** (vector-square), **Time** (timer). Tabs show the same content the accordions hold today — this is an IA/layout restyle, not new controls. Applies to every context panel, each showing only the tabs that fit it.
 
-## Tab mapping (user-confirmed)
+## Tab mapping (re-verified against current code 2026-07-21)
 
-| Tab | TEXT panel | CAPTIONS panel | VIDEO panel |
-|---|---|---|---|
-| Style | saved-style preset library (STYLES accordion) | same, caption preset | — |
-| Design | font family/weight/size/B-I-U/color/outline (FONT accordion) | same **+ the HIGHLIGHT controls** (mode/color/max words) | volume/mute (once the audio item lands) |
-| Box | size mode/background/border/text-align/position (BOX accordion) | same | — |
-| Time | start/end (TIME accordion) | — (words carry their own times) | trim in/out + reorder |
-| Closed-caption (Lucide captions icon) | — | **all caption words listed inline** — the current words *drill-down* content moves here as a permanent tab | — |
+| Tab | TEXT panel | CAPTIONS panel | VIDEO panel | VIDEO BOX panel |
+|---|---|---|---|---|
+| Style | saved-style preset library (STYLES accordion) | same, caption preset | — | — |
+| Design | font family/weight/size/B-I-U/color/outline (FONT accordion) | same **+ the HIGHLIGHT controls** (mode/color/max words) | **FILL mode + SPEED** (added since the original brainstorm; volume/mute joins here once the audio item lands) | — |
+| Box | size mode/background/border/text-align/position (BOX accordion) | same | — | **size & position + TRIM** (new tab, panel wasn't in the original mapping) |
+| Time | start/end (TIME accordion) | — (words carry their own times) | trim in/out + reorder | **start time** (new tab) |
+| Closed-caption (Lucide captions icon) | — | **all caption words listed inline** — the current words *drill-down* content moves here as a permanent tab | — | — |
 
-Panels with one logical content group (FILES, PROJECTS, SETTINGS, EXPORT) get no tab bar.
+Duplicate/Delete action buttons (TEXT, VIDEO, VIDEO BOX) stay as a **persistent footer** below the tab bar/panes, visible regardless of active tab — unchanged from today's always-visible placement.
+
+Panels with one logical content group (FILES, PROJECTS, SETTINGS, EXPORT, LAYERS) get no tab bar.
 
 ## Design
 
@@ -38,18 +40,20 @@ None.
 
 ## Tasks
 
-1. `UI.tabBar` component + `tab-bar.css` (new files, no consumers yet).
-2. TEXT panel: replace its accordions with the tab bar + panes (`index.html` restructure, `editor.js`'s `renderTextPanel` wiring).
-3. CAPTIONS panel: same, plus HIGHLIGHT controls into the Design pane and the words drill-down becoming the Closed-caption pane.
-4. VIDEO panel: tab bar with Time (trim/reorder); Design added later by the audio item.
-5. Remove dead accordion markup/CSS (`UI.accordionSection` call sites that no longer exist; keep the component itself — SETTINGS/EXPORT may still use plain groups).
+Batches, each merged to main and pushed before the next starts:
+
+1. **Component:** `UI.tabBar` + `tab-bar.css` (new files, no consumers yet).
+2. **TEXT panel:** replace its accordions with the tab bar + panes (`index.html` restructure, `panel-text.js`'s wiring); Duplicate/Delete become a persistent footer.
+3. **CAPTIONS panel:** same, plus HIGHLIGHT controls into the Design pane and the words drill-down (`caption-panel-words.js`) becoming the permanent Closed-caption pane.
+4. **VIDEO + VIDEO BOX panels together** (same tab shape, small diffs each): VIDEO gets Design (FILL + SPEED) and Time (trim + reorder) tabs, Duplicate/Delete as footer; VIDEO BOX gets Box (size & position + TRIM) and Time (start) tabs, Delete as footer.
+5. **Cleanup:** remove dead accordion markup/CSS (`UI.accordionSection` call sites that no longer exist; keep the component itself — SETTINGS/EXPORT/LAYERS still use plain groups, no tab bar).
 
 ## Testing
 
-UI-only wiring — untested layer stated per convention. Manual verification: every control reachable under its new tab on TEXT/CAPTIONS/VIDEO; all controls still write to the same fields (spot-check one per tab against saved JSON); captions word list shows inline; tab state survives panel switches within a session; `pytest -q` stays green (no backend changes).
+UI-only wiring — untested layer stated per convention. Manual verification, on a throwaway project only (never real project data): every control reachable under its new tab on TEXT/CAPTIONS/VIDEO/VIDEO BOX; all controls still write to the same fields (spot-check one per tab against saved JSON); captions word list shows inline; tab state survives panel switches within a session; `pytest -q` stays green (no backend changes).
 
 ## Out of scope
 
 - New controls of any kind.
 - Persisting the active tab.
-- Tabs on FILES/PROJECTS/SETTINGS/EXPORT.
+- Tabs on FILES/PROJECTS/SETTINGS/EXPORT/LAYERS.

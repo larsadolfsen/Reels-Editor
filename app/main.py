@@ -3,11 +3,11 @@
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack
-from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe
+from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
 DATA_DIR = Path("data")
@@ -74,7 +74,9 @@ def duplicate_project(pid: str) -> Project:
 
 @app.get("/api/probe")
 def probe(path: str) -> dict:
-    return {"duration": media.probe_duration(path), "has_audio": media.has_audio_stream(path)}
+    if media.is_image_path(path):
+        return {"duration": 0.0, "has_audio": False, "kind": "image"}
+    return {"duration": media.probe_duration(path), "has_audio": media.has_audio_stream(path), "kind": "video"}
 
 @app.get("/api/pick-file")
 def pick_file() -> dict:
@@ -154,7 +156,20 @@ def export_project(pid: str) -> dict:
             ass_path = str(ass_file)
         cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), ass_path, caption_ass_path=caption_ass_path)
 
-    media.run_export(cmd)
-    return {"out_path": str(out_path)}
+    total_duration = timeline.sequence_duration(timeline.ordered(p.clips))
+
+    def run(on_progress):
+        media.run_export(cmd, on_progress=on_progress, total_duration=total_duration)
+        return str(out_path)
+
+    job_id = export_jobs.start_job(run)
+    return {"job_id": job_id}
+
+@app.get("/api/exports/{job_id}")
+def export_status(job_id: str) -> dict:
+    job = export_jobs.get_job(job_id)
+    if job is None:
+        raise HTTPException(404, f"unknown export job: {job_id}")
+    return job
 
 app.mount("/static", StaticFiles(directory="static"), name="static")

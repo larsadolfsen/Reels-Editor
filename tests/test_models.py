@@ -223,3 +223,13 @@ def test_clip_layer_old_saved_json_without_volume_fields_loads_with_defaults():
     loaded = ClipLayer.model_validate_json(old_json)
     assert loaded.volume == 1.0
     assert loaded.muted is False
+
+def test_media_item_kind_defaults_to_video():
+    from app.models import MediaItem
+    m = MediaItem(file_path="a.mp4", duration=2.0)
+    assert m.kind == "video"
+
+def test_media_item_kind_accepts_image():
+    from app.models import MediaItem
+    m = MediaItem(file_path="a.jpg", duration=0.0, has_audio=False, kind="image")
+    assert m.kind == "image"

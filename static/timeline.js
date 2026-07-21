@@ -4,18 +4,57 @@
 // (no audio-track feature yet). The playhead-handle box (#slice-btn) tracks the playhead
 // and holds two icons: a grip-vertical handle (dragged in editor.js to scrub the playhead)
 // and a scissors icon (visual only, no slice feature yet).
-// Fixed pixels-per-second scale (not stretched to container width) so content is always
-// readable; #timeline-scroll provides horizontal scroll when content exceeds the viewport.
+// Zoomable pixels-per-second scale: auto fit-to-width by default, or a manual zoom level set
+// via the toolbar −/+ buttons (×1.5 steps, clamped [fit-to-width, 200 px/s]); not persisted,
+// reset to fit-to-width on every project open (editor.js calls Timeline.resetZoom()).
+// #timeline-scroll provides horizontal scroll once zoomed content exceeds the viewport.
 // render()'s 5th `actions = {}` param ({ onAddClip, onAddText }) renders a small dashed "+"
 // button after the VIDEO row's clip sequence / TEXT row's last block (at x=0 when empty),
 // giving a visible way to add a clip/text block beyond the console.
-// Exposes window.Timeline.{render, groupWords, timeAtX, tick}. tick() is a cheap
-// playhead-only update driven every animation frame during playback (see editor.js),
-// so motion stays smooth between the heavier full render() calls. Depends on Preview (preview.js).
+// Exposes window.Timeline.{render, groupWords, timeAtX, tick, resetZoom, PX_PER_SEC}.
+// PX_PER_SEC is a live getter reflecting the current zoom level (see the header comment
+// above for the zoom scale itself). tick() is a cheap playhead-only update driven every
+// animation frame during playback (see editor.js), so motion stays smooth between the
+// heavier full render() calls. Depends on Preview (preview.js).
 window.Timeline = (() => {
-  const PX_PER_SEC = 60;
   const LABEL_WIDTH = 88;
+  const MIN_PX_PER_SEC_FLOOR = 60; // fallback if the scroll container can't be measured yet
+  const MAX_PX_PER_SEC = 200;
+  const ZOOM_STEP = 1.5;
   let lastDuration = 1;
+  let lastProject = null;
+  let lastTimelineTime = 0;
+  let pxPerSecond = null; // null = auto fit-to-width (the zoomed-out floor); a number once the user zooms in
+
+  // Fit-to-width: the scale at which the whole sequence exactly fills the visible scroll
+  // container, with no horizontal scrollbar. Recomputed fresh every call (not cached) since
+  // the container can resize (panel collapse/expand, window resize).
+  function fitToWidthPx(duration) {
+    const scrollEl = document.getElementById("timeline-scroll");
+    const w = scrollEl ? scrollEl.clientWidth : 0;
+    if (!w || !duration) return MIN_PX_PER_SEC_FLOOR;
+    return w / duration;
+  }
+
+  function currentPxPerSecond() {
+    return pxPerSecond !== null ? pxPerSecond : fitToWidthPx(lastDuration);
+  }
+
+  function zoomIn() {
+    const base = currentPxPerSecond();
+    pxPerSecond = Math.min(MAX_PX_PER_SEC, base * ZOOM_STEP);
+  }
+
+  function zoomOut() {
+    if (pxPerSecond === null) return; // already at the fit-to-width floor
+    const next = pxPerSecond / ZOOM_STEP;
+    const fit = fitToWidthPx(lastDuration);
+    pxPerSecond = next <= fit ? null : next; // snap back to auto fit-to-width at the floor
+  }
+
+  function resetZoom() {
+    pxPerSecond = null;
+  }
 
   function ordered(list) {
     return [...list].sort((a, b) => a.order - b.order);
@@ -56,9 +95,11 @@ window.Timeline = (() => {
   // full render() does (rebuilding all block DOM nodes every animation frame would be
   // wasteful and can visibly jank).
   function tick(timelineTime) {
-    document.getElementById("playhead").style.left = `${timelineTime * PX_PER_SEC}px`;
+    lastTimelineTime = timelineTime;
+    document.getElementById("playhead").style.left = `${timelineTime * currentPxPerSecond()}px`;
     document.getElementById("timeline-time").textContent =
       `${formatTimeDeci(timelineTime)} / ${formatTimeDeci(lastDuration)}`;
+    autoScrollToPlayhead(timelineTime);
     updateSliceButton();
   }
 
@@ -68,6 +109,25 @@ window.Timeline = (() => {
     const playhead = document.getElementById("playhead");
     const left = parseFloat(playhead.style.left) || 0;
     btn.style.left = `${LABEL_WIDTH + left - scrollEl.scrollLeft}px`;
+
+    const sliceAction = document.getElementById("slice-action");
+    const clips = (lastProject && lastProject.clips) || [];
+    const disabled = Timeline.isSliceDisabled(clips, lastTimelineTime);
+    sliceAction.classList.toggle("disabled", disabled);
+  }
+
+  // Keeps the playhead within view during playback by nudging #timeline-scroll's scrollLeft
+  // when the playhead nears either visible edge. Only called from tick() (the playback RAF
+  // loop) — manual scrubbing/scrolling elsewhere is left entirely to the user.
+  function autoScrollToPlayhead(timelineTime) {
+    const scrollEl = document.getElementById("timeline-scroll");
+    const x = timelineTime * currentPxPerSecond();
+    const margin = 40;
+    if (x < scrollEl.scrollLeft + margin) {
+      scrollEl.scrollLeft = Math.max(0, x - margin);
+    } else if (x > scrollEl.scrollLeft + scrollEl.clientWidth - margin) {
+      scrollEl.scrollLeft = x - scrollEl.clientWidth + margin;
+    }
   }
 
   // Deterministic pseudo-random bar heights, regenerated only when the track width
@@ -105,7 +165,7 @@ window.Timeline = (() => {
   }
 
   function timeAtX(clips, rulerRect, clientX) {
-    return Math.max(0, (clientX - rulerRect.left) / PX_PER_SEC);
+    return Math.max(0, (clientX - rulerRect.left) / currentPxPerSecond());
   }
 
   function clearTrack(id) {
@@ -140,13 +200,13 @@ window.Timeline = (() => {
     track.appendChild(div);
   }
 
-  function renderRuler(duration) {
+  function renderRuler(duration, px) {
     const ruler = document.getElementById("timeline-ruler");
     ruler.querySelectorAll(".tick").forEach((t) => t.remove());
     for (let s = 0; s <= Math.ceil(duration); s += 2) {
       const tick = document.createElement("div");
       tick.className = "tick";
-      tick.style.left = `${s * PX_PER_SEC}px`;
+      tick.style.left = `${s * px}px`;
       tick.textContent = formatTime(s);
       ruler.appendChild(tick);
     }
@@ -156,11 +216,14 @@ window.Timeline = (() => {
     const clips = ordered(project.clips || []);
     const duration = totalDuration(project);
     lastDuration = duration;
-    const contentWidth = duration * PX_PER_SEC;
+    lastProject = project;
+    lastTimelineTime = timelineTime;
+    const px = currentPxPerSecond();
+    const contentWidth = duration * px;
     document.getElementById("timeline-content").style.width = `${contentWidth}px`;
 
-    renderRuler(duration);
-    document.getElementById("playhead").style.left = `${timelineTime * PX_PER_SEC}px`;
+    renderRuler(duration, px);
+    document.getElementById("playhead").style.left = `${timelineTime * px}px`;
     document.getElementById("timeline-time").textContent =
       `${formatTimeDeci(timelineTime)} / ${formatTimeDeci(duration)}`;
     updateSliceButton();
@@ -179,25 +242,26 @@ window.Timeline = (() => {
       const media = project.media_library.find((m) => m.id === c.media_id);
       const name = (media && (media.name || media.file_path.split(/[\\/]/).pop())) || c.file_path.split(/[\\/]/).pop();
       const isSel = !!selected && selected.type === "video" && selected.item.id === c.id;
-      addBlock(videoTrack, acc * PX_PER_SEC, d * PX_PER_SEC, name, isSel, () => onSelect({ type: "video", item: c }));
+      addBlock(videoTrack, acc * px, d * px, name, isSel, () => onSelect({ type: "video", item: c }));
+      videoTrack.lastElementChild.dataset.clipId = c.id;
       acc += d;
     }
-    if (actions.onAddClip) addRowAddButton(videoTrack, acc * PX_PER_SEC, "Add clip", actions.onAddClip);
+    if (actions.onAddClip) addRowAddButton(videoTrack, acc * px, "Add clip", actions.onAddClip);
 
     const textTrack = clearTrack("row-text");
     for (const b of project.text_blocks || []) {
       const isSel = !!selected && selected.type === "text" && !!selected.item && selected.item.id === b.id;
-      addBlock(textTrack, b.start * PX_PER_SEC, (b.end - b.start) * PX_PER_SEC, b.heading, isSel,
+      addBlock(textTrack, b.start * px, (b.end - b.start) * px, b.heading, isSel,
         () => onSelect({ type: "text", item: b }));
     }
     const textEnd = (project.text_blocks || []).reduce((m, b) => Math.max(m, b.end), 0);
-    if (actions.onAddText) addRowAddButton(textTrack, textEnd * PX_PER_SEC, "Add text", actions.onAddText);
+    if (actions.onAddText) addRowAddButton(textTrack, textEnd * px, "Add text", actions.onAddText);
 
     const videoBoxTrack = clearTrack("row-videobox");
     for (const v of project.video_boxes || []) {
       const isSel = !!selected && selected.type === "video-box" && !!selected.item && selected.item.id === v.id;
       const name = v.file_path.split(/[\\/]/).pop();
-      addBlock(videoBoxTrack, v.start * PX_PER_SEC, (videoBoxEnd(v) - v.start) * PX_PER_SEC, name, isSel,
+      addBlock(videoBoxTrack, v.start * px, (videoBoxEnd(v) - v.start) * px, name, isSel,
         () => onSelect({ type: "video-box", item: v }));
       const el = videoBoxTrack.lastElementChild;
       el.draggable = true;
@@ -210,10 +274,16 @@ window.Timeline = (() => {
       const start = g[0].t_start, end = g[g.length - 1].t_end;
       const label = g.map((w) => w.text).join(" ");
       const isSel = !!selected && selected.type === "caption" && selected.groupIndex === i;
-      addBlock(capTrack, start * PX_PER_SEC, (end - start) * PX_PER_SEC, label, isSel,
+      addBlock(capTrack, start * px, (end - start) * px, label, isSel,
         () => onSelect({ type: "caption", item: g, groupIndex: i }));
     });
   }
 
-  return { render, groupWords, timeAtX, tick, PX_PER_SEC };
+  document.getElementById("zoom-in").addEventListener("click", () => { zoomIn(); renderTimeline(); });
+  document.getElementById("zoom-out").addEventListener("click", () => { zoomOut(); renderTimeline(); });
+
+  return {
+    render, groupWords, timeAtX, tick, resetZoom,
+    get PX_PER_SEC() { return currentPxPerSecond(); },
+  };
 })();

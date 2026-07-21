@@ -13,6 +13,7 @@ class MediaItem(BaseModel):
     name: str = ""
     duration: float
     has_audio: bool = True
+    kind: str = "video"  # "video" or "image"
 
     @property
     def display_name(self) -> str:

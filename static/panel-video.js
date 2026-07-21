@@ -1,5 +1,5 @@
 // VIDEO context-panel section: trim/order/fill-mode/speed/delete for the selected clip. Exposes
-// window.VideoPanel.render()/select()/deleteClip()/moveClip(), plus the shared clampTrim()
+// window.VideoPanel.render()/select()/deleteClip()/moveClipTo(), plus the shared clampTrim()
 // helper (also used by panel-video-box.js).
 window.VideoPanel = window.VideoPanel || {};
 
@@ -45,8 +45,8 @@ UI.divider(document.getElementById("video-order-divider"));
     const downBtn = document.getElementById("video-move-down");
     upBtn.disabled = idx <= 0;
     downBtn.disabled = idx === -1 || idx === ordered.length - 1;
-    upBtn.onclick = async () => { await moveClip(c, ordered[idx - 1]); render(c); };
-    downBtn.onclick = async () => { await moveClip(c, ordered[idx + 1]); render(c); };
+    upBtn.onclick = async () => { await moveClipTo(c.id, idx - 1); render(c); };
+    downBtn.onclick = async () => { await moveClipTo(c.id, idx + 1); render(c); };
 
     UI.buttonGroup(document.getElementById("video-fill-mode-group"),
       [{ value: "fit", label: "FIT", span: 4 }, { value: "fill", label: "FILL", span: 4 }],
@@ -111,10 +111,18 @@ UI.divider(document.getElementById("video-order-divider"));
     renderTimeline();
   }
 
-  async function moveClip(a, b) {
-    const t = a.order;
-    a.order = b.order;
-    b.order = t;
+  // Reindexes project.clips so `clipId` ends up at position `newIndex` (0-based, among clips
+  // ordered by `.order`), renumbering every clip's `.order` to 0..n-1 gap-free. `newIndex` is
+  // clamped to the valid range. Shared by the VIDEO panel's move-up/down buttons and the
+  // timeline's drag-to-reorder gesture (static/timeline-clip-drag.js).
+  async function moveClipTo(clipId, newIndex) {
+    const list = [...project.clips].sort((a, b) => a.order - b.order);
+    const from = list.findIndex((c) => c.id === clipId);
+    if (from === -1) return;
+    const clamped = Math.max(0, Math.min(newIndex, list.length - 1));
+    const [moved] = list.splice(from, 1);
+    list.splice(clamped, 0, moved);
+    list.forEach((c, i) => { c.order = i; });
     await saveProject();
     Preview.load(project);
     renderTimeline();
@@ -136,6 +144,6 @@ UI.divider(document.getElementById("video-order-divider"));
   window.VideoPanel.render = render;
   window.VideoPanel.select = select;
   window.VideoPanel.deleteClip = deleteClip;
-  window.VideoPanel.moveClip = moveClip;
+  window.VideoPanel.moveClipTo = moveClipTo;
   window.VideoPanel.duplicateClip = duplicateClip;
 })();
