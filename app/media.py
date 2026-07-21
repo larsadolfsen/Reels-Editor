@@ -1,5 +1,7 @@
-# Media helpers: ffprobe duration probing, audio stream detection, safe local file serving, native file picker.
-# Exposes ffprobe_cmd, probe_duration, has_audio_stream, media_response, run_export, pick_file. Depends on ffprobe on PATH and tkinter.
+# Media helpers: ffprobe duration probing, audio stream detection, safe local file serving, native
+# file picker, and parsing ffmpeg -progress output into a percent.
+# Exposes ffprobe_cmd, probe_duration, has_audio_stream, media_response, run_export,
+# percent_from_progress_line, pick_file. Depends on ffprobe/ffmpeg on PATH and tkinter.
 import os
 import shutil
 import subprocess
@@ -32,6 +34,19 @@ def _resolve_cmd(cmd: list[str], path: str) -> tuple[list[str], dict]:
     env["PATH"] = path
     resolved = [shutil.which(cmd[0], path=path) or cmd[0], *cmd[1:]]
     return resolved, env
+
+def percent_from_progress_line(line: str, total_duration: float) -> float | None:
+    """Parses one line of ffmpeg's `-progress pipe:1` output. Returns a 0-100 percent for an
+    out_time_us= line when total_duration > 0, else None (caller skips other progress keys)."""
+    line = line.strip()
+    if not line.startswith("out_time_us=") or total_duration <= 0:
+        return None
+    try:
+        micros = int(line.split("=", 1)[1])
+    except ValueError:
+        return None
+    seconds = micros / 1_000_000
+    return max(0.0, min(100.0, (seconds / total_duration) * 100))
 
 def ffprobe_cmd(path: str) -> list[str]:
     return ["ffprobe", "-v", "error", "-show_entries", "format=duration",
