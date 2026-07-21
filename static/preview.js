@@ -299,7 +299,7 @@ window.Preview = (() => {
     iconPause.classList.toggle("icon-hidden", !isPlaying);
   }
   player.addEventListener("play", () => setPlayingIcon(true));
-  player.addEventListener("pause", () => setPlayingIcon(false));
+  player.addEventListener("pause", () => { if (!isImageActive()) setPlayingIcon(false); });
 
   function seek(t) {
     if (clips.length === 0) {
