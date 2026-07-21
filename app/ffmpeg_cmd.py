@@ -1,5 +1,6 @@
 # Pure ffmpeg export-command builder: per-clip trim/scale/pad-or-crop (branched on ClipLayer.fill_mode:
 # "fit" letterboxes, "fill" center-crops), concat with silent-audio synthesis for video-only clips,
+# image clips (MediaItem.kind == "image") get `-loop 1 -t <duration>` prepended to their input,
 # optional ASS burn or banded chain alternating ASS burn-in with video-box overlays.
 # CRF is derived from Project.export_quality ("high" -> 18, "medium" -> 23, default 18).
 # Per-clip ClipLayer.speed (!= 1.0) scales video pace via setpts=(PTS-STARTPTS)/speed and real audio
@@ -28,7 +29,12 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
     input_index = 0
     for i, c in enumerate(clips):
         v_idx = input_index
-        cmd += ["-i", c.file_path]
+        media = media_by_id.get(c.media_id)
+        if media and media.kind == "image":
+            duration = (c.out_point - c.in_point) / c.speed
+            cmd += ["-loop", "1", "-t", _num(duration), "-i", c.file_path]
+        else:
+            cmd += ["-i", c.file_path]
         input_index += 1
         setpts = f"(PTS-STARTPTS)/{_num(c.speed)}" if c.speed != 1.0 else "PTS-STARTPTS"
         trim_prefix = f"[{v_idx}:v]trim=start={_num(c.in_point)}:end={_num(c.out_point)},setpts={setpts},"
@@ -42,7 +48,6 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
                 f"scale={p.width}:{p.height}:force_original_aspect_ratio=decrease,"
                 f"pad={p.width}:{p.height}:(ow-iw)/2:(oh-ih)/2")
         parts.append(trim_prefix + scale_segment + suffix)
-        media = media_by_id.get(c.media_id)
         has_audio = media.has_audio if media else True
         if has_audio:
             atempo = f",atempo={_num(c.speed)}" if c.speed != 1.0 else ""
