@@ -96,6 +96,7 @@ window.Timeline = (() => {
     document.getElementById("playhead").style.left = `${timelineTime * currentPxPerSecond()}px`;
     document.getElementById("timeline-time").textContent =
       `${formatTimeDeci(timelineTime)} / ${formatTimeDeci(lastDuration)}`;
+    autoScrollToPlayhead(timelineTime);
     updateSliceButton();
   }
 
@@ -105,6 +106,20 @@ window.Timeline = (() => {
     const playhead = document.getElementById("playhead");
     const left = parseFloat(playhead.style.left) || 0;
     btn.style.left = `${LABEL_WIDTH + left - scrollEl.scrollLeft}px`;
+  }
+
+  // Keeps the playhead within view during playback by nudging #timeline-scroll's scrollLeft
+  // when the playhead nears either visible edge. Only called from tick() (the playback RAF
+  // loop) — manual scrubbing/scrolling elsewhere is left entirely to the user.
+  function autoScrollToPlayhead(timelineTime) {
+    const scrollEl = document.getElementById("timeline-scroll");
+    const x = timelineTime * currentPxPerSecond();
+    const margin = 40;
+    if (x < scrollEl.scrollLeft + margin) {
+      scrollEl.scrollLeft = Math.max(0, x - margin);
+    } else if (x > scrollEl.scrollLeft + scrollEl.clientWidth - margin) {
+      scrollEl.scrollLeft = x - scrollEl.clientWidth + margin;
+    }
   }
 
   // Deterministic pseudo-random bar heights, regenerated only when the track width
