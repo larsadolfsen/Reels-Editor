@@ -1,21 +1,11 @@
-// CAPTIONS panel: "Caption words" drill-down — every transcribed word, inline-editable text
-// (empty text deletes the word) and inline-editable start/end timing (seconds, one decimal).
-// Exposes window.CaptionPanel.renderWords().
+// CAPTIONS panel Closed-caption tab: every transcribed word, inline-editable text (empty
+// text deletes the word) and inline-editable start/end timing (seconds, one decimal).
+// Exposes window.CaptionPanel.renderWords(). Was a settings-row + drill-down sub-panel;
+// folded into a permanent tab pane (2026-07-21, right-panel-tabs item) — same list rendering,
+// no more back-arrow/open-close wiring.
 window.CaptionPanel = window.CaptionPanel || {};
 
 (() => {
-  function openWordsPanel() {
-    renderWordsList();
-    document.getElementById("panel-captions-main").hidden = true;
-    document.getElementById("panel-captions-words").hidden = false;
-  }
-
-  function closeWordsPanel() {
-    document.getElementById("panel-captions-words").hidden = true;
-    document.getElementById("panel-captions-main").hidden = false;
-    renderCaptionPreview();
-  }
-
   // Pure validation: t_start clamped to >= 0, and t_start must be < t_end.
   // Returns the clamped {t_start, t_end} when valid, or null when invalid
   // (caller should revert the field to the previously-stored value).
@@ -93,12 +83,5 @@ window.CaptionPanel = window.CaptionPanel || {};
     });
   }
 
-  UI.subPanelHeader(document.getElementById("caption-words-subpanel-header"), { title: "Caption words", onBack: closeWordsPanel });
-
-  window.CaptionPanel.renderWords = function renderWords() {
-    const track = ensureCaptionTrack();
-    UI.settingsRow(document.getElementById("caption-words-row"), {
-      label: "Caption words", value: String(track.words.length), onClick: openWordsPanel,
-    });
-  };
+  window.CaptionPanel.renderWords = renderWordsList;
 })();
