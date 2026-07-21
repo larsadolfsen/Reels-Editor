@@ -1,6 +1,15 @@
 # Insert Model: Left Rail Inserts, Timeline Opens — Design
 
-**Status:** brainstormed 2026-07-20, ready for a build session to write its implementation plan. No open questions.
+**Status:** brainstormed 2026-07-20, verified against code 2026-07-21, ready for a build session to write its implementation plan. No open questions.
+
+## Verification against current code (2026-07-21)
+
+Code has moved on since this was first brainstormed (multi-text-block selection, panel extractions). Re-checked every assumption:
+
+- `addTextBlock()` / `addTextBlockAndEdit()` (`static/panel-text.js`) already exist exactly as assumed — creates a block + preset, selects it, opens the panel, enters on-stage edit.
+- **CAPTIONS insert-or-open is already the actual behavior, no code change needed.** `openCaptionsPanel()` → `renderCaptionPanel()` → `ensureCaptionTrack()` unconditionally creates the track in memory if missing, and the "Auto-caption" button (`#caption-auto-btn`) is already always visible at the top of the panel, not gated by the empty state. Task 2 below is satisfied by existing code — confirming it in manual verification is enough, nothing to build.
+- `onTimelineSelect` (`static/editor.js`) already routes video/text/caption/video-box clicks to the right panel and selects the right item. AUDIO row doesn't exist yet — correctly out of scope.
+- **New finding:** `static/editor.js` is now 456 lines (already over the ~400 guideline) and this task's only remaining code change (the TEXT rail handler) lives in exactly the navigation code that makes up most of that size. Extracting `PANEL_NAV_ITEMS`, `PANEL_NAV_HANDLERS`, `showPanel()`, `onTimelineSelect()`, every `openXPanel()` function, and `reRenderAfterRestore()` into a new `static/panel-nav.js` is added as Task 0 below — a pure move (same pattern as the `panel-text.js`/`panel-captions.js` extractions), done before the TEXT handler change so that change lands in the new home file, not the old one. `editor.js` keeps thin wrapper calls where those functions are invoked from other wiring (e.g. `Preview.setOnStageTextActivate`, the `#row-video` drop handler's video-box fallback).
 
 ## What / Why
 
@@ -21,14 +30,15 @@ None.
 
 ## Reuse
 
-- `addTextBlock()` / clip-add flow / `ensureCaptionTrack()` — all shared with the empty-project item and existing code.
-- `PANEL_NAV_ITEMS` / `PANEL_NAV_HANDLERS` in `editor.js` — handlers change behavior; the rail component itself (`ui-icon-rail.js`) only gains the badge option.
+- `addTextBlockAndEdit()` / clip-add flow / `ensureCaptionTrack()` — already exist, all shared with the empty-project item and existing code.
+- `PANEL_NAV_ITEMS` / `PANEL_NAV_HANDLERS` — move from `editor.js` to the new `static/panel-nav.js` (Task 0); the `text` entry's handler changes from `openTextPanel` to `addTextBlockAndEdit`. The rail component itself (`ui-icon-rail.js`) only gains the badge option.
 
 ## Tasks
 
-1. TEXT rail handler → insert flow (+ plus-badge option in `ui-icon-rail.js`).
-2. CAPTIONS rail handler → create-or-open flow.
-3. Audit `onTimelineSelect` covers all rows and selection states; fix gaps.
+0. Extract `PANEL_NAV_ITEMS`/`PANEL_NAV_HANDLERS`/`showPanel()`/`onTimelineSelect()`/every `openXPanel()`/`reRenderAfterRestore()` from `editor.js` into `static/panel-nav.js` (pure move, zero behavior change).
+1. TEXT rail handler → insert flow (`openTextPanel()`'s rail wiring now calls `addTextBlockAndEdit()` instead of just opening the panel) + plus-badge option in `ui-icon-rail.js` (+ `icon-rail.css`), applied to the TEXT and CAPTIONS rail items in `PANEL_NAV_ITEMS`.
+2. ~~CAPTIONS rail handler → create-or-open flow~~ — already true of existing code (see Verification above); confirm via manual check only, no code change.
+3. Audit `onTimelineSelect` covers all rows and selection states; fix gaps — already covers video/text/caption/video-box (see Verification above); confirm via manual check only, no code change expected.
 
 ## Testing
 
@@ -41,4 +51,4 @@ UI wiring — untested layer per convention. Manual verification: TEXT rail clic
 
 ## Dependency note
 
-Builds on `addTextBlock()` and the + buttons from [2026-07-20-empty-project-and-multi-text-design.md](2026-07-20-empty-project-and-multi-text-design.md) — if picked up first, this item extracts those shared flows itself and the other item consumes them.
+Builds on `addTextBlock()`/`addTextBlockAndEdit()` and the + buttons from [2026-07-20-empty-project-and-multi-text-design.md](2026-07-20-empty-project-and-multi-text-design.md) — already landed in `static/panel-text.js`/`static/timeline.js` as of 2026-07-21, confirmed in the Verification section above. No extraction needed here; this item just reuses them as-is.
