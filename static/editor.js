@@ -315,14 +315,27 @@ document.getElementById("theme-toggle").addEventListener("click", () => {
 });
 
 async function exportProject() {
+  const btn = document.getElementById("export");
   const resultEl = document.getElementById("export-result");
-  resultEl.textContent = "Exporting...";
+  btn.disabled = true;
+  resultEl.textContent = "Starting export...";
   const result = await Api.exportProject(project.id);
   if (!result.ok) {
     resultEl.textContent = "Export failed: " + result.error;
+    btn.disabled = false;
     return;
   }
-  resultEl.innerHTML = `Exported: <a href="/media?path=${encodeURIComponent(result.out_path)}">download</a>`;
+  resultEl.textContent = "";
+  ExportProgress.start(result.job_id, {
+    onDone(outputPath) {
+      btn.disabled = false;
+      resultEl.innerHTML = `Exported: <a href="/media?path=${encodeURIComponent(outputPath)}">download</a>`;
+    },
+    onFailed(error) {
+      btn.disabled = false;
+      resultEl.textContent = "Export failed: " + error;
+    },
+  });
 }
 
 document.getElementById("export").addEventListener("click", exportProject);
