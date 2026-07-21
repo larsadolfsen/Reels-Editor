@@ -1,11 +1,13 @@
 # Tests for app.main's export route: confirms ASS subtitles are rendered to a file and
 # burned into the ffmpeg command when a project has text blocks, and skipped otherwise.
 from unittest.mock import patch
+from app import export_jobs
 from app.main import export_project, list_presets, create_preset, probe, sanitize_export_filename, resolve_export_path
 from app.models import Project, TextBlockLayer, TextPreset, MediaItem
 
 def test_export_writes_ass_file_and_burns_it_in(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
     pr = TextPreset(name="Pop")
     p = Project(name="r", text_blocks=[TextBlockLayer(heading="Hi", preset_id=pr.id, start=0, end=2)],
                 text_presets={pr.id: pr})
@@ -20,6 +22,7 @@ def test_export_writes_ass_file_and_burns_it_in(tmp_path, monkeypatch):
 
 def test_export_omits_ass_when_no_text_blocks(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
     p = Project(name="r")
     with patch("app.main.store.load_project", return_value=p), \
          patch("app.main.media.run_export") as run_export:
@@ -145,37 +148,65 @@ def test_resolve_export_path_increments_past_multiple_collisions(tmp_path):
 
 def test_export_uses_export_filename_when_set(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
     p = Project(name="r", export_filename="my-custom-name")
     with patch("app.main.store.load_project", return_value=p), \
          patch("app.main.media.run_export") as run_export:
         result = export_project(p.id)
-    assert result["out_path"].endswith("my-custom-name.mp4")
+    job = export_jobs.get_job(result["job_id"])
+    assert job["output_path"].endswith("my-custom-name.mp4")
     cmd = run_export.call_args[0][0]
     assert cmd[-1].endswith("my-custom-name.mp4")
 
 def test_export_falls_back_to_default_stem_when_filename_empty(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
     p = Project(name="r")
     with patch("app.main.store.load_project", return_value=p), \
          patch("app.main.media.run_export"):
         result = export_project(p.id)
-    assert result["out_path"].endswith(f"r-{p.id[:8]}.mp4")
+    job = export_jobs.get_job(result["job_id"])
+    assert job["output_path"].endswith(f"r-{p.id[:8]}.mp4")
 
 def test_export_appends_collision_suffix_when_target_exists(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
     (tmp_path / "exports").mkdir(parents=True)
     (tmp_path / "exports" / "taken.mp4").write_text("existing")
     p = Project(name="r", export_filename="taken")
     with patch("app.main.store.load_project", return_value=p), \
          patch("app.main.media.run_export"):
         result = export_project(p.id)
-    assert result["out_path"].endswith("taken-2.mp4")
+    job = export_jobs.get_job(result["job_id"])
+    assert job["output_path"].endswith("taken-2.mp4")
 
 def test_export_quality_medium_uses_crf_23(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
     p = Project(name="r", export_quality="medium")
     with patch("app.main.store.load_project", return_value=p), \
          patch("app.main.media.run_export") as run_export:
         export_project(p.id)
     cmd = run_export.call_args[0][0]
     assert cmd[cmd.index("-crf") + 1] == "23"
+
+def test_export_status_route_returns_job_state(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
+    p = Project(name="r")
+    with patch("app.main.store.load_project", return_value=p), \
+         patch("app.main.media.run_export"):
+        result = export_project(p.id)
+    from app.main import export_status
+    job = export_status(result["job_id"])
+    assert job["status"] == "done"
+    assert job["percent"] == 100.0
+    assert job["output_path"].endswith(f"r-{p.id[:8]}.mp4")
+
+def test_export_status_route_404_for_unknown_job():
+    from app.main import export_status
+    from fastapi import HTTPException
+    import pytest
+    with pytest.raises(HTTPException) as exc_info:
+        export_status("nonexistent")
+    assert exc_info.value.status_code == 404

@@ -1,11 +1,15 @@
-# Media helpers: ffprobe duration probing, audio stream detection, safe local file serving, native file picker.
-# Exposes ffprobe_cmd, probe_duration, has_audio_stream, media_response, run_export, pick_file. Depends on ffprobe on PATH and tkinter.
+# Media helpers: ffprobe duration probing, audio stream detection, safe local file serving, native
+# file picker, and parsing ffmpeg -progress output into a percent.
+# Exposes ffprobe_cmd, probe_duration, has_audio_stream, media_response, run_export,
+# percent_from_progress_line, pick_file. Depends on ffprobe/ffmpeg on PATH and tkinter.
 import os
 import shutil
 import subprocess
+import tempfile
 import tkinter
 import winreg
 from tkinter import filedialog
+from typing import Callable
 from pathlib import Path
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
@@ -33,6 +37,19 @@ def _resolve_cmd(cmd: list[str], path: str) -> tuple[list[str], dict]:
     resolved = [shutil.which(cmd[0], path=path) or cmd[0], *cmd[1:]]
     return resolved, env
 
+def percent_from_progress_line(line: str, total_duration: float) -> float | None:
+    """Parses one line of ffmpeg's `-progress pipe:1` output. Returns a 0-100 percent for an
+    out_time_us= line when total_duration > 0, else None (caller skips other progress keys)."""
+    line = line.strip()
+    if not line.startswith("out_time_us=") or total_duration <= 0:
+        return None
+    try:
+        micros = int(line.split("=", 1)[1])
+    except ValueError:
+        return None
+    seconds = micros / 1_000_000
+    return max(0.0, min(100.0, (seconds / total_duration) * 100))
+
 def ffprobe_cmd(path: str) -> list[str]:
     return ["ffprobe", "-v", "error", "-show_entries", "format=duration",
             "-of", "default=noprint_wrappers=1:nokey=1", path]
@@ -55,11 +72,31 @@ def media_response(path: str) -> FileResponse:
         raise HTTPException(404, f"not found: {path}")
     return FileResponse(p)
 
-def run_export(cmd: list[str]) -> None:
+def run_export(cmd: list[str], on_progress: Callable[[float], None] | None = None, total_duration: float = 0.0) -> None:
     resolved, env = _resolve_cmd(cmd, _refreshed_path())
-    proc = subprocess.run(resolved, capture_output=True, text=True, env=env)
-    if proc.returncode != 0:
-        raise RuntimeError(proc.stderr[-2000:])
+    use_progress = on_progress is not None and total_duration > 0
+    if use_progress:
+        # Insert right after the executable — global options only need to precede -i, and this
+        # avoids assuming cmd[1] is a standalone flag (e.g. "-y") rather than one taking a value.
+        resolved = [resolved[0], "-progress", "pipe:1", "-nostats", *resolved[1:]]
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stderr_file:
+        proc = subprocess.Popen(
+            resolved,
+            stdout=subprocess.PIPE if use_progress else subprocess.DEVNULL,
+            stderr=stderr_file,
+            env=env,
+            text=True,
+        )
+        if use_progress:
+            for line in proc.stdout:
+                percent = percent_from_progress_line(line, total_duration)
+                if percent is not None:
+                    on_progress(percent)
+            proc.stdout.close()
+        proc.wait()
+        if proc.returncode != 0:
+            stderr_file.seek(0)
+            raise RuntimeError(stderr_file.read()[-2000:])
 
 def pick_file() -> str | None:
     # Must stay a sync `def` route: FastAPI dispatches sync handlers to a worker thread,

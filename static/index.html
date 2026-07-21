@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="/static/css/components/project-picker.css">
 <link rel="stylesheet" href="/static/css/components/video-box-panel.css">
 <link rel="stylesheet" href="/static/css/components/layers-panel.css">
+<link rel="stylesheet" href="/static/css/components/export-progress.css">
 </head><body>
 <div id="app">
   <main>
@@ -379,6 +380,9 @@
         <div class="style-group">
           <button id="export" class="col-8">EXPORT &middot; 1080&times;1920</button>
         </div>
+        <div id="export-progress" class="export-progress" hidden>
+          <div id="export-progress-fill" class="export-progress-fill"></div>
+        </div>
         <div id="export-result"></div>
       </div>
 
@@ -625,6 +629,7 @@
 <script src="/static/api-pick-file.js"></script>
 <script src="/static/api-probe-media.js"></script>
 <script src="/static/api-export-project.js"></script>
+<script src="/static/api-export-status.js"></script>
 <script src="/static/api-list-presets.js"></script>
 <script src="/static/api-save-preset.js"></script>
 <script src="/static/caption-panel-style.js"></script>
@@ -660,6 +665,7 @@
 <script src="/static/clip-sequence.js"></script>
 <script src="/static/panel-layers.js"></script>
 <script src="/static/panel-export.js"></script>
+<script src="/static/export-progress.js"></script>
 <script src="/static/preview-text.js"></script>
 <script src="/static/preview-captions.js"></script>
 <script src="/static/preview.js"></script>
