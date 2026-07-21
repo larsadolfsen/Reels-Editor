@@ -1,7 +1,7 @@
 # Tests for app.timeline: pure sequence math over ordered, trimmed clips.
 import pytest
 from app.models import ClipLayer, VideoBoxLayer, TextBlockLayer, Project
-from app.timeline import ordered, clip_duration, sequence_duration, locate, video_box_end, banded_layers
+from app.timeline import ordered, clip_duration, sequence_duration, locate, video_box_end, banded_layers, slice_clip
 
 def c(i, o, order): return ClipLayer(media_id=f"m{order}", file_path=f"{order}.mp4", in_point=i, out_point=o, order=order)
 
@@ -68,3 +68,46 @@ def test_banded_layers_video_box_below_all_text():
     p = Project(name="r", text_blocks=[text], video_boxes=[box])
     bands = banded_layers(p)
     assert [b["kind"] for b in bands] == ["video_box", "text"]
+
+def test_slice_mid_clip_splits_into_two():
+    clips = [c(0, 4, 0), c(0, 4, 1)]              # two 4s clips
+    out, new_id = slice_clip(clips, 1.0)          # t=1.0 -> 1s into clip0 (source 1.0)
+    assert new_id is not None and len(out) == 3
+    by_order = sorted(out, key=lambda x: x.order)
+    assert [x.order for x in by_order] == [0, 1, 2]     # contiguous
+    first, second = by_order[0], by_order[1]
+    assert (first.in_point, first.out_point) == (0, 1.0)
+    assert (second.in_point, second.out_point) == (1.0, 4.0)
+    assert second.id == new_id and second.id != first.id
+    assert second.media_id == first.media_id           # same source media
+    assert by_order[2].order == 2                       # the old clip1 shifted 1 -> 2
+
+def test_slice_at_boundary_is_noop():
+    clips = [c(0, 4, 0)]
+    out, new_id = slice_clip(clips, 0.0)          # exactly at start
+    assert new_id is None and len(out) == 1
+    out, new_id = slice_clip(clips, 4.0)          # exactly at end (beyond -> ValueError path)
+    assert new_id is None and len(out) == 1
+
+def test_slice_within_epsilon_of_boundary_is_noop():
+    clips = [c(0, 4, 0)]
+    out, new_id = slice_clip(clips, 0.03)         # < eps from start
+    assert new_id is None and len(out) == 1
+
+def test_slice_empty_clips_is_noop():
+    out, new_id = slice_clip([], 1.0)
+    assert new_id is None and out == []
+
+def test_slice_trimmed_clip_uses_source_time():
+    clips = [c(2, 6, 0)]                          # in=2, out=6, timeline duration 4
+    out, new_id = slice_clip(clips, 1.0)          # 1s timeline -> source 3.0
+    by_order = sorted(out, key=lambda x: x.order)
+    assert (by_order[0].in_point, by_order[0].out_point) == (2, 3.0)
+    assert (by_order[1].in_point, by_order[1].out_point) == (3.0, 6.0)
+
+def test_slice_carries_fill_mode_and_speed():
+    src = ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=4, order=0, fill_mode="fill", speed=2.0)
+    out, new_id = slice_clip([src], 1.0)          # 2x -> 1s timeline maps to source 2.0
+    by_order = sorted(out, key=lambda x: x.order)
+    assert by_order[0].out_point == 2.0 and by_order[1].in_point == 2.0
+    assert all(x.fill_mode == "fill" and x.speed == 2.0 for x in by_order)

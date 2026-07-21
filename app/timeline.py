@@ -19,6 +19,29 @@ def locate(clips: list[ClipLayer], t: float) -> tuple[ClipLayer, float]:
         acc += d
     raise ValueError(f"t={t} beyond sequence end {acc}")
 
+def slice_clip(clips: list[ClipLayer], t: float, eps: float = 0.05) -> tuple[list[ClipLayer], str | None]:
+    """Split the clip under timeline-time t into two clips at that point (source-time from locate).
+    First clip keeps in_point..s; the second is a new ClipLayer (s..out_point) inserted right after,
+    later orders shifted +1. No-op (clips unchanged, None) when t is in no clip or within eps
+    (source-seconds) of a boundary. Both halves share media/file/fill_mode/speed."""
+    try:
+        c, s = locate(clips, t)
+    except ValueError:
+        return clips, None
+    if abs(s - c.in_point) < eps or abs(c.out_point - s) < eps:
+        return clips, None
+    for other in clips:
+        if other.order > c.order:
+            other.order += 1
+    new_clip = ClipLayer(
+        media_id=c.media_id, file_path=c.file_path,
+        in_point=s, out_point=c.out_point, order=c.order + 1,
+        fill_mode=c.fill_mode, speed=c.speed,
+    )
+    c.out_point = s
+    clips.append(new_clip)
+    return clips, new_clip.id
+
 def video_box_end(v: VideoBoxLayer) -> float:
     return v.start + (v.out_point - v.in_point)
 
