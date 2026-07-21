@@ -61,6 +61,19 @@ function addTextBlock() {
   return block;
 }
 
+// Removes the selected block and its preset. The panel then auto-targets the first remaining
+// block (currentTextBlock's fallback), or shows the empty state when none are left.
+async function deleteSelectedTextBlock() {
+  const block = currentTextBlock();
+  if (!block) return;
+  project.text_blocks = project.text_blocks.filter((b) => b.id !== block.id);
+  delete project.text_presets[block.preset_id];
+  selectedTextBlockId = null;
+  await saveProject();
+  await renderTextPanel();
+  renderTimeline();
+}
+
 async function addTextBlockAndEdit() {
   const block = addTextBlock();
   selected = { type: "text", item: block };
@@ -219,3 +232,4 @@ UI.divider(document.getElementById("text-box-background-border-divider"));
 UI.divider(document.getElementById("text-box-border-position-divider"));
 
 document.getElementById("text-add-block-btn").addEventListener("click", () => addTextBlockAndEdit());
+document.getElementById("text-delete").addEventListener("click", () => deleteSelectedTextBlock());

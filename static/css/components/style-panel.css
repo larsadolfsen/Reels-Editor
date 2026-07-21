@@ -234,7 +234,7 @@
   justify-content: center;
 }
 
-#video-delete {
+#video-delete, #text-delete {
   width: 100%;
   margin-top: var(--space-3);
   color: var(--danger, #e5484d);

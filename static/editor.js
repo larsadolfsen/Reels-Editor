@@ -394,4 +394,5 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowUp") { e.preventDefault(); if (Preview.isPaused()) Preview.play(); else Preview.pause(); }
   else if (e.key === "ArrowDown") { e.preventDefault(); Preview.restart(); }
   else if (e.key === "Delete" && selected && selected.type === "video") { e.preventDefault(); VideoPanel.deleteClip(selected.item.id); }
+  else if (e.key === "Delete" && selected && selected.type === "text") { e.preventDefault(); deleteSelectedTextBlock(); }
 });
