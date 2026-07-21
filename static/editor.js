@@ -27,6 +27,8 @@ async function showPickerScreen() {
 async function openProject(target) {
   const res = await fetch(`/api/projects/${target.id}`);
   project = await res.json();
+  UndoHistory.reset();
+  lastSavedJson = JSON.stringify(project);
   localStorage.setItem("projectId", project.id);
   showEditorShell();
   document.title = project.name ? `${project.name} – Reels Editor` : "Reels Editor";
@@ -39,7 +41,11 @@ async function openProject(target) {
 
 const saveIndicator = UI.saveIndicator(document.getElementById("save-indicator"));
 
-async function saveProject() {
+let lastSavedJson = null; // most recent persisted project JSON; the undo baseline
+
+async function saveProject(recordHistory = true) {
+  if (recordHistory && lastSavedJson !== null) UndoHistory.record(lastSavedJson);
+  lastSavedJson = JSON.stringify(project);
   saveIndicator.setSaving();
   try {
     await Api.saveProject(project);
@@ -230,6 +236,43 @@ async function openProjectsPanel() {
   renderTimeline();
 }
 
+// Re-render everything from the current in-memory `project` after an undo/redo swap.
+// Rebuilds the stage, timeline, and media list, then re-opens the panel that was showing —
+// falling back to FILES when the previously-selected entity no longer exists in the restored state.
+function reRenderAfterRestore() {
+  MediaPanel.render();
+  Preview.load(project);
+  renderTimeline();
+  const t = selected && selected.type;
+  if (t === "video") {
+    const clip = project.clips.find((c) => selected.item && c.id === selected.item.id);
+    if (clip) onTimelineSelect({ type: "video", item: clip }); else openFilesPanel();
+  } else if (t === "video-box") {
+    const box = project.video_boxes.find((v) => selected.item && v.id === selected.item.id);
+    if (box) onTimelineSelect({ type: "video-box", item: box }); else openFilesPanel();
+  } else if (t === "text") {
+    openTextPanel();      // renderTextPanel()/currentTextBlock() self-heal to first block or empty state
+  } else if (t === "captions") {
+    openCaptionsPanel();
+  } else if (t && PANEL_NAV_HANDLERS[t]) {
+    PANEL_NAV_HANDLERS[t]();
+  } else {
+    openFilesPanel();
+  }
+}
+
+// Parse a restored snapshot into `project`, persist it WITHOUT recording (the two-stack
+// bookkeeping already moved the current state to the opposite stack), then full re-render.
+function applyRestore(json) {
+  if (json == null) return;              // nothing to undo/redo — no-op
+  project = JSON.parse(json);
+  reRenderAfterRestore();
+  saveProject(false);                    // persist restored state, do not record into history
+}
+
+function undoEdit() { applyRestore(UndoHistory.undo(JSON.stringify(project))); }
+function redoEdit() { applyRestore(UndoHistory.redo(JSON.stringify(project))); }
+
 const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, layers: openLayersPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel };
 
 UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (value) => PANEL_NAV_HANDLERS[value]());
@@ -389,6 +432,9 @@ document.getElementById("step-forward").addEventListener("click", () => nudgeTim
 document.addEventListener("keydown", (e) => {
   const el = document.activeElement;
   if (["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName) || el.isContentEditable) return;
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && (e.key === "z" || e.key === "Z") && !e.shiftKey) { e.preventDefault(); undoEdit(); return; }
+  if (mod && ((e.key === "z" || e.key === "Z") && e.shiftKey || e.key === "y" || e.key === "Y")) { e.preventDefault(); redoEdit(); return; }
   if (e.key === "ArrowLeft") { e.preventDefault(); nudgeTime(-0.1); }
   else if (e.key === "ArrowRight") { e.preventDefault(); nudgeTime(0.1); }
   else if (e.key === "ArrowUp") { e.preventDefault(); if (Preview.isPaused()) Preview.play(); else Preview.pause(); }
