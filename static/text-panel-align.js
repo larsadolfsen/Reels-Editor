@@ -2,7 +2,7 @@
 window.TextPanel = window.TextPanel || {};
 
 window.TextPanel.renderAlign = function renderAlign() {
-  const preset = ensureTextPreset(ensureTextBlock().preset_id);
+  const preset = ensureTextPreset(currentTextBlock().preset_id);
 
   UI.buttonGroup(document.getElementById("text-align-group"),
     [

@@ -1,6 +1,6 @@
 // TEXT panel FONT accordion: font-family row + drill-down subpanel. Pure UI over TextPreset.font.
 // Exposes window.TextPanel.renderFontFamily(). No bundler — reaches directly into editor.js's
-// globals (ensureTextBlock, ensureTextPreset, saveProject, renderTextPreview, project, AVAILABLE_FONTS),
+// globals (currentTextBlock, ensureTextPreset, saveProject, renderTextPreview, project, AVAILABLE_FONTS),
 // same pattern renderBoxPanel() already uses.
 window.TextPanel = window.TextPanel || {};
 
@@ -20,13 +20,13 @@ window.TextPanel = window.TextPanel || {};
   }
 
   function hoverPreviewFont(fontName) {
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
+    const preset = ensureTextPreset(currentTextBlock().preset_id);
     const previewPresets = { ...project.text_presets, [preset.id]: { ...preset, font: fontName } };
     Preview.renderText(project, previewPresets, Preview.currentTimelineTime());
   }
 
   async function selectFont(fontName) {
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
+    const preset = ensureTextPreset(currentTextBlock().preset_id);
     preset.font = fontName;
     const weights = await Api.listFontWeights(fontName);
     if (!weights.some((w) => w.value === preset.weight)) {
@@ -44,7 +44,7 @@ window.TextPanel = window.TextPanel || {};
   function renderFontList() {
     const listEl = document.getElementById("text-font-list");
     listEl.innerHTML = "";
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
+    const preset = ensureTextPreset(currentTextBlock().preset_id);
     const orderedFonts = [preset.font, ...AVAILABLE_FONTS.filter((f) => f !== preset.font)];
     orderedFonts.forEach((fontName, index) => {
       if (index > 0) {
@@ -88,7 +88,7 @@ window.TextPanel = window.TextPanel || {};
   UI.subPanelHeader(document.getElementById("text-font-subpanel-header"), { title: "Font Family", onBack: closeFontPanel });
 
   function renderFontFamily() {
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
+    const preset = ensureTextPreset(currentTextBlock().preset_id);
     if (fontRowSetValue) {
       fontRowSetValue(preset.font, preset.font);
     } else {

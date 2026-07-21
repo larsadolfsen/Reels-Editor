@@ -1,6 +1,7 @@
 // TEXT context-panel section: renders the FONT/STYLES/BOX/TIME accordions for the selected
-// text block, plus the stage resize/move handlers. Plain globals (renderTextPanel, ensureTextBlock,
-// ...) shared with text-panel-*.js; reaches into editor.js's `project`/`saveProject` globals.
+// text block (empty-state aware when zero blocks exist), plus the stage resize/move handlers.
+// Plain globals (renderTextPanel, currentTextBlock, selectTextBlock, addTextBlock, ...) shared
+// with text-panel-*.js; reaches into editor.js's `project`/`saveProject`/`selected`/`showPanel` globals.
 
 // Position grid anchors (thirds of the 1080x1920 canvas). Used only as a stateless one-shot
 // shortcut in the POSITION accordion's 3x3 grid — clicking a cell writes the computed value
@@ -29,17 +30,41 @@ function ensureTextPreset(id) {
   return project.text_presets[id];
 }
 
-function ensureTextBlock() {
-  let block = project.text_blocks[0];
-  if (!block) {
-    block = {
-      id: crypto.randomUUID().replaceAll("-", ""),
-      heading: "", preset_id: crypto.randomUUID().replaceAll("-", ""), start: 0, end: 3,
-    };
-    project.text_blocks.push(block);
-  }
+let selectedTextBlockId = null;
+
+// The TEXT panel's target block: the explicitly selected one, else the first block, else null.
+// Never creates — creation is only ever explicit via addTextBlock() (+ buttons).
+function currentTextBlock() {
+  const blocks = project.text_blocks || [];
+  const sel = blocks.find((b) => b.id === selectedTextBlockId);
+  if (sel) return sel;
+  selectedTextBlockId = blocks[0] ? blocks[0].id : null;
+  return blocks[0] || null;
+}
+
+function selectTextBlock(id) { selectedTextBlockId = id; }
+
+// Creates a new empty block (with its own preset) starting at the playhead and selects it.
+function addTextBlock() {
+  const start = Math.floor(Preview.currentTimelineTime() * 10) / 10;
+  const block = {
+    id: crypto.randomUUID().replaceAll("-", ""),
+    heading: "", preset_id: crypto.randomUUID().replaceAll("-", ""),
+    start, end: start + 3,
+  };
+  project.text_blocks.push(block);
   ensureTextPreset(block.preset_id);
+  selectedTextBlockId = block.id;
   return block;
+}
+
+async function addTextBlockAndEdit() {
+  const block = addTextBlock();
+  selected = { type: "text", item: block };
+  showPanel("text");
+  await renderTextPanel();
+  renderTimeline();
+  await saveProject();
 }
 
 function renderTextPreview() {
@@ -53,7 +78,14 @@ async function renderTextPanel() {
   document.getElementById("panel-text-style").hidden = true;
   document.getElementById("panel-text-main").hidden = false;
 
-  const block = ensureTextBlock();
+  const block = currentTextBlock();
+  document.getElementById("text-empty-state").hidden = !!block;
+  document.getElementById("text-accordions").hidden = !block;
+  if (!block) {
+    Preview.setSelectedTextBlock(null, null);
+    renderTextPreview();
+    return;
+  }
   const preset = ensureTextPreset(block.preset_id);
 
   TextPanel.renderFontFamily();
@@ -82,7 +114,7 @@ async function renderTextPanel() {
 }
 
 function renderBoxPanel() {
-  const preset = ensureTextPreset(ensureTextBlock().preset_id);
+  const preset = ensureTextPreset(currentTextBlock().preset_id);
 
   UI.buttonGroup(document.getElementById("text-box-size-mode-group"),
     [{ value: "fit", label: "FIT", span: 3 }, { value: "fixed", label: "FREE", span: 2 }, { value: "fill", label: "FILL", span: 3 }],
@@ -181,3 +213,5 @@ UI.accordionSection(document.getElementById("text-time-accordion"), document.get
 UI.divider(document.getElementById("text-box-width-height-divider"));
 UI.divider(document.getElementById("text-box-background-border-divider"));
 UI.divider(document.getElementById("text-box-border-position-divider"));
+
+document.getElementById("text-add-block-btn").addEventListener("click", () => addTextBlockAndEdit());

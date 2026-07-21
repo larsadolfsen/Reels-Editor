@@ -2,7 +2,7 @@
 // TextPreset.weight, unless a stage text selection is active (Preview.getActiveFormatSelection()),
 // in which case selecting a weight writes/updates a per-range FormatRun instead (mirrors
 // text-panel-font-style.js's upsertFormatRun). Exposes window.TextPanel.renderFontWeight().
-// No bundler — reaches directly into editor.js's globals (ensureTextBlock, ensureTextPreset,
+// No bundler — reaches directly into editor.js's globals (currentTextBlock, ensureTextPreset,
 // saveProject, renderTextPreview), same pattern as text-panel-font-family.js.
 window.TextPanel = window.TextPanel || {};
 
@@ -34,7 +34,7 @@ window.TextPanel = window.TextPanel || {};
   }
 
   async function selectWeight(weightValue) {
-    const block = ensureTextBlock();
+    const block = currentTextBlock();
     const preset = ensureTextPreset(block.preset_id);
     const sel = Preview.getActiveFormatSelection();
     if (sel && sel.blockId === block.id) {
@@ -51,7 +51,7 @@ window.TextPanel = window.TextPanel || {};
   function renderWeightList() {
     const listEl = document.getElementById("text-weight-list");
     listEl.innerHTML = "";
-    const block = ensureTextBlock();
+    const block = currentTextBlock();
     const preset = ensureTextPreset(block.preset_id);
     // Each row renders the block's actual heading text (not just the weight's label) in the
     // current font family at that exact weight — a real preview of how the block would look,
@@ -106,7 +106,7 @@ window.TextPanel = window.TextPanel || {};
   UI.subPanelHeader(document.getElementById("text-weight-subpanel-header"), { title: "Weight", onBack: closeWeightPanel });
 
   async function renderFontWeight() {
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
+    const preset = ensureTextPreset(currentTextBlock().preset_id);
     currentWeights = await Api.listFontWeights(preset.font);
     const current = currentWeights.find((w) => w.value === preset.weight);
     const label = current ? current.label : String(preset.weight);

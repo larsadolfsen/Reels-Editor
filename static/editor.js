@@ -104,6 +104,7 @@ async function onTimelineSelect({ type, item, groupIndex }) {
     showPanel("video");
     VideoPanel.render(item);
   } else if (type === "text") {
+    selectTextBlock(item.id);
     showPanel("text");
     await renderTextPanel();
   } else if (type === "caption") {
@@ -235,7 +236,7 @@ UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (val
 // Clicking stage text while some other right-panel section is open (FILES/VIDEO/CAPTIONS/...)
 // should switch to TEXT and fully select the block, in the same click that entered edit mode.
 Preview.setOnStageTextActivate((blockId) => {
-  if (selected && selected.type === "text") return; // already the active panel, nothing to do
+  selectTextBlock(blockId);
   openTextPanel();
 });
 

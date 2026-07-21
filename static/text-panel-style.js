@@ -24,7 +24,7 @@ window.TextPanel = window.TextPanel || {};
   async function saveCurrentStyleAsPreset() {
     const name = prompt("Name this style:");
     if (!name) return;
-    const preset = ensureTextPreset(ensureTextBlock().preset_id);
+    const preset = ensureTextPreset(currentTextBlock().preset_id);
     const saved = { ...styleFieldsOf(preset), id: crypto.randomUUID().replaceAll("-", ""), name, usage_count: 0 };
     await Api.savePreset(saved);
     await loadSavedPresets();
@@ -32,7 +32,7 @@ window.TextPanel = window.TextPanel || {};
   }
 
   async function applySavedPreset(saved) {
-    const block = ensureTextBlock();
+    const block = currentTextBlock();
     const preset = ensureTextPreset(block.preset_id);
     Object.assign(preset, styleFieldsOf(saved));
     block.formatting_runs = [];   // a saved preset is "reset to this whole look" — clears any per-range overrides

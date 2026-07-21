@@ -1,11 +1,11 @@
 // TEXT panel POSITION accordion: absolute HORIZONTAL/VERTICAL pixel fields (TextPreset.x/y) +
 // a stateless 3x3 anchor-grid shortcut. Exposes window.TextPanel.renderPosition(). Reaches into
-// editor.js's globals (ensureTextBlock, ensureTextPreset, saveProject, renderTextPreview,
+// editor.js's globals (currentTextBlock, ensureTextPreset, saveProject, renderTextPreview,
 // renderTextPanel, POSITION_ANCHORS_X, POSITION_ANCHORS_Y).
 window.TextPanel = window.TextPanel || {};
 
 window.TextPanel.renderPosition = function renderPosition() {
-  const preset = ensureTextPreset(ensureTextBlock().preset_id);
+  const preset = ensureTextPreset(currentTextBlock().preset_id);
 
   UI.numberField(document.getElementById("text-offset-x-field"),
     { label: "HORIZONTAL", unit: "PX", value: preset.x, step: 1, min: 1, max: 1080, span: 4,
