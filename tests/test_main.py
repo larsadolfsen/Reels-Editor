@@ -115,7 +115,21 @@ def test_probe_route_includes_has_audio():
     with patch("app.main.media.probe_duration", return_value=5.0), \
          patch("app.main.media.has_audio_stream", return_value=False):
         result = probe("c.mp4")
-    assert result == {"duration": 5.0, "has_audio": False}
+    assert result == {"duration": 5.0, "has_audio": False, "kind": "video"}
+
+def test_probe_route_includes_kind_video():
+    with patch("app.main.media.probe_duration", return_value=5.0), \
+         patch("app.main.media.has_audio_stream", return_value=True):
+        result = probe("c.mp4")
+    assert result == {"duration": 5.0, "has_audio": True, "kind": "video"}
+
+def test_probe_route_skips_ffprobe_for_images():
+    with patch("app.main.media.probe_duration") as pd, \
+         patch("app.main.media.has_audio_stream") as ha:
+        result = probe("c.jpg")
+    pd.assert_not_called()
+    ha.assert_not_called()
+    assert result == {"duration": 0.0, "has_audio": False, "kind": "image"}
 
 def test_sanitize_export_filename_strips_path_separators_and_unsafe_chars():
     assert sanitize_export_filename('a/b\\c:d*e?f"g<h>i|j') == "abcdefghij"

@@ -1,5 +1,5 @@
-# Media helpers: ffprobe duration probing, audio stream detection, safe local file serving, native file picker.
-# Exposes ffprobe_cmd, probe_duration, has_audio_stream, media_response, run_export, pick_file. Depends on ffprobe on PATH and tkinter.
+# Media helpers: ffprobe duration probing, audio stream detection, extension-based image detection, safe local file serving, native file picker.
+# Exposes ffprobe_cmd, probe_duration, has_audio_stream, is_image_path, media_response, run_export, pick_file. Depends on ffprobe on PATH and tkinter.
 import os
 import shutil
 import subprocess
@@ -9,6 +9,11 @@ from tkinter import filedialog
 from pathlib import Path
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
+
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+
+def is_image_path(path: str) -> bool:
+    return Path(path).suffix.lower() in IMAGE_EXTENSIONS
 
 def _refreshed_path() -> str:
     # Re-reads PATH from the registry so a PATH change (e.g. installing ffmpeg) takes
@@ -70,7 +75,12 @@ def pick_file() -> str | None:
     root.attributes("-topmost", True)
     path = filedialog.askopenfilename(
         title="Choose a clip",
-        filetypes=[("Video files", "*.mp4 *.mov *.mkv"), ("All files", "*.*")],
+        filetypes=[
+            ("Media files", "*.mp4 *.mov *.mkv *.jpg *.jpeg *.png *.webp"),
+            ("Video files", "*.mp4 *.mov *.mkv"),
+            ("Image files", "*.jpg *.jpeg *.png *.webp"),
+            ("All files", "*.*"),
+        ],
     )
     root.destroy()
     return path or None
