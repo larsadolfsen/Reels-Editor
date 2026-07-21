@@ -28,9 +28,6 @@ async function openProject(target) {
   const res = await fetch(`/api/projects/${target.id}`);
   project = await res.json();
   localStorage.setItem("projectId", project.id);
-  const before = JSON.stringify(project);
-  seedDefaults(project);
-  if (JSON.stringify(project) !== before) await saveProject();
   showEditorShell();
   document.title = project.name ? `${project.name} – Reels Editor` : "Reels Editor";
   MediaPanel.render();

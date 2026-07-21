@@ -141,6 +141,7 @@ window.Preview = (() => {
       playClipAt(0);
     } else {
       player.removeAttribute("src");
+      player.load();
       timeEl.textContent = "0.0";
     }
   }

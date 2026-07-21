@@ -97,7 +97,6 @@ static/
   caption-panel-box.js          # CAPTIONS panel BOX accordion: size mode/background/border + TEXT ALIGN/POSITION (combines editor.js's renderBoxPanel() with text-panel-align.js/text-panel-position.js), against the caption track's preset
   caption-panel-highlight.js    # CAPTIONS panel HIGHLIGHT accordion: karaoke mode toggle, highlight color, max words per line — captions-only, no TEXT-panel equivalent
   caption-panel-words.js        # CAPTIONS panel "Caption words" drill-down: every transcribed word, inline-editable text (empty text deletes the word) and inline-editable start/end timing (number inputs, validated via clampWordTiming(), added 2026-07-20)
-  seed.js                 # seeds a project with a sample caption line on first load so the CAPTIONS timeline row isn't empty (dev convenience; text block seeding removed — editor.js's ensureTextBlock() already creates a real, style-panel-backed one)
   css/
     tokens.css            # :root custom properties (colors, fonts, spacing, radius) + @font-face — single source of truth
     base.css               # reset + element defaults (body, button, input) on the tokens
@@ -249,7 +248,6 @@ Shared preset library (distinct from a block's live working style) used by both 
 - `static/preview-captions.js` (`window.PreviewCaptions`, extracted from `static/preview.js` 2026-07-21) — `renderCaptions(project, presets, timelineTime)`: groups words via `Timeline.groupWords`, finds the group covering `timelineTime`, renders one `.caption-block` div with one `<span>` per word colored by `highlight_mode`. `static/preview.js` exposes `Preview.renderCaptions` as a thin delegating wrapper.
 - `app/ass_render.py` — `group_words(words, max_words)` (pure; expands each `CaptionWord` through `app.caption_word_estimate.estimate_word_timings` before sorting/chunking, so multi-word entries split into per-word groups), `render_caption_ass(project, preset)`: standalone ASS script — one `Caption` style + karaoke dialogue, `progressive_fill` via native `\k` sweep, `current_word` via per-word `\1c` override.
 - `app/main.py` — `export_project` burns in karaoke captions when `p.captions.words` is non-empty (see Export pipeline below).
-- `static/seed.js` — `seedDefaults(project)`: seeds one sample caption line when `project.captions` is null (dev convenience only).
 - `static/css/components/style-panel.css` — `#panel-captions`'s accordions, same FONT/STYLE/BOX/POSITION shape as TEXT plus captions-only HIGHLIGHT.
 
 ### Layers panel (z-order)
