@@ -11,9 +11,11 @@
 // render()'s 5th `actions = {}` param ({ onAddClip, onAddText }) renders a small dashed "+"
 // button after the VIDEO row's clip sequence / TEXT row's last block (at x=0 when empty),
 // giving a visible way to add a clip/text block beyond the console.
-// Exposes window.Timeline.{render, groupWords, timeAtX, tick}. tick() is a cheap
-// playhead-only update driven every animation frame during playback (see editor.js),
-// so motion stays smooth between the heavier full render() calls. Depends on Preview (preview.js).
+// Exposes window.Timeline.{render, groupWords, timeAtX, tick, resetZoom, PX_PER_SEC}.
+// PX_PER_SEC is a live getter reflecting the current zoom level (see the header comment
+// above for the zoom scale itself). tick() is a cheap playhead-only update driven every
+// animation frame during playback (see editor.js), so motion stays smooth between the
+// heavier full render() calls. Depends on Preview (preview.js).
 window.Timeline = (() => {
   const LABEL_WIDTH = 88;
   const MIN_PX_PER_SEC_FLOOR = 60; // fallback if the scroll container can't be measured yet
