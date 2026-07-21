@@ -34,6 +34,7 @@ async function openProject(target) {
   document.title = project.name ? `${project.name} – Reels Editor` : "Reels Editor";
   MediaPanel.render();
   Preview.load(project);
+  Timeline.resetZoom();
   await renderTextPanel();
   renderTimeline();
   openFilesPanel();
