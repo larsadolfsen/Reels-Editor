@@ -193,7 +193,8 @@
             <p id="caption-empty-state" class="context-panel-name col-8">No captions yet — click Auto-caption to transcribe this reel's audio.</p>
           </div>
 
-          <div id="caption-style-accordion"></div>
+          <div id="caption-tab-bar"></div>
+
           <div id="caption-style-body">
             <div class="style-group">
               <button id="caption-style-save" class="col-8" type="button">+ Save current style</button>
@@ -206,7 +207,6 @@
             </div>
           </div>
 
-          <div id="caption-font-accordion">
           <div id="caption-font-body">
             <div class="style-group">
               <div id="caption-font-row" class="col-8"></div>
@@ -251,9 +251,7 @@
               <label id="caption-outline-px-field"></label>
             </div>
           </div>
-          </div>
 
-          <div id="caption-box-accordion">
           <div id="caption-box-body">
 
             <div class="style-group-label">SIZE</div>
@@ -308,9 +306,7 @@
             </div>
 
           </div>
-          </div>
 
-          <div id="caption-highlight-accordion"></div>
           <div id="caption-highlight-body">
             <div class="style-group-label">MODE</div>
             <div class="style-group">
@@ -324,8 +320,8 @@
             </div>
           </div>
 
-          <div class="style-group">
-            <div id="caption-words-row" class="col-8"></div>
+          <div id="caption-words-body">
+            <ul id="caption-words-list" class="font-list"></ul>
           </div>
 
         </div>
@@ -345,10 +341,6 @@
           <ul id="caption-style-list" class="font-list"></ul>
         </div>
 
-        <div id="panel-captions-words" hidden>
-          <div id="caption-words-subpanel-header"></div>
-          <ul id="caption-words-list" class="font-list"></ul>
-        </div>
       </div>
 
       <div id="panel-settings" class="context-panel" hidden>
