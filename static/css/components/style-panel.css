@@ -55,6 +55,7 @@
   margin-bottom: var(--space-2);
 }
 .style-group:last-child { margin-bottom: 0; }
+.style-group[hidden] { display: none; }
 
 .style-group-label {
   font-family: var(--font-ui);
