@@ -76,6 +76,26 @@ async function deleteSelectedTextBlock() {
   renderTimeline();
 }
 
+// Deep-copies the block AND its preset (new ids, preset_id re-linked), offsets the copy's
+// position +20/+20 px so it's visibly distinct, selects the copy, saves and re-renders.
+async function duplicateTextBlock(blockId) {
+  const src = (project.text_blocks || []).find((b) => b.id === blockId);
+  if (!src) return;
+  const newPresetId = crypto.randomUUID().replaceAll("-", "");
+  const srcPreset = project.text_presets[src.preset_id] || defaultTextPreset(newPresetId);
+  project.text_presets[newPresetId] = {
+    ...srcPreset, id: newPresetId,
+    x: (srcPreset.x || 0) + 20, y: (srcPreset.y || 0) + 20,
+  };
+  const copy = { ...src, id: crypto.randomUUID().replaceAll("-", ""), preset_id: newPresetId };
+  project.text_blocks.push(copy);
+  selectedTextBlockId = copy.id;
+  selected = { type: "text", item: copy };
+  await saveProject();
+  await renderTextPanel();
+  renderTimeline();
+}
+
 async function addTextBlockAndEdit() {
   const block = addTextBlock();
   selected = { type: "text", item: block };
@@ -235,3 +255,7 @@ UI.divider(document.getElementById("text-box-border-position-divider"));
 
 document.getElementById("text-add-block-btn").addEventListener("click", () => addTextBlockAndEdit());
 document.getElementById("text-delete").addEventListener("click", () => deleteSelectedTextBlock());
+document.getElementById("text-duplicate").addEventListener("click", () => {
+  const b = currentTextBlock();
+  if (b) duplicateTextBlock(b.id);
+});

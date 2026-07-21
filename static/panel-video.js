@@ -67,6 +67,7 @@ UI.divider(document.getElementById("video-order-divider"));
         } });
 
     document.getElementById("video-delete").onclick = () => deleteClip(c.id);
+    document.getElementById("video-duplicate").onclick = () => duplicateClip(c.id);
   }
 
   // Removes a clip from the sequence: renumbers the remaining clips' `order` so no gaps appear,
@@ -119,8 +120,22 @@ UI.divider(document.getElementById("video-order-divider"));
     renderTimeline();
   }
 
+  // Deep-copies a clip, inserting it immediately after the original (order+1), and selects it.
+  async function duplicateClip(clipId) {
+    const c = project.clips.find((x) => x.id === clipId);
+    if (!c) return;
+    project.clips.forEach((x) => { if (x.order > c.order) x.order += 1; });
+    const copy = { ...c, id: crypto.randomUUID().replaceAll("-", ""), order: c.order + 1 };
+    project.clips.push(copy);
+    if (clipDurations[c.id] !== undefined) clipDurations[copy.id] = clipDurations[c.id];
+    await saveProject();
+    Preview.load(project);
+    select(copy);   // sets selected, opens VIDEO panel on the copy, renders + renderTimeline
+  }
+
   window.VideoPanel.render = render;
   window.VideoPanel.select = select;
   window.VideoPanel.deleteClip = deleteClip;
   window.VideoPanel.moveClip = moveClip;
+  window.VideoPanel.duplicateClip = duplicateClip;
 })();

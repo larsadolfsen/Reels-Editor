@@ -440,6 +440,12 @@ document.addEventListener("keydown", (e) => {
   const mod = e.ctrlKey || e.metaKey;
   if (mod && (e.key === "z" || e.key === "Z") && !e.shiftKey) { e.preventDefault(); undoEdit(); return; }
   if (mod && ((e.key === "z" || e.key === "Z") && e.shiftKey || e.key === "y" || e.key === "Y")) { e.preventDefault(); redoEdit(); return; }
+  if (mod && (e.key === "d" || e.key === "D")) {
+    e.preventDefault();
+    if (selected && selected.type === "video") VideoPanel.duplicateClip(selected.item.id);
+    else if (selected && selected.type === "text") duplicateTextBlock(selected.item.id);
+    return;
+  }
   if (e.key === "ArrowLeft") { e.preventDefault(); nudgeTime(-0.1); }
   else if (e.key === "ArrowRight") { e.preventDefault(); nudgeTime(0.1); }
   else if (e.key === "ArrowUp") { e.preventDefault(); if (Preview.isPaused()) Preview.play(); else Preview.pause(); }
