@@ -1,4 +1,4 @@
-// TEXT context-panel section: renders the FONT/STYLES/BOX/TIME accordions for the selected
+// TEXT context-panel section: renders the FONT/STYLES/BOX/TIME tab bar (UI.tabBar) for the selected
 // text block (empty-state aware when zero blocks exist), plus the stage resize/move handlers.
 // Plain globals (renderTextPanel, currentTextBlock, selectTextBlock, addTextBlock, ...) shared
 // with text-panel-*.js; reaches into editor.js's `project`/`saveProject`/`selected`/`showPanel` globals.
@@ -249,10 +249,30 @@ async function handleBoxMoveEnd(preset, { dx, dy }) {
   await renderTextPanel();
 }
 
-UI.accordionSection(document.getElementById("text-style-accordion"), document.getElementById("text-style-body"), { title: "STYLES", expanded: false });
-UI.accordionSection(document.getElementById("text-font-accordion"), document.getElementById("text-font-body"), { title: "FONT", expanded: false });
-UI.accordionSection(document.getElementById("text-box-accordion"), document.getElementById("text-box-body"), { title: "BOX", expanded: false });
-UI.accordionSection(document.getElementById("text-time-accordion"), document.getElementById("text-time-body"), { title: "TIME", expanded: false });
+const TEXT_TAB_ICON_STYLE = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.622 17.897-10.68-2.913"/><path d="M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z"/><path d="M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15"/></svg>';
+const TEXT_TAB_ICON_DESIGN = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>';
+const TEXT_TAB_ICON_BOX = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 7a24 24 0 0 1 0 10"/><path d="M4.5 7a24 24 0 0 0 0 10"/><path d="M7 19.5a24 24 0 0 0 10 0"/><path d="M7 4.5a24 24 0 0 1 10 0"/><rect x="17" y="17" width="5" height="5" rx="1"/><rect x="17" y="2" width="5" height="5" rx="1"/><rect x="2" y="17" width="5" height="5" rx="1"/><rect x="2" y="2" width="5" height="5" rx="1"/></svg>';
+const TEXT_TAB_ICON_TIME = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>';
+
+const TEXT_TABS = [
+  { value: "style", icon: TEXT_TAB_ICON_STYLE, label: "Style" },
+  { value: "design", icon: TEXT_TAB_ICON_DESIGN, label: "Design" },
+  { value: "box", icon: TEXT_TAB_ICON_BOX, label: "Box" },
+  { value: "time", icon: TEXT_TAB_ICON_TIME, label: "Time" },
+];
+const textTabPanes = {
+  style: document.getElementById("text-style-body"),
+  design: document.getElementById("text-font-body"),
+  box: document.getElementById("text-box-body"),
+  time: document.getElementById("text-time-body"),
+};
+let activeTextTab = "style";
+function showTextTab(value) {
+  activeTextTab = value;
+  Object.entries(textTabPanes).forEach(([k, el]) => { el.hidden = k !== value; });
+}
+UI.tabBar(document.getElementById("text-tab-bar"), TEXT_TABS, activeTextTab, showTextTab);
+showTextTab(activeTextTab);
 
 UI.divider(document.getElementById("text-box-width-height-divider"));
 UI.divider(document.getElementById("text-box-background-border-divider"));
