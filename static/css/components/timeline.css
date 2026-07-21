@@ -255,3 +255,23 @@
   border-color: var(--accent);
   color: var(--text);
 }
+
+/* Drag-to-reorder (static/timeline-clip-drag.js): the dragged block follows the pointer via
+   `transform`, and a thin vertical line shows the snap-to-boundary drop target. */
+.timeline-row[data-row="video"] .timeline-block.dragging {
+  z-index: 5;
+  opacity: 0.85;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  cursor: grabbing;
+}
+
+.clip-drop-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  display: none;
+  pointer-events: none;
+  z-index: 4;
+}
