@@ -255,7 +255,9 @@ function reRenderAfterRestore() {
     if (box) onTimelineSelect({ type: "video-box", item: box }); else openFilesPanel();
   } else if (t === "text") {
     openTextPanel();      // renderTextPanel()/currentTextBlock() self-heal to first block or empty state
-  } else if (t === "captions") {
+  } else if (t === "captions" || t === "caption") {
+    // "caption" (singular) is a selected caption group from a timeline click (onTimelineSelect);
+    // "captions" (plural) is the panel-nav CAPTIONS entry with nothing specific selected.
     openCaptionsPanel();
   } else if (t && PANEL_NAV_HANDLERS[t]) {
     PANEL_NAV_HANDLERS[t]();
