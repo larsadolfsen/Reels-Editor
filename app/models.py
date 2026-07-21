@@ -13,7 +13,7 @@ class MediaItem(BaseModel):
     name: str = ""
     duration: float
     has_audio: bool = True
-    kind: str = "video"  # "video" or "image"
+    kind: str = "video"  # "video" | "image" | "audio" — "audio" for imported music files (mp3/wav/m4a/aac/ogg/flac), decided at import time from the file extension
 
     @property
     def display_name(self) -> str:
@@ -32,6 +32,8 @@ class ClipLayer(BaseModel):
     order: int
     fill_mode: str = "fit"  # "fit" (letterbox, default) or "fill" (center-crop, no padding)
     speed: float = Field(default=1.0, gt=0)  # playback speed multiplier (UI clamps 0.5-2.0); gt=0 guards clip_duration's divide. timeline duration = (out-in)/speed
+    volume: float = Field(default=1.0, ge=0.0, le=2.0)  # UI clamps 0.0-2.0; export volume=<v> filter, preview clamps to <=1.0 (HTML5 audio cap)
+    muted: bool = False
 
 class VideoBoxLayer(BaseModel):
     id: str = Field(default_factory=new_id)
@@ -129,6 +131,13 @@ class CaptionTrack(BaseModel):
     z_index: int = 0
     preset_id: str = Field(default_factory=new_id)   # points at a TextPreset, same pattern as TextBlockLayer.preset_id
 
+class MusicTrack(BaseModel):
+    id: str = Field(default_factory=new_id)
+    media_id: str          # links to a MediaItem with kind="audio" in project.media_library
+    volume: float = Field(default=0.3, ge=0.0, le=2.0)
+    muted: bool = False
+    # Timing is fixed: starts at timeline t=0, cut at reel end. No loop/trim/start-offset in v1.
+
 class Project(BaseModel):
     id: str = Field(default_factory=new_id)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -143,6 +152,7 @@ class Project(BaseModel):
     text_blocks: list[TextBlockLayer] = []
     text_presets: dict[str, TextPreset] = {}
     captions: CaptionTrack | None = None
+    music: MusicTrack | None = None
     export_filename: str = ""
     export_quality: str = "high"
 

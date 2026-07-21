@@ -203,6 +203,27 @@ def test_media_item_name_round_trip():
     m = MediaItem(file_path="clip.mp4", name="Custom Name", duration=5.0)
     assert MediaItem.model_validate_json(m.model_dump_json()).name == "Custom Name"
 
+def test_clip_layer_volume_and_muted_defaults():
+    from app.models import ClipLayer
+    c = ClipLayer(media_id="m1", file_path="a.mp4", out_point=2, order=0)
+    assert c.volume == 1.0
+    assert c.muted is False
+
+def test_clip_layer_volume_and_muted_round_trip():
+    from app.models import ClipLayer
+    c = ClipLayer(media_id="m1", file_path="a.mp4", out_point=2, order=0, volume=1.5, muted=True)
+    loaded = ClipLayer.model_validate_json(c.model_dump_json())
+    assert loaded.volume == 1.5
+    assert loaded.muted is True
+
+def test_clip_layer_old_saved_json_without_volume_fields_loads_with_defaults():
+    from app.models import ClipLayer
+    import json
+    old_json = json.dumps({"id": "x", "media_id": "m1", "file_path": "a.mp4", "out_point": 2, "order": 0})
+    loaded = ClipLayer.model_validate_json(old_json)
+    assert loaded.volume == 1.0
+    assert loaded.muted is False
+
 def test_media_item_kind_defaults_to_video():
     from app.models import MediaItem
     m = MediaItem(file_path="a.mp4", duration=2.0)
@@ -212,3 +233,37 @@ def test_media_item_kind_accepts_image():
     from app.models import MediaItem
     m = MediaItem(file_path="a.jpg", duration=0.0, has_audio=False, kind="image")
     assert m.kind == "image"
+
+def test_media_item_kind_accepts_audio():
+    from app.models import MediaItem
+    m = MediaItem(file_path="song.mp3", duration=120, kind="audio")
+    loaded = MediaItem.model_validate_json(m.model_dump_json())
+    assert loaded.kind == "audio"
+
+def test_music_track_defaults():
+    from app.models import MusicTrack
+    t = MusicTrack(media_id="m1")
+    assert t.volume == 0.3
+    assert t.muted is False
+    assert isinstance(t.id, str) and t.id
+
+def test_project_music_defaults_to_none():
+    from app.models import Project
+    p = Project(name="r")
+    assert p.music is None
+
+def test_project_music_round_trip():
+    from app.models import Project, MusicTrack
+    p = Project(name="r", music=MusicTrack(media_id="m1", volume=0.5, muted=True))
+    loaded = Project.model_validate_json(p.model_dump_json())
+    assert loaded.music is not None
+    assert loaded.music.media_id == "m1"
+    assert loaded.music.volume == 0.5
+    assert loaded.music.muted is True
+
+def test_project_old_saved_json_without_music_loads_as_none():
+    from app.models import Project
+    import json
+    old_json = json.dumps({"id": "x", "name": "r"})
+    loaded = Project.model_validate_json(old_json)
+    assert loaded.music is None
