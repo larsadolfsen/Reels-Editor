@@ -13,7 +13,7 @@ class MediaItem(BaseModel):
     name: str = ""
     duration: float
     has_audio: bool = True
-    kind: str = "video"  # "video" or "image"
+    kind: str = "video"  # "video" | "image" | "audio" — "audio" for imported music files (mp3/wav/m4a/aac/ogg/flac), decided at import time from the file extension
 
     @property
     def display_name(self) -> str:

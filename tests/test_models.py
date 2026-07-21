@@ -233,3 +233,9 @@ def test_media_item_kind_accepts_image():
     from app.models import MediaItem
     m = MediaItem(file_path="a.jpg", duration=0.0, has_audio=False, kind="image")
     assert m.kind == "image"
+
+def test_media_item_kind_accepts_audio():
+    from app.models import MediaItem
+    m = MediaItem(file_path="song.mp3", duration=120, kind="audio")
+    loaded = MediaItem.model_validate_json(m.model_dump_json())
+    assert loaded.kind == "audio"
