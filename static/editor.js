@@ -63,7 +63,8 @@ async function confirmFlushAndSwitch(action) {
 
 function renderTimeline() {
   const t = parseFloat(document.getElementById("time").textContent) || 0;
-  Timeline.render(project, t, selected, onTimelineSelect);
+  Timeline.render(project, t, selected, onTimelineSelect,
+    { onAddClip: () => addClip(), onAddText: () => addTextBlockAndEdit() });
 }
 
 function showPanel(type) {
@@ -379,7 +380,7 @@ function nudgeTime(delta) {
   const cur = parseFloat(document.getElementById("time").textContent) || 0;
   const t = Math.max(0, cur + delta);
   Preview.seek(t);
-  Timeline.render(project, t, selected, onTimelineSelect);
+  renderTimeline();
 }
 
 document.getElementById("step-back").addEventListener("click", () => nudgeTime(-0.1));

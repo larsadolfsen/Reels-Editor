@@ -232,3 +232,26 @@
   background: var(--text-dim);
   border-radius: 1px;
 }
+
+/* + add button at the end of the VIDEO/TEXT row content */
+.row-add-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 6px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.row-add-btn:hover {
+  border-style: solid;
+  border-color: var(--accent);
+  color: var(--text);
+}

@@ -2,6 +2,8 @@
 // perform a native text selection (reported via onSelectionChange, for rich-text range formatting),
 // or click-drag over empty box padding to move the element. Mirrors ui-resize-handles.js's shape (a
 // standalone interaction handler preview.js mounts/unmounts per-element via a callback object).
+// Returns { enterEditMode } so a caller can programmatically enter edit mode (e.g. immediately
+// after creating a new text block), not just on user click.
 window.UI = window.UI || {};
 
 window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput, onEditEnd, onMove, onMoveEnd, onSelectionChange } = {}) {
@@ -65,4 +67,6 @@ window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
   });
+
+  return { enterEditMode };
 };

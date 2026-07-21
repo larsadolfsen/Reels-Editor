@@ -6,6 +6,9 @@
 // and a scissors icon (visual only, no slice feature yet).
 // Fixed pixels-per-second scale (not stretched to container width) so content is always
 // readable; #timeline-scroll provides horizontal scroll when content exceeds the viewport.
+// render()'s 5th `actions = {}` param ({ onAddClip, onAddText }) renders a small dashed "+"
+// button after the VIDEO row's clip sequence / TEXT row's last block (at x=0 when empty),
+// giving a visible way to add a clip/text block beyond the console.
 // Exposes window.Timeline.{render, groupWords, timeAtX, tick}. tick() is a cheap
 // playhead-only update driven every animation frame during playback (see editor.js),
 // so motion stays smooth between the heavier full render() calls. Depends on Preview (preview.js).
@@ -111,6 +114,20 @@ window.Timeline = (() => {
     return el;
   }
 
+  // Small + button appended after a row's content (VIDEO: end of the clip sequence,
+  // TEXT: after the last block). Only rendered when the caller passes the action.
+  function addRowAddButton(track, left, label, onClick) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "row-add-btn";
+    btn.title = label;
+    btn.setAttribute("aria-label", label);
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
+    btn.style.left = `${left}px`;
+    btn.addEventListener("click", (e) => { e.stopPropagation(); onClick(); });
+    track.appendChild(btn);
+  }
+
   function addBlock(track, left, width, label, selected, onClick) {
     const div = document.createElement("div");
     div.className = "timeline-block" + (selected ? " selected" : "");
@@ -135,7 +152,7 @@ window.Timeline = (() => {
     }
   }
 
-  function render(project, timelineTime, selected, onSelect) {
+  function render(project, timelineTime, selected, onSelect, actions = {}) {
     const clips = ordered(project.clips || []);
     const duration = totalDuration(project);
     lastDuration = duration;
@@ -165,6 +182,7 @@ window.Timeline = (() => {
       addBlock(videoTrack, acc * PX_PER_SEC, d * PX_PER_SEC, name, isSel, () => onSelect({ type: "video", item: c }));
       acc += d;
     }
+    if (actions.onAddClip) addRowAddButton(videoTrack, acc * PX_PER_SEC, "Add clip", actions.onAddClip);
 
     const textTrack = clearTrack("row-text");
     for (const b of project.text_blocks || []) {
@@ -172,6 +190,8 @@ window.Timeline = (() => {
       addBlock(textTrack, b.start * PX_PER_SEC, (b.end - b.start) * PX_PER_SEC, b.heading, isSel,
         () => onSelect({ type: "text", item: b }));
     }
+    const textEnd = (project.text_blocks || []).reduce((m, b) => Math.max(m, b.end), 0);
+    if (actions.onAddText) addRowAddButton(textTrack, textEnd * PX_PER_SEC, "Add text", actions.onAddText);
 
     const videoBoxTrack = clearTrack("row-videobox");
     for (const v of project.video_boxes || []) {

@@ -1,8 +1,10 @@
 // Stage text-block overlay rendering + selection state: composites one .text-block div per
 // visible text block into #overlay (rich-text runs, box background/border, BOX FILL auto-sizing),
 // and owns click-to-edit/drag-to-move/drag-to-select wiring plus the active format-range selection
-// consumed by the FONT accordion. Exposes window.PreviewText.{renderText, setSelectedTextBlock,
-// getActiveFormatSelection, setOnStageTextActivate}.
+// consumed by the FONT accordion. Also tracks the per-block UI.textInteraction() handle (keyed by
+// block id, cleared/rebuilt each renderText() call) so a newly-created block can be dropped
+// straight into on-stage edit mode via enterEditMode(blockId). Exposes window.PreviewText.
+// {renderText, setSelectedTextBlock, getActiveFormatSelection, setOnStageTextActivate, enterEditMode}.
 window.PreviewText = (() => {
   let textProject = null;
   let textPresets = {};
@@ -13,6 +15,7 @@ window.PreviewText = (() => {
   let onStageTextActivate = null;
   let activeFormatSelection = null;
   const fitCache = new Map(); // blockId -> { key: string, size: number }
+  const interactionHandles = new Map(); // blockId -> UI.textInteraction() return handle
   const overlay = document.getElementById("overlay");
   const stage = document.getElementById("stage");
 
@@ -43,6 +46,7 @@ window.PreviewText = (() => {
   function renderText(project, presets, timelineTime) {
     textProject = project;
     textPresets = presets;
+    interactionHandles.clear();
     const keepEditingDiv = editingDiv && overlay.contains(editingDiv);
     overlay.querySelectorAll(".text-block").forEach((el) => { if (el !== editingDiv) el.remove(); });
     if (keepEditingDiv) {
@@ -138,7 +142,7 @@ window.PreviewText = (() => {
       // cursor and always be one click away from edit mode.
       div.style.pointerEvents = "auto";
       div.style.cursor = "text";
-      UI.textInteraction(div, {
+      interactionHandles.set(block.id, UI.textInteraction(div, {
         onEditStart: () => {
           editingBlockId = block.id;
           editingDiv = div;
@@ -167,7 +171,7 @@ window.PreviewText = (() => {
           activeFormatSelection = { blockId: block.id, start: offsets.start, end: offsets.end };
           if (boxResizeCallbacks && boxResizeCallbacks.onSelectionChange) boxResizeCallbacks.onSelectionChange(activeFormatSelection);
         },
-      });
+      }));
       if (block.id === selectedTextBlockId && boxResizeCallbacks) {
         UI.resizeHandles(div, {
           getSize: () => ({ width: div.offsetWidth, height: div.offsetHeight }),
@@ -193,5 +197,10 @@ window.PreviewText = (() => {
     return activeFormatSelection;
   }
 
-  return { renderText, setSelectedTextBlock, getActiveFormatSelection, setOnStageTextActivate };
+  function enterEditMode(blockId) {
+    const h = interactionHandles.get(blockId);
+    if (h) h.enterEditMode();
+  }
+
+  return { renderText, setSelectedTextBlock, getActiveFormatSelection, setOnStageTextActivate, enterEditMode };
 })();
