@@ -1,4 +1,4 @@
-// CAPTIONS panel FONT accordion: SIZE/Italic/Underline/Color/Outline controls, whole-track
+// CAPTIONS panel Design tab: SIZE/Italic/Underline/Color/Outline controls, whole-track
 // caption styling. Exposes window.CaptionPanel.renderFontStyle().
 window.CaptionPanel = window.CaptionPanel || {};
 

@@ -1,4 +1,4 @@
-// TEXT panel FONT accordion: SIZE/Bold/Italic/Underline/Color/Outline controls. When a stage text
+// TEXT panel Design tab: SIZE/Bold/Italic/Underline/Color/Outline controls. When a stage text
 // selection is active (Preview.getActiveFormatSelection()), each control writes/updates a
 // per-range FormatRun on the block instead of the whole-block base preset (upsertFormatRun);
 // otherwise it falls back to the old whole-block behavior. Exposes window.TextPanel.renderFontStyle().

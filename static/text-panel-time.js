@@ -1,4 +1,4 @@
-// TEXT panel TIME accordion: block start/end seconds. Exposes window.TextPanel.renderTime().
+// TEXT panel Time tab: block start/end seconds. Exposes window.TextPanel.renderTime().
 window.TextPanel = window.TextPanel || {};
 
 window.TextPanel.renderTime = function renderTime() {

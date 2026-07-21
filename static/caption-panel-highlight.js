@@ -1,4 +1,4 @@
-// CAPTIONS panel HIGHLIGHT accordion: karaoke mode toggle, highlight color, max words per
+// CAPTIONS panel Design tab (HIGHLIGHT group): karaoke mode toggle, highlight color, max words per
 // line — captions-only controls with no TEXT-panel equivalent. Exposes
 // window.CaptionPanel.renderHighlight().
 window.CaptionPanel = window.CaptionPanel || {};

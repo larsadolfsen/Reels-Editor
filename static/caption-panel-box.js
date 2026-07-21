@@ -1,4 +1,4 @@
-// CAPTIONS panel BOX accordion: width/height SIZE mode, background/border, TEXT ALIGN, and
+// CAPTIONS panel Box tab: width/height SIZE mode, background/border, TEXT ALIGN, and
 // absolute POSITION fields — same shape as editor.js's renderBoxPanel() + text-panel-align.js
 // + text-panel-position.js combined, pointed at the caption track's preset.
 window.CaptionPanel = window.CaptionPanel || {};

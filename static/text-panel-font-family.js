@@ -1,4 +1,4 @@
-// TEXT panel FONT accordion: font-family row + drill-down subpanel. Pure UI over TextPreset.font.
+// TEXT panel Design tab: font-family row + drill-down subpanel. Pure UI over TextPreset.font.
 // Exposes window.TextPanel.renderFontFamily(). No bundler — reaches directly into editor.js's
 // globals (currentTextBlock, ensureTextPreset, saveProject, renderTextPreview, project, AVAILABLE_FONTS),
 // same pattern renderBoxPanel() already uses.

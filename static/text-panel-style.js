@@ -1,4 +1,4 @@
-// TEXT panel STYLE accordion: saved-style preset library — save current style as new, most-used
+// TEXT panel Style tab: saved-style preset library — save current style as new, most-used
 // inline list, browse-all drill-down. Exposes window.TextPanel.renderStyle()/loadSavedPresets().
 // Distinct from project.text_presets (per-block live working style) — this is the separate global
 // library persisted via GET/POST /api/presets (app/main.py).
