@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="/static/css/components/project-picker.css">
 <link rel="stylesheet" href="/static/css/components/video-box-panel.css">
 <link rel="stylesheet" href="/static/css/components/layers-panel.css">
+<link rel="stylesheet" href="/static/css/components/export-progress.css">
 </head><body>
 <div id="app">
   <main>
@@ -378,6 +379,9 @@
 
         <div class="style-group">
           <button id="export" class="col-8">EXPORT &middot; 1080&times;1920</button>
+        </div>
+        <div id="export-progress" class="export-progress" hidden>
+          <div id="export-progress-fill" class="export-progress-fill"></div>
         </div>
         <div id="export-result"></div>
       </div>
