@@ -62,6 +62,12 @@ The AUDIO timeline row is a fake waveform and there is no audio control at all. 
 - `test_models.py`: new fields' defaults; old project JSON loads.
 - Manual: volume/mute audible in preview and export; music plays under clips, cut at reel end; AUDIO row shows real waveforms aligned with speech.
 
+## Design decisions confirmed 2026-07-21
+
+- **amix normalization:** use ffmpeg's default `amix=inputs=2:duration=first` (no `normalize=0`). Default behavior scales each input down by input count, so a clip at volume=1.0 mixed with music will sound quieter than clip-only playback. Ship this first; if manual testing shows the mix is too quiet or the volume slider doesn't feel 1:1, revisit with `normalize=0` as a follow-up fix rather than blocking this implementation on it.
+- **Peaks cache invalidation:** absence-only (no mtime/hash check) is safe — confirmed `MediaItem.file_path` is never repointed at different bytes after import, matching the existing `has_audio` probe-once-at-import pattern.
+- **Batch split:** five batches, each its own plan file: (1) data model + persistence, (2) export per-clip volume filters, (3) export music input/amix, (4) preview `<audio>` sync + clip volume/mute, (5a) peaks route + waveform row, (5b) VIDEO panel VOLUME group, (5c) AUDIO panel + music import. (Spec's Tasks section already lists 8 fine-grained tasks; plan files will group them into the 5 subsystem batches named in the task instructions, with export split into two batches per the two `amix`-related tasks.)
+
 ## Out of scope
 
 - Automatic ducking.
