@@ -1,6 +1,16 @@
 // VIDEO context-panel section: trim/order/fill-mode/delete for the selected clip. Exposes
-// window.VideoPanel.render()/select()/deleteClip()/moveClip().
+// window.VideoPanel.render()/select()/deleteClip()/moveClip(), plus the shared clampTrim()
+// helper (also used by panel-video-box.js).
 window.VideoPanel = window.VideoPanel || {};
+
+function clampTrim(inP, outP, dur) {
+  inP = Math.max(0, Math.min(inP, dur));
+  outP = Math.max(0, Math.min(outP, dur));
+  if (outP <= inP) outP = Math.min(dur, inP + 0.1);
+  return { in_point: inP, out_point: outP };
+}
+
+UI.divider(document.getElementById("video-order-divider"));
 
 (() => {
   function render(c) {

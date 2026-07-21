@@ -40,82 +40,6 @@ async function openProject(target) {
   openFilesPanel();
 }
 
-function defaultCaptionPreset(id) {
-  return {
-    id, name: "Caption", font: "Public Sans", size_px: 72, color: "#FFFFFF",
-    outline_color: "#000000", outline_px: 4, weight: 400, italic: false, underline: false,
-    box_width_mode: "fit", box_height_mode: "fit", box_width: 0, box_height: 0,
-    box_background: false, box_background_color: "#000000", box_background_opacity: 100,
-    box_border_width: 0, box_border_color: "#FFFFFF", box_border_radius: 0,
-    align: "center", x: 540, y: 1520, entrance: "none",
-    highlight_color: "#FFD400", highlight_mode: "current_word", max_words_per_line: 4,
-  };
-}
-
-function ensureCaptionPreset(id) {
-  if (!project.text_presets[id]) {
-    project.text_presets[id] = defaultCaptionPreset(id);
-  }
-  return project.text_presets[id];
-}
-
-function ensureCaptionTrack() {
-  let track = project.captions;
-  if (!track) {
-    track = {
-      id: crypto.randomUUID().replaceAll("-", ""), words: [], z_index: 0,
-      preset_id: crypto.randomUUID().replaceAll("-", ""),
-    };
-    project.captions = track;
-  }
-  ensureCaptionPreset(track.preset_id);
-  return track;
-}
-
-function renderCaptionPreview() {
-  if (window.Preview && Preview.renderCaptions) {
-    Preview.renderCaptions(project, project.text_presets, Preview.currentTimelineTime());
-  }
-}
-
-async function renderCaptionPanel() {
-  document.getElementById("panel-captions-font").hidden = true;
-  document.getElementById("panel-captions-weight").hidden = true;
-  document.getElementById("panel-captions-style").hidden = true;
-  document.getElementById("panel-captions-words").hidden = true;
-  document.getElementById("panel-captions-main").hidden = false;
-
-  const track = ensureCaptionTrack();
-  document.getElementById("caption-empty-state").hidden = track.words.length > 0;
-
-  CaptionPanel.renderStyle();
-  CaptionPanel.renderFontFamily();
-  await CaptionPanel.renderFontWeight();
-  CaptionPanel.renderFontStyle();
-  CaptionPanel.renderBox();
-  CaptionPanel.renderHighlight();
-  CaptionPanel.renderWords();
-
-  renderCaptionPreview();
-}
-
-UI.accordionSection(document.getElementById("caption-style-accordion"), document.getElementById("caption-style-body"), { title: "STYLE", expanded: false });
-UI.accordionSection(document.getElementById("caption-font-accordion"), document.getElementById("caption-font-body"), { title: "FONT", expanded: false });
-UI.accordionSection(document.getElementById("caption-box-accordion"), document.getElementById("caption-box-body"), { title: "BOX", expanded: false });
-UI.accordionSection(document.getElementById("caption-highlight-accordion"), document.getElementById("caption-highlight-body"), { title: "HIGHLIGHT", expanded: false });
-
-UI.divider(document.getElementById("video-order-divider"));
-UI.divider(document.getElementById("caption-box-width-height-divider"));
-UI.divider(document.getElementById("caption-box-background-border-divider"));
-UI.divider(document.getElementById("caption-box-border-position-divider"));
-
-function clampTrim(inP, outP, dur) {
-  inP = Math.max(0, Math.min(inP, dur));
-  outP = Math.max(0, Math.min(outP, dur));
-  if (outP <= inP) outP = Math.min(dur, inP + 0.1);
-  return { in_point: inP, out_point: outP };
-}
-
 const saveIndicator = UI.saveIndicator(document.getElementById("save-indicator"));
 
 async function saveProject() {
@@ -318,99 +242,6 @@ Preview.setOnStageTextActivate((blockId) => {
   openTextPanel();
 });
 
-// Inserts a new main-sequence ClipLayer at `dropTime` from any source carrying
-// media_id/file_path/in_point/out_point (a video box or a media-library drag): if the
-// drop point lands inside an existing clip, that clip splits into two (same media, trimmed
-// halves) with the new clip inserted between them; otherwise it inserts at the nearest clip
-// boundary. Mutates project.clips in place; returns the new clip.
-function insertClipIntoSequence(source, dropTime) {
-  const ordered = [...project.clips].sort((a, b) => a.order - b.order);
-  let acc = 0;
-  let splitClip = null;
-  let splitAt = 0;
-  let insertOrder = ordered.length; // default: past the end of the sequence
-
-  for (const c of ordered) {
-    const d = c.out_point - c.in_point;
-    if (dropTime < acc + d) {
-      splitClip = c;
-      splitAt = c.in_point + (dropTime - acc);
-      insertOrder = c.order;
-      break;
-    }
-    acc += d;
-  }
-
-  // Dropping essentially at a clip's own start point needs no split — just insert before it.
-  if (splitClip && Math.abs(splitAt - splitClip.in_point) < 0.01) {
-    insertOrder = splitClip.order;
-    for (const c of project.clips) if (c.order >= insertOrder) c.order += 1;
-    splitClip = null;
-  } else if (splitClip) {
-    for (const c of project.clips) if (c.order > splitClip.order) c.order += 2;
-    const secondHalf = {
-      id: crypto.randomUUID().replaceAll("-", ""),
-      media_id: splitClip.media_id,
-      file_path: splitClip.file_path,
-      in_point: splitAt,
-      out_point: splitClip.out_point,
-      order: splitClip.order + 2,
-      fill_mode: splitClip.fill_mode,
-    };
-    splitClip.out_point = splitAt;
-    project.clips.push(secondHalf);
-    insertOrder = splitClip.order + 1;
-  } else {
-    for (const c of project.clips) if (c.order >= insertOrder) c.order += 1;
-  }
-
-  const newClip = {
-    id: crypto.randomUUID().replaceAll("-", ""),
-    media_id: source.media_id,
-    file_path: source.file_path,
-    in_point: source.in_point,
-    out_point: source.out_point,
-    order: insertOrder,
-    fill_mode: source.fill_mode || "fit",
-  };
-  project.clips.push(newClip);
-  return newClip;
-}
-
-// Drag-to-stitch: a video box dropped on the VIDEO row becomes a sequence clip and stops
-// being a box. Position/size/z_index are dropped (meaningless for a full-frame clip).
-function stitchVideoBoxIntoSequence(box, dropTime) {
-  insertClipIntoSequence(box, dropTime);
-  project.video_boxes = project.video_boxes.filter((v) => v.id !== box.id);
-}
-
-async function addClip() {
-  const path = await Api.pickFile();
-  if (!path) return;
-  const probeResult = await Api.probeMedia(path);
-  if (!probeResult) { alert("probe failed"); return; }
-  const { duration, has_audio } = probeResult;
-  const mediaId = crypto.randomUUID().replaceAll("-", "");
-  project.media_library.push({ id: mediaId, file_path: path, duration, has_audio });
-
-  const id = crypto.randomUUID().replaceAll("-", "");
-  clipDurations[id] = duration;
-  project.clips.push({
-    id,
-    media_id: mediaId,
-    file_path: path,
-    in_point: 0,
-    out_point: duration,
-    order: project.clips.length,
-  });
-  await saveProject();
-  MediaPanel.render();
-  Preview.load(project);
-  renderTimeline();
-}
-
-document.getElementById("add-clip").addEventListener("click", addClip);
-
 UI.button(document.getElementById("theme-toggle"), { variant: "icon" });
 UI.button(document.getElementById("export"), { variant: "accent" });
 
@@ -448,22 +279,6 @@ async function exportProject() {
 }
 
 document.getElementById("export").addEventListener("click", exportProject);
-
-document.getElementById("caption-auto-btn").addEventListener("click", async () => {
-  ensureCaptionTrack();
-  const btn = document.getElementById("caption-auto-btn");
-  btn.disabled = true;
-  btn.textContent = "Transcribing…";
-  try {
-    const res = await fetch(`/api/projects/${project.id}/transcribe`, { method: "POST" });
-    project = await res.json();
-    await renderCaptionPanel();
-    renderTimeline();
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Auto-caption";
-  }
-});
 
 (async () => {
   setSafeZonesVisible(localStorage.getItem("safeZonesVisible") === "1");
