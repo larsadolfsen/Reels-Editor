@@ -21,7 +21,7 @@
     const clips = [...(project.clips || [])].sort((a, b) => a.order - b.order);
     let acc = 0;
     for (const c of clips) {
-      const dur = c.out_point - c.in_point;
+      const dur = (c.out_point - c.in_point) / (c.speed || 1);
       boundaries.push(acc, acc + dur);
       acc += dur;
     }

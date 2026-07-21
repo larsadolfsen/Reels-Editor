@@ -51,7 +51,7 @@ window.Preview = (() => {
   }
 
   function clipDuration(c) {
-    return c.out_point - c.in_point;
+    return (c.out_point - c.in_point) / (c.speed || 1);
   }
 
   function sequenceDuration(list) {
@@ -62,7 +62,7 @@ window.Preview = (() => {
     let acc = 0;
     for (const c of ordered(list)) {
       const d = clipDuration(c);
-      if (t < acc + d) return { clip: c, src: c.in_point + (t - acc), acc };
+      if (t < acc + d) return { clip: c, src: c.in_point + (t - acc) * (c.speed || 1), acc };
       acc += d;
     }
     return null;
@@ -75,6 +75,7 @@ window.Preview = (() => {
     player.src = "/media?path=" + encodeURIComponent(c.file_path);
     player.onloadedmetadata = () => {
       player.currentTime = c.in_point;
+      player.playbackRate = c.speed || 1;
       player.play();
     };
     maybePreloadNext(index);
@@ -172,7 +173,7 @@ window.Preview = (() => {
     const c = clips[activeIndex];
     let t = 0;
     for (let i = 0; i < activeIndex; i++) t += clipDuration(clips[i]);
-    return t + (player.currentTime - c.in_point);
+    return t + (player.currentTime - c.in_point) / (c.speed || 1);
   }
 
   player.addEventListener("timeupdate", () => {
@@ -256,9 +257,10 @@ window.Preview = (() => {
       activeIndex = clips.indexOf(loc.clip);
       applyFillModeClass(loc.clip);
       player.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
-      player.onloadedmetadata = () => { player.currentTime = loc.src; };
+      player.onloadedmetadata = () => { player.currentTime = loc.src; player.playbackRate = loc.clip.speed || 1; };
     } else {
       player.currentTime = loc.src;
+      player.playbackRate = loc.clip.speed || 1;
     }
   }
 

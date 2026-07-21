@@ -72,11 +72,11 @@ UI.divider(document.getElementById("video-order-divider"));
     let start = 0;
     for (const clip of ordered) {
       if (clip.id === c.id) break;
-      start += clip.out_point - clip.in_point;
+      start += (clip.out_point - clip.in_point) / (clip.speed || 1);
     }
     const wasInside = (() => {
       const t = parseFloat(document.getElementById("time").textContent) || 0;
-      return t >= start && t < start + (c.out_point - c.in_point);
+      return t >= start && t < start + (c.out_point - c.in_point) / (c.speed || 1);
     })();
 
     project.clips = project.clips.filter((x) => x.id !== clipId);

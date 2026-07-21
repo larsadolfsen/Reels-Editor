@@ -21,7 +21,7 @@ window.Timeline = (() => {
     return [...list].sort((a, b) => a.order - b.order);
   }
   function clipDuration(c) {
-    return c.out_point - c.in_point;
+    return (c.out_point - c.in_point) / (c.speed || 1);
   }
   function sequenceDuration(clips) {
     return clips.reduce((sum, c) => sum + clipDuration(c), 0);

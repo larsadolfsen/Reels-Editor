@@ -16,10 +16,10 @@ function insertClipIntoSequence(source, dropTime) {
   let insertOrder = ordered.length; // default: past the end of the sequence
 
   for (const c of ordered) {
-    const d = c.out_point - c.in_point;
+    const d = (c.out_point - c.in_point) / (c.speed || 1);
     if (dropTime < acc + d) {
       splitClip = c;
-      splitAt = c.in_point + (dropTime - acc);
+      splitAt = c.in_point + (dropTime - acc) * (c.speed || 1);
       insertOrder = c.order;
       break;
     }
@@ -41,6 +41,7 @@ function insertClipIntoSequence(source, dropTime) {
       out_point: splitClip.out_point,
       order: splitClip.order + 2,
       fill_mode: splitClip.fill_mode,
+      speed: splitClip.speed || 1,
     };
     splitClip.out_point = splitAt;
     project.clips.push(secondHalf);
@@ -57,6 +58,7 @@ function insertClipIntoSequence(source, dropTime) {
     out_point: source.out_point,
     order: insertOrder,
     fill_mode: source.fill_mode || "fit",
+    speed: source.speed || 1,
   };
   project.clips.push(newClip);
   return newClip;
@@ -87,6 +89,7 @@ async function addClip() {
     in_point: 0,
     out_point: duration,
     order: project.clips.length,
+    speed: 1,
   });
   await saveProject();
   MediaPanel.render();

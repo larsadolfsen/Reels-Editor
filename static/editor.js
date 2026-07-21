@@ -108,7 +108,7 @@ async function onTimelineSelect({ type, item, groupIndex }) {
     let start = 0;
     for (const c of ordered) {
       if (c.id === item.id) break;
-      start += c.out_point - c.in_point;
+      start += (c.out_point - c.in_point) / (c.speed || 1);
     }
     Preview.seek(start);
     showPanel("video");
