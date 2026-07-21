@@ -295,3 +295,17 @@ def test_image_clip_speed_scales_loop_duration():
     cmd = build_export_cmd(p, "out.mp4")
     i = cmd.index("photo.jpg")
     assert cmd[i - 5:i - 1] == ["-loop", "1", "-t", "2"]  # 4s / 2x speed = 2s
+
+def test_image_clip_speed_setpts_not_double_applied():
+    # The `-t` on the looped input already encodes the speed-adjusted duration, so setpts must
+    # NOT also divide by speed again (that would halve the duration a second time: 4s/2/2 = 1s
+    # instead of the intended 2s).
+    p = Project(name="r",
+                media_library=[MediaItem(id="m0", file_path="photo.jpg", duration=0.0, has_audio=False, kind="image")],
+                clips=[ClipLayer(media_id="m0", file_path="photo.jpg", in_point=0, out_point=4, order=0, speed=2.0)])
+    cmd = build_export_cmd(p, "out.mp4")
+    i = cmd.index("photo.jpg")
+    assert cmd[i - 5:i - 1] == ["-loop", "1", "-t", "2"]
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "setpts=PTS-STARTPTS," in fc
+    assert "setpts=(PTS-STARTPTS)/2" not in fc

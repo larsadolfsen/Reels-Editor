@@ -36,7 +36,14 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
         else:
             cmd += ["-i", c.file_path]
         input_index += 1
-        setpts = f"(PTS-STARTPTS)/{_num(c.speed)}" if c.speed != 1.0 else "PTS-STARTPTS"
+        is_image = bool(media and media.kind == "image")
+        # Image clips already bake the speed-adjusted duration into the `-t` flag on the looped
+        # input above, so applying /speed to setpts here would double-apply it. Video clips still
+        # need the /speed setpts scaling since their input stream runs at native duration.
+        if is_image:
+            setpts = "PTS-STARTPTS"
+        else:
+            setpts = f"(PTS-STARTPTS)/{_num(c.speed)}" if c.speed != 1.0 else "PTS-STARTPTS"
         trim_prefix = f"[{v_idx}:v]trim=start={_num(c.in_point)}:end={_num(c.out_point)},setpts={setpts},"
         suffix = f",setsar=1,fps={p.fps}[v{i}];"
         if c.fill_mode == "fill":
