@@ -1,4 +1,4 @@
-// VIDEO context-panel section: trim/order/fill-mode/delete for the selected clip. Exposes
+// VIDEO context-panel section: trim/order/fill-mode/speed/delete for the selected clip. Exposes
 // window.VideoPanel.render()/select()/deleteClip()/moveClip(), plus the shared clampTrim()
 // helper (also used by panel-video-box.js).
 window.VideoPanel = window.VideoPanel || {};
@@ -56,6 +56,15 @@ UI.divider(document.getElementById("video-order-divider"));
         await saveProject();
         Preview.load(project);
       });
+
+    UI.numberField(document.getElementById("video-speed-field"),
+      { label: "SPEED", unit: "×", value: c.speed || 1, step: 0.1, min: 0.5, max: 2.0, decimals: 1, span: 8,
+        onChange: async (v) => {
+          c.speed = Math.max(0.5, Math.min(2.0, v));
+          await saveProject();
+          Preview.load(project);
+          renderTimeline();
+        } });
 
     document.getElementById("video-delete").onclick = () => deleteClip(c.id);
   }
