@@ -168,7 +168,7 @@ window.Timeline = (() => {
 
     const textTrack = clearTrack("row-text");
     for (const b of project.text_blocks || []) {
-      const isSel = !!selected && selected.type === "text" && selected.item.id === b.id;
+      const isSel = !!selected && selected.type === "text" && !!selected.item && selected.item.id === b.id;
       addBlock(textTrack, b.start * PX_PER_SEC, (b.end - b.start) * PX_PER_SEC, b.heading, isSel,
         () => onSelect({ type: "text", item: b }));
     }
