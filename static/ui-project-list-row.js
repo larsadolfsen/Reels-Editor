@@ -2,8 +2,9 @@
 // Depends on the .project-list-row CSS component, .icon-btn (button-group.css), and
 // UI.listRow() (ui-list-row.js) for the shared card/hover/selected styling. No app
 // state — callers own the project data and own persisting any change the callbacks report.
-// Reused by both the full-screen picker (open-only) and the in-editor PROJECTS panel
+// Reused by both the full-screen picker (open + delete) and the in-editor PROJECTS panel
 // (open + inline rename + delete + duplicate) — pass only the callbacks each context needs.
+// Action buttons (duplicate/delete) are hidden until the row is hovered (project-list-row.css).
 window.UI = window.UI || {};
 
 function formatRelativeProjectTime(isoString) {

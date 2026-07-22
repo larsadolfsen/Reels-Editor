@@ -1,7 +1,8 @@
 // Full-screen project picker, framework-free. Attaches to window.UI. Shown at cold start when
 // no valid localStorage.projectId is found — see api-ensure-project.js and editor.js.
 // Depends on the #project-picker CSS component, UI.projectListRow, and window.Api
-// (listProjects/createProject). No app state of its own — always re-fetches the list on mount.
+// (listProjects/createProject/deleteProject). No app state of its own — always re-fetches the
+// list on mount, including after a hover-revealed row delete.
 window.UI = window.UI || {};
 
 window.UI.projectPicker = async function projectPicker(container, { onOpen }) {
@@ -36,7 +37,14 @@ window.UI.projectPicker = async function projectPicker(container, { onOpen }) {
   } else {
     const list = document.createElement("ul");
     list.className = "project-picker-list project-list-row-list";
-    projects.forEach((p) => list.appendChild(UI.projectListRow(p, { onOpen: () => onOpen(p) })));
+    projects.forEach((p) => list.appendChild(UI.projectListRow(p, {
+      onOpen: () => onOpen(p),
+      onDelete: async () => {
+        if (!confirm(`Delete "${p.name}"? This can't be undone.`)) return;
+        await Api.deleteProject(p.id);
+        await window.UI.projectPicker(container, { onOpen });
+      },
+    })));
     wrap.appendChild(list);
   }
 
