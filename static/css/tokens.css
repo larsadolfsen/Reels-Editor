@@ -32,7 +32,7 @@
   --space-3: 16px;
   --space-4: 24px;
 
-  --radius: 2px;
+  --radius: 0px;
 
   --border-hover-width: 1px;
   --border-hover-color: var(--accent);
