@@ -6,14 +6,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2);
-  border-radius: 3px;
-  margin-bottom: var(--space-1);
-  background: var(--bg-2);
-  border: 1px solid var(--border-soft);
   cursor: grab;
 }
-.layers-list-row:hover { border-color: var(--border-hover-color); }
 .layers-list-row.dragging { opacity: 0.4; }
 
 .layers-list-row-type {
