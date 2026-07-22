@@ -2,6 +2,8 @@
 // grouped by type (videos, then images, each with a small section label — omitted when that
 // group is empty), click-to-select, hover-reveal inline rename (pencil icon) and remove (trash
 // icon, disabled with a usage-count chip when the media item is referenced by any ClipLayer).
+// Clip rows use UI.listRow()/list-row.css (static/ui-list-row.js) for shared card styling
+// (background/border/hover/selected); section-label rows are untouched by it.
 // Exposes window.MediaPanel.render().
 window.MediaPanel = window.MediaPanel || {};
 
@@ -52,11 +54,9 @@ window.MediaPanel = window.MediaPanel || {};
 
   function buildRow(m) {
     const li = document.createElement("li");
+    UI.listRow(li, { selected: selectedMediaId === m.id });
     li.draggable = true; // drag onto the timeline's VIDEO row to place this file as a clip
     li.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/media-id", m.id));
-    if (selectedMediaId === m.id) {
-      li.classList.add("selected");
-    }
 
     const thumb = document.createElement("div");
     thumb.className = "clip-thumb";
