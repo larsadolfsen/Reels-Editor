@@ -1,6 +1,8 @@
 // CAPTIONS panel Box tab: width/height SIZE mode, background/border, TEXT ALIGN, and
 // absolute POSITION fields — same shape as editor.js's renderBoxPanel() + text-panel-align.js
-// + text-panel-position.js combined, pointed at the caption track's preset.
+// + text-panel-position.js combined, pointed at the caption track's preset. POSITION anchor grid
+// shares panel-text.js's anchorPositionX/Y helpers + Preview.getCaptionBoxSize() (edge-flush
+// against the caption block's actual on-stage rendered size).
 window.CaptionPanel = window.CaptionPanel || {};
 
 window.CaptionPanel.renderBox = function renderBox() {
@@ -68,9 +70,17 @@ window.CaptionPanel.renderBox = function renderBox() {
 
   UI.buttonGroup(document.getElementById("caption-position-row-group"),
     [{ value: "top", label: "TOP", span: 3 }, { value: "mid", label: "MID", span: 2 }, { value: "btm", label: "BTM", span: 3 }],
-    null, (value) => { preset.y = POSITION_ANCHORS_Y[value]; saveProject(); renderCaptionPanel(); });
+    null, (value) => {
+      const size = Preview.getCaptionBoxSize();
+      preset.y = Math.round(anchorPositionY(value, size && size.height));
+      saveProject(); renderCaptionPanel();
+    });
 
   UI.buttonGroup(document.getElementById("caption-position-col-group"),
     [{ value: "left", label: "LEFT", span: 3 }, { value: "mid", label: "MID", span: 2 }, { value: "right", label: "RIGHT", span: 3 }],
-    null, (value) => { preset.x = POSITION_ANCHORS_X[value]; saveProject(); renderCaptionPanel(); });
+    null, (value) => {
+      const size = Preview.getCaptionBoxSize();
+      preset.x = Math.round(anchorPositionX(value, size && size.width));
+      saveProject(); renderCaptionPanel();
+    });
 };
