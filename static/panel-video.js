@@ -86,6 +86,30 @@ UI.divider(document.getElementById("video-order-divider"));
           renderTimeline();
         } });
 
+    UI.numberField(document.getElementById("video-volume-field"),
+      { label: "VOLUME", unit: "%", value: Math.round((c.volume ?? 1) * 100), step: 5, min: 0, max: 200, decimals: 0, span: 6,
+        onChange: async (v) => {
+          c.volume = Math.max(0, Math.min(2, v / 100));
+          await saveProject();
+          Preview.load(project);
+        } });
+
+    const muteBtn = document.getElementById("video-mute-btn");
+    const iconVolume = muteBtn.querySelector(".icon-volume");
+    const iconMuted = muteBtn.querySelector(".icon-volume-muted");
+    function updateMuteIcon() {
+      iconVolume.classList.toggle("icon-hidden", c.muted);
+      iconMuted.classList.toggle("icon-hidden", !c.muted);
+      muteBtn.setAttribute("aria-pressed", String(!!c.muted));
+    }
+    updateMuteIcon();
+    muteBtn.onclick = async () => {
+      c.muted = !c.muted;
+      updateMuteIcon();
+      await saveProject();
+      Preview.load(project);
+    };
+
     document.getElementById("video-delete").onclick = () => deleteClip(c.id);
     document.getElementById("video-duplicate").onclick = () => duplicateClip(c.id);
   }
