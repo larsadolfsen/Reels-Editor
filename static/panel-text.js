@@ -135,6 +135,7 @@ async function renderTextPanel() {
   TextPanel.renderFontFamily();
   await TextPanel.renderFontWeight();
   TextPanel.renderFontStyle();
+  TextPanel.renderOutline();
   TextPanel.renderStyle();
   renderBoxPanel();
   TextPanel.renderAlign();

@@ -1,5 +1,6 @@
-// CAPTIONS panel Design tab: SIZE/Italic/Underline/Color/Outline controls, whole-track
-// caption styling. Exposes window.CaptionPanel.renderFontStyle().
+// CAPTIONS panel Design tab: SIZE/Italic/Underline/Color controls, whole-track
+// caption styling (Outline lives in its own caption-panel-outline.js subpage,
+// same pattern as font family/weight). Exposes window.CaptionPanel.renderFontStyle().
 window.CaptionPanel = window.CaptionPanel || {};
 
 (() => {
@@ -62,12 +63,5 @@ window.CaptionPanel = window.CaptionPanel || {};
       { label: "Color", value: preset.color, span: 8,
         onChange: (v) => { preset.color = v; saveProject(); renderCaptionPreview(); } });
 
-    UI.colorSwatch(document.getElementById("caption-outline-color-field"),
-      { label: "Outline", value: preset.outline_color, span: 8,
-        onChange: (v) => { preset.outline_color = v; saveProject(); renderCaptionPreview(); } });
-
-    UI.numberField(document.getElementById("caption-outline-px-field"),
-      { label: "WIDTH", unit: "PX", value: preset.outline_px, min: 0, max: 20, span: 8,
-        onChange: (v) => { preset.outline_px = v; saveProject(); renderCaptionPreview(); } });
   };
 })();
