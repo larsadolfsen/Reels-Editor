@@ -100,6 +100,9 @@ window.PreviewText = (() => {
       div.style.borderWidth = (preset.box_border_width / 1080 * stageW) + "px";
       div.style.borderStyle = preset.box_border_width > 0 ? "solid" : "none";
       div.style.borderColor = preset.box_border_color;
+      div.style.textShadow = preset.shadow
+        ? `${preset.shadow_offset_x / 1920 * stageH}px ${preset.shadow_offset_y / 1920 * stageH}px ${preset.shadow_blur / 1920 * stageH}px ${preset.shadow_color}`
+        : "none";
       div.style.borderRadius = (preset.box_border_radius / 1080 * stageW) + "px";
 
       const widthIsBoxed = preset.box_width_mode === "fixed" || preset.box_width_mode === "fill";
