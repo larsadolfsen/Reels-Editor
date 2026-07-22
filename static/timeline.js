@@ -206,6 +206,11 @@ window.Timeline = (() => {
       `${formatTimeDeci(timelineTime)} / ${formatTimeDeci(duration)}`;
     updateSliceButton();
     TimelineAudioRow.render(project, px, () => renderTimeline());
+    const audioTrack = document.getElementById("row-audio");
+    if (!audioTrack.dataset.selectBound) {
+      audioTrack.dataset.selectBound = "1";
+      audioTrack.addEventListener("click", () => actions.onSelectAudio && actions.onSelectAudio());
+    }
 
     const scrollEl = document.getElementById("timeline-scroll");
     if (!scrollEl.dataset.sliceBound) {
