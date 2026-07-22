@@ -110,7 +110,7 @@ window.TextPanel = window.TextPanel || {};
     const preset = ensureTextPreset(currentTextBlock().preset_id);
     currentWeights = await Api.listFontWeights(preset.font);
     const current = currentWeights.find((w) => w.value === preset.weight);
-    const label = current ? current.label : String(preset.weight);
+    const label = `${current ? current.label : ""} ${preset.weight}`.trim();
     if (weightRowSetValue) {
       weightRowSetValue(label);
     } else {
