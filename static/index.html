@@ -4,6 +4,7 @@
 <link rel="stylesheet" href="/static/css/base.css">
 <link rel="stylesheet" href="/static/css/layout.css">
 <link rel="stylesheet" href="/static/css/components/button.css">
+<link rel="stylesheet" href="/static/css/components/panel-button.css">
 <link rel="stylesheet" href="/static/css/components/panel.css">
 <link rel="stylesheet" href="/static/css/components/stage.css">
 <link rel="stylesheet" href="/static/css/components/timeline.css">
@@ -129,7 +130,7 @@
       <div id="panel-files" class="context-panel">
         <div class="style-panel-header">FILES</div>
         <div id="panel-files-add">
-          <button id="add-clip"><span class="icon">+</span><span class="label">IMPORT MEDIA</span></button>
+          <button id="add-clip" class="panel-button panel-button-dashed"><span class="icon">+</span><span class="label">IMPORT MEDIA</span></button>
         </div>
         <ol id="clip-list"></ol>
       </div>
@@ -400,7 +401,7 @@
       <div id="panel-projects" class="context-panel" hidden>
         <div class="style-panel-header">PROJECTS</div>
         <div class="style-group">
-          <button id="project-create" class="new-project-btn col-8"><span class="icon">+</span><span class="label">NEW PROJECT</span></button>
+          <button id="project-create" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">NEW PROJECT</span></button>
         </div>
         <ul id="project-list" class="project-list-row-list"></ul>
       </div>
@@ -408,7 +409,7 @@
       <div id="panel-video-box" class="context-panel" hidden>
         <div class="style-panel-header">VIDEO BOX</div>
         <div class="style-group">
-          <button id="video-box-add" type="button" class="col-8"><span class="icon">+</span><span class="label">ADD VIDEO BOX</span></button>
+          <button id="video-box-add" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD VIDEO BOX</span></button>
         </div>
         <div id="video-box-picker" hidden>
           <ul id="video-box-picker-list" class="font-list"></ul>
@@ -456,7 +457,7 @@
       <div id="panel-audio" class="context-panel" hidden>
         <div class="style-panel-header">AUDIO</div>
         <div id="audio-empty-state" class="style-group">
-          <button id="audio-add-music" type="button" class="col-8"><span class="icon">+</span><span class="label">ADD MUSIC</span></button>
+          <button id="audio-add-music" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD MUSIC</span></button>
         </div>
         <div id="audio-detail" hidden>
           <div id="audio-music-name" class="context-panel-name"></div>
@@ -492,7 +493,7 @@
 
         <div id="text-empty-state" class="style-group" hidden>
           <p class="context-panel-name col-8">No text yet.</p>
-          <button id="text-add-block-btn" class="col-8" type="button">+ Add text</button>
+          <button id="text-add-block-btn" class="panel-button panel-button-dashed col-8" type="button">+ Add text</button>
         </div>
 
         <div id="text-accordions">

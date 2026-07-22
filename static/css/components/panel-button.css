@@ -1,0 +1,37 @@
+/* Full-width panel action buttons (right-hand context panels): plain action,
+   destructive (danger), and "add a new thing" (dashed) variants, all 33px
+   tall — the height measured from the pre-existing New Project button.
+   Exposes .panel-button, .panel-button-danger, .panel-button-dashed.
+   Depends on tokens.css. base.css's global button:hover rule provides the
+   plain variant's hover state; danger/dashed override it below. */
+.panel-button {
+  width: 100%;
+  height: 33px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.panel-button-danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.panel-button-dashed {
+  border-style: dashed;
+  color: var(--text-secondary);
+}
+.panel-button-dashed:hover {
+  color: var(--text);
+  border-color: var(--border-hover-color);
+  border-width: var(--border-hover-width);
+}

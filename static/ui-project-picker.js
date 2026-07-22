@@ -18,7 +18,7 @@ window.UI.projectPicker = async function projectPicker(container, { onOpen }) {
 
   const createBtn = document.createElement("button");
   createBtn.type = "button";
-  createBtn.className = "new-project-btn";
+  createBtn.className = "panel-button panel-button-dashed";
   createBtn.innerHTML = '<span class="icon">+</span><span class="label">NEW PROJECT</span>';
   createBtn.addEventListener("click", async () => {
     const name = prompt("Project name:");
