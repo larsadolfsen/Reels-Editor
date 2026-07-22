@@ -2,7 +2,7 @@
 # burned into the ffmpeg command when a project has text blocks, and skipped otherwise.
 from unittest.mock import patch
 from app import export_jobs
-from app.main import export_project, list_presets, create_preset, probe, sanitize_export_filename, resolve_export_path
+from app.main import export_project, list_presets, create_preset, probe, sanitize_export_filename, resolve_export_path, media_peaks
 from app.models import Project, TextBlockLayer, TextPreset, MediaItem
 
 def test_export_writes_ass_file_and_burns_it_in(tmp_path, monkeypatch):
@@ -224,3 +224,9 @@ def test_export_status_route_404_for_unknown_job():
     with pytest.raises(HTTPException) as exc_info:
         export_status("nonexistent")
     assert exc_info.value.status_code == 404
+
+def test_media_peaks_route_returns_peaks(monkeypatch):
+    monkeypatch.setattr("app.main.waveform.peaks_for_media",
+                         lambda media_id, file_path, data_dir, samples_per_second=10: [0.1, 0.2, 0.3])
+    result = media_peaks("abc123", "song.mp3")
+    assert result == [0.1, 0.2, 0.3]

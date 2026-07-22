@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack
-from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs
+from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
 DATA_DIR = Path("data")
@@ -77,6 +77,10 @@ def probe(path: str) -> dict:
     if media.is_image_path(path):
         return {"duration": 0.0, "has_audio": False, "kind": "image"}
     return {"duration": media.probe_duration(path), "has_audio": media.has_audio_stream(path), "kind": "video"}
+
+@app.get("/api/media/{media_id}/peaks")
+def media_peaks(media_id: str, path: str) -> list[float]:
+    return waveform.peaks_for_media(media_id, path, DATA_DIR)
 
 @app.get("/api/pick-file")
 def pick_file() -> dict:
