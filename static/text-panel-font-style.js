@@ -156,5 +156,37 @@ window.TextPanel = window.TextPanel || {};
           saveProject();
           renderTextPreview();
         } });
+
+    const shadowFieldsHidden = !preset.shadow;
+    document.getElementById("text-shadow-color-field").hidden = shadowFieldsHidden;
+    document.getElementById("text-shadow-offset-x-field").hidden = shadowFieldsHidden;
+    document.getElementById("text-shadow-offset-y-field").hidden = shadowFieldsHidden;
+    document.getElementById("text-shadow-blur-field").hidden = shadowFieldsHidden;
+
+    UI.buttonGroup(document.getElementById("text-shadow-toggle-group"),
+      [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
+      preset.shadow ? "on" : "off",
+      (value) => {
+        preset.shadow = value === "on";
+        saveProject();
+        renderTextPreview();
+        window.TextPanel.renderFontStyle();
+      });
+
+    UI.colorSwatch(document.getElementById("text-shadow-color-field"),
+      { label: "Shadow", value: preset.shadow_color, span: 8,
+        onChange: (v) => { preset.shadow_color = v; saveProject(); renderTextPreview(); } });
+
+    UI.numberField(document.getElementById("text-shadow-offset-x-field"),
+      { label: "OFFSET X", unit: "PX", value: preset.shadow_offset_x, min: -40, max: 40, span: 4,
+        onChange: (v) => { preset.shadow_offset_x = v; saveProject(); renderTextPreview(); } });
+
+    UI.numberField(document.getElementById("text-shadow-offset-y-field"),
+      { label: "OFFSET Y", unit: "PX", value: preset.shadow_offset_y, min: -40, max: 40, span: 4,
+        onChange: (v) => { preset.shadow_offset_y = v; saveProject(); renderTextPreview(); } });
+
+    UI.numberField(document.getElementById("text-shadow-blur-field"),
+      { label: "BLUR", unit: "PX", value: preset.shadow_blur, min: 0, max: 40, span: 8,
+        onChange: (v) => { preset.shadow_blur = v; saveProject(); renderTextPreview(); } });
   };
 })();
