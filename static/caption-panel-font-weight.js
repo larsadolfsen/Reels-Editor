@@ -33,6 +33,7 @@ window.CaptionPanel = window.CaptionPanel || {};
     currentWeights.forEach((w) => {
       const li = document.createElement("li");
       li.className = "font-list-row";
+      UI.listRow(li, { subtle: true });
       li.addEventListener("click", () => selectWeight(w.value));
 
       const content = document.createElement("span");

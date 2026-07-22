@@ -42,6 +42,7 @@ window.CaptionPanel = window.CaptionPanel || {};
     [...track.words].sort((a, b) => a.t_start - b.t_start).forEach((word) => {
       const li = document.createElement("li");
       li.className = "font-list-row";
+      UI.listRow(li, { subtle: true });
 
       const startInput = document.createElement("input");
       startInput.type = "number";
