@@ -20,6 +20,7 @@ function formatRelativeProjectTime(isoString) {
 window.UI.projectListRow = function projectListRow(project, { onOpen, onRename, onDelete, onDuplicate } = {}) {
   const li = document.createElement("li");
   li.className = "project-list-row";
+  UI.listRow(li);
 
   const nameEl = document.createElement("span");
   nameEl.className = "project-list-row-name";
