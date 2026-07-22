@@ -74,7 +74,7 @@ async function confirmFlushAndSwitch(action) {
 function renderTimeline() {
   const t = parseFloat(document.getElementById("time").textContent) || 0;
   Timeline.render(project, t, selected, onTimelineSelect,
-    { onAddClip: () => importMedia(), onAddText: () => addTextBlockAndEdit(), onSelectAudio: () => openAudioPanel() });
+    { onAddClip: () => importMedia(), onSelectAudio: () => openAudioPanel() });
 }
 
 let stylePanelCollapsed = false;

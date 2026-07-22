@@ -13,9 +13,11 @@
 // toolbar −/+ buttons zoom in/out by 10s steps, clamped [10s, 120s]. Not persisted,
 // reset to the 30s default on every project open (editor.js calls Timeline.resetZoom()).
 // #timeline-scroll provides horizontal scroll once zoomed content exceeds the viewport.
-// render()'s 5th `actions = {}` param ({ onAddClip, onAddText }) renders a small dashed "+"
-// button after the VIDEO row's clip sequence / TEXT row's last block (at x=0 when empty),
-// giving a visible way to add a clip/text block beyond the console.
+// render()'s 5th `actions = {}` param ({ onAddClip }) renders a small dashed "+" button
+// after the VIDEO row's clip sequence (at x=0 when empty), giving a visible way to add a
+// clip beyond the console. TEXT blocks are added via the left icon rail's TEXT entry instead
+// (see panel-nav.js); TEXT-row blocks instead render a right-edge resize handle (`resizable`
+// option on addBlock, dataset.blockId set on each block) driven by timeline-text-resize.js.
 // Exposes window.Timeline.{render, groupWords, timeAtX, tick, resetZoom, PX_PER_SEC}.
 // PX_PER_SEC is a live getter reflecting the current zoom level (see the header comment
 // above for the zoom scale itself). tick() is a cheap playhead-only update driven every
@@ -175,7 +177,7 @@ window.Timeline = (() => {
     track.appendChild(btn);
   }
 
-  function addBlock(track, left, width, label, selected, onClick) {
+  function addBlock(track, left, width, label, selected, onClick, { resizable } = {}) {
     const div = document.createElement("div");
     div.className = "timeline-block" + (selected ? " selected" : "");
     div.style.left = `${left}px`;
@@ -184,6 +186,11 @@ window.Timeline = (() => {
     span.textContent = label;
     div.appendChild(span);
     div.addEventListener("click", (e) => { e.stopPropagation(); onClick(); });
+    if (resizable) {
+      const handle = document.createElement("div");
+      handle.className = "timeline-resize-handle";
+      div.appendChild(handle);
+    }
     track.appendChild(div);
   }
 
@@ -244,10 +251,9 @@ window.Timeline = (() => {
     for (const b of project.text_blocks || []) {
       const isSel = !!selected && selected.type === "text" && !!selected.item && selected.item.id === b.id;
       addBlock(textTrack, b.start * px, (b.end - b.start) * px, b.heading, isSel,
-        () => onSelect({ type: "text", item: b }));
+        () => onSelect({ type: "text", item: b }), { resizable: true });
+      textTrack.lastElementChild.dataset.blockId = b.id;
     }
-    const textEnd = (project.text_blocks || []).reduce((m, b) => Math.max(m, b.end), 0);
-    if (actions.onAddText) addRowAddButton(textTrack, textEnd * px, "Add text", actions.onAddText);
 
     const videoBoxTrack = clearTrack("row-videobox");
     for (const v of project.video_boxes || []) {
