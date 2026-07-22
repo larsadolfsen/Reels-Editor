@@ -30,6 +30,7 @@ function defaultTextPreset(id) {
     id,
     name: "Default", font: "Public Sans", size_px: 96, color: "#FFFFFF",
     outline_color: "#000000", outline_px: 4, weight: 400, italic: false, underline: false,
+    shadow: false, shadow_color: "#000000", shadow_offset_x: 4, shadow_offset_y: 4, shadow_blur: 0,
     box_width_mode: "fit", box_height_mode: "fit", box_width: 0, box_height: 0,
     box_background: false, box_background_color: "#000000", box_background_opacity: 100,
     box_border_width: 0, box_border_color: "#FFFFFF", box_border_radius: 0,
@@ -149,6 +150,7 @@ async function renderTextPanel() {
   await TextPanel.renderFontWeight();
   TextPanel.renderFontStyle();
   TextPanel.renderOutline();
+  TextPanel.renderShadow();
   TextPanel.renderStyle();
   renderBoxPanel();
   TextPanel.renderAlign();
