@@ -1,7 +1,7 @@
 # Tests for app.media: ffprobe command construction, duration parsing, and -progress line parsing.
 from unittest.mock import patch
 import pytest
-from app.media import ffprobe_cmd, probe_duration, has_audio_stream, percent_from_progress_line, run_export, is_image_path
+from app.media import ffprobe_cmd, probe_duration, has_audio_stream, percent_from_progress_line, run_export, is_image_path, _filedialog_options
 
 def test_ffprobe_cmd():
     assert ffprobe_cmd("c.mp4") == ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -109,3 +109,22 @@ def test_is_image_path_true_for_known_image_extensions():
 def test_is_image_path_false_for_video_extensions():
     assert is_image_path("C:/clips/a.mp4") is False
     assert is_image_path("C:/clips/a.mov") is False
+
+def test_filedialog_options_video_default_matches_current_media_filter():
+    title, filetypes = _filedialog_options("video")
+    assert title == "Choose a clip"
+    assert filetypes == [
+        ("Media files", "*.mp4 *.mov *.mkv *.jpg *.jpeg *.png *.webp"),
+        ("Video files", "*.mp4 *.mov *.mkv"),
+        ("Image files", "*.jpg *.jpeg *.png *.webp"),
+        ("All files", "*.*"),
+    ]
+
+def test_filedialog_options_audio():
+    title, filetypes = _filedialog_options("audio")
+    assert title == "Choose a music file"
+    assert filetypes == [("Audio files", "*.mp3 *.wav *.m4a *.aac *.ogg *.flac"), ("All files", "*.*")]
+
+def test_filedialog_options_unknown_kind_falls_back_to_video():
+    title, filetypes = _filedialog_options("bogus")
+    assert title == "Choose a clip"

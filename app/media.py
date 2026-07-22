@@ -1,7 +1,9 @@
 # Media helpers: ffprobe duration probing, audio stream detection, extension-based image detection,
 # safe local file serving, native file picker, and parsing ffmpeg -progress output into a percent.
 # Exposes ffprobe_cmd, probe_duration, has_audio_stream, is_image_path, media_response, run_export,
-# percent_from_progress_line, pick_file. Depends on ffprobe/ffmpeg on PATH and tkinter.
+# percent_from_progress_line, pick_file (kind="video"|"audio" selects the dialog's file-type
+# filter — video defaults to the existing video+image picker, audio filters to music files for
+# the AUDIO panel's music import). Depends on ffprobe/ffmpeg on PATH and tkinter.
 import os
 import shutil
 import subprocess
@@ -103,21 +105,27 @@ def run_export(cmd: list[str], on_progress: Callable[[float], None] | None = Non
             stderr_file.seek(0)
             raise RuntimeError(stderr_file.read()[-2000:])
 
-def pick_file() -> str | None:
+def _filedialog_options(kind: str) -> tuple[str, list[tuple[str, str]]]:
+    """Pure: dialog title + filetypes for the native file picker, by import kind.
+    Unknown kind falls back to the video/image picker (today's only behavior, preserved
+    byte-for-byte from the pre-audio-import version of pick_file)."""
+    if kind == "audio":
+        return "Choose a music file", [("Audio files", "*.mp3 *.wav *.m4a *.aac *.ogg *.flac"), ("All files", "*.*")]
+    return "Choose a clip", [
+        ("Media files", "*.mp4 *.mov *.mkv *.jpg *.jpeg *.png *.webp"),
+        ("Video files", "*.mp4 *.mov *.mkv"),
+        ("Image files", "*.jpg *.jpeg *.png *.webp"),
+        ("All files", "*.*"),
+    ]
+
+def pick_file(kind: str = "video") -> str | None:
     # Must stay a sync `def` route: FastAPI dispatches sync handlers to a worker thread,
     # so this blocking Tk dialog runs off the main thread. Switching the /api/pick-file
     # route to `async def` would run this on the event loop and freeze the server.
+    title, filetypes = _filedialog_options(kind)
     root = tkinter.Tk()
     root.withdraw()
     root.attributes("-topmost", True)
-    path = filedialog.askopenfilename(
-        title="Choose a clip",
-        filetypes=[
-            ("Media files", "*.mp4 *.mov *.mkv *.jpg *.jpeg *.png *.webp"),
-            ("Video files", "*.mp4 *.mov *.mkv"),
-            ("Image files", "*.jpg *.jpeg *.png *.webp"),
-            ("All files", "*.*"),
-        ],
-    )
+    path = filedialog.askopenfilename(title=title, filetypes=filetypes)
     root.destroy()
     return path or None
