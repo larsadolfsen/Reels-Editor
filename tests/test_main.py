@@ -230,3 +230,24 @@ def test_media_peaks_route_returns_peaks(monkeypatch):
                          lambda media_id, file_path, data_dir, samples_per_second=10: [0.1, 0.2, 0.3])
     result = media_peaks("abc123", "song.mp3")
     assert result == [0.1, 0.2, 0.3]
+
+def test_pick_file_route_passes_kind_through(monkeypatch):
+    from app.main import pick_file as pick_file_route
+    captured = {}
+    def fake_pick_file(kind="video"):
+        captured["kind"] = kind
+        return "song.mp3"
+    monkeypatch.setattr("app.main.media.pick_file", fake_pick_file)
+    result = pick_file_route(kind="audio")
+    assert result == {"path": "song.mp3"}
+    assert captured["kind"] == "audio"
+
+def test_pick_file_route_defaults_to_video_kind(monkeypatch):
+    from app.main import pick_file as pick_file_route
+    captured = {}
+    def fake_pick_file(kind="video"):
+        captured["kind"] = kind
+        return None
+    monkeypatch.setattr("app.main.media.pick_file", fake_pick_file)
+    pick_file_route()
+    assert captured["kind"] == "video"

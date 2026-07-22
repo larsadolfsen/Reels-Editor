@@ -83,8 +83,8 @@ def media_peaks(media_id: str, path: str) -> list[float]:
     return waveform.peaks_for_media(media_id, path, DATA_DIR)
 
 @app.get("/api/pick-file")
-def pick_file() -> dict:
-    return {"path": media.pick_file()}
+def pick_file(kind: str = "video") -> dict:
+    return {"path": media.pick_file(kind)}
 
 @app.get("/api/fonts/{name}/weights")
 def list_font_weights(name: str) -> list[dict]:
