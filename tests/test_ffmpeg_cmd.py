@@ -309,3 +309,31 @@ def test_image_clip_speed_setpts_not_double_applied():
     fc = cmd[cmd.index("-filter_complex") + 1]
     assert "setpts=PTS-STARTPTS," in fc
     assert "setpts=(PTS-STARTPTS)/2" not in fc
+
+def test_clip_volume_applies_volume_filter():
+    p = Project(name="r",
+                media_library=[MediaItem(id="m0", file_path="a.mp4", duration=2, has_audio=True)],
+                clips=[ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=2, order=0, volume=1.5)])
+    fc = build_export_cmd(p, "out.mp4")[build_export_cmd(p, "out.mp4").index("-filter_complex") + 1]
+    assert "volume=1.5" in fc
+    assert "[0:a]atrim=start=0:end=2,asetpts=PTS-STARTPTS,volume=1.5[a0];" in fc
+
+def test_clip_default_volume_emits_no_volume_filter():
+    cmd = build_export_cmd(proj(), "out.mp4")
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "volume=" not in fc
+
+def test_muted_clip_forces_volume_zero():
+    p = Project(name="r",
+                media_library=[MediaItem(id="m0", file_path="a.mp4", duration=2, has_audio=True)],
+                clips=[ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=2, order=0, volume=1.5, muted=True)])
+    fc = build_export_cmd(p, "out.mp4")[build_export_cmd(p, "out.mp4").index("-filter_complex") + 1]
+    assert "volume=0" in fc
+    assert "volume=1.5" not in fc
+
+def test_muted_clip_with_default_volume_still_forces_volume_zero():
+    p = Project(name="r",
+                media_library=[MediaItem(id="m0", file_path="a.mp4", duration=2, has_audio=True)],
+                clips=[ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=2, order=0, muted=True)])
+    fc = build_export_cmd(p, "out.mp4")[build_export_cmd(p, "out.mp4").index("-filter_complex") + 1]
+    assert ",volume=0[a0];" in fc

@@ -6,6 +6,9 @@
 # Per-clip ClipLayer.speed (!= 1.0) scales video pace via setpts=(PTS-STARTPTS)/speed and real audio
 # via atempo=speed (both in build_export_cmd and build_audio_cmd); synthesized silence duration is
 # scaled by 1/speed to match. At speed == 1.0 the emitted commands are byte-identical to the pre-speed baseline.
+# Per-clip ClipLayer.volume/muted apply a `volume=<v>` filter to each clip's real audio chain
+# (muted forces volume=0, overriding any set volume); the synthesized-silence path needs no
+# volume filter. At volume == 1.0 and muted == False, no filter is emitted (byte-identical baseline).
 from app.models import Project
 from app.timeline import ordered
 
@@ -58,7 +61,13 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
         has_audio = media.has_audio if media else True
         if has_audio:
             atempo = f",atempo={_num(c.speed)}" if c.speed != 1.0 else ""
-            parts.append(f"[{v_idx}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS{atempo}[a{i}];")
+            if c.muted:
+                volume_filter = ",volume=0"
+            elif c.volume != 1.0:
+                volume_filter = f",volume={_num(c.volume)}"
+            else:
+                volume_filter = ""
+            parts.append(f"[{v_idx}:a]atrim=start={_num(c.in_point)}:end={_num(c.out_point)},asetpts=PTS-STARTPTS{atempo}{volume_filter}[a{i}];")
         else:
             a_idx = input_index
             cmd += ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"]
