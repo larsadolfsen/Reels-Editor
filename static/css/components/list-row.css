@@ -18,4 +18,4 @@
   background: transparent;
   border: 1px solid transparent;
 }
-.list-row--subtle:hover { background: var(--bg-2); }
+.list-row--subtle:hover { background: var(--bg-2); border-color: transparent; }
