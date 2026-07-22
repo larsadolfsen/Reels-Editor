@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="/static/css/layout.css">
 <link rel="stylesheet" href="/static/css/components/list-row.css">
 <link rel="stylesheet" href="/static/css/components/button.css">
+<link rel="stylesheet" href="/static/css/components/panel-button.css">
 <link rel="stylesheet" href="/static/css/components/panel.css">
 <link rel="stylesheet" href="/static/css/components/stage.css">
 <link rel="stylesheet" href="/static/css/components/timeline.css">
@@ -130,7 +131,7 @@
       <div id="panel-files" class="context-panel">
         <div class="style-panel-header">FILES</div>
         <div id="panel-files-add">
-          <button id="add-clip"><span class="icon">+</span><span class="label">IMPORT MEDIA</span></button>
+          <button id="add-clip" class="panel-button panel-button-dashed"><span class="icon">+</span><span class="label">IMPORT MEDIA</span></button>
         </div>
         <ol id="clip-list"></ol>
       </div>
@@ -194,11 +195,11 @@
         </div>
 
         <div class="style-group">
-          <button id="video-duplicate" class="col-8" type="button">Duplicate clip</button>
+          <button id="video-duplicate" class="panel-button col-8" type="button">Duplicate clip</button>
         </div>
 
         <div class="style-group">
-          <button id="video-delete" class="col-8" type="button">Delete clip</button>
+          <button id="video-delete" class="panel-button panel-button-danger col-8" type="button">Delete clip</button>
         </div>
       </div>
 
@@ -207,7 +208,7 @@
           <div class="style-panel-header">CAPTIONS</div>
 
           <div class="style-group">
-            <button id="caption-auto-btn" class="col-8" type="button">Auto-caption</button>
+            <button id="caption-auto-btn" class="panel-button col-8" type="button">Auto-caption</button>
             <p id="caption-empty-state" class="context-panel-name col-8">No captions yet — click Auto-caption to transcribe this reel's audio.</p>
           </div>
 
@@ -215,7 +216,7 @@
 
           <div id="caption-style-body">
             <div class="style-group">
-              <button id="caption-style-save" class="col-8" type="button">+ Save current style</button>
+              <button id="caption-style-save" class="panel-button col-8" type="button">+ Save current style</button>
             </div>
             <div class="style-group">
               <ul id="caption-style-most-used" class="font-list col-8"></ul>
@@ -401,7 +402,7 @@
       <div id="panel-projects" class="context-panel" hidden>
         <div class="style-panel-header">PROJECTS</div>
         <div class="style-group">
-          <button id="project-create" class="new-project-btn col-8"><span class="icon">+</span><span class="label">NEW PROJECT</span></button>
+          <button id="project-create" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">NEW PROJECT</span></button>
         </div>
         <ul id="project-list" class="project-list-row-list"></ul>
       </div>
@@ -409,7 +410,7 @@
       <div id="panel-video-box" class="context-panel" hidden>
         <div class="style-panel-header">VIDEO BOX</div>
         <div class="style-group">
-          <button id="video-box-add" type="button" class="col-8"><span class="icon">+</span><span class="label">ADD VIDEO BOX</span></button>
+          <button id="video-box-add" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD VIDEO BOX</span></button>
         </div>
         <div id="video-box-picker" hidden>
           <ul id="video-box-picker-list" class="font-list"></ul>
@@ -449,7 +450,7 @@
           </div>
 
           <div class="style-group">
-            <button id="video-box-delete" type="button" class="col-8">Delete video box</button>
+            <button id="video-box-delete" type="button" class="panel-button panel-button-danger col-8">Delete video box</button>
           </div>
         </div>
       </div>
@@ -457,7 +458,7 @@
       <div id="panel-audio" class="context-panel" hidden>
         <div class="style-panel-header">AUDIO</div>
         <div id="audio-empty-state" class="style-group">
-          <button id="audio-add-music" type="button" class="col-8"><span class="icon">+</span><span class="label">ADD MUSIC</span></button>
+          <button id="audio-add-music" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD MUSIC</span></button>
         </div>
         <div id="audio-detail" hidden>
           <div id="audio-music-name" class="context-panel-name"></div>
@@ -474,10 +475,10 @@
           </div>
 
           <div class="style-group">
-            <button id="audio-replace" class="col-8" type="button">Replace music</button>
+            <button id="audio-replace" class="panel-button col-8" type="button">Replace music</button>
           </div>
           <div class="style-group">
-            <button id="audio-remove" class="col-8" type="button">Remove music</button>
+            <button id="audio-remove" class="panel-button col-8" type="button">Remove music</button>
           </div>
         </div>
       </div>
@@ -493,14 +494,14 @@
 
         <div id="text-empty-state" class="style-group" hidden>
           <p class="context-panel-name col-8">No text yet.</p>
-          <button id="text-add-block-btn" class="col-8" type="button">+ Add text</button>
+          <button id="text-add-block-btn" class="panel-button panel-button-dashed col-8" type="button">+ Add text</button>
         </div>
 
         <div id="text-accordions">
         <div id="text-tab-bar"></div>
         <div id="text-style-body">
           <div class="style-group">
-            <button id="text-style-save" class="col-8" type="button">+ Save current style</button>
+            <button id="text-style-save" class="panel-button col-8" type="button">+ Save current style</button>
           </div>
           <div class="style-group">
             <ul id="text-style-most-used" class="font-list col-8"></ul>
@@ -620,11 +621,11 @@
         </div>
 
         <div class="style-group">
-          <button id="text-duplicate" class="col-8" type="button">Duplicate text</button>
+          <button id="text-duplicate" class="panel-button col-8" type="button">Duplicate text</button>
         </div>
 
         <div class="style-group">
-          <button id="text-delete" class="col-8" type="button">Delete text</button>
+          <button id="text-delete" class="panel-button panel-button-danger col-8" type="button">Delete text</button>
         </div>
 
         </div>

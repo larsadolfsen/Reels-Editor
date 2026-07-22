@@ -1,7 +1,6 @@
 /* Full-screen project picker shown at cold start when no valid localStorage project is found. */
 /* Exposes #project-picker/.project-picker-inner/.project-picker-heading/.project-picker-empty/ */
-/* .project-picker-list, plus .new-project-btn (shared with panel-projects.js's create button). */
-/* Depends on tokens.css, project-list-row.css. */
+/* .project-picker-list. Depends on tokens.css, project-list-row.css. */
 #project-picker {
   position: fixed;
   inset: 0;
@@ -34,17 +33,3 @@
   text-align: center;
   padding: var(--space-4) 0;
 }
-
-.new-project-btn {
-  width: 100%;
-  border: 1px dashed var(--border);
-  color: var(--text-secondary);
-  font-size: 11px;
-  padding: 9px 0;
-  margin-bottom: var(--space-3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-}
-.new-project-btn:hover { border-color: var(--border-hover-color); border-width: var(--border-hover-width); color: var(--text); }
