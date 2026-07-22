@@ -105,7 +105,7 @@ window.Preview = (() => {
       const onTick = (elapsed) => renderOverlaysAt(computeTimelineTime());
       const onDone = () => {
         if (activeIndex + 1 < clips.length) playClipAt(activeIndex + 1, true);
-        else setPlayingIcon(false);
+        else { setPlayingIcon(false); PreviewAudio.pause(); }
       };
       if (autoplay) {
         setPlayingIcon(true);
@@ -123,6 +123,7 @@ window.Preview = (() => {
     imagePlayer.classList.add("stage-hidden");
     player.classList.remove("stage-hidden");
     applyFillModeClass(c, player);
+    applyClipAudio(c);
     player.src = "/media?path=" + encodeURIComponent(c.file_path);
     player.onloadedmetadata = () => {
       player.currentTime = c.in_point;
@@ -136,6 +137,15 @@ window.Preview = (() => {
   // object-fit: contain) and cropped-to-fill (FILL, object-fit: cover) per ClipLayer.fill_mode.
   function applyFillModeClass(clip, el = player) {
     el.classList.toggle("fill-mode-fill", clip.fill_mode === "fill");
+  }
+
+  // Sets #player's volume/mute from the active clip's ClipLayer.volume/muted. HTML5 <video>
+  // volume caps at 1.0 — a volume > 1.0 (export's exact ffmpeg gain) is clamped here, same
+  // approximation the VOLUME UI documents. Only called for real video clips — image clips
+  // (MediaItem.kind === "image") never have an audio track, so there is nothing to mute/adjust.
+  function applyClipAudio(clip) {
+    player.volume = Math.max(0, Math.min(clip.volume ?? 1, 1));
+    player.muted = !!clip.muted;
   }
 
   function maybePreloadNext(index) {
@@ -170,6 +180,7 @@ window.Preview = (() => {
       virtualTime = zeroClipDuration();
       virtualPlaying = false;
       setPlayingIcon(false);
+      PreviewAudio.pause();
     }
     timeEl.textContent = virtualTime.toFixed(1);
     if (textProject) renderText(textProject, textPresets, virtualTime);
@@ -193,6 +204,7 @@ window.Preview = (() => {
     cancelVirtualPlayback();
     virtualTime = 0;
     preloadedIndex = -1;
+    PreviewAudio.load(project);
     if (clips.length > 0) {
       playClipAt(0, false);
     } else {
@@ -243,6 +255,7 @@ window.Preview = (() => {
         playClipAt(activeIndex + 1);
       } else {
         player.pause();
+        PreviewAudio.pause();
       }
     }
   });
@@ -256,26 +269,35 @@ window.Preview = (() => {
     if (clips.length === 0) {
       if (virtualTime >= zeroClipDuration()) virtualTime = 0;
       startVirtualPlayback();
+      PreviewAudio.seek(virtualTime);
+      PreviewAudio.play();
       return;
     }
     if (isImageActive()) {
       ImageClipPlayback.resume();
       setPlayingIcon(true);
+      PreviewAudio.seek(computeTimelineTime());
+      PreviewAudio.play();
       return;
     }
     const atEnd = activeIndex >= 0 && activeIndex === clips.length - 1
       && player.currentTime >= clips[activeIndex].out_point;
     if (atEnd) playClipAt(0);
     else player.play();
+    PreviewAudio.seek(computeTimelineTime());
+    PreviewAudio.play();
   }
   function doPause() {
+    PreviewAudio.pause();
     if (clips.length === 0) { cancelVirtualPlayback(); setPlayingIcon(false); return; }
     if (isImageActive()) { ImageClipPlayback.pause(); setPlayingIcon(false); return; }
     player.pause();
   }
   function doRestart() {
-    if (clips.length === 0) { virtualTime = 0; startVirtualPlayback(); return; }
+    PreviewAudio.seek(0);
+    if (clips.length === 0) { virtualTime = 0; startVirtualPlayback(); PreviewAudio.play(); return; }
     playClipAt(0);
+    PreviewAudio.play();
   }
   function isPaused() {
     if (clips.length === 0) return !virtualPlaying;
@@ -303,6 +325,7 @@ window.Preview = (() => {
   player.addEventListener("pause", () => { if (!isImageActive()) setPlayingIcon(false); });
 
   function seek(t) {
+    PreviewAudio.seek(t);
     if (clips.length === 0) {
       virtualTime = Math.max(0, Math.min(t, zeroClipDuration()));
       renderOverlaysAt(virtualTime);
@@ -323,7 +346,7 @@ window.Preview = (() => {
         const onTick = (e) => renderOverlaysAt(computeTimelineTime());
         const onDone = () => {
           if (activeIndex + 1 < clips.length) playClipAt(activeIndex + 1, true);
-          else setPlayingIcon(false);
+          else { setPlayingIcon(false); PreviewAudio.pause(); }
         };
         // start()+pause() rather than a bare seekTo(): this clip has never been loaded into
         // ImageClipPlayback before, so seekTo() alone would clamp against a stale duration
@@ -335,6 +358,7 @@ window.Preview = (() => {
         imagePlayer.classList.add("stage-hidden");
         player.classList.remove("stage-hidden");
         applyFillModeClass(loc.clip, player);
+        applyClipAudio(loc.clip);
         player.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
         player.onloadedmetadata = () => { player.currentTime = loc.src; player.playbackRate = loc.clip.speed || 1; };
       }
