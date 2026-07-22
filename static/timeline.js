@@ -1,7 +1,8 @@
 // Timeline strip: pure row-position math (mirrors app/timeline.py) + rendering for
 // toolbar (zoom/time readout)/ruler/playhead/playhead-handle box/TEXT/CAPTIONS/VIDEO BOX/VIDEO/AUDIO
-// rows into the DOM ids defined in index.html. The AUDIO row is a static dummy waveform
-// (no audio-track feature yet). The playhead-handle box (#slice-btn) tracks the playhead
+// rows into the DOM ids defined in index.html. The AUDIO row renders real per-clip + music
+// waveforms via TimelineAudioRow (static/timeline-audio-row.js) — see that file for detail.
+// The playhead-handle box (#slice-btn) tracks the playhead
 // and holds two icons: a grip-vertical handle (dragged in editor.js to scrub the playhead)
 // and a scissors icon (visual only, no slice feature yet).
 // Zoomable pixels-per-second scale: auto fit-to-width by default, or a manual zoom level set
@@ -130,29 +131,6 @@ window.Timeline = (() => {
     }
   }
 
-  // Deterministic pseudo-random bar heights, regenerated only when the track width
-  // changes, so the placeholder doesn't reflow on every playback tick.
-  function renderAudioTrack(width) {
-    const track = document.getElementById("row-audio");
-    const rounded = String(Math.round(width));
-    if (track.dataset.width === rounded) return;
-    track.dataset.width = rounded;
-    track.innerHTML = "";
-    const pitch = 4;
-    const count = Math.max(1, Math.floor(width / pitch));
-    let seed = 1;
-    const rand = () => {
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-      return seed / 0x7fffffff;
-    };
-    for (let i = 0; i < count; i++) {
-      const bar = document.createElement("div");
-      bar.className = "waveform-bar";
-      bar.style.height = `${4 + Math.round(rand() * 24)}px`;
-      track.appendChild(bar);
-    }
-  }
-
   // Total duration must cover video, text blocks, and captions — not just the clip
   // sequence — otherwise rows with content past the video's end render off-scale.
   function totalDuration(project) {
@@ -227,7 +205,7 @@ window.Timeline = (() => {
     document.getElementById("timeline-time").textContent =
       `${formatTimeDeci(timelineTime)} / ${formatTimeDeci(duration)}`;
     updateSliceButton();
-    renderAudioTrack(contentWidth);
+    TimelineAudioRow.render(project, px, () => renderTimeline());
 
     const scrollEl = document.getElementById("timeline-scroll");
     if (!scrollEl.dataset.sliceBound) {

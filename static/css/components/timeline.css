@@ -218,19 +218,30 @@
   color: var(--text-secondary);
 }
 
-/* AUDIO row: dummy static waveform placeholder (no audio track feature yet). */
+/* AUDIO row: real per-clip + music waveforms, absolutely positioned canvases (same
+   coordinate system as .timeline-block in the other rows) so they line up with clip
+   boundaries and scale with zoom. */
 .timeline-row[data-row="audio"] .row-track {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 0 var(--space-2);
+  position: relative;
+  padding: 0;
 }
 
-.waveform-bar {
-  width: 2px;
-  flex-shrink: 0;
-  background: var(--text-dim);
-  border-radius: 1px;
+.audio-clip-waveform,
+.audio-music-waveform {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.audio-music-waveform {
+  color: var(--accent);
+  z-index: 0;
+}
+
+.audio-clip-waveform {
+  z-index: 1;
 }
 
 /* + add button at the end of the VIDEO/TEXT row content */
