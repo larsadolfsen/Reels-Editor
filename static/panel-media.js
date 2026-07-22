@@ -1,6 +1,7 @@
 // FILES/MEDIA context-panel section: media-library list (thumbnail, name, duration),
-// click-to-select, hover-reveal inline rename (pencil icon) and remove (trash icon, disabled
-// with a usage-count chip when the media item is referenced by any ClipLayer).
+// grouped by type (videos, then images, each with a small section label — omitted when that
+// group is empty), click-to-select, hover-reveal inline rename (pencil icon) and remove (trash
+// icon, disabled with a usage-count chip when the media item is referenced by any ClipLayer).
 // Exposes window.MediaPanel.render().
 window.MediaPanel = window.MediaPanel || {};
 
@@ -49,81 +50,95 @@ window.MediaPanel = window.MediaPanel || {};
     input.select();
   }
 
+  function buildRow(m) {
+    const li = document.createElement("li");
+    li.draggable = true; // drag onto the timeline's VIDEO row to place this file as a clip
+    li.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/media-id", m.id));
+    if (selectedMediaId === m.id) {
+      li.classList.add("selected");
+    }
+
+    const thumb = document.createElement("div");
+    thumb.className = "clip-thumb";
+    li.appendChild(thumb);
+
+    const info = document.createElement("div");
+    info.className = "clip-info";
+    const name = document.createElement("span");
+    name.className = "clip-name";
+    name.textContent = displayName(m);
+    const duration = document.createElement("span");
+    duration.className = "clip-duration";
+    duration.textContent = formatClipDuration(m.duration);
+    info.appendChild(name);
+    info.appendChild(duration);
+    li.appendChild(info);
+
+    const actions = document.createElement("div");
+    actions.className = "clip-actions";
+    const renameBtn = document.createElement("button");
+    renameBtn.type = "button";
+    renameBtn.className = "icon-btn clip-action";
+    renameBtn.title = "Rename";
+    renameBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>';
+    renameBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      startRename(m, name);
+    });
+    actions.appendChild(renameBtn);
+
+    const count = project.clips.filter((c) => c.media_id === m.id).length;
+    if (count > 0) {
+      const chip = document.createElement("span");
+      chip.className = "clip-usage-chip";
+      chip.textContent = String(count);
+      actions.appendChild(chip);
+    }
+
+    const trashBtn = document.createElement("button");
+    trashBtn.type = "button";
+    trashBtn.className = "icon-btn clip-action";
+    if (count > 0) {
+      trashBtn.disabled = true;
+      trashBtn.title = `used by ${count} clip${count === 1 ? "" : "s"}`;
+    } else {
+      trashBtn.title = "Remove";
+    }
+    trashBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    trashBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (count > 0) return;
+      project.media_library = project.media_library.filter((x) => x.id !== m.id);
+      await saveProject();
+      render();
+    });
+    actions.appendChild(trashBtn);
+
+    li.appendChild(actions);
+
+    li.addEventListener("click", () => {
+      selectedMediaId = selectedMediaId === m.id ? null : m.id;
+      render();
+    });
+    return li;
+  }
+
+  function appendGroup(list, label, items) {
+    if (!items.length) return;
+    const labelLi = document.createElement("li");
+    labelLi.className = "clip-section-label";
+    labelLi.textContent = label;
+    list.appendChild(labelLi);
+    items.forEach((m) => list.appendChild(buildRow(m)));
+  }
+
   function render() {
     const list = document.getElementById("clip-list");
     list.innerHTML = "";
-    project.media_library.forEach((m) => {
-      const li = document.createElement("li");
-      li.draggable = true; // drag onto the timeline's VIDEO row to place this file as a clip
-      li.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/media-id", m.id));
-      if (selectedMediaId === m.id) {
-        li.classList.add("selected");
-      }
-
-      const thumb = document.createElement("div");
-      thumb.className = "clip-thumb";
-      li.appendChild(thumb);
-
-      const info = document.createElement("div");
-      info.className = "clip-info";
-      const name = document.createElement("span");
-      name.className = "clip-name";
-      name.textContent = displayName(m);
-      const duration = document.createElement("span");
-      duration.className = "clip-duration";
-      duration.textContent = formatClipDuration(m.duration);
-      info.appendChild(name);
-      info.appendChild(duration);
-      li.appendChild(info);
-
-      const actions = document.createElement("div");
-      actions.className = "clip-actions";
-      const renameBtn = document.createElement("button");
-      renameBtn.type = "button";
-      renameBtn.className = "icon-btn clip-action";
-      renameBtn.title = "Rename";
-      renameBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>';
-      renameBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        startRename(m, name);
-      });
-      actions.appendChild(renameBtn);
-
-      const count = project.clips.filter((c) => c.media_id === m.id).length;
-      if (count > 0) {
-        const chip = document.createElement("span");
-        chip.className = "clip-usage-chip";
-        chip.textContent = String(count);
-        actions.appendChild(chip);
-      }
-
-      const trashBtn = document.createElement("button");
-      trashBtn.type = "button";
-      trashBtn.className = "icon-btn clip-action";
-      if (count > 0) {
-        trashBtn.disabled = true;
-        trashBtn.title = `used by ${count} clip${count === 1 ? "" : "s"}`;
-      } else {
-        trashBtn.title = "Remove";
-      }
-      trashBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
-      trashBtn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        if (count > 0) return;
-        project.media_library = project.media_library.filter((x) => x.id !== m.id);
-        await saveProject();
-        render();
-      });
-      actions.appendChild(trashBtn);
-
-      li.appendChild(actions);
-
-      li.addEventListener("click", () => {
-        selectedMediaId = selectedMediaId === m.id ? null : m.id;
-        render();
-      });
-      list.appendChild(li);
-    });
+    const videos = project.media_library.filter((m) => m.kind !== "image");
+    const images = project.media_library.filter((m) => m.kind === "image");
+    appendGroup(list, "VIDEOS", videos);
+    appendGroup(list, "IMAGES", images);
   }
 
   window.MediaPanel.render = render;
