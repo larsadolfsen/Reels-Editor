@@ -193,6 +193,16 @@
   padding: 1px 3px;
 }
 
+.clip-section-label {
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: var(--space-2) 0 4px;
+  list-style: none;
+}
+.clip-section-label:first-child { padding-top: 0; }
+
 .clip-actions {
   display: flex;
   align-items: center;

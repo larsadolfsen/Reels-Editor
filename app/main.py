@@ -82,6 +82,10 @@ def probe(path: str) -> dict:
 def media_peaks(media_id: str, path: str) -> list[float]:
     return waveform.peaks_for_media(media_id, path, DATA_DIR)
 
+@app.get("/api/pick-files")
+def pick_files() -> dict:
+    return {"paths": media.pick_files()}
+
 @app.get("/api/pick-file")
 def pick_file(kind: str = "video") -> dict:
     return {"path": media.pick_file(kind)}

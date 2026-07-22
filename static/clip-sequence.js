@@ -1,8 +1,9 @@
 // Sequence-mutation helpers for the main VIDEO clip track: inserting a new clip at a drop point
-// (splitting an existing clip if needed), converting a video box into a sequence clip, and
-// importing a new media file via the native file picker (image imports default to a 3s clip
-// duration since MediaItem.duration is 0 for images). Plain globals shared with editor.js's
-// drag/drop wiring; reaches into editor.js's `project`/`clipDurations`/`saveProject` globals.
+// (splitting an existing clip if needed) and converting a video box into a sequence clip.
+// Also imports one or more media files via the native multi-select file picker straight into
+// the media library (no timeline insert — the user drags library items onto the timeline
+// themselves). Plain globals shared with editor.js's drag/drop wiring; reaches into editor.js's
+// `project`/`saveProject` globals.
 
 // Inserts a new main-sequence ClipLayer at `dropTime` from any source carrying
 // media_id/file_path/in_point/out_point (a video box or a media-library drag): if the
@@ -72,33 +73,20 @@ function stitchVideoBoxIntoSequence(box, dropTime) {
   project.video_boxes = project.video_boxes.filter((v) => v.id !== box.id);
 }
 
-const DEFAULT_IMAGE_DURATION = 3.0;
+async function importMedia() {
+  const paths = await Api.pickFiles();
+  if (!paths.length) return;
 
-async function addClip() {
-  const path = await Api.pickFile();
-  if (!path) return;
-  const probeResult = await Api.probeMedia(path);
-  if (!probeResult) { alert("probe failed"); return; }
-  const { duration, has_audio, kind } = probeResult;
-  const mediaId = crypto.randomUUID().replaceAll("-", "");
-  project.media_library.push({ id: mediaId, file_path: path, duration, has_audio, kind });
+  for (const path of paths) {
+    const probeResult = await Api.probeMedia(path);
+    if (!probeResult) continue;
+    const { duration, has_audio, kind } = probeResult;
+    const mediaId = crypto.randomUUID().replaceAll("-", "");
+    project.media_library.push({ id: mediaId, file_path: path, duration, has_audio, kind });
+  }
 
-  const clipDuration = kind === "image" ? DEFAULT_IMAGE_DURATION : duration;
-  const id = crypto.randomUUID().replaceAll("-", "");
-  clipDurations[id] = clipDuration;
-  project.clips.push({
-    id,
-    media_id: mediaId,
-    file_path: path,
-    in_point: 0,
-    out_point: clipDuration,
-    order: project.clips.length,
-    speed: 1,
-  });
   await saveProject();
   MediaPanel.render();
-  Preview.load(project);
-  renderTimeline();
 }
 
-document.getElementById("add-clip").addEventListener("click", addClip);
+document.getElementById("add-clip").addEventListener("click", importMedia);

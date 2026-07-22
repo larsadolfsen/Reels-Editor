@@ -1,9 +1,9 @@
 # Media helpers: ffprobe duration probing, audio stream detection, extension-based image detection,
 # safe local file serving, native file picker, and parsing ffmpeg -progress output into a percent.
 # Exposes ffprobe_cmd, probe_duration, has_audio_stream, is_image_path, media_response, run_export,
-# percent_from_progress_line, pick_file (kind="video"|"audio" selects the dialog's file-type
-# filter — video defaults to the existing video+image picker, audio filters to music files for
-# the AUDIO panel's music import). Depends on ffprobe/ffmpeg on PATH and tkinter.
+# percent_from_progress_line, pick_files (multi-select video+image import), pick_file (kind="video"|
+# "audio", single-select — "audio" filters to music files for the AUDIO panel's music import).
+# Depends on ffprobe/ffmpeg on PATH and tkinter.
 import os
 import shutil
 import subprocess
@@ -118,10 +118,28 @@ def _filedialog_options(kind: str) -> tuple[str, list[tuple[str, str]]]:
         ("All files", "*.*"),
     ]
 
-def pick_file(kind: str = "video") -> str | None:
+def pick_files() -> list[str]:
     # Must stay a sync `def` route: FastAPI dispatches sync handlers to a worker thread,
-    # so this blocking Tk dialog runs off the main thread. Switching the /api/pick-file
+    # so this blocking Tk dialog runs off the main thread. Switching the /api/pick-files
     # route to `async def` would run this on the event loop and freeze the server.
+    root = tkinter.Tk()
+    root.withdraw()
+    root.attributes("-topmost", True)
+    paths = filedialog.askopenfilenames(
+        title="Import Media",
+        filetypes=[
+            ("Media files", "*.mp4 *.mov *.mkv *.jpg *.jpeg *.png *.webp"),
+            ("Video files", "*.mp4 *.mov *.mkv"),
+            ("Image files", "*.jpg *.jpeg *.png *.webp"),
+            ("All files", "*.*"),
+        ],
+    )
+    root.destroy()
+    return list(paths)
+
+def pick_file(kind: str = "video") -> str | None:
+    # Single-select variant of pick_files(), used where exactly one file is wanted (e.g. the
+    # AUDIO panel's music import). Must stay a sync `def` for the same reason as pick_files().
     title, filetypes = _filedialog_options(kind)
     root = tkinter.Tk()
     root.withdraw()
