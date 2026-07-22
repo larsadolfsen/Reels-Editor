@@ -2,25 +2,153 @@
 
 ## Problem
 
-Every panel file in `static/css/components/*.css` hand-rolls its own `font-family`/`font-size`/`letter-spacing`/`color` for text elements instead of reusing a shared definition. A grep across `static/css/components/` turns up 35+ distinct `font-size` values (8px, 9px, 9.5px, 10px, 10.5px, 11px, 11.5px, 12px, 12.5px, 13px, 14px, 16px, 20px, …) — most of them accidental near-duplicates of each other rather than intentional distinct sizes.
+`static/css/components/*.css` has 35+ distinct `font-size` values for text that should share a small number of roles. A concrete confirmed case: `.style-field`, `.style-group-label`, `.clip-section-label`, `.settings-row-label`, `.sub-panel-title`, `.accordion-header` are all "small caps mono label" text, copy-pasted six times with drifted values (9px/0.05em/`--text-dim` vs 10.5px/0.06em/`--text-muted`). This causes visible drift between panels that should look identical (e.g. a "VIDEOS" section label rendering differently from a "WIDTH (PX)" field label).
 
-Confirmed concrete case: `.style-field`, `.style-group-label`, `.clip-section-label`, `.settings-row-label`, `.sub-panel-title`, and `.accordion-header` are all the same "small caps mono label" role, copy-pasted six times with slightly different values (9px/0.05em/`--text-dim` vs 10.5px/0.06em/`--text-muted`). This causes visible drift (e.g. a "VIDEOS" section label rendering differently from a "WIDTH (PX)" field label) any time a new panel is added by hand instead of reusing an existing rule.
-
-**Second, related bug found during investigation:** `.clip-section-label` (the "VIDEOS"/"IMAGES" group header in the FILES panel) is a bare `<li>` inside `#clip-list`, and [style-panel.css:157-169](../../../static/css/components/style-panel.css) applies card styling (background, border, padding, hover border-color) to *every* `<li>` in that list — it doesn't distinguish "this is a clickable media row" from "this is a section-label row." The label visibly has a background and a hover effect that a label must never have; it inherited them purely from its structural position (a sibling `<li>` selector), not from anything about being a label. This is the same root problem — a label reusing structural/behavioral context instead of being an isolated component with only its own styles — so the fix below must ensure the new label/text component is structurally independent of whatever list/container it's placed in (no shared selector can leak background/border/hover/cursor onto it).
+**Second, related bug:** `.clip-section-label` (the "VIDEOS"/"IMAGES" group header in the FILES panel) is a bare `<li>` inside `#clip-list`, and `style-panel.css`'s `#clip-list li` rule applies card styling (background, border, padding, hover border-color) to *every* `<li>` in that list — it doesn't distinguish "clickable media row" from "section-label row." The label visibly gets a background and hover effect it should never have, purely from its structural position as a sibling `<li>`, not from anything about being a label. The fix must ensure the new label/text component is structurally independent of whatever list/container it sits in — no shared list selector may leak background/border/hover/cursor onto it.
 
 ## Goal
 
-Introduce one canonical text-styling component so no file can hand-roll typography (or accidentally inherit interactive/card styling) again. Concretely:
+One canonical text-styling component so no file hand-rolls typography again: a `window.UI.text()` component + a `text.css` stylesheet defining a small, closed set of text roles, with every existing call site migrated onto it.
 
-1. Audit every `font-size`/`font-family`/`letter-spacing`/`color` combination currently used for text in `static/css/components/*.css` and `static/index.html`. Cluster them into the smallest set of genuinely distinct **text roles** the design actually needs (expect roughly 5–8 — e.g. `micro-label` [the caps mono label case above], `value`/`readout`, `heading`, `body`, `mono-data`/timestamp, `button-label`). Do not preserve accidental near-duplicates as separate roles — collapse them into the nearest existing role and flag the visual size delta for review.
-2. Build `static/ui-text.js` exposing `window.UI.text(container, text, { role, as = "span" })` — mirrors the existing minimal-component pattern (see `static/ui-divider.js`): creates one element of the given tag, stamps it with a role-specific class, sets its text, appends it to `container`, returns it. The created element must carry **only** its role class — never reuse a structural/list selector (like `#clip-list li`) that also carries background/border/hover/cursor rules meant for interactive rows.
-3. Build `static/css/components/text.css` with one class per role (e.g. `.text-micro-label`, `.text-heading`, …), each defining the full declaration (font-family/size/letter-spacing/color) exactly once, and nothing else (no background/border/cursor/hover — those are never part of a text role).
-4. Migrate every existing call site (JS-generated and static `index.html` markup) to the new classes/component. This includes fixing `.clip-section-label` in `panel-media.js` so its `<li>` opts out of `#clip-list li`'s card styling (e.g. give the label its own non-card selector, or restrict the card rule to `#clip-list li:not(.text-micro-label)` — whichever keeps the CSS simplest). Delete the old duplicate CSS rules once nothing references them — no dead code left behind.
-5. **Non-goals:** don't touch `tokens.css` color values, don't restyle `--font-content` (Public Sans) body copy that isn't part of this label/value/heading family, don't introduce a generic type-scale utility beyond the roles actually found in the audit.
-6. **Verification:** since this is a pure-CSS/JS refactor with no automated visual-regression tooling in this repo, verify by loading every panel that uses a migrated class (VIDEO, VIDEO BOX, TEXT, CAPTIONS, LAYERS, SETTINGS, EXPORT, PROJECTS, FILES) in the running dev server and confirming: (a) no unintended layout/size shifts beyond the explicitly-approved label unification (field labels growing 9px→10.5px, `--text-dim`→`--text-muted`), and (b) the FILES panel's VIDEOS/IMAGES section labels no longer show a background, border, or hover effect.
+## Component API
 
-## Decisions already made (do not re-litigate)
+`static/ui-text.js`, mirroring the existing minimal-component pattern in `static/ui-divider.js` (framework-free, presentational-only, attaches to `window.UI`):
 
-- One size for every label-role instance — no per-context size variants.
-- Canonical label style is the majority style already in use: 10.5px / 0.06em letter-spacing / `--text-muted` (not the 9px/`--text-dim` field-label style).
-- `.color-swatch-label` (14px, Public Sans, e.g. "Highlight Color" next to a swatch) is explicitly out of scope — it's a readable inline value label, a different role from the micro-caps label pattern.
+```js
+window.UI = window.UI || {};
+window.UI.text = function text(container, str, { role, as = "span", strong = false } = {}) {
+  const el = document.createElement(as);
+  el.className = strong ? `text-${role} text-strong` : `text-${role}`;
+  el.textContent = str;
+  container.appendChild(el);
+  return el;
+};
+```
+
+Unlike `UI.divider`, this does not clear `container.innerHTML` — text nodes typically sit alongside sibling children in a row (e.g. a label next to an input), so `UI.text` only appends.
+
+The created element carries **only** its role class (`text-<role>`, plus `text-strong` if requested) — never a structural/list selector that also carries unrelated background/border/hover/cursor rules meant for interactive rows (see the `.clip-section-label` fix below).
+
+## Roles
+
+`static/css/components/text.css` defines one class per role plus a `.text-strong` modifier (`font-weight: 600`), stamped on top of a role class when a caller passes `strong: true`.
+
+| Role | family | size | letter-spacing | color | transform |
+|---|---|---|---|---|---|
+| `text-label` | `var(--font-ui)` | 11px | 0.03em | `var(--text-muted)` | uppercase |
+| `text-body` | `var(--font-content)` | 13px | — | `var(--text)` | — |
+| `text-heading` | `var(--font-ui)` | 13px | 0.04em | `var(--text)` | — |
+| `text-data` | `var(--font-ui)` | 10px | — | `var(--text-dim)` | — |
+
+`text-heading` and `text-body` land on the same 13px size but differ in family/letter-spacing/purpose (mono UI-chrome heading vs Public Sans content/name text) — kept as distinct roles since they render different typefaces, not just different sizes.
+
+`text-label` absorbs what would otherwise have been a separate "button-label" role — both are small caps-mono chrome text, and button text (`IMPORT MEDIA`, `NEW PROJECT`, etc.) is already typed in caps in the markup, so the shared `uppercase` transform is a no-op for it. Buttons are native `<button>` elements, so there's no wrapper span to route through `UI.text()`: `base.css`'s existing button rule (11px/0.03em/`var(--text-muted)`) already matches `text-label`'s values exactly, and `button.css`'s `.button` (currently 11.5px) plus `button-group.css`'s `.btn-group button` (currently 10.5px) are realigned to the same 11px/0.03em/`--text-muted` values directly in their own CSS files (not by wrapping button contents in a `UI.text()` call). `.button`'s existing `font-weight: 600` stays as its own explicit rule (button-specific emphasis, not touched).
+
+### Bespoke exceptions (not migrated, left as their own dedicated CSS)
+
+These are sized for a functional reason, not copy-paste drift:
+
+- `.font-list-row-name` (16px) and `.font-weight-row-preview` (20px) — render a live font/weight sample so the user can see what that font actually looks like.
+- `.zoom-btn` (14px) — deliberately larger tap target for the lone +/- glyph buttons.
+- `.icon-btn`'s 12px — icon glyph sizing, not label text.
+
+### Out of scope
+
+`.text-block` / `.caption-block` (stage canvas overlay text) — user-authored content styled by `font-fit.js` + the `text-panel-font-*.js`/`caption-panel-font-*.js` pipeline. This is a content-styling system, not UI chrome, and stays independent of `window.UI.text()`.
+
+### Dead code deleted
+
+`.style-checkbox` and `.caption-preview-box` in `style-panel.css` have no JS or HTML producer anywhere in the codebase. Deleted outright, not migrated.
+
+## Migration table
+
+Every remaining text selector folds into its nearest role. Sizes round to the role's value; some colors shift brighter/dimmer; selectors that were bold (`#brand-name`, `.safe-zone span`, `.button`) keep their weight via `strong: true` (or, for `.button`, its own explicit rule). Deltas are approved as part of this unification.
+
+**`text-label`** (target 11px / 0.03em / `--text-muted` / uppercase / JetBrains Mono — includes what would otherwise be a separate button-label role):
+
+| Old selector | Old spec | Delta |
+|---|---|---|
+| `.accordion-header` | 10.5px/0.06em/text-muted | size 10.5→11, spacing 0.06→0.03 |
+| `.style-group-label` | 10.5px/0.06em/text-muted | size 10.5→11, spacing 0.06→0.03 |
+| `.settings-row-label` | 10.5px/0.06em/text-muted | size 10.5→11, spacing 0.06→0.03 |
+| `.clip-section-label` | 10.5px/0.06em/text-muted | size 10.5→11, spacing 0.06→0.03 |
+| `.style-panel-header` | 10.5px/0.06em/text-dim | size 10.5→11, spacing 0.06→0.03, color dim→muted |
+| `.sub-panel-title` | 10.5px/0.06em/text-dim | size 10.5→11, spacing 0.06→0.03, color dim→muted |
+| `.style-field` | 9px/0.05em/text-dim | size 9→11, spacing 0.05→0.03, color dim→muted |
+| `.icon-rail-btn`/`.icon-rail-label` | 9px/0.04em/text-dim/uppercase | size 9→11, spacing 0.04→0.03, color dim→muted |
+| `.layers-list-row-type` | 9.5px/text-dim/uppercase | size 9.5→11, +0.03em spacing (new), color dim→muted |
+| `#brand-name` | 10px/0.02em/weight 600 | size 10→11, spacing 0.02→0.03, **+ `strong: true`** to keep weight 600 |
+| `.safe-zone span` | 9px/0.05em/text-secondary/uppercase/600 | size 9→11, spacing 0.05→0.03, color secondary→muted, **+ `strong: true`** to keep weight 600 |
+| `.save-indicator-label` | 8px/0.04em/text-dim | size **8→11 (largest single delta)**, spacing 0.04→0.03, color dim→muted |
+| `.button` | 11.5px/0.03em/weight 600 | size 11.5→11, **+ `strong: true`**-equivalent (own explicit rule, not touched) to keep weight 600 |
+| `.btn-group button` | 10.5px/0.03em | size 10.5→11 |
+
+**`text-body`** (target 13px / `--text` / Public Sans):
+
+| Old selector | Old spec | Delta |
+|---|---|---|
+| `.settings-row-value` | 16px/text-secondary | size 16→13, color secondary→text |
+| `.color-swatch-label` | 14px/text-muted | size 14→13, color muted→text |
+| `.font-list-row-time` | 12px/inherited | size 12→13 |
+| `.style-field input[type="number"]` | 14px/text | size 14→13 |
+| `.context-panel-name` | 12.5px/text-tertiary | size 12.5→13, color tertiary→text |
+| `.layers-list-row-label` | 12.5px/text | size 12.5→13 |
+| `.project-list-row-name` | 12.5px/text | size 12.5→13 |
+| `.project-picker-empty` | 12px/text-dim | size 12→13, color dim→text |
+
+**`text-heading`** (target 13px/0.04em/`--text`/JetBrains Mono):
+
+| Old selector | Old spec | Delta |
+|---|---|---|
+| `.project-picker-heading` | 13px/0.04em/text | none — canonical already |
+
+**`text-data`** (target 10px/`--text-dim`/JetBrains Mono):
+
+| Old selector | Old spec | Delta |
+|---|---|---|
+| `.clip-info .clip-duration` | 9.5px/text-dim | size 9.5→10 |
+| `.clip-usage-chip` | 9.5px/text-dim | size 9.5→10 |
+| `.project-list-row-meta` | 9.5px/text-dim | size 9.5→10 |
+| `.tick` | 9px/text-dim | size 9→10 |
+| `.timeline-block span` | 9.5px/text-tertiary (video-row override: text-secondary) | size 9.5→10, color tertiary→dim (override collapses too) |
+| `#transport` | 11px/text-dim | size 11→10 |
+| `#export-result` | 11px/text-muted | size 11→10, color muted→dim |
+| `#timeline-time` | 11px/text-dim | size 11→10 |
+
+## JS call sites to migrate
+
+Each of these currently builds the element manually (via `className = "..."` or an inlined string) and switches to calling `UI.text(container, str, { role, as, strong })`:
+
+- `static/ui-accordion-section.js` → `.accordion-header`
+- `static/ui-settings-row.js` → `.settings-row-label`, `.settings-row-value`
+- `static/ui-sub-panel-header.js` → `.sub-panel-title`
+- `static/panel-media.js` → `.clip-section-label`, `.clip-info .clip-duration`, `.clip-usage-chip`. `.clip-section-label`'s `<li>` also needs `style-panel.css`'s `#clip-list li` card rule (background/border/padding/hover) scoped to exclude it — e.g. `#clip-list li:not(.text-label)` — so the section-label row no longer inherits card/hover styling meant for clickable media rows.
+- `static/ui-icon-rail.js` → `.icon-rail-btn`/`.icon-rail-label`
+- `static/panel-layers.js` → `.layers-list-row-type`, `.layers-list-row-label`
+- `static/ui-save-indicator.js` → `.save-indicator-label`
+- `static/ui-color-swatch.js` → `.color-swatch-label`
+- `static/caption-panel-words.js` → `.font-list-row-time`
+- `static/ui-project-picker.js` → `.project-picker-heading`, `.project-picker-empty`
+- `static/ui-project-list-row.js` → `.project-list-row-name`, `.project-list-row-meta`
+- `static/panel-video.js`, `static/panel-video-box.js`, `static/panel-audio.js` → `.context-panel-name`
+- `static/timeline.js`, `static/timeline-clip-drag.js` → `.tick`, `.timeline-block span`
+
+Literal-in-HTML cases get their class swapped directly in `static/index.html` (no JS call site to change): `#brand-name`, `.safe-zone span` (4 spans), `#transport`, `#export-result`, `#timeline-time`, `.style-panel-header` (per-panel literal headers), `.style-group-label` where used directly in markup.
+
+`static/panel-export.js`'s number input (`.style-field input[type="number"]`) keeps using `UI.numberField` — only the CSS rule's values change, no call-site change needed since the input isn't created via `UI.text()`.
+
+`.button` and `.btn-group button` are not migrated to a `UI.text()` call — they're native `<button>` elements. Their font-size/letter-spacing/color values in `button.css`/`button-group.css` are updated in place to match `text-label`'s 11px/0.03em/`--text-muted` exactly (`.button` keeps its own explicit `font-weight: 600` rule alongside).
+
+## CSS cleanup
+
+Once every selector above is migrated onto a role class, delete the now-dead per-selector font declarations from: `accordion.css`, `color-swatch.css`, `icon-rail.css`, `layers-panel.css`, `panel.css`, `project-list-row.css`, `project-picker.css`, `safe-zones.css`, `save-indicator.css`, `settings-row.css`, `stage.css` (`#transport`/`#export-result` only), `style-panel.css` (`.context-panel-name`, `.style-panel-header`, `.style-group-label`, `.style-field`, `.style-checkbox`, `.caption-preview-box`, `.clip-info .clip-duration`, `.clip-section-label`, `.clip-usage-chip`), `sub-panel.css` (`.sub-panel-title` only, keep `.font-list-row-name`/`.font-weight-row-preview` bespoke), `timeline.css` (`.tick`, `.timeline-block span`, `#timeline-time` only, keep `.zoom-btn` bespoke). `button-group.css`'s `.btn-group button` and `button.css`'s `.button` keep their rules but with values realigned (see above), not deleted.
+
+## Non-goals
+
+- No changes to `tokens.css` color values.
+- No changes to `--font-content` body copy that isn't part of this label/value/heading family (e.g. `.text-block` canvas overlay text).
+- No generic type-scale utility beyond the 4 roles found in the audit.
+
+## Verification
+
+Pure CSS/JS refactor, no automated visual-regression tooling in this repo. Verify by running the dev server and opening every panel that uses a migrated class — VIDEO, VIDEO BOX, TEXT, CAPTIONS, LAYERS, SETTINGS, EXPORT, PROJECTS, FILES, plus the cold-start project picker and the timeline strip — confirming: (a) no unintended layout/size shifts beyond the deltas explicitly approved above, and (b) the FILES panel's VIDEOS/IMAGES section labels no longer show a background, border, or hover effect.
