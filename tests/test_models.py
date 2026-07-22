@@ -171,6 +171,28 @@ def test_text_preset_highlight_defaults_off():
     p = TextPreset(name="Pop")
     assert p.highlight is False
 
+def test_text_preset_shadow_defaults_off():
+    p = TextPreset(name="Pop")
+    assert p.shadow is False
+    assert p.shadow_color == "#000000"
+    assert p.shadow_offset_x == 4
+    assert p.shadow_offset_y == 4
+    assert p.shadow_blur == 0
+
+def test_text_preset_shadow_round_trip():
+    p = TextPreset(name="Pop", shadow=True, shadow_color="#FF00FF",
+                    shadow_offset_x=-10, shadow_offset_y=20, shadow_blur=8)
+    loaded = TextPreset.model_validate_json(p.model_dump_json())
+    assert loaded == p
+
+def test_text_preset_old_saved_json_without_shadow_fields_loads_with_defaults():
+    import json
+    old_json = json.dumps({"name": "Pop"})
+    loaded = TextPreset.model_validate_json(old_json)
+    assert loaded.shadow is False
+    assert loaded.shadow_color == "#000000"
+    assert (loaded.shadow_offset_x, loaded.shadow_offset_y, loaded.shadow_blur) == (4, 4, 0)
+
 def test_media_item_name_defaults_empty():
     m = MediaItem(file_path="clip.mp4", duration=5.0)
     assert m.name == ""

@@ -56,6 +56,11 @@ class TextPreset(BaseModel):
     color: str = "#FFFFFF"
     outline_color: str = "#000000"
     outline_px: int = 4
+    shadow: bool = False           # drop-shadow on/off
+    shadow_color: str = "#000000"
+    shadow_offset_x: int = 4       # px on the 1080x1920 canvas; UI clamps -40..40
+    shadow_offset_y: int = 4       # px; UI clamps -40..40
+    shadow_blur: int = 0           # px; UI clamps 0..40
     weight: int = 400              # 400 | 500 | 600 | 700 — replaces the old `bold: bool`
     italic: bool = False
     underline: bool = False
