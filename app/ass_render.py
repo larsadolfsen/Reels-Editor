@@ -209,8 +209,18 @@ def _highlight_dialogues(b, p: TextPreset, weight: int | None = None) -> list[st
                         f"P{p.id[:8]}hl{run_i}_{line_i},,0,0,0,,{{{fx}}}{path}{{\\p0}}")
     return out
 
+def _shadow_tag(p: TextPreset) -> str:
+    """ASS override tags for a whole-preset drop shadow: \\4c/\\4a set the shadow (back) color
+    to opaque, \\xshad/\\yshad set independent offsets (overriding the style line's uniform
+    Shadow distance, which stays 0), \\blur softens edges. Note ASS has no shadow-only blur
+    primitive — \\blur softens both outline and shadow together."""
+    if not p.shadow:
+        return ""
+    color = _ass_override_color(p.shadow_color)
+    return f"\\4c{color}\\4a00\\xshad{p.shadow_offset_x}\\yshad{p.shadow_offset_y}\\blur{p.shadow_blur}"
+
 def _block_dialogue(b, p: TextPreset, weight: int | None = None) -> str:
-    fx = f"\\pos({p.x},{p.y})"
+    fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
     if p.entrance == "fade_pop":
         fx += "\\fad(200,0)\\fscx80\\fscy80\\t(0,200,\\fscx100\\fscy100)"
     text, _, _, _ = _wrapped_lines_and_size(b, p, weight)

@@ -32,6 +32,25 @@ def test_entrance_none_has_no_fad():
     p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
     assert "\\fad" not in render_ass(p, {pr.id: pr})
 
+def test_block_dialogue_shadow_off_emits_no_shadow_tags():
+    pr = TextPreset(name="Pop", shadow=False)
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
+    out = render_ass(p, {pr.id: pr})
+    line = next(l for l in out.splitlines() if l.startswith("Dialogue:") and "H" in l)
+    assert "\\xshad" not in line and "\\yshad" not in line and "\\blur" not in line
+
+def test_block_dialogue_shadow_on_emits_offset_blur_and_color_tags():
+    pr = TextPreset(name="Pop", shadow=True, shadow_color="#FF00FF",
+                     shadow_offset_x=6, shadow_offset_y=-3, shadow_blur=8)
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
+    out = render_ass(p, {pr.id: pr})
+    line = next(l for l in out.splitlines() if l.startswith("Dialogue:") and "H" in l)
+    assert "\\xshad6" in line
+    assert "\\yshad-3" in line
+    assert "\\blur8" in line
+    assert "\\4c&HFF00FF&" in line  # #FF00FF -> b=FF,g=00,r=FF, same &HBBGGRR& shape _ass_override_color already uses elsewhere in this file
+    assert "\\4a00" in line
+
 def test_style_line_bold_column_is_always_zero_regardless_of_weight():
     # Bold-ness now lives entirely in which font face Fontname selects, not in ASS's
     # synthetic-bold flag — setting both would double-bold a 700-weight face.
