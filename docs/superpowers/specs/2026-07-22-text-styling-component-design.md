@@ -4,6 +4,8 @@
 
 `static/css/components/*.css` has 35+ distinct `font-size` values for text that should share a small number of roles. A concrete confirmed case: `.style-field`, `.style-group-label`, `.clip-section-label`, `.settings-row-label`, `.sub-panel-title`, `.accordion-header` are all "small caps mono label" text, copy-pasted six times with drifted values (9px/0.05em/`--text-dim` vs 10.5px/0.06em/`--text-muted`). This causes visible drift between panels that should look identical (e.g. a "VIDEOS" section label rendering differently from a "WIDTH (PX)" field label).
 
+**Second, related bug:** `.clip-section-label` (the "VIDEOS"/"IMAGES" group header in the FILES panel) is a bare `<li>` inside `#clip-list`, and `style-panel.css`'s `#clip-list li` rule applies card styling (background, border, padding, hover border-color) to *every* `<li>` in that list — it doesn't distinguish "clickable media row" from "section-label row." The label visibly gets a background and hover effect it should never have, purely from its structural position as a sibling `<li>`, not from anything about being a label. The fix must ensure the new label/text component is structurally independent of whatever list/container it sits in — no shared list selector may leak background/border/hover/cursor onto it.
+
 ## Goal
 
 One canonical text-styling component so no file hand-rolls typography again: a `window.UI.text()` component + a `text.css` stylesheet defining a small, closed set of text roles, with every existing call site migrated onto it.
@@ -24,6 +26,8 @@ window.UI.text = function text(container, str, { role, as = "span", strong = fal
 ```
 
 Unlike `UI.divider`, this does not clear `container.innerHTML` — text nodes typically sit alongside sibling children in a row (e.g. a label next to an input), so `UI.text` only appends.
+
+The created element carries **only** its role class (`text-<role>`, plus `text-strong` if requested) — never a structural/list selector that also carries unrelated background/border/hover/cursor rules meant for interactive rows (see the `.clip-section-label` fix below).
 
 ## Roles
 
@@ -118,7 +122,7 @@ Each of these currently builds the element manually (via `className = "..."` or 
 - `static/ui-accordion-section.js` → `.accordion-header`
 - `static/ui-settings-row.js` → `.settings-row-label`, `.settings-row-value`
 - `static/ui-sub-panel-header.js` → `.sub-panel-title`
-- `static/panel-media.js` → `.clip-section-label`, `.clip-info .clip-duration`, `.clip-usage-chip`
+- `static/panel-media.js` → `.clip-section-label`, `.clip-info .clip-duration`, `.clip-usage-chip`. `.clip-section-label`'s `<li>` also needs `style-panel.css`'s `#clip-list li` card rule (background/border/padding/hover) scoped to exclude it — e.g. `#clip-list li:not(.text-label)` — so the section-label row no longer inherits card/hover styling meant for clickable media rows.
 - `static/ui-icon-rail.js` → `.icon-rail-btn`/`.icon-rail-label`
 - `static/panel-layers.js` → `.layers-list-row-type`, `.layers-list-row-label`
 - `static/ui-save-indicator.js` → `.save-indicator-label`
@@ -147,4 +151,4 @@ Once every selector above is migrated onto a role class, delete the now-dead per
 
 ## Verification
 
-Pure CSS/JS refactor, no automated visual-regression tooling in this repo. Verify by running the dev server and opening every panel that uses a migrated class — VIDEO, VIDEO BOX, TEXT, CAPTIONS, LAYERS, SETTINGS, EXPORT, PROJECTS, FILES, plus the cold-start project picker and the timeline strip — confirming no unintended layout/size shifts beyond the deltas explicitly approved above.
+Pure CSS/JS refactor, no automated visual-regression tooling in this repo. Verify by running the dev server and opening every panel that uses a migrated class — VIDEO, VIDEO BOX, TEXT, CAPTIONS, LAYERS, SETTINGS, EXPORT, PROJECTS, FILES, plus the cold-start project picker and the timeline strip — confirming: (a) no unintended layout/size shifts beyond the deltas explicitly approved above, and (b) the FILES panel's VIDEOS/IMAGES section labels no longer show a background, border, or hover effect.
