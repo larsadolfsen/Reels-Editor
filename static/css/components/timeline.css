@@ -165,6 +165,10 @@
   align-items: center;
   border-top: 1px solid var(--border-soft);
 }
+/* Empty rows (and their labels) are collapsed out via the `hidden` attribute; this
+   overrides the row's display:flex / the label's display:flex above. */
+.timeline-row[hidden],
+#timeline-labels .row-label[hidden] { display: none; }
 .timeline-row[data-row="text"] { height: 44px; }
 .timeline-row[data-row="captions"] { height: 44px; }
 .timeline-row[data-row="video"] { height: 56px; }
