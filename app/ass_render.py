@@ -273,13 +273,13 @@ def _caption_style(p: TextPreset, weight: int) -> str:
             f"0,{italic},{underline},0,100,100,0,0,1,{p.outline_px},0,{alignment},0,0,0,1")
 
 def _karaoke_dialogue(group: list[CaptionWord], p: TextPreset) -> str:
-    fx = f"\\pos({p.x},{p.y})"
+    fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
     body = "".join(f"{{\\k{max(1, round((w.t_end - w.t_start) * 100))}}}{w.text} " for w in group).rstrip()
     start, end = group[0].t_start, group[-1].t_end
     return f"Dialogue: 0,{ass_time(start)},{ass_time(end)},{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{body}"
 
 def _current_word_dialogues(group: list[CaptionWord], p: TextPreset) -> list[str]:
-    fx = f"\\pos({p.x},{p.y})"
+    fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
     highlight = _ass_override_color(p.highlight_color)
     normal = _ass_override_color(p.color)
     lines = []
