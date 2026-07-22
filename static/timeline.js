@@ -1,7 +1,10 @@
 // Timeline strip: pure row-position math (mirrors app/timeline.py) + rendering for
 // toolbar (zoom/time readout)/ruler/playhead/playhead-handle box/TEXT/CAPTIONS/VIDEO BOX/VIDEO/AUDIO
 // rows into the DOM ids defined in index.html. The AUDIO row is a static dummy waveform
-// (no audio-track feature yet). The playhead-handle box (#slice-btn) tracks the playhead
+// (no audio-track feature yet). Empty rows are collapsed out of the timeline (row +
+// aligned label hidden together via setRowVisible): only VIDEO always shows; TEXT/
+// CAPTIONS/VIDEO BOX appear only when they have content, and AUDIO stays hidden until a
+// real audio feature exists. The playhead-handle box (#slice-btn) tracks the playhead
 // and holds two icons: a grip-vertical handle (dragged in editor.js to scrub the playhead)
 // and a scissors icon (visual only, no slice feature yet).
 // Zoomable pixels-per-second scale: auto fit-to-width by default, or a manual zoom level set
@@ -174,6 +177,17 @@ window.Timeline = (() => {
     return el;
   }
 
+  // Show/hide a row and its aligned left-column label together, so empty tracks
+  // (and their labels) collapse out of the timeline. `rowName` is the data-row
+  // value, which also matches the label id (`label-<rowName>`). VIDEO is never
+  // toggled — it always stays visible.
+  function setRowVisible(rowName, visible) {
+    const row = document.querySelector(`.timeline-row[data-row="${rowName}"]`);
+    const label = document.getElementById(`label-${rowName}`);
+    if (row) row.hidden = !visible;
+    if (label) label.hidden = !visible;
+  }
+
   // Small + button appended after a row's content (VIDEO: end of the clip sequence,
   // TEXT: after the last block). Only rendered when the caller passes the action.
   function addRowAddButton(track, left, label, onClick) {
@@ -277,6 +291,14 @@ window.Timeline = (() => {
       addBlock(capTrack, start * px, (end - start) * px, label, isSel,
         () => onSelect({ type: "caption", item: g, groupIndex: i }));
     });
+
+    // Collapse empty tracks out of the timeline: only VIDEO always shows. AUDIO is a
+    // placeholder waveform (no real audio feature wired yet), so it hides too. Rows
+    // reappear automatically once content is added, since render() runs on every change.
+    setRowVisible("text", (project.text_blocks || []).length > 0);
+    setRowVisible("captions", groups.length > 0);
+    setRowVisible("videobox", (project.video_boxes || []).length > 0);
+    setRowVisible("audio", false);
   }
 
   document.getElementById("zoom-in").addEventListener("click", () => { zoomIn(); renderTimeline(); });
