@@ -1,5 +1,6 @@
 // Reusable presentational UI helper, framework-free. Attaches to window.UI.
-// Depends on the .project-list-row CSS component and .icon-btn (button-group.css). No app
+// Depends on the .project-list-row CSS component, .icon-btn (button-group.css), and
+// UI.listRow() (ui-list-row.js) for the shared card/hover/selected styling. No app
 // state — callers own the project data and own persisting any change the callbacks report.
 // Reused by both the full-screen picker (open-only) and the in-editor PROJECTS panel
 // (open + inline rename + delete + duplicate) — pass only the callbacks each context needs.
