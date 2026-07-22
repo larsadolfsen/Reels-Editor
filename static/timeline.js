@@ -8,9 +8,10 @@
 // The playhead-handle box (#slice-btn) tracks the playhead
 // and holds two icons: a grip-vertical handle (dragged in editor.js to scrub the playhead)
 // and a scissors icon (visual only, no slice feature yet).
-// Zoomable pixels-per-second scale: auto fit-to-width by default, or a manual zoom level set
-// via the toolbar −/+ buttons (×1.5 steps, clamped [fit-to-width, 200 px/s]); not persisted,
-// reset to fit-to-width on every project open (editor.js calls Timeline.resetZoom()).
+// Zoomable pixels-per-second scale: the timeline always shows a fixed window of
+// `visibleSeconds` seconds across the scroll container's width. Defaults to 30s; the
+// toolbar −/+ buttons zoom in/out by 10s steps, clamped [10s, 120s]. Not persisted,
+// reset to the 30s default on every project open (editor.js calls Timeline.resetZoom()).
 // #timeline-scroll provides horizontal scroll once zoomed content exceeds the viewport.
 // render()'s 5th `actions = {}` param ({ onAddClip, onAddText }) renders a small dashed "+"
 // button after the VIDEO row's clip sequence / TEXT row's last block (at x=0 when empty),
@@ -23,41 +24,35 @@
 window.Timeline = (() => {
   const LABEL_WIDTH = 88;
   const MIN_PX_PER_SEC_FLOOR = 60; // fallback if the scroll container can't be measured yet
-  const MAX_PX_PER_SEC = 200;
-  const ZOOM_STEP = 1.5;
+  const DEFAULT_VISIBLE_SECONDS = 30;
+  const ZOOM_STEP_SECONDS = 10;
+  const MIN_VISIBLE_SECONDS = 10;
+  const MAX_VISIBLE_SECONDS = 120;
   let lastDuration = 1;
   let lastProject = null;
   let lastTimelineTime = 0;
-  let pxPerSecond = null; // null = auto fit-to-width (the zoomed-out floor); a number once the user zooms in
+  let visibleSeconds = DEFAULT_VISIBLE_SECONDS;
 
-  // Fit-to-width: the scale at which the whole sequence exactly fills the visible scroll
-  // container, with no horizontal scrollbar. Recomputed fresh every call (not cached) since
-  // the container can resize (panel collapse/expand, window resize).
-  function fitToWidthPx(duration) {
+  // Pixels-per-second scale that fits `visibleSeconds` seconds across the scroll container's
+  // width. Recomputed fresh every call (not cached) since the container can resize (panel
+  // collapse/expand, window resize).
+  function currentPxPerSecond() {
     const scrollEl = document.getElementById("timeline-scroll");
     const w = scrollEl ? scrollEl.clientWidth : 0;
-    if (!w || !duration) return MIN_PX_PER_SEC_FLOOR;
-    return w / duration;
-  }
-
-  function currentPxPerSecond() {
-    return pxPerSecond !== null ? pxPerSecond : fitToWidthPx(lastDuration);
+    if (!w) return MIN_PX_PER_SEC_FLOOR;
+    return w / visibleSeconds;
   }
 
   function zoomIn() {
-    const base = currentPxPerSecond();
-    pxPerSecond = Math.min(MAX_PX_PER_SEC, base * ZOOM_STEP);
+    visibleSeconds = Math.max(MIN_VISIBLE_SECONDS, visibleSeconds - ZOOM_STEP_SECONDS);
   }
 
   function zoomOut() {
-    if (pxPerSecond === null) return; // already at the fit-to-width floor
-    const next = pxPerSecond / ZOOM_STEP;
-    const fit = fitToWidthPx(lastDuration);
-    pxPerSecond = next <= fit ? null : next; // snap back to auto fit-to-width at the floor
+    visibleSeconds = Math.min(MAX_VISIBLE_SECONDS, visibleSeconds + ZOOM_STEP_SECONDS);
   }
 
   function resetZoom() {
-    pxPerSecond = null;
+    visibleSeconds = DEFAULT_VISIBLE_SECONDS;
   }
 
   function ordered(list) {
