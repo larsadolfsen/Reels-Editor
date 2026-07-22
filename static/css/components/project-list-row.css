@@ -35,4 +35,5 @@
   color: var(--text-dim);
 }
 
-.project-list-row-action { flex-shrink: 0; }
+.project-list-row-action { flex-shrink: 0; opacity: 0; }
+.project-list-row:hover .project-list-row-action { opacity: 1; }
