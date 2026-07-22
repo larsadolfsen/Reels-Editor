@@ -337,3 +337,62 @@ def test_muted_clip_with_default_volume_still_forces_volume_zero():
                 clips=[ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=2, order=0, muted=True)])
     fc = build_export_cmd(p, "out.mp4")[build_export_cmd(p, "out.mp4").index("-filter_complex") + 1]
     assert ",volume=0[a0];" in fc
+
+def _proj_with_music(volume=0.3, muted=False):
+    p = proj()
+    p.media_library = [MediaItem(id="music1", file_path="song.mp3", duration=180, has_audio=True, kind="audio")]
+    from app.models import MusicTrack
+    p.music = MusicTrack(media_id="music1", volume=volume, muted=muted)
+    return p
+
+def test_music_track_adds_input_trims_and_amixes():
+    p = _proj_with_music(volume=0.4)
+    cmd = build_export_cmd(p, "out.mp4")
+    assert "song.mp3" in cmd
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "atrim=start=0:end=4" in fc          # proj()'s two 2s clips = 4s sequence duration
+    assert "volume=0.4[amusic]" in fc
+    assert "[a][amusic]amix=inputs=2:duration=first[amix]" in fc
+    map_indices = [i for i, x in enumerate(cmd) if x == "-map"]
+    assert cmd[map_indices[-1] + 1] == "[amix]"
+
+def test_no_music_track_leaves_map_a_unchanged():
+    cmd = build_export_cmd(proj(), "out.mp4")
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "amix" not in fc
+    map_indices = [i for i, x in enumerate(cmd) if x == "-map"]
+    assert cmd[map_indices[-1] + 1] == "[a]"
+
+def test_muted_music_skips_amix():
+    p = _proj_with_music(muted=True)
+    cmd = build_export_cmd(p, "out.mp4")
+    assert "song.mp3" not in cmd
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "amix" not in fc
+
+def test_zero_volume_music_skips_amix():
+    p = _proj_with_music(volume=0.0)
+    cmd = build_export_cmd(p, "out.mp4")
+    assert "song.mp3" not in cmd
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "amix" not in fc
+
+def test_music_with_missing_media_item_skips_gracefully():
+    p = proj()
+    from app.models import MusicTrack
+    p.music = MusicTrack(media_id="does-not-exist", volume=0.3)
+    cmd = build_export_cmd(p, "out.mp4")
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "amix" not in fc
+
+def test_music_input_index_bookkeeping_with_video_box_band():
+    p = _proj_with_music(volume=0.3)
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", in_point=0, out_point=2, start=0, height=1920, z_index=5)
+    cmd = build_export_cmd(p, "out.mp4", bands=[{"kind": "video_box", "video_box": box}])
+    # inputs in order: clip a.mp4 (order 0), clip b.mp4 (order 1), song.mp3 (music), pip.mp4 (band)
+    ia, ib, imusic, ipip = cmd.index("a.mp4"), cmd.index("b.mp4"), cmd.index("song.mp3"), cmd.index("pip.mp4")
+    assert ia < ib < imusic < ipip
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "[3:v]" in fc      # pip.mp4 is input index 3 (0=a.mp4, 1=b.mp4, 2=song.mp3, 3=pip.mp4)
+    map_indices = [i for i, x in enumerate(cmd) if x == "-map"]
+    assert cmd[map_indices[-1] + 1] == "[amix]"

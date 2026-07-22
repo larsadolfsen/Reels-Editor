@@ -9,8 +9,13 @@
 # Per-clip ClipLayer.volume/muted apply a `volume=<v>` filter to each clip's real audio chain
 # (muted forces volume=0, overriding any set volume); the synthesized-silence path needs no
 # volume filter. At volume == 1.0 and muted == False, no filter is emitted (byte-identical baseline).
+# Project.music (MusicTrack), when set and audible (not muted, volume > 0), adds the referenced
+# media file as one more input, trims it to the clip sequence's total duration, applies its
+# volume, and amix=inputs=2:duration=first-mixes it with the concatenated clip audio — replacing
+# the final audio map target [a] with [amix]. amix's default normalization (no normalize=0) is
+# used as-is. No music: output is byte-identical to the pre-music baseline.
 from app.models import Project
-from app.timeline import ordered
+from app.timeline import ordered, sequence_duration
 
 def escape_filter_path(path: str) -> str:
     return path.replace("\\", "/").replace(":", "\\:")
@@ -77,6 +82,19 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
     streams = "".join(f"[v{i}][a{i}]" for i in range(len(clips)))
     fc = "".join(parts) + f"{streams}concat=n={len(clips)}:v=1:a=1[vc][a]"
 
+    amap = "[a]"
+    if p.music and not p.music.muted and p.music.volume > 0:
+        music_media = media_by_id.get(p.music.media_id)
+        if music_media:
+            music_idx = input_index
+            cmd += ["-i", music_media.file_path]
+            input_index += 1
+            music_duration = sequence_duration(clips)
+            fc += (f";[{music_idx}:a]atrim=start=0:end={_num(music_duration)},asetpts=PTS-STARTPTS,"
+                   f"volume={_num(p.music.volume)}[amusic]"
+                   f";[a][amusic]amix=inputs=2:duration=first[amix]")
+            amap = "[amix]"
+
     if bands is None:
         vmap = "[vc]"
         if ass_path:
@@ -85,7 +103,7 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
         if caption_ass_path:
             fc += f";{vmap}ass='{escape_filter_path(caption_ass_path)}':fontsdir='{escape_filter_path('static/fonts')}'[vcap]"
             vmap = "[vcap]"
-        cmd += ["-filter_complex", fc, "-map", vmap, "-map", "[a]",
+        cmd += ["-filter_complex", fc, "-map", vmap, "-map", amap,
                 "-c:v", "libx264", "-preset", "fast", "-crf", crf, "-c:a", "aac", out_path]
         return cmd
 
@@ -112,7 +130,7 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
         fc += f";{current}ass='{escape_filter_path(caption_ass_path)}':fontsdir='{escape_filter_path('static/fonts')}'[vcap]"
         current = "[vcap]"
 
-    cmd += ["-filter_complex", fc, "-map", current, "-map", "[a]",
+    cmd += ["-filter_complex", fc, "-map", current, "-map", amap,
             "-c:v", "libx264", "-preset", "fast", "-crf", crf, "-c:a", "aac", out_path]
     return cmd
 
