@@ -263,11 +263,7 @@
             </div>
 
             <div class="style-group">
-              <label id="caption-outline-color-field"></label>
-            </div>
-
-            <div class="style-group">
-              <label id="caption-outline-px-field"></label>
+              <div id="caption-outline-row" class="col-8"></div>
             </div>
 
             <div class="style-group-label">SHADOW</div>
@@ -373,6 +369,16 @@
         <div id="panel-captions-weight" hidden>
           <div id="caption-weight-subpanel-header"></div>
           <ul id="caption-weight-list" class="font-list"></ul>
+        </div>
+
+        <div id="panel-captions-outline" hidden>
+          <div id="caption-outline-subpanel-header"></div>
+          <div class="style-group">
+            <label id="caption-outline-color-field"></label>
+          </div>
+          <div class="style-group">
+            <label id="caption-outline-px-field"></label>
+          </div>
         </div>
 
         <div id="panel-captions-style" hidden>
@@ -537,6 +543,10 @@
           </div>
 
           <div class="style-group">
+            <div id="text-weight-row" class="col-8"></div>
+          </div>
+
+          <div class="style-group">
             <div class="style-row" id="text-size-row">
               <button class="icon-btn col-1" id="text-size-step-down" type="button" aria-label="Decrease font size" title="Decrease font size">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 12 4 4 4-4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>
@@ -546,10 +556,6 @@
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 11 4-4 4 4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>
               </button>
             </div>
-          </div>
-
-          <div class="style-group">
-            <div id="text-weight-row" class="col-8"></div>
           </div>
 
           <div class="style-group">
@@ -568,11 +574,7 @@
           </div>
 
           <div class="style-group">
-            <label id="text-outline-color-field"></label>
-          </div>
-
-          <div class="style-group">
-            <label id="text-outline-px-field"></label>
+            <div id="text-outline-row" class="col-8"></div>
           </div>
 
           <div class="style-group-label">SHADOW</div>
@@ -682,6 +684,16 @@
           <ul id="text-weight-list" class="font-list"></ul>
         </div>
 
+        <div id="panel-text-outline" hidden>
+          <div id="text-outline-subpanel-header"></div>
+          <div class="style-group">
+            <label id="text-outline-color-field"></label>
+          </div>
+          <div class="style-group">
+            <label id="text-outline-px-field"></label>
+          </div>
+        </div>
+
         <div id="panel-text-style" hidden>
           <div id="text-style-subpanel-header"></div>
           <ul id="text-style-list" class="font-list"></ul>
@@ -722,6 +734,7 @@
 <script src="/static/caption-panel-font-family.js"></script>
 <script src="/static/caption-panel-font-weight.js"></script>
 <script src="/static/caption-panel-font-style.js"></script>
+<script src="/static/caption-panel-outline.js"></script>
 <script src="/static/caption-panel-box.js"></script>
 <script src="/static/caption-panel-highlight.js"></script>
 <script src="/static/caption-panel-words.js"></script>
@@ -734,6 +747,7 @@
 <script src="/static/text-panel-font-family.js"></script>
 <script src="/static/text-panel-font-style.js"></script>
 <script src="/static/text-panel-font-weight.js"></script>
+<script src="/static/text-panel-outline.js"></script>
 <script src="/static/text-panel-style.js"></script>
 <script src="/static/text-panel-align.js"></script>
 <script src="/static/text-panel-position.js"></script>
@@ -764,6 +778,7 @@
 <script src="/static/timeline-snap.js"></script>
 <script src="/static/timeline-slice.js"></script>
 <script src="/static/timeline-clip-drag.js"></script>
+<script src="/static/timeline-text-resize.js"></script>
 <script src="/static/undo-history.js"></script>
 <script src="/static/panel-nav.js"></script>
 <script src="/static/editor.js"></script>

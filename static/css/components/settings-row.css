@@ -1,5 +1,5 @@
 /* Clickable settings row: label on top, value (optionally in a custom font) + chevron below. */
-/* Exposes .settings-row/.settings-row-btn/.settings-row-label/.settings-row-value-group/.settings-row-value/.settings-row-chevron. Depends on tokens.css. */
+/* Exposes .settings-row/.settings-row-btn/.settings-row-label/.settings-row-value-group/.settings-row-value/.settings-row-swatch/.settings-row-chevron. Depends on tokens.css. */
 .settings-row-btn {
   display: flex;
   flex-direction: column;
@@ -32,12 +32,27 @@
   min-width: 0;
 }
 
+.settings-row-value-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
 .settings-row-value {
   font-size: 16px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.settings-row-swatch {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
 }
 
 .settings-row-chevron {

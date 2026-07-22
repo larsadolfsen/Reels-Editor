@@ -271,6 +271,24 @@
   color: var(--text);
 }
 
+/* Right-edge duration resize handle for TEXT-row blocks (static/timeline-text-resize.js).
+   Hidden by default, revealed on hover/selected so the block's own click-to-select stays
+   the primary interaction. */
+.timeline-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  opacity: 0;
+}
+.timeline-block:hover .timeline-resize-handle,
+.timeline-block.selected .timeline-resize-handle {
+  opacity: 1;
+  background: var(--accent);
+}
+
 /* Drag-to-reorder (static/timeline-clip-drag.js): the dragged block follows the pointer via
    `transform`, and a thin vertical line shows the snap-to-boundary drop target. */
 .timeline-row[data-row="video"] .timeline-block.dragging {

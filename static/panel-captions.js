@@ -55,6 +55,7 @@ async function renderCaptionPanel() {
   CaptionPanel.renderFontFamily();
   await CaptionPanel.renderFontWeight();
   CaptionPanel.renderFontStyle();
+  CaptionPanel.renderOutline();
   CaptionPanel.renderBox();
   CaptionPanel.renderHighlight();
   CaptionPanel.renderWords();

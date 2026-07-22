@@ -2,15 +2,28 @@
 // text block (empty-state aware when zero blocks exist), plus the stage resize/move handlers.
 // Plain globals (renderTextPanel, currentTextBlock, selectTextBlock, addTextBlock, ...) shared
 // with text-panel-*.js; reaches into editor.js's `project`/`saveProject`/`selected`/`showPanel` globals.
-// addTextBlockAndEdit() (wired to both the empty-state "+ Add text" button and the timeline's
-// TEXT-row + button) creates the block, opens the panel, and immediately enters on-stage
+// addTextBlockAndEdit() (wired to both the empty-state "+ Add text" button and the left icon
+// rail's TEXT entry) creates the block, opens the panel, and immediately enters on-stage
 // contentEditable edit mode via Preview.enterTextEditMode() so the user can type right away.
 
-// Position grid anchors (thirds of the 1080x1920 canvas). Used only as a stateless one-shot
-// shortcut in the POSITION accordion's 3x3 grid — clicking a cell writes the computed value
-// straight into TextPreset.x/y with no persisted anchor selection.
-const POSITION_ANCHORS_X = { left: 162, mid: 540, right: 918 };
-const POSITION_ANCHORS_Y = { top: 288, mid: 960, btm: 1632 };
+// Position grid anchors: edge-flush against the 1080x1920 canvas, using the box's own actual
+// rendered width/height (from Preview.getTextBoxSize/getCaptionBoxSize) so TOP/BTM/LEFT/RIGHT
+// place the box's edge (not its top-left corner) flush with the canvas edge, and MID centers it.
+// Used only as a stateless one-shot shortcut in the POSITION accordion's 3x3 grid — clicking a
+// cell writes the computed value straight into TextPreset.x/y with no persisted anchor selection.
+function anchorPositionX(value, boxWidth) {
+  const w = boxWidth || 0;
+  if (value === "left") return 0;
+  if (value === "right") return Math.max(0, 1080 - w);
+  return Math.max(0, (1080 - w) / 2);
+}
+
+function anchorPositionY(value, boxHeight) {
+  const h = boxHeight || 0;
+  if (value === "top") return 0;
+  if (value === "btm") return Math.max(0, 1920 - h);
+  return Math.max(0, (1920 - h) / 2);
+}
 
 function defaultTextPreset(id) {
   return {
@@ -135,6 +148,7 @@ async function renderTextPanel() {
   TextPanel.renderFontFamily();
   await TextPanel.renderFontWeight();
   TextPanel.renderFontStyle();
+  TextPanel.renderOutline();
   TextPanel.renderStyle();
   renderBoxPanel();
   TextPanel.renderAlign();

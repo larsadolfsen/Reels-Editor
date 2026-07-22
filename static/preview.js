@@ -18,7 +18,11 @@
 // (preloadPlayer) as soon as the current clip starts, so the browser's HTTP cache is warm by the
 // time the real player.src swap happens at the join — smooths the visible stall that a cold
 // network fetch at the clip boundary otherwise causes.
-// Exposes window.Preview.{load, seek, renderText, renderCaptions, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection, enterTextEditMode}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// Exposes window.Preview.{load, seek, renderText, renderCaptions, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection, enterTextEditMode, getTextBoxSize, getCaptionBoxSize}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// getTextBoxSize(blockId)/getCaptionBoxSize() are thin delegating wrappers onto
+// PreviewText.getBoxSizeCanvasPx/PreviewCaptions.getBoxSizeCanvasPx, used by the POSITION
+// anchor-grid shortcut (text-panel-position.js/caption-panel-box.js) to compute edge-flush x/y
+// from the block's actual on-stage rendered size.
 // enterTextEditMode(blockId) is a thin delegating wrapper onto PreviewText.enterEditMode, used to
 // drop a newly-created text block straight into on-stage contentEditable edit mode.
 // renderText/renderCaptions/setSelectedTextBlock/getActiveFormatSelection/setOnStageTextActivate
@@ -234,6 +238,10 @@ window.Preview = (() => {
 
   function enterTextEditMode(blockId) { PreviewText.enterEditMode(blockId); }
 
+  function getTextBoxSize(blockId) { return PreviewText.getBoxSizeCanvasPx(blockId); }
+
+  function getCaptionBoxSize() { return PreviewCaptions.getBoxSizeCanvasPx(); }
+
   function computeTimelineTime() {
     if (clips.length === 0) return virtualTime;
     if (activeIndex < 0) return 0;
@@ -371,5 +379,5 @@ window.Preview = (() => {
     }
   }
 
-  return { load, locate, sequenceDuration, seek, renderText, renderCaptions, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection, enterTextEditMode };
+  return { load, locate, sequenceDuration, seek, renderText, renderCaptions, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection, enterTextEditMode, getTextBoxSize, getCaptionBoxSize };
 })();

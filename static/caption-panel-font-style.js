@@ -1,5 +1,6 @@
-// CAPTIONS panel Design tab: SIZE/Italic/Underline/Color/Outline controls, whole-track
-// caption styling. Exposes window.CaptionPanel.renderFontStyle().
+// CAPTIONS panel Design tab: SIZE/Italic/Underline/Color controls, whole-track
+// caption styling (Outline lives in its own caption-panel-outline.js subpage,
+// same pattern as font family/weight). Exposes window.CaptionPanel.renderFontStyle().
 window.CaptionPanel = window.CaptionPanel || {};
 
 (() => {
@@ -62,44 +63,5 @@ window.CaptionPanel = window.CaptionPanel || {};
       { label: "Color", value: preset.color, span: 8,
         onChange: (v) => { preset.color = v; saveProject(); renderCaptionPreview(); } });
 
-    UI.colorSwatch(document.getElementById("caption-outline-color-field"),
-      { label: "Outline", value: preset.outline_color, span: 8,
-        onChange: (v) => { preset.outline_color = v; saveProject(); renderCaptionPreview(); } });
-
-    UI.numberField(document.getElementById("caption-outline-px-field"),
-      { label: "WIDTH", unit: "PX", value: preset.outline_px, min: 0, max: 20, span: 8,
-        onChange: (v) => { preset.outline_px = v; saveProject(); renderCaptionPreview(); } });
-
-    const shadowFieldsHidden = !preset.shadow;
-    document.getElementById("caption-shadow-color-field").hidden = shadowFieldsHidden;
-    document.getElementById("caption-shadow-offset-x-field").hidden = shadowFieldsHidden;
-    document.getElementById("caption-shadow-offset-y-field").hidden = shadowFieldsHidden;
-    document.getElementById("caption-shadow-blur-field").hidden = shadowFieldsHidden;
-
-    UI.buttonGroup(document.getElementById("caption-shadow-toggle-group"),
-      [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
-      preset.shadow ? "on" : "off",
-      (value) => {
-        preset.shadow = value === "on";
-        saveProject();
-        renderCaptionPreview();
-        window.CaptionPanel.renderFontStyle();
-      });
-
-    UI.colorSwatch(document.getElementById("caption-shadow-color-field"),
-      { label: "Shadow", value: preset.shadow_color, span: 8,
-        onChange: (v) => { preset.shadow_color = v; saveProject(); renderCaptionPreview(); } });
-
-    UI.numberField(document.getElementById("caption-shadow-offset-x-field"),
-      { label: "OFFSET X", unit: "PX", value: preset.shadow_offset_x, min: -40, max: 40, span: 4,
-        onChange: (v) => { preset.shadow_offset_x = v; saveProject(); renderCaptionPreview(); } });
-
-    UI.numberField(document.getElementById("caption-shadow-offset-y-field"),
-      { label: "OFFSET Y", unit: "PX", value: preset.shadow_offset_y, min: -40, max: 40, span: 4,
-        onChange: (v) => { preset.shadow_offset_y = v; saveProject(); renderCaptionPreview(); } });
-
-    UI.numberField(document.getElementById("caption-shadow-blur-field"),
-      { label: "BLUR", unit: "PX", value: preset.shadow_blur, min: 0, max: 40, span: 8,
-        onChange: (v) => { preset.shadow_blur = v; saveProject(); renderCaptionPreview(); } });
   };
 })();

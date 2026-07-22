@@ -1,11 +1,12 @@
 // TEXT panel Box tab: absolute HORIZONTAL/VERTICAL pixel fields (TextPreset.x/y) +
 // a stateless 3x3 anchor-grid shortcut. Exposes window.TextPanel.renderPosition(). Reaches into
 // editor.js's globals (currentTextBlock, ensureTextPreset, saveProject, renderTextPreview,
-// renderTextPanel, POSITION_ANCHORS_X, POSITION_ANCHORS_Y).
+// renderTextPanel, anchorPositionX, anchorPositionY, Preview.getTextBoxSize).
 window.TextPanel = window.TextPanel || {};
 
 window.TextPanel.renderPosition = function renderPosition() {
-  const preset = ensureTextPreset(currentTextBlock().preset_id);
+  const block = currentTextBlock();
+  const preset = ensureTextPreset(block.preset_id);
 
   UI.numberField(document.getElementById("text-offset-x-field"),
     { label: "HORIZONTAL", unit: "PX", value: preset.x, step: 1, min: 1, max: 1080, span: 4,
@@ -20,9 +21,17 @@ window.TextPanel.renderPosition = function renderPosition() {
   // panel so the HORIZONTAL/VERTICAL fields above reflect the new value.
   UI.buttonGroup(document.getElementById("position-row-group"),
     [{ value: "top", label: "TOP", span: 3 }, { value: "mid", label: "MID", span: 2 }, { value: "btm", label: "BTM", span: 3 }],
-    null, (value) => { preset.y = POSITION_ANCHORS_Y[value]; saveProject(); renderTextPanel(); });
+    null, (value) => {
+      const size = Preview.getTextBoxSize(block.id);
+      preset.y = Math.round(anchorPositionY(value, size && size.height));
+      saveProject(); renderTextPanel();
+    });
 
   UI.buttonGroup(document.getElementById("position-col-group"),
     [{ value: "left", label: "LEFT", span: 3 }, { value: "mid", label: "MID", span: 2 }, { value: "right", label: "RIGHT", span: 3 }],
-    null, (value) => { preset.x = POSITION_ANCHORS_X[value]; saveProject(); renderTextPanel(); });
+    null, (value) => {
+      const size = Preview.getTextBoxSize(block.id);
+      preset.x = Math.round(anchorPositionX(value, size && size.width));
+      saveProject(); renderTextPanel();
+    });
 };
