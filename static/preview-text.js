@@ -3,8 +3,10 @@
 // and owns click-to-edit/drag-to-move/drag-to-select wiring plus the active format-range selection
 // consumed by the FONT accordion. Also tracks the per-block UI.textInteraction() handle (keyed by
 // block id, cleared/rebuilt each renderText() call) so a newly-created block can be dropped
-// straight into on-stage edit mode via enterEditMode(blockId). Exposes window.PreviewText.
-// {renderText, setSelectedTextBlock, getActiveFormatSelection, setOnStageTextActivate, enterEditMode}.
+// straight into on-stage edit mode via enterEditMode(blockId). getBoxSizeCanvasPx(blockId) reads
+// a block's live on-stage rendered size (in 1080x1920 canvas px) for the POSITION anchor-grid
+// shortcut. Exposes window.PreviewText.
+// {renderText, setSelectedTextBlock, getActiveFormatSelection, setOnStageTextActivate, enterEditMode, getBoxSizeCanvasPx}.
 window.PreviewText = (() => {
   let textProject = null;
   let textPresets = {};
@@ -86,6 +88,7 @@ window.PreviewText = (() => {
 
       const div = document.createElement("div");
       div.className = `text-block text-block--align-${preset.align}`;
+      div.dataset.blockId = block.id;
       div.style.zIndex = String(block.z_index ?? 0);
       div.style.left = (preset.x / 1080 * stageW) + "px";
       div.style.top = (preset.y / 1920 * stageH) + "px";
@@ -202,5 +205,17 @@ window.PreviewText = (() => {
     if (h) h.enterEditMode();
   }
 
-  return { renderText, setSelectedTextBlock, getActiveFormatSelection, setOnStageTextActivate, enterEditMode };
+  // Returns the currently-rendered box's size in canvas (1080x1920) px, for the POSITION
+  // anchor-grid shortcut to compute edge-flush x/y from — null if the block isn't on stage
+  // (e.g. hidden by its own time range) to render against.
+  function getBoxSizeCanvasPx(blockId) {
+    const div = overlay.querySelector(`.text-block[data-block-id="${blockId}"]`);
+    if (!div) return null;
+    const stageW = overlay.clientWidth || stage.clientWidth;
+    const stageH = overlay.clientHeight || stage.clientHeight;
+    if (!stageW || !stageH) return null;
+    return { width: div.offsetWidth / stageW * 1080, height: div.offsetHeight / stageH * 1920 };
+  }
+
+  return { renderText, setSelectedTextBlock, getActiveFormatSelection, setOnStageTextActivate, enterEditMode, getBoxSizeCanvasPx };
 })();

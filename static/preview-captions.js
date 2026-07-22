@@ -1,7 +1,9 @@
 // Stage caption overlay rendering: groups project.captions.words via Timeline.groupWords
 // (max_words_per_line), finds the group active at a given timelineTime, and renders it as one
 // .caption-block div with per-word highlight color per preset.highlight_mode. Stateless.
-// Exposes window.PreviewCaptions.renderCaptions(project, presets, timelineTime).
+// getBoxSizeCanvasPx() reads the caption block's live on-stage rendered size (in 1080x1920 canvas
+// px) for the POSITION anchor-grid shortcut. Exposes window.PreviewCaptions.
+// {renderCaptions(project, presets, timelineTime), getBoxSizeCanvasPx}.
 window.PreviewCaptions = (() => {
   const overlay = document.getElementById("overlay");
   const stage = document.getElementById("stage");
@@ -66,5 +68,14 @@ window.PreviewCaptions = (() => {
     overlay.appendChild(div);
   }
 
-  return { renderCaptions };
+  function getBoxSizeCanvasPx() {
+    const div = overlay.querySelector(".caption-block");
+    if (!div) return null;
+    const stageW = overlay.clientWidth || stage.clientWidth;
+    const stageH = overlay.clientHeight || stage.clientHeight;
+    if (!stageW || !stageH) return null;
+    return { width: div.offsetWidth / stageW * 1080, height: div.offsetHeight / stageH * 1920 };
+  }
+
+  return { renderCaptions, getBoxSizeCanvasPx };
 })();
