@@ -11,11 +11,17 @@
 // place the box's edge (not its top-left corner) flush with the canvas edge, and MID centers it.
 // Used only as a stateless one-shot shortcut in the POSITION accordion's 3x3 grid — clicking a
 // cell writes the computed value straight into TextPreset.x/y with no persisted anchor selection.
-function anchorPositionX(value, boxWidth) {
+function anchorPositionX(value, boxWidth, align) {
+  // The box's rendered left edge is offset from `x` by a CSS transform keyed on text align
+  // (stage.css's .text-block--align-*: 0 for left, -50% for center, -100% for right), so the
+  // same edge-flush x must be shifted by that same fraction of the box width to compensate.
   const w = boxWidth || 0;
-  if (value === "left") return 0;
-  if (value === "right") return Math.max(0, 1080 - w);
-  return Math.max(0, (1080 - w) / 2);
+  const offsetFactor = align === "center" ? 0.5 : align === "right" ? 1 : 0;
+  let visualLeft;
+  if (value === "left") visualLeft = 0;
+  else if (value === "right") visualLeft = Math.max(0, 1080 - w);
+  else visualLeft = Math.max(0, (1080 - w) / 2);
+  return visualLeft + offsetFactor * w;
 }
 
 function anchorPositionY(value, boxHeight) {

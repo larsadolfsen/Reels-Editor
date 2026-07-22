@@ -80,7 +80,7 @@ window.CaptionPanel.renderBox = function renderBox() {
     [{ value: "left", label: "LEFT", span: 3 }, { value: "mid", label: "MID", span: 2 }, { value: "right", label: "RIGHT", span: 3 }],
     null, (value) => {
       const size = Preview.getCaptionBoxSize();
-      preset.x = Math.round(anchorPositionX(value, size && size.width));
+      preset.x = Math.round(anchorPositionX(value, size && size.width, preset.align));
       saveProject(); renderCaptionPanel();
     });
 };
