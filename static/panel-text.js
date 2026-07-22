@@ -2,8 +2,8 @@
 // text block (empty-state aware when zero blocks exist), plus the stage resize/move handlers.
 // Plain globals (renderTextPanel, currentTextBlock, selectTextBlock, addTextBlock, ...) shared
 // with text-panel-*.js; reaches into editor.js's `project`/`saveProject`/`selected`/`showPanel` globals.
-// addTextBlockAndEdit() (wired to both the empty-state "+ Add text" button and the timeline's
-// TEXT-row + button) creates the block, opens the panel, and immediately enters on-stage
+// addTextBlockAndEdit() (wired to both the empty-state "+ Add text" button and the left icon
+// rail's TEXT entry) creates the block, opens the panel, and immediately enters on-stage
 // contentEditable edit mode via Preview.enterTextEditMode() so the user can type right away.
 
 // Position grid anchors (thirds of the 1080x1920 canvas). Used only as a stateless one-shot
