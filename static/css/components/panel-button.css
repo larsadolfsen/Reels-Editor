@@ -25,6 +25,10 @@
   color: var(--danger);
   border-color: var(--danger);
 }
+.panel-button-danger:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
 
 .panel-button-dashed {
   border-style: dashed;
