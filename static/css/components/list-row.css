@@ -1,0 +1,21 @@
+/* Shared "clickable list row" card recipe: background/border/hover/selected state, reused by
+   the PROJECTS list, LAYERS list, FILES clip list, and font/style drill-down lists so each
+   panel no longer hand-rolls its own copy. Depends on tokens.css. Applied via
+   window.UI.listRow() (static/ui-list-row.js) — each panel keeps its own row layout
+   (flex direction, gap, children) in its own CSS file. */
+.list-row {
+  padding: var(--space-2);
+  border-radius: 3px;
+  margin-bottom: var(--space-1);
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  cursor: pointer;
+}
+.list-row:hover { border-color: var(--border-hover-color); }
+.list-row.selected { border-color: var(--accent); }
+
+.list-row--subtle {
+  background: transparent;
+  border: 1px solid transparent;
+}
+.list-row--subtle:hover { background: var(--bg-2); }
