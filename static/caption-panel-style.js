@@ -45,6 +45,7 @@ window.CaptionPanel = window.CaptionPanel || {};
   function renderStyleListRow(saved) {
     const li = document.createElement("li");
     li.className = "font-list-row";
+    UI.listRow(li, { subtle: true });
     li.addEventListener("click", () => applySavedPreset(saved));
     const nameEl = document.createElement("span");
     nameEl.className = "font-list-row-name";

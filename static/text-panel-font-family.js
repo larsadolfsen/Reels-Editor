@@ -56,6 +56,7 @@ window.TextPanel = window.TextPanel || {};
 
       const li = document.createElement("li");
       li.className = "font-list-row";
+      UI.listRow(li, { subtle: true });
       li.addEventListener("mouseenter", () => hoverPreviewFont(fontName));
       li.addEventListener("mouseleave", () => renderTextPreview());
       li.addEventListener("click", () => selectFont(fontName));

@@ -1,7 +1,7 @@
 // #panel-layers context-panel section: every text block + video box in one drag-and-drop
 // reorderable list, sorted by z_index descending (top row = highest z_index = frontmost).
 // Dropping a row renumbers every entry's z_index to match the new order. Exposes
-// window.LayersPanel.render(). Plain HTML5 drag-and-drop, no new dependency.
+// window.LayersPanel.render(). Uses UI.listRow() for shared card styling (UI.listRow, list-row.css).
 window.LayersPanel = window.LayersPanel || {};
 
 (() => {
@@ -26,6 +26,7 @@ window.LayersPanel = window.LayersPanel || {};
     entries.forEach((entry, index) => {
       const li = document.createElement("li");
       li.className = "layers-list-row";
+      UI.listRow(li);
       li.draggable = true;
 
       const type = document.createElement("span");

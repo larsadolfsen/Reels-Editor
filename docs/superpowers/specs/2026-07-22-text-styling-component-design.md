@@ -122,7 +122,7 @@ Each of these currently builds the element manually (via `className = "..."` or 
 - `static/ui-accordion-section.js` → `.accordion-header`
 - `static/ui-settings-row.js` → `.settings-row-label`, `.settings-row-value`
 - `static/ui-sub-panel-header.js` → `.sub-panel-title`
-- `static/panel-media.js` → `.clip-section-label`, `.clip-info .clip-duration`, `.clip-usage-chip`. `.clip-section-label`'s `<li>` also needs `style-panel.css`'s `#clip-list li` card rule (background/border/padding/hover) scoped to exclude it — e.g. `#clip-list li:not(.text-label)` — so the section-label row no longer inherits card/hover styling meant for clickable media rows.
+- `static/panel-media.js` → `.clip-section-label`, `.clip-info .clip-duration`, `.clip-usage-chip`. `.clip-section-label`'s `<li>` gets only `text-label` (via `UI.text()`) and is never passed to `UI.listRow()` (see `docs/superpowers/specs/2026-07-22-list-row-component-design.md`) — since card/hover styling now only reaches an `<li>` that explicitly opts in via `.list-row`, no `:not()` exclusion is needed on `#clip-list li` at all.
 - `static/ui-icon-rail.js` → `.icon-rail-btn`/`.icon-rail-label`
 - `static/panel-layers.js` → `.layers-list-row-type`, `.layers-list-row-label`
 - `static/ui-save-indicator.js` → `.save-indicator-label`

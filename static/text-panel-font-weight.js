@@ -61,6 +61,7 @@ window.TextPanel = window.TextPanel || {};
     currentWeights.forEach((w) => {
       const li = document.createElement("li");
       li.className = "font-list-row";
+      UI.listRow(li, { subtle: true });
       li.addEventListener("click", () => selectWeight(w.value));
 
       // Label + preview are grouped in one wrapper so this row still has exactly two direct
