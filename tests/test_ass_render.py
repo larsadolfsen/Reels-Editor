@@ -341,6 +341,23 @@ def test_current_word_dialogue_shadow_off_emits_no_tags():
     line = next(l for l in out.splitlines() if l.startswith("Dialogue:"))
     assert "\\xshad" not in line and "\\blur" not in line
 
+def test_current_word_dialogue_shadow_on_emits_tags():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Cap", highlight_mode="current_word",
+                     shadow=True, shadow_color="#0000FF", shadow_offset_x=4, shadow_offset_y=-2, shadow_blur=1)
+    p = Project(name="r", captions=CaptionTrack(words=[w("hi", 0.0, 0.5)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    line = next(l for l in out.splitlines() if l.startswith("Dialogue:"))
+    assert "\\xshad4" in line and "\\yshad-2" in line and "\\blur1" in line
+
+def test_karaoke_dialogue_shadow_off_emits_no_tags():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Cap", highlight_mode="progressive_fill", shadow=False)
+    p = Project(name="r", captions=CaptionTrack(words=[w("hi", 0.0, 0.5)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    line = next(l for l in out.splitlines() if l.startswith("Dialogue:"))
+    assert "\\xshad" not in line and "\\blur" not in line
+
 def test_render_caption_ass_expands_multi_word_entry_into_karaoke_segments():
     from app.ass_render import render_caption_ass
     pr = TextPreset(name="Caption", highlight_mode="progressive_fill", max_words_per_line=4)
