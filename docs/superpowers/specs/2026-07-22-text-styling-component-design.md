@@ -1,0 +1,26 @@
+# Text styling component — design
+
+## Problem
+
+Every panel file in `static/css/components/*.css` hand-rolls its own `font-family`/`font-size`/`letter-spacing`/`color` for text elements instead of reusing a shared definition. A grep across `static/css/components/` turns up 35+ distinct `font-size` values (8px, 9px, 9.5px, 10px, 10.5px, 11px, 11.5px, 12px, 12.5px, 13px, 14px, 16px, 20px, …) — most of them accidental near-duplicates of each other rather than intentional distinct sizes.
+
+Confirmed concrete case: `.style-field`, `.style-group-label`, `.clip-section-label`, `.settings-row-label`, `.sub-panel-title`, and `.accordion-header` are all the same "small caps mono label" role, copy-pasted six times with slightly different values (9px/0.05em/`--text-dim` vs 10.5px/0.06em/`--text-muted`). This causes visible drift (e.g. a "VIDEOS" section label rendering differently from a "WIDTH (PX)" field label) any time a new panel is added by hand instead of reusing an existing rule.
+
+**Second, related bug found during investigation:** `.clip-section-label` (the "VIDEOS"/"IMAGES" group header in the FILES panel) is a bare `<li>` inside `#clip-list`, and [style-panel.css:157-169](../../../static/css/components/style-panel.css) applies card styling (background, border, padding, hover border-color) to *every* `<li>` in that list — it doesn't distinguish "this is a clickable media row" from "this is a section-label row." The label visibly has a background and a hover effect that a label must never have; it inherited them purely from its structural position (a sibling `<li>` selector), not from anything about being a label. This is the same root problem — a label reusing structural/behavioral context instead of being an isolated component with only its own styles — so the fix below must ensure the new label/text component is structurally independent of whatever list/container it's placed in (no shared selector can leak background/border/hover/cursor onto it).
+
+## Goal
+
+Introduce one canonical text-styling component so no file can hand-roll typography (or accidentally inherit interactive/card styling) again. Concretely:
+
+1. Audit every `font-size`/`font-family`/`letter-spacing`/`color` combination currently used for text in `static/css/components/*.css` and `static/index.html`. Cluster them into the smallest set of genuinely distinct **text roles** the design actually needs (expect roughly 5–8 — e.g. `micro-label` [the caps mono label case above], `value`/`readout`, `heading`, `body`, `mono-data`/timestamp, `button-label`). Do not preserve accidental near-duplicates as separate roles — collapse them into the nearest existing role and flag the visual size delta for review.
+2. Build `static/ui-text.js` exposing `window.UI.text(container, text, { role, as = "span" })` — mirrors the existing minimal-component pattern (see `static/ui-divider.js`): creates one element of the given tag, stamps it with a role-specific class, sets its text, appends it to `container`, returns it. The created element must carry **only** its role class — never reuse a structural/list selector (like `#clip-list li`) that also carries background/border/hover/cursor rules meant for interactive rows.
+3. Build `static/css/components/text.css` with one class per role (e.g. `.text-micro-label`, `.text-heading`, …), each defining the full declaration (font-family/size/letter-spacing/color) exactly once, and nothing else (no background/border/cursor/hover — those are never part of a text role).
+4. Migrate every existing call site (JS-generated and static `index.html` markup) to the new classes/component. This includes fixing `.clip-section-label` in `panel-media.js` so its `<li>` opts out of `#clip-list li`'s card styling (e.g. give the label its own non-card selector, or restrict the card rule to `#clip-list li:not(.text-micro-label)` — whichever keeps the CSS simplest). Delete the old duplicate CSS rules once nothing references them — no dead code left behind.
+5. **Non-goals:** don't touch `tokens.css` color values, don't restyle `--font-content` (Public Sans) body copy that isn't part of this label/value/heading family, don't introduce a generic type-scale utility beyond the roles actually found in the audit.
+6. **Verification:** since this is a pure-CSS/JS refactor with no automated visual-regression tooling in this repo, verify by loading every panel that uses a migrated class (VIDEO, VIDEO BOX, TEXT, CAPTIONS, LAYERS, SETTINGS, EXPORT, PROJECTS, FILES) in the running dev server and confirming: (a) no unintended layout/size shifts beyond the explicitly-approved label unification (field labels growing 9px→10.5px, `--text-dim`→`--text-muted`), and (b) the FILES panel's VIDEOS/IMAGES section labels no longer show a background, border, or hover effect.
+
+## Decisions already made (do not re-litigate)
+
+- One size for every label-role instance — no per-context size variants.
+- Canonical label style is the majority style already in use: 10.5px / 0.06em letter-spacing / `--text-muted` (not the 9px/`--text-dim` field-label style).
+- `.color-swatch-label` (14px, Public Sans, e.g. "Highlight Color" next to a swatch) is explicitly out of scope — it's a readable inline value label, a different role from the micro-caps label pattern.
