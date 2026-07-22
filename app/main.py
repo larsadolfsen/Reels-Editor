@@ -78,9 +78,9 @@ def probe(path: str) -> dict:
         return {"duration": 0.0, "has_audio": False, "kind": "image"}
     return {"duration": media.probe_duration(path), "has_audio": media.has_audio_stream(path), "kind": "video"}
 
-@app.get("/api/pick-file")
-def pick_file() -> dict:
-    return {"path": media.pick_file()}
+@app.get("/api/pick-files")
+def pick_files() -> dict:
+    return {"paths": media.pick_files()}
 
 @app.get("/api/fonts/{name}/weights")
 def list_font_weights(name: str) -> list[dict]:

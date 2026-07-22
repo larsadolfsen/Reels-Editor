@@ -1,7 +1,7 @@
 # Media helpers: ffprobe duration probing, audio stream detection, extension-based image detection,
 # safe local file serving, native file picker, and parsing ffmpeg -progress output into a percent.
 # Exposes ffprobe_cmd, probe_duration, has_audio_stream, is_image_path, media_response, run_export,
-# percent_from_progress_line, pick_file. Depends on ffprobe/ffmpeg on PATH and tkinter.
+# percent_from_progress_line, pick_files. Depends on ffprobe/ffmpeg on PATH and tkinter.
 import os
 import shutil
 import subprocess
@@ -103,15 +103,15 @@ def run_export(cmd: list[str], on_progress: Callable[[float], None] | None = Non
             stderr_file.seek(0)
             raise RuntimeError(stderr_file.read()[-2000:])
 
-def pick_file() -> str | None:
+def pick_files() -> list[str]:
     # Must stay a sync `def` route: FastAPI dispatches sync handlers to a worker thread,
-    # so this blocking Tk dialog runs off the main thread. Switching the /api/pick-file
+    # so this blocking Tk dialog runs off the main thread. Switching the /api/pick-files
     # route to `async def` would run this on the event loop and freeze the server.
     root = tkinter.Tk()
     root.withdraw()
     root.attributes("-topmost", True)
-    path = filedialog.askopenfilename(
-        title="Choose a clip",
+    paths = filedialog.askopenfilenames(
+        title="Import Media",
         filetypes=[
             ("Media files", "*.mp4 *.mov *.mkv *.jpg *.jpeg *.png *.webp"),
             ("Video files", "*.mp4 *.mov *.mkv"),
@@ -120,4 +120,4 @@ def pick_file() -> str | None:
         ],
     )
     root.destroy()
-    return path or None
+    return list(paths)
