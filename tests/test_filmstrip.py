@@ -1,4 +1,3 @@
-from unittest.mock import patch
 from app.filmstrip import frame_interval, frame_count, generate_filmstrip
 
 def test_frame_interval_is_one_second_under_the_cap():
