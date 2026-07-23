@@ -51,6 +51,16 @@
   white-space: nowrap;
 }
 
+/* Groups a .font-list-row-name with an inline status icon (e.g. the filler-words tab's
+   "found in transcript" warning) so they sit flush together instead of being spread apart by
+   .font-list-row's own space-between. */
+.font-list-row-name-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  overflow: hidden;
+}
+
 .font-list-row-time {
   width: 52px;
   flex-shrink: 0;
