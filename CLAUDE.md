@@ -23,6 +23,7 @@ Local web editor that assembles 4–6 mp4 clips into one vertical reel with trim
 app/
   __init__.py       # package marker
   main.py           # FastAPI app wiring only (routes -> modules, static mount); DATA_DIR resolves via _resolve_data_dir() from the DATA_DIR env var (default "data"), added 2026-07-23 for cloud hosting
+  auth.py            # session-cookie signing for the shared-password login gate (added 2026-07-23, cloud hosting): create_session_token/verify_session_token (itsdangerous URLSafeTimedSerializer, 30-day max age), no accounts/DB
   models.py         # Pydantic data model (Project, ProjectSummary, MediaItem, ClipLayer, VideoBoxLayer, TextPreset, FormatRun, TextBlockLayer, CaptionWord, CaptionTrack)
   store.py          # project JSON persistence (save/load/list/delete) + global presets.json
   media.py           # ffprobe command building/duration parsing, extension-based image detection (is_image_path, added 2026-07-21, image/photo clips), serves media files, native file picker (`pick_file(kind="video"|"audio")`/`_filedialog_options(kind)`, audio filter added 2026-07-22 for music import)
@@ -318,6 +319,12 @@ Shared preset library (distinct from a block's live working style) used by both 
 - `static/export-progress.js` — `ExportProgress.start(jobId, {onDone, onFailed})`: 500ms poller driving `#panel-export`'s progress bar (`#export-progress`/`#export-progress-fill`, `static/css/components/export-progress.css`); `static/editor.js`'s `exportProject()` disables `#export` during the job (starts it via `Api.exportProject`, then `ExportProgress.start`) and re-enables it on `onDone`/`onFailed`, matching the pre-change `#export-result` output on success/failure.
 - `static/editor.js` — `openExportPanel()` opens `#panel-export` (calls `ExportPanel.render()`, plus the existing `#export`/`exportProject()`/`#export-result` wiring).
 - `static/fonts/` — vendored variable woff2 + generated static per-weight `.ttf` files.
+
+### Hosting, auth & deployment
+
+Added 2026-07-23 for the "run this app on Android" project's piece 1 (cloud hosting + access gate) — see `docs/superpowers/specs/2026-07-23-cloud-hosting-auth-design.md`.
+
+- `app/auth.py` — `create_session_token(secret) -> str`/`verify_session_token(token, secret) -> bool`: signs/verifies a stateless session cookie (itsdangerous `URLSafeTimedSerializer`, 30-day max age). No accounts or DB — one shared `APP_PASSWORD`, not per-user.
 
 ### Settings & safe zones
 
