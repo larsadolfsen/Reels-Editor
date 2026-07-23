@@ -2,6 +2,7 @@
 # burned into the ffmpeg command when a project has text blocks, and skipped otherwise.
 from pathlib import Path
 from unittest.mock import patch
+import pytest
 from app import export_jobs
 from app.main import export_project, list_presets, create_preset, probe, sanitize_export_filename, resolve_export_path, media_peaks
 from app.models import Project, TextBlockLayer, TextPreset, MediaItem
@@ -352,3 +353,15 @@ def test_login_page_itself_reachable_without_cookie(monkeypatch):
     client = TestClient(fastapi_app)
     res = client.get("/login")
     assert res.status_code == 200
+
+def test_missing_session_secret_with_app_password_raises_at_import(monkeypatch):
+    import importlib
+    import app.main as main_module
+    monkeypatch.setenv("APP_PASSWORD", "x")
+    monkeypatch.delenv("SESSION_SECRET", raising=False)
+    try:
+        with pytest.raises(RuntimeError):
+            importlib.reload(main_module)
+    finally:
+        monkeypatch.delenv("APP_PASSWORD", raising=False)
+        importlib.reload(main_module)

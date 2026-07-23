@@ -21,6 +21,8 @@ app = FastAPI()
 
 APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "")
+if APP_PASSWORD and not SESSION_SECRET:
+    raise RuntimeError("SESSION_SECRET must be set when APP_PASSWORD is set")
 
 _UNSAFE_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')
 
@@ -60,6 +62,7 @@ def login_submit(password: str = Form(...)):
             max_age=auth.SESSION_MAX_AGE_SECONDS,
             httponly=True,
             samesite="lax",
+            secure=True,
         )
         return resp
     return RedirectResponse("/login?error=1", status_code=303)
