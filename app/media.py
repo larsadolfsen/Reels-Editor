@@ -160,10 +160,10 @@ def generate_thumbnail(media_id: str, file_path: str, data_dir: Path) -> Path:
 
     if is_image_path(file_path):
         # For images, just copy to thumbnail (ffmpeg will scale it)
-        cmd = ["ffmpeg", "-y", "-i", file_path, "-vf", "scale=68:102:force_original_aspect_ratio=decrease,pad=68:102:(ow-iw)/2:(oh-ih)/2", "-q:v", "5", str(thumb_path)]
+        cmd = ["ffmpeg", "-y", "-i", file_path, "-vf", "scale=68:102:force_original_aspect_ratio=increase,crop=68:102", "-q:v", "5", str(thumb_path)]
     else:
         # For videos, extract frame at 1 second
-        cmd = ["ffmpeg", "-y", "-ss", "1", "-i", file_path, "-vf", "scale=68:102:force_original_aspect_ratio=decrease,pad=68:102:(ow-iw)/2:(oh-ih)/2", "-vframes", "1", "-q:v", "5", str(thumb_path)]
+        cmd = ["ffmpeg", "-y", "-ss", "1", "-i", file_path, "-vf", "scale=68:102:force_original_aspect_ratio=increase,crop=68:102", "-vframes", "1", "-q:v", "5", str(thumb_path)]
 
     resolved, env = _resolve_cmd(cmd, _refreshed_path())
     subprocess.run(resolved, capture_output=True, check=True, env=env)
