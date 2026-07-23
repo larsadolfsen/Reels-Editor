@@ -231,6 +231,15 @@ def test_media_peaks_route_returns_peaks(monkeypatch):
     result = media_peaks("abc123", "song.mp3")
     assert result == [0.1, 0.2, 0.3]
 
+def test_media_filmstrip_route_returns_file_response(monkeypatch, tmp_path):
+    from app.main import media_filmstrip
+    fake_path = tmp_path / "sprite.jpg"
+    fake_path.write_bytes(b"fake-sprite")
+    monkeypatch.setattr("app.main.filmstrip.generate_filmstrip",
+                         lambda media_id, path, data_dir: fake_path)
+    result = media_filmstrip("abc123", "clip.mp4")
+    assert result.path == str(fake_path)
+
 def test_pick_file_route_passes_kind_through(monkeypatch):
     from app.main import pick_file as pick_file_route
     captured = {}
