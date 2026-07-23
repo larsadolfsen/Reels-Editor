@@ -208,15 +208,6 @@
         <div id="panel-captions-main">
           <div class="style-panel-header">CAPTIONS</div>
 
-          <div class="style-group">
-            <div id="caption-language-row" class="col-8"></div>
-          </div>
-
-          <div class="style-group">
-            <button id="caption-auto-btn" class="panel-button col-8" type="button"><span class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H8"/><path d="m15.007 5.008 3.987 3.986"/><path d="M20 15v4"/><path d="M21.174 6.813a2.82 2.82 0 0 0-3.986-3.987L3.842 16.175a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="M22 17h-4"/><path d="M4 5v4"/><path d="M6 7H2"/><path d="M9 2v2"/></svg></span><span class="label">Auto-caption</span></button>
-            <p id="caption-empty-state" class="context-panel-name col-8">No captions yet — click Auto-caption to transcribe this reel's audio.</p>
-          </div>
-
           <div id="caption-tab-bar"></div>
 
           <div id="caption-style-body">
@@ -345,6 +336,25 @@
           </div>
 
           <div id="caption-words-body">
+            <div class="style-group">
+              <div id="caption-language-row" class="col-8"></div>
+            </div>
+
+            <div class="style-group">
+              <button id="caption-auto-btn" class="panel-button col-8" type="button"><span class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H8"/><path d="m15.007 5.008 3.987 3.986"/><path d="M20 15v4"/><path d="M21.174 6.813a2.82 2.82 0 0 0-3.986-3.987L3.842 16.175a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="M22 17h-4"/><path d="M4 5v4"/><path d="M6 7H2"/><path d="M9 2v2"/></svg></span><span class="label">Auto-caption</span></button>
+            </div>
+
+            <div id="caption-transcript-section">
+              <div class="style-group-label">TRANSCRIPT</div>
+              <ul id="caption-words-list" class="font-list"></ul>
+            </div>
+          </div>
+
+          <div id="caption-filler-body">
+            <div class="style-group">
+              <button id="caption-filler-auto-remove-btn" class="panel-button col-8" type="button"><span class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 16.586V19a1 1 0 0 1-1 1H2L18.37 3.63a1 1 0 1 1 3 3l-9.663 9.663a1 1 0 0 1-1.414 0L8 14"/><path d="M10 3H8"/><path d="M9 2v2"/><path d="M20 15v4"/><path d="M22 17h-4"/><path d="M4 5v4"/><path d="M6 7H2"/></svg></span><span class="label">Auto-remove filler words</span></button>
+            </div>
+
             <div class="style-group-label">FILLER WORDS</div>
             <div class="style-group">
               <div class="style-row">
@@ -353,9 +363,6 @@
               </div>
             </div>
             <ul id="caption-filler-words-list" class="font-list"></ul>
-
-            <div class="style-group-label">TRANSCRIPT</div>
-            <ul id="caption-words-list" class="font-list"></ul>
           </div>
 
         </div>
@@ -802,6 +809,7 @@
 <script src="/static/caption-panel-highlight.js"></script>
 <script src="/static/caption-panel-words.js"></script>
 <script src="/static/caption-panel-language.js"></script>
+<script src="/static/filler-word-ranges.js"></script>
 <script src="/static/caption-panel-filler-words.js"></script>
 <script src="/static/api-list-projects.js"></script>
 <script src="/static/api-delete-project.js"></script>

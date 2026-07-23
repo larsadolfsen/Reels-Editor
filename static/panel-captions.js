@@ -50,8 +50,7 @@ async function renderCaptionPanel() {
   document.getElementById("panel-captions-language").hidden = true;
   document.getElementById("panel-captions-main").hidden = false;
 
-  const track = ensureCaptionTrack();
-  document.getElementById("caption-empty-state").hidden = track.words.length > 0;
+  ensureCaptionTrack();
 
   CaptionPanel.renderLanguage();
   CaptionPanel.renderStyle();
@@ -72,12 +71,14 @@ const CAPTION_TAB_ICON_STYLE = '<svg viewBox="0 0 24 24" width="18" height="18" 
 const CAPTION_TAB_ICON_DESIGN = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>';
 const CAPTION_TAB_ICON_BOX = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 7a24 24 0 0 1 0 10"/><path d="M4.5 7a24 24 0 0 0 0 10"/><path d="M7 19.5a24 24 0 0 0 10 0"/><path d="M7 4.5a24 24 0 0 1 10 0"/><rect x="17" y="17" width="5" height="5" rx="1"/><rect x="17" y="2" width="5" height="5" rx="1"/><rect x="2" y="17" width="5" height="5" rx="1"/><rect x="2" y="2" width="5" height="5" rx="1"/></svg>';
 const CAPTION_TAB_ICON_CLOSED_CAPTION = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="14" x="3" y="5" rx="2" ry="2"/><path d="M7 15h4M15 15h2M7 11h2M13 11h4"/></svg>';
+const CAPTION_TAB_ICON_FILLER = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 16.586V19a1 1 0 0 1-1 1H2L18.37 3.63a1 1 0 1 1 3 3l-9.663 9.663a1 1 0 0 1-1.414 0L8 14"/><path d="M10 3H8"/><path d="M9 2v2"/><path d="M20 15v4"/><path d="M22 17h-4"/><path d="M4 5v4"/><path d="M6 7H2"/></svg>';
 
 const CAPTION_TABS = [
+  { value: "closed-caption", icon: CAPTION_TAB_ICON_CLOSED_CAPTION, label: "Closed captions" },
+  { value: "filler", icon: CAPTION_TAB_ICON_FILLER, label: "Filler words" },
   { value: "style", icon: CAPTION_TAB_ICON_STYLE, label: "Style" },
   { value: "design", icon: CAPTION_TAB_ICON_DESIGN, label: "Design" },
   { value: "box", icon: CAPTION_TAB_ICON_BOX, label: "Box" },
-  { value: "closed-caption", icon: CAPTION_TAB_ICON_CLOSED_CAPTION, label: "Closed captions" },
 ];
 // Design groups two existing bodies (FONT + HIGHLIGHT) — both show/hide together.
 const captionTabPanes = {
@@ -85,8 +86,9 @@ const captionTabPanes = {
   design: [document.getElementById("caption-font-body"), document.getElementById("caption-highlight-body")],
   box: [document.getElementById("caption-box-body")],
   "closed-caption": [document.getElementById("caption-words-body")],
+  filler: [document.getElementById("caption-filler-body")],
 };
-let activeCaptionTab = "style";
+let activeCaptionTab = "closed-caption";
 function showCaptionTab(value) {
   activeCaptionTab = value;
   Object.entries(captionTabPanes).forEach(([k, els]) => els.forEach((el) => { el.hidden = k !== value; }));
