@@ -90,6 +90,20 @@ window.TextPanel = window.TextPanel || {};
   document.getElementById("text-size-step-down").addEventListener("click", () => stepSize(-1));
   document.getElementById("text-size-step-up").addEventListener("click", () => stepSize(1));
 
+  let colorRowSetValue = null;
+
+  function openColorPanel() {
+    document.getElementById("panel-text-main").hidden = true;
+    document.getElementById("panel-text-color").hidden = false;
+  }
+
+  function closeColorPanel() {
+    document.getElementById("panel-text-color").hidden = true;
+    document.getElementById("panel-text-main").hidden = false;
+  }
+
+  UI.subPanelHeader(document.getElementById("text-color-subpanel-header"), { title: "Color", onBack: closeColorPanel });
+
   window.TextPanel.renderFontStyle = function renderFontStyle() {
     const preset = ensureTextPreset(currentTextBlock().preset_id);
     // BOX SIZE mode FILL computes size_px automatically (static/preview.js's maybeRefitFillText) —
@@ -116,7 +130,16 @@ window.TextPanel = window.TextPanel || {};
           renderTextPreview();
         } });
 
-    UI.colorSwatch(document.getElementById("text-color-field"),
+    if (colorRowSetValue) {
+      colorRowSetValue(preset.color, null, preset.color);
+    } else {
+      colorRowSetValue = UI.settingsRow(document.getElementById("text-color-row"), {
+        label: "Color", value: preset.color, swatchColor: preset.color,
+        onClick: openColorPanel,
+      });
+    }
+
+    UI.colorSwatch(document.getElementById("text-color-color-field"),
       { label: "Color", value: preset.color, span: 8,
         onChange: (v) => {
           const block = currentTextBlock();
@@ -128,6 +151,7 @@ window.TextPanel = window.TextPanel || {};
           }
           saveProject();
           renderTextPreview();
+          renderFontStyle();
         } });
 
   };
