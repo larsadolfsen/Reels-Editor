@@ -8,6 +8,7 @@ Local web editor that assembles 4–6 mp4 clips into one vertical reel with trim
 - Server: `.venv/Scripts/python -m uvicorn app.main:app --reload` (then open http://127.0.0.1:8000)
 - Setup: `python -m venv .venv && .venv/Scripts/pip install -e .[dev]`
 - Requires `ffmpeg`/`ffprobe` on PATH for clip probing/export (not required for `pytest`, which mocks subprocess calls).
+- Cloud deploy: Railway, GitHub-connected, builds from the repo's `Dockerfile`. See `docs/deploy-railway.md` for one-time setup and the post-deploy verification checklist.
 
 ## Conventions
 
@@ -330,6 +331,8 @@ Added 2026-07-23 for the "run this app on Android" project's piece 1 (cloud host
 - `app/auth.py` — `create_session_token(secret) -> str`/`verify_session_token(token, secret) -> bool`: signs/verifies a stateless session cookie (itsdangerous `URLSafeTimedSerializer`, 30-day max age). No accounts or DB — one shared `APP_PASSWORD`, not per-user.
 - `app/main.py` — `GET /login` serves `static/login.html`; `POST /login` (form-encoded `password`) compares against `APP_PASSWORD` via `hmac.compare_digest`, sets a signed session cookie and redirects to `/` on match, else redirects to `/login?error=1`. `AuthMiddleware` (Starlette `BaseHTTPMiddleware`) gates every other route: skipped entirely when `APP_PASSWORD` is unset; `/login`/`/static` paths always pass through; elsewhere a missing/invalid session cookie redirects to `/login` (or returns `401` for `/api/*` paths).
 - `static/login.html`/`static/login.js`/`static/css/components/login.css` — standalone login page (not part of the `index.html` SPA): password field, posts to `/login`, `login.js` shows `#login-error` when redirected back with `?error=1`.
+- `Dockerfile`/`.dockerignore` — `python:3.12-slim` + `ffmpeg`, base (non-`dev`/`ml`) dependencies only; Railway's GitHub-connected service builds from this on push.
+- `docs/deploy-railway.md` — one-time Railway dashboard setup (volume, env vars) and the manual post-deploy verification checklist (login flow, volume persistence, `ffmpeg` on `PATH`).
 
 ### Settings & safe zones
 
