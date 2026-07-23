@@ -10,8 +10,12 @@
 // and a scissors icon (visual only, no slice feature yet).
 // Zoomable pixels-per-second scale: the timeline always shows a fixed window of
 // `visibleSeconds` seconds across the scroll container's width. Defaults to 30s; the
-// toolbar −/+ buttons zoom in/out by 10s steps, clamped [10s, 120s]. Not persisted,
-// reset to the 30s default on every project open (editor.js calls Timeline.resetZoom()).
+// toolbar −/+ buttons zoom in/out by 10s steps, clamped to at least [10s, 120s] (see
+// below). Not persisted, reset to the 30s default on every project open (editor.js
+// calls Timeline.resetZoom()). Auto-fit: every render() widens `visibleSeconds` to
+// fit the project's whole content (fitVisibleSeconds) unless the user has manually
+// zoomed (manualZoom flag, set by zoomIn/zoomOut, cleared by resetZoom) — so adding
+// clips grows the visible window automatically until the user takes manual control.
 // #timeline-scroll provides horizontal scroll once zoomed content exceeds the viewport.
 // render()'s 5th `actions = {}` param ({ onAddClip }) renders a small dashed "+" button
 // after the VIDEO row's clip sequence (at x=0 when empty), giving a visible way to add a
@@ -34,6 +38,7 @@ window.Timeline = (() => {
   let lastProject = null;
   let lastTimelineTime = 0;
   let visibleSeconds = DEFAULT_VISIBLE_SECONDS;
+  let manualZoom = false;
 
   // Pixels-per-second scale that fits `visibleSeconds` seconds across the scroll container's
   // width. Recomputed fresh every call (not cached) since the container can resize (panel
@@ -45,16 +50,27 @@ window.Timeline = (() => {
     return w / visibleSeconds;
   }
 
+  // Widens the visible window to fit the whole project (plus a little trailing
+  // padding so the last block's add-button/resize-handle isn't flush against the
+  // container's right edge), used for auto-fit and as the manual zoom-out ceiling.
+  function fitVisibleSeconds(duration) {
+    return Math.max(DEFAULT_VISIBLE_SECONDS, Math.ceil(duration) + 2);
+  }
+
   function zoomIn() {
+    manualZoom = true;
     visibleSeconds = Math.max(MIN_VISIBLE_SECONDS, visibleSeconds - ZOOM_STEP_SECONDS);
   }
 
   function zoomOut() {
-    visibleSeconds = Math.min(MAX_VISIBLE_SECONDS, visibleSeconds + ZOOM_STEP_SECONDS);
+    manualZoom = true;
+    const ceiling = lastProject ? Math.max(MAX_VISIBLE_SECONDS, fitVisibleSeconds(totalDuration(lastProject))) : MAX_VISIBLE_SECONDS;
+    visibleSeconds = Math.min(ceiling, visibleSeconds + ZOOM_STEP_SECONDS);
   }
 
   function resetZoom() {
     visibleSeconds = DEFAULT_VISIBLE_SECONDS;
+    manualZoom = false;
   }
 
   function ordered(list) {
@@ -212,6 +228,7 @@ window.Timeline = (() => {
     lastDuration = duration;
     lastProject = project;
     lastTimelineTime = timelineTime;
+    if (!manualZoom) visibleSeconds = fitVisibleSeconds(duration);
     const px = currentPxPerSecond();
     const contentWidth = duration * px;
     document.getElementById("timeline-content").style.width = `${contentWidth}px`;
