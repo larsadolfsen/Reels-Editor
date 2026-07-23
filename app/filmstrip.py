@@ -28,8 +28,9 @@ def frame_count(duration: float, interval: float) -> int:
 def generate_filmstrip(media_id: str, file_path: str, data_dir: Path) -> Path:
     """Generate a horizontal sprite-sheet JPEG of sampled frames for a media file.
     For videos, samples one frame every frame_interval() seconds up to frame_count()
-    frames; for images, ffmpeg's fps filter naturally yields a single tile. Returns
-    the path to the cached sprite."""
+    frames; for images, the input is looped for one interval so the fps filter has
+    something to sample, yielding a single-tile sprite. Returns the path to the
+    cached sprite."""
     filmstrip_dir = Path(data_dir) / "filmstrips"
     filmstrip_dir.mkdir(parents=True, exist_ok=True)
     filmstrip_path = filmstrip_dir / f"{media_id}.jpg"
@@ -43,7 +44,14 @@ def generate_filmstrip(media_id: str, file_path: str, data_dir: Path) -> Path:
 
     scale_pad = f"scale={FRAME_W}:-1:force_original_aspect_ratio=decrease,pad={FRAME_W}:{FRAME_H}:(ow-iw)/2:(oh-ih)/2"
     vf = f"fps=1/{interval},{scale_pad},tile={count}x1"
-    cmd = ["ffmpeg", "-y", "-i", file_path, "-vf", vf, "-frames:v", "1", "-q:v", "5", str(filmstrip_path)]
+    if is_image_path(file_path):
+        # A still image has no duration for ffmpeg's fps filter to sample against, so
+        # without -loop it yields zero output frames. Loop it for exactly one sampled
+        # interval (count is always 1 for images) so the fps filter has something to sample.
+        input_args = ["-loop", "1", "-t", str(interval), "-i", file_path]
+    else:
+        input_args = ["-i", file_path]
+    cmd = ["ffmpeg", "-y", *input_args, "-vf", vf, "-frames:v", "1", "-q:v", "5", str(filmstrip_path)]
 
     resolved, env = _resolve_cmd(cmd, _refreshed_path())
     subprocess.run(resolved, capture_output=True, check=True, env=env)

@@ -259,7 +259,11 @@ window.Timeline = (() => {
       const name = (media && (media.name || media.file_path.split(/[\\/]/).pop())) || c.file_path.split(/[\\/]/).pop();
       const isSel = !!selected && selected.type === "video" && selected.item.id === c.id;
       addBlock(videoTrack, acc * px, d * px, name, isSel, () => onSelect({ type: "video", item: c }));
-      videoTrack.lastElementChild.dataset.clipId = c.id;
+      const blockEl = videoTrack.lastElementChild;
+      blockEl.dataset.clipId = c.id;
+      if (media && media.kind !== "audio") {
+        TimelineVideoRow.render(blockEl, c, media, px, () => renderTimeline());
+      }
       acc += d;
     }
     if (actions.onAddClip) addRowAddButton(videoTrack, acc * px, "Add clip", actions.onAddClip);

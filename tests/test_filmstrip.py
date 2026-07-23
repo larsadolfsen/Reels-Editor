@@ -48,6 +48,8 @@ def test_generate_filmstrip_image_yields_single_frame_sprite(tmp_path, monkeypat
 
     cmd_str = " ".join(captured_cmd["cmd"])
     assert "tile=1x1" in cmd_str
+    assert "-loop" in captured_cmd["cmd"]
+    assert "1" in captured_cmd["cmd"]
 
 def test_generate_filmstrip_reuses_cached_file(tmp_path, monkeypatch):
     filmstrip_dir = tmp_path / "filmstrips"
