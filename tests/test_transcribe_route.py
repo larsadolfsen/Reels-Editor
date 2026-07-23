@@ -73,3 +73,16 @@ def test_transcribe_returns_503_when_ml_extra_missing(tmp_path, monkeypatch):
 
     assert res.status_code == 503
     assert res.json()["detail"] == "Transcription not available on this deployment"
+
+def test_transcribe_returns_503_when_runtime_fails(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    p = Project(name="r")
+    store.save_project(p, tmp_path)
+
+    with patch("app.main.media.run_export"), \
+         patch("app.main.transcribe.transcribe_file",
+               side_effect=RuntimeError("Library cublas64_12.dll is not found or cannot be loaded")):
+        res = client.post(f"/api/projects/{p.id}/transcribe")
+
+    assert res.status_code == 503
+    assert res.json()["detail"] == "Transcription failed: Library cublas64_12.dll is not found or cannot be loaded"

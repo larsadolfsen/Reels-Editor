@@ -161,6 +161,8 @@ def transcribe_project(pid: str) -> Project:
         words = transcribe.transcribe_file(str(wav_path), language=language)
     except ImportError:
         raise HTTPException(503, "Transcription not available on this deployment")
+    except RuntimeError as e:
+        raise HTTPException(503, f"Transcription failed: {e}")
 
     if p.captions:
         p.captions.words = words

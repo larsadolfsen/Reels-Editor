@@ -40,6 +40,11 @@
   white-space: nowrap;
 }
 
+.caption-transcribe-error {
+  color: var(--danger);
+  white-space: normal;
+}
+
 .style-panel-header {
   font-family: var(--font-ui);
   font-size: 10.5px;

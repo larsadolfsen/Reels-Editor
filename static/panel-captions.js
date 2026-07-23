@@ -52,6 +52,7 @@ async function renderCaptionPanel() {
 
   const track = ensureCaptionTrack();
   document.getElementById("caption-empty-state").hidden = track.words.length > 0;
+  document.getElementById("caption-transcribe-error").hidden = true;
 
   CaptionPanel.renderLanguage();
   CaptionPanel.renderStyle();
@@ -109,14 +110,25 @@ async function runAutoCaption() {
   ensureCaptionTrack();
   const btn = document.getElementById("caption-auto-btn");
   const label = btn.querySelector(".label");
+  const errorEl = document.getElementById("caption-transcribe-error");
+  errorEl.hidden = true;
   btn.disabled = true;
   label.textContent = "Transcribing…";
   try {
     const res = await fetch(`/api/projects/${project.id}/transcribe`, { method: "POST" });
-    if (!res.ok) return;
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      errorEl.textContent = (body && body.detail) || `Transcription failed (${res.status}).`;
+      errorEl.hidden = false;
+      document.getElementById("caption-empty-state").hidden = true;
+      return;
+    }
     project = await res.json();
     await renderCaptionPanel();
     renderTimeline();
+  } catch {
+    errorEl.textContent = "Transcription failed: could not reach the server.";
+    errorEl.hidden = false;
   } finally {
     btn.disabled = false;
     label.textContent = "Auto-caption";
