@@ -38,13 +38,14 @@ def generate_filmstrip(media_id: str, file_path: str, data_dir: Path) -> Path:
     if filmstrip_path.exists():
         return filmstrip_path
 
-    duration = 0.0 if is_image_path(file_path) else probe_duration(file_path)
+    is_image = is_image_path(file_path)
+    duration = 0.0 if is_image else probe_duration(file_path)
     interval = frame_interval(duration)
     count = frame_count(duration, interval)
 
     scale_pad = f"scale={FRAME_W}:-1:force_original_aspect_ratio=decrease,pad={FRAME_W}:{FRAME_H}:(ow-iw)/2:(oh-ih)/2"
     vf = f"fps=1/{interval},{scale_pad},tile={count}x1"
-    if is_image_path(file_path):
+    if is_image:
         # A still image has no duration for ffmpeg's fps filter to sample against, so
         # without -loop it yields zero output frames. Loop it for exactly one sampled
         # interval (count is always 1 for images) so the fps filter has something to sample.
