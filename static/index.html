@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="/static/css/components/project-picker.css">
 <link rel="stylesheet" href="/static/css/components/video-box-panel.css">
 <link rel="stylesheet" href="/static/css/components/layers-panel.css">
+<link rel="stylesheet" href="/static/css/components/auto-slice-panel.css">
 <link rel="stylesheet" href="/static/css/components/export-progress.css">
 </head><body>
 <div id="app">
@@ -517,6 +518,37 @@
         <ul id="layers-list" class="layers-list"></ul>
       </div>
 
+      <div id="panel-auto-slice" class="context-panel" hidden>
+        <div class="style-panel-header">AUTO SLICE</div>
+
+        <div id="auto-slice-idle" class="style-group">
+          <p class="auto-slice-hint">Detect silence and filler words (um, uh…) and remove them from the timeline.</p>
+          <p id="auto-slice-no-transcript-hint" class="auto-slice-hint" hidden>No transcript yet — only silence will be detected. Transcribe captions first (CAPTIONS panel) to also catch filler words.</p>
+          <button id="auto-slice-detect-btn" type="button" class="panel-button col-8">Detect Silence &amp; Filler Words</button>
+        </div>
+
+        <div id="auto-slice-results" hidden>
+          <div id="auto-slice-summary" class="auto-slice-summary"></div>
+          <ul id="auto-slice-list" class="auto-slice-list"></ul>
+          <div class="style-group">
+            <button id="auto-slice-continue" type="button" class="panel-button col-8">Continue</button>
+          </div>
+          <div class="style-group">
+            <button id="auto-slice-redetect" type="button" class="panel-button col-8">Re-detect</button>
+          </div>
+        </div>
+
+        <div id="auto-slice-confirm" hidden>
+          <p id="auto-slice-confirm-summary" class="auto-slice-hint"></p>
+          <div class="style-group">
+            <button id="auto-slice-confirm-apply" type="button" class="panel-button panel-button-danger col-8">Confirm &amp; Apply</button>
+          </div>
+          <div class="style-group">
+            <button id="auto-slice-back" type="button" class="panel-button col-8">Back</button>
+          </div>
+        </div>
+      </div>
+
       <div id="panel-text" class="context-panel" hidden>
         <div id="panel-text-main">
           <div class="style-panel-header">TEXT</div>
@@ -732,6 +764,8 @@
 <script src="/static/api-pick-file.js"></script>
 <script src="/static/api-probe-media.js"></script>
 <script src="/static/api-export-project.js"></script>
+<script src="/static/api-detect-auto-slice.js"></script>
+<script src="/static/api-apply-auto-slice.js"></script>
 <script src="/static/api-get-media-peaks.js"></script>
 <script src="/static/api-get-media-thumbnail.js"></script>
 <script src="/static/api-get-media-filmstrip.js"></script>
@@ -776,6 +810,7 @@
 <script src="/static/panel-captions.js"></script>
 <script src="/static/clip-sequence.js"></script>
 <script src="/static/panel-layers.js"></script>
+<script src="/static/panel-auto-slice.js"></script>
 <script src="/static/panel-export.js"></script>
 <script src="/static/export-progress.js"></script>
 <script src="/static/preview-text.js"></script>

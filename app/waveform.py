@@ -2,7 +2,8 @@
 # (no I/O); peaks_for_media decodes a media file to mono 16-bit PCM via ffmpeg and caches the
 # downsampled result as JSON at data/peaks/{media_id}.json — gitignored, invalidated by absence
 # only (media files are immutable once imported, so no mtime/hash check is needed).
-# Exposes downsample_pcm16, peaks_for_media. Depends on app.media's registry-PATH ffmpeg resolution.
+# Exposes downsample_pcm16, peaks_from_file (uncached, any file), peaks_for_media (cached, by media id).
+# Depends on app.media's registry-PATH ffmpeg resolution.
 import json
 import struct
 import subprocess
@@ -37,11 +38,13 @@ def _cache_path(media_id: str, data_dir) -> Path:
     d.mkdir(parents=True, exist_ok=True)
     return d / f"{media_id}.json"
 
+def peaks_from_file(file_path: str, samples_per_second: int = 10) -> list[float]:
+    return downsample_pcm16(_decode_pcm(file_path), sample_rate=PCM_SAMPLE_RATE, samples_per_second=samples_per_second)
+
 def peaks_for_media(media_id: str, file_path: str, data_dir, samples_per_second: int = 10) -> list[float]:
     cache_file = _cache_path(media_id, data_dir)
     if cache_file.exists():
         return json.loads(cache_file.read_text(encoding="utf-8"))
-    pcm = _decode_pcm(file_path)
-    peaks = downsample_pcm16(pcm, sample_rate=PCM_SAMPLE_RATE, samples_per_second=samples_per_second)
+    peaks = peaks_from_file(file_path, samples_per_second=samples_per_second)
     cache_file.write_text(json.dumps(peaks), encoding="utf-8")
     return peaks

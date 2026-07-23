@@ -1,7 +1,7 @@
 # Tests for app.timeline: pure sequence math over ordered, trimmed clips.
 import pytest
 from app.models import ClipLayer, VideoBoxLayer, TextBlockLayer, Project
-from app.timeline import ordered, clip_duration, sequence_duration, locate, video_box_end, banded_layers, slice_clip
+from app.timeline import ordered, clip_duration, sequence_duration, locate, video_box_end, banded_layers, slice_clip, clip_starts
 
 def c(i, o, order): return ClipLayer(media_id=f"m{order}", file_path=f"{order}.mp4", in_point=i, out_point=o, order=order)
 
@@ -104,6 +104,18 @@ def test_slice_trimmed_clip_uses_source_time():
     by_order = sorted(out, key=lambda x: x.order)
     assert (by_order[0].in_point, by_order[0].out_point) == (2, 3.0)
     assert (by_order[1].in_point, by_order[1].out_point) == (3.0, 6.0)
+
+def test_clip_starts_accumulates_in_order():
+    clips = [c(0, 4, 1), c(2, 5, 0)]          # unordered on purpose, durations 4 and 3
+    starts = clip_starts(clips)
+    assert starts[clips[1].id] == 0.0         # order=0 starts at 0
+    assert starts[clips[0].id] == 3.0         # order=1 starts after order=0's 3s duration
+
+def test_clip_starts_speed_scaled():
+    clips = [cs(0, 4, 0, 2.0), cs(0, 4, 1, 1.0)]   # timeline durations 2 and 4
+    starts = clip_starts(clips)
+    assert starts[clips[0].id] == 0.0
+    assert starts[clips[1].id] == 2.0
 
 def test_slice_carries_fill_mode_and_speed():
     src = ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=4, order=0, fill_mode="fill", speed=2.0)

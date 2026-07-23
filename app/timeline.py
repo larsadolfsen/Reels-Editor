@@ -10,6 +10,17 @@ def clip_duration(c: ClipLayer) -> float:
 def sequence_duration(clips: list[ClipLayer]) -> float:
     return sum(clip_duration(c) for c in clips)
 
+def clip_starts(clips: list[ClipLayer]) -> dict[str, float]:
+    """Maps each clip id to its accumulated timeline start (same walk as locate(), but returns
+    every clip's start instead of stopping at one t). Used by app.auto_slice to find which clips
+    fall inside an approved cut range."""
+    acc = 0.0
+    starts = {}
+    for c in ordered(clips):
+        starts[c.id] = acc
+        acc += clip_duration(c)
+    return starts
+
 def locate(clips: list[ClipLayer], t: float) -> tuple[ClipLayer, float]:
     acc = 0.0
     for c in ordered(clips):

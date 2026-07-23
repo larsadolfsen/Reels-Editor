@@ -9,8 +9,8 @@ from fastapi import FastAPI, HTTPException, Form, Request
 from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack
-from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip, auth
+from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack, AutoSliceApplyRequest
+from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip, auth, auto_slice
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
 def _resolve_data_dir() -> Path:
@@ -169,6 +169,39 @@ def transcribe_project(pid: str) -> Project:
         p.text_presets[preset.id] = preset
         p.captions = CaptionTrack(words=words, preset_id=preset.id)
 
+    store.save_project(p, DATA_DIR)
+    return p
+
+@app.post("/api/projects/{pid}/auto-slice/detect")
+def detect_auto_slice(pid: str) -> dict:
+    p = store.load_project(pid, DATA_DIR)
+    ordered_clips = timeline.ordered(p.clips)
+    if not ordered_clips:
+        return {"ranges": []}
+
+    out_dir = DATA_DIR / "exports"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    wav_path = out_dir / f"{p.id[:8]}-autoslice.wav"
+    media.run_export(ffmpeg_cmd.build_audio_cmd(p, str(wav_path)))
+    peaks = waveform.peaks_from_file(str(wav_path), samples_per_second=auto_slice.DETECTION_SAMPLES_PER_SECOND)
+
+    ranges = [
+        {"start": s, "end": e, "kind": "silence", "label": f"{e - s:.1f}s silence"}
+        for s, e in auto_slice.detect_silence_ranges(peaks, auto_slice.DETECTION_SAMPLES_PER_SECOND)
+    ]
+    if p.captions and p.captions.words:
+        ranges += [
+            {"start": s, "end": e, "kind": "filler", "label": text}
+            for s, e, text in auto_slice.detect_filler_ranges(p.captions.words)
+        ]
+    ranges.sort(key=lambda r: r["start"])
+    return {"ranges": ranges}
+
+@app.post("/api/projects/{pid}/auto-slice/apply")
+def apply_auto_slice(pid: str, body: AutoSliceApplyRequest) -> Project:
+    p = store.load_project(pid, DATA_DIR)
+    ranges = [(r.start, r.end) for r in body.ranges]
+    p = auto_slice.apply_cuts(p, ranges)
     store.save_project(p, DATA_DIR)
     return p
 

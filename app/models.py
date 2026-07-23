@@ -161,6 +161,13 @@ class Project(BaseModel):
     export_filename: str = ""
     export_quality: str = "high"
 
+class AutoSliceRange(BaseModel):
+    start: float
+    end: float
+
+class AutoSliceApplyRequest(BaseModel):
+    ranges: list[AutoSliceRange]
+
 class ProjectSummary(BaseModel):
     id: str
     name: str
