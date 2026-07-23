@@ -5,9 +5,10 @@ import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, Form
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi import FastAPI, HTTPException, Form, Request
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack
 from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, auth
 from app.font_metrics import available_weights, WEIGHT_LABELS
@@ -62,6 +63,21 @@ def login_submit(password: str = Form(...)):
         )
         return resp
     return RedirectResponse("/login?error=1", status_code=303)
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if not APP_PASSWORD:
+            return await call_next(request)
+        if request.url.path.startswith("/login") or request.url.path.startswith("/static"):
+            return await call_next(request)
+        token = request.cookies.get(auth.SESSION_COOKIE_NAME)
+        if token and auth.verify_session_token(token, SESSION_SECRET):
+            return await call_next(request)
+        if request.url.path.startswith("/api/"):
+            return Response(status_code=401)
+        return RedirectResponse("/login")
+
+app.add_middleware(AuthMiddleware)
 
 @app.post("/api/projects")
 def create_project(body: dict) -> Project:

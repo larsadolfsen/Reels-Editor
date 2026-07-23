@@ -293,3 +293,62 @@ def test_login_page_serves_html(monkeypatch):
     res = client.get("/login")
     assert res.status_code == 200
     assert "login-form" in res.text
+
+def test_unauthenticated_request_redirected_to_login(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app as fastapi_app
+    monkeypatch.setattr("app.main.APP_PASSWORD", "correct-horse")
+    monkeypatch.setattr("app.main.SESSION_SECRET", "test-secret")
+    client = TestClient(fastapi_app)
+    res = client.get("/", follow_redirects=False)
+    assert res.status_code == 307
+    assert res.headers["location"] == "/login"
+
+def test_unauthenticated_api_request_returns_401(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app as fastapi_app
+    monkeypatch.setattr("app.main.APP_PASSWORD", "correct-horse")
+    monkeypatch.setattr("app.main.SESSION_SECRET", "test-secret")
+    client = TestClient(fastapi_app)
+    res = client.get("/api/projects", follow_redirects=False)
+    assert res.status_code == 401
+
+def test_no_app_password_skips_auth_entirely(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app as fastapi_app
+    monkeypatch.setattr("app.main.APP_PASSWORD", "")
+    client = TestClient(fastapi_app)
+    res = client.get("/")
+    assert res.status_code == 200
+
+def test_valid_cookie_allows_request_through(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app as fastapi_app
+    from app import auth
+    monkeypatch.setattr("app.main.APP_PASSWORD", "correct-horse")
+    monkeypatch.setattr("app.main.SESSION_SECRET", "test-secret")
+    client = TestClient(fastapi_app)
+    token = auth.create_session_token("test-secret")
+    client.cookies.set(auth.SESSION_COOKIE_NAME, token)
+    res = client.get("/")
+    assert res.status_code == 200
+
+def test_tampered_cookie_redirected_to_login(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app as fastapi_app
+    from app import auth
+    monkeypatch.setattr("app.main.APP_PASSWORD", "correct-horse")
+    monkeypatch.setattr("app.main.SESSION_SECRET", "test-secret")
+    client = TestClient(fastapi_app)
+    client.cookies.set(auth.SESSION_COOKIE_NAME, "garbage-token")
+    res = client.get("/", follow_redirects=False)
+    assert res.status_code == 307
+    assert res.headers["location"] == "/login"
+
+def test_login_page_itself_reachable_without_cookie(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app as fastapi_app
+    monkeypatch.setattr("app.main.APP_PASSWORD", "correct-horse")
+    client = TestClient(fastapi_app)
+    res = client.get("/login")
+    assert res.status_code == 200
