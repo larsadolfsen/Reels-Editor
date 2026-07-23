@@ -4,9 +4,13 @@
 // standalone interaction handler preview.js mounts/unmounts per-element via a callback object).
 // Returns { enterEditMode } so a caller can programmatically enter edit mode (e.g. immediately
 // after creating a new text block), not just on user click.
+// isPlaceholder skips the glyph hit-test entirely: placeholder text isn't real content to select
+// or format, and classifying it as a glyph made any click on it fragile (native text-selection
+// treats the smallest mouse jitter as a drag, so the click silently fails to enter edit mode
+// instead of always landing on the padding/click-vs-move threshold logic below).
 window.UI = window.UI || {};
 
-window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput, onEditEnd, onMove, onMoveEnd, onSelectionChange } = {}) {
+window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput, onEditEnd, onMove, onMoveEnd, onSelectionChange, isPlaceholder } = {}) {
   function enterEditMode() {
     if (div.contentEditable === "true") return;
     div.contentEditable = "true";
@@ -27,7 +31,7 @@ window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput
     if (e.target.closest(".resize-handle")) return; // let resize handles work unmodified
     if (div.contentEditable === "true") return; // already editing, let native caret placement work
 
-    if (UI.rangeContainsPoint(div, e.clientX, e.clientY)) {
+    if (!isPlaceholder && UI.rangeContainsPoint(div, e.clientX, e.clientY)) {
       // Landed on a glyph: let the browser's native text-selection drag run completely
       // unmodified (no preventDefault, no custom mousemove tracking) and classify the
       // outcome on mouseup — a real drag produces a non-collapsed selection (format-range
