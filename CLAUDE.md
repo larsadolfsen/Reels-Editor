@@ -8,6 +8,7 @@ Local web editor that assembles 4–6 mp4 clips into one vertical reel with trim
 - Server: `.venv/Scripts/python -m uvicorn app.main:app --reload` (then open http://127.0.0.1:8000)
 - Setup: `python -m venv .venv && .venv/Scripts/pip install -e .[dev]`
 - Requires `ffmpeg`/`ffprobe` on PATH for clip probing/export (not required for `pytest`, which mocks subprocess calls).
+- Cloud deploy: Railway, GitHub-connected, builds from the repo's `Dockerfile`. See `docs/deploy-railway.md` for one-time setup and the post-deploy verification checklist.
 
 ## Conventions
 
@@ -22,7 +23,8 @@ Local web editor that assembles 4–6 mp4 clips into one vertical reel with trim
 ```
 app/
   __init__.py       # package marker
-  main.py           # FastAPI app wiring only (routes -> modules, static mount)
+  main.py           # FastAPI app wiring only (routes -> modules, static mount); DATA_DIR resolves via _resolve_data_dir() from the DATA_DIR env var (default "data"), added 2026-07-23 for cloud hosting
+  auth.py            # session-cookie signing for the shared-password login gate (added 2026-07-23, cloud hosting): create_session_token/verify_session_token (itsdangerous URLSafeTimedSerializer, 30-day max age), no accounts/DB
   models.py         # Pydantic data model (Project, ProjectSummary, MediaItem, ClipLayer, VideoBoxLayer, TextPreset, FormatRun, TextBlockLayer, CaptionWord, CaptionTrack)
   store.py          # project JSON persistence (save/load/list/delete) + global presets.json
   media.py           # ffprobe command building/duration parsing, extension-based image detection (is_image_path, added 2026-07-21, image/photo clips), serves media files, native file picker (`pick_file(kind="video"|"audio")`/`_filedialog_options(kind)`, audio filter added 2026-07-22 for music import)
@@ -66,6 +68,8 @@ static/
   panel-layers.js        # LAYERS context-panel section: drag-and-drop reorderable z-order list of text blocks + video boxes
   panel-export.js        # EXPORT context-panel section: FILENAME text input + QUALITY (HIGH/MEDIUM) button group, above the export button (added 2026-07-20)
   export-progress.js     # ExportProgress.start(jobId, {onDone, onFailed}): polls Api.exportStatus every 500ms, drives #panel-export's progress bar
+  login.html              # standalone login page (added 2026-07-23, cloud hosting) served at GET /login — password field posting to POST /login, not part of the index.html SPA
+  login.js                # login.html's script: shows #login-error when redirected back with ?error=1 (added 2026-07-23, cloud hosting)
   ui-icon-rail.js         # UI.iconRail: left-panel icon rail nav, single-select
   ui-button.js             # UI.button: generic button variant styling (icon/outline/accent) applied to existing <button> elements
   ui-list-row.js           # UI.listRow(el, {selected, subtle}): stamps shared clickable-row card/hover/selected styling (list-row.css) onto an existing element, applied variant-style like UI.button; used by PROJECTS/LAYERS/FILES clip rows/font-style drill-down lists (added 2026-07-22, list-row component — also fixed a bug where FILES' VIDEOS/IMAGES section-label rows incorrectly inherited card styling from a too-broad #clip-list li selector)
@@ -147,6 +151,7 @@ static/
       project-picker.css       # #project-picker full-screen cold-start picker
       project-list-row.css     # .project-list-row name/meta/action-buttons + shared list reset (UI.projectListRow); row card/hover/selected styling moved to list-row.css 2026-07-22, this file now holds only the row's own flex layout
       safe-zones.css               # #safe-zones: 4 `.safe-zone-*` guide bands (top nav / right action rail / caption area / bottom nav, percentages matching TikTok's real UI chrome) overlaid on #stage — shaded tint + solid accent edge (not dashed) plus opaque label chips (same recipe as .slice-btn) for legibility over arbitrary video content, toggled via [hidden]; #safe-zones-toggle lives in the timeline toolbar (`#timeline-toolbar`, next to zoom −/+, shield icon), preview-only, persisted in localStorage
+      login.css                    # full-screen centered password form for GET/POST /login (added 2026-07-23, cloud hosting)
   fonts/                # vendored variable woff2 (JetBrainsMono-Regular, PublicSans-Regular, 400-700) + static per-weight .ttf files baked by scripts/generate_font_weights.py (for PIL measurement + libass fontsdir)
 scripts/
   generate_font_weights.py  # one-off dev script: bakes the static per-weight .ttf files from the vendored variable fonts
@@ -290,7 +295,7 @@ Shared preset library (distinct from a block's live working style) used by both 
 - `CaptionWord`/`CaptionTrack` in `app/models.py` — `CaptionTrack.z_index: int = 0` (see Layers panel); `preset_id: str` links to a `TextPreset`, defaulted via `new_id()` so old saved projects self-heal.
 - `app/transcribe.py` — `words_from_segments(segments) -> list[CaptionWord]` (pure), `transcribe_file(path)` (lazy `WhisperModel("large-v3", device="cuda")`, module-level cache; requires the `ml` optional dependency group).
 - `app/caption_word_estimate.py` — `estimate_word_timings(word: CaptionWord) -> list[CaptionWord]` (pure): splits a multi-word entry into per-word sub-ranges by character-offset interpolation within the entry's own `[t_start, t_end]`; a single-word entry passes through unchanged. Consumed by `app/ass_render.py`'s `group_words`.
-- `app/main.py` — `POST /api/projects/{pid}/transcribe`.
+- `app/main.py` — `POST /api/projects/{pid}/transcribe`; returns `503` (not an unhandled `500`) when `transcribe.transcribe_file` raises `ImportError` — i.e. when the `ml` extra isn't installed, as on the Railway deployment (added 2026-07-23, cloud hosting).
 - `static/panel-captions.js` — `defaultCaptionPreset(id)`/`ensureCaptionPreset(id)`/`ensureCaptionTrack()` (lazily creates/loads `project.captions` and its preset), `renderCaptionPreview()`, `renderCaptionPanel()` (the `#panel-captions` orchestrator: shows/hides the FONT/WEIGHT/STYLE drill-downs vs the main view, delegates to each `CaptionPanel.render*()`), its tab-bar/divider wiring (`UI.tabBar`; Design tab groups the FONT + HIGHLIGHT bodies, Closed-caption tab holds the words list), and the `#caption-auto-btn` transcribe-click listener.
 - `static/caption-panel-font-family.js` / `caption-panel-font-weight.js` / `caption-panel-font-style.js` / `caption-panel-outline.js` / `caption-panel-shadow.js` / `caption-panel-box.js` — mirrors of the equivalent `text-panel-*.js` files (including the Outline and Shadow settings-row+subpanel pairs, both added 2026-07-22), pointed at the caption track's preset via `ensureCaptionTrack()`/`ensureCaptionPreset()` (`panel-captions.js`).
 - `static/caption-panel-highlight.js` — `CaptionPanel.renderHighlight()`: MODE (`current_word`/`progressive_fill`), highlight color, max words per line — captions-only, no TEXT-panel equivalent.
@@ -324,6 +329,16 @@ Shared preset library (distinct from a block's live working style) used by both 
 - `static/export-progress.js` — `ExportProgress.start(jobId, {onDone, onFailed})`: 500ms poller driving `#panel-export`'s progress bar (`#export-progress`/`#export-progress-fill`, `static/css/components/export-progress.css`); `static/editor.js`'s `exportProject()` disables `#export` during the job (starts it via `Api.exportProject`, then `ExportProgress.start`) and re-enables it on `onDone`/`onFailed`, matching the pre-change `#export-result` output on success/failure.
 - `static/editor.js` — `openExportPanel()` opens `#panel-export` (calls `ExportPanel.render()`, plus the existing `#export`/`exportProject()`/`#export-result` wiring).
 - `static/fonts/` — vendored variable woff2 + generated static per-weight `.ttf` files.
+
+### Hosting, auth & deployment
+
+Added 2026-07-23 for the "run this app on Android" project's piece 1 (cloud hosting + access gate) — see `docs/superpowers/specs/2026-07-23-cloud-hosting-auth-design.md`.
+
+- `app/auth.py` — `create_session_token(secret) -> str`/`verify_session_token(token, secret) -> bool`: signs/verifies a stateless session cookie (itsdangerous `URLSafeTimedSerializer`, 30-day max age). No accounts or DB — one shared `APP_PASSWORD`, not per-user.
+- `app/main.py` — `GET /login` serves `static/login.html`; `POST /login` (form-encoded `password`) compares against `APP_PASSWORD` via `hmac.compare_digest`, sets a signed session cookie and redirects to `/` on match, else redirects to `/login?error=1`. `AuthMiddleware` (Starlette `BaseHTTPMiddleware`) gates every other route: skipped entirely when `APP_PASSWORD` is unset; `/login`/`/static` paths always pass through; elsewhere a missing/invalid session cookie redirects to `/login` (or returns `401` for `/api/*` paths).
+- `static/login.html`/`static/login.js`/`static/css/components/login.css` — standalone login page (not part of the `index.html` SPA): password field, posts to `/login`, `login.js` shows `#login-error` when redirected back with `?error=1`.
+- `Dockerfile`/`.dockerignore` — `python:3.12-slim` + `ffmpeg`, base (non-`dev`/`ml`) dependencies only; Railway's GitHub-connected service builds from this on push.
+- `docs/deploy-railway.md` — one-time Railway dashboard setup (volume, env vars) and the manual post-deploy verification checklist (login flow, volume persistence, `ffmpeg` on `PATH`).
 
 ### Settings & safe zones
 

@@ -1,17 +1,28 @@
 # FastAPI composition root: mounts static UI and wires API routes to modules.
 # No feature logic lives here. Run: uvicorn app.main:app --reload
+import hmac
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Form, Request
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack
-from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip
+from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip, auth
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
-DATA_DIR = Path("data")
+def _resolve_data_dir() -> Path:
+    return Path(os.environ.get("DATA_DIR", "data"))
+
+DATA_DIR = _resolve_data_dir()
 app = FastAPI()
+
+APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
+SESSION_SECRET = os.environ.get("SESSION_SECRET", "")
+if APP_PASSWORD and not SESSION_SECRET:
+    raise RuntimeError("SESSION_SECRET must be set when APP_PASSWORD is set")
 
 _UNSAFE_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')
 
@@ -36,6 +47,40 @@ def resolve_export_path(out_dir: Path, stem: str) -> Path:
 @app.get("/")
 def index():
     return FileResponse("static/index.html")
+
+@app.get("/login")
+def login_page():
+    return FileResponse("static/login.html")
+
+@app.post("/login")
+def login_submit(password: str = Form(...)):
+    if APP_PASSWORD and hmac.compare_digest(password, APP_PASSWORD):
+        resp = RedirectResponse("/", status_code=303)
+        resp.set_cookie(
+            auth.SESSION_COOKIE_NAME,
+            auth.create_session_token(SESSION_SECRET),
+            max_age=auth.SESSION_MAX_AGE_SECONDS,
+            httponly=True,
+            samesite="lax",
+            secure=True,
+        )
+        return resp
+    return RedirectResponse("/login?error=1", status_code=303)
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if not APP_PASSWORD:
+            return await call_next(request)
+        if request.url.path.startswith("/login") or request.url.path.startswith("/static"):
+            return await call_next(request)
+        token = request.cookies.get(auth.SESSION_COOKIE_NAME)
+        if token and auth.verify_session_token(token, SESSION_SECRET):
+            return await call_next(request)
+        if request.url.path.startswith("/api/"):
+            return Response(status_code=401)
+        return RedirectResponse("/login")
+
+app.add_middleware(AuthMiddleware)
 
 @app.post("/api/projects")
 def create_project(body: dict) -> Project:
@@ -111,7 +156,10 @@ def transcribe_project(pid: str) -> Project:
     wav_path = out_dir / f"{p.id[:8]}-audio.wav"
 
     media.run_export(ffmpeg_cmd.build_audio_cmd(p, str(wav_path)))
-    words = transcribe.transcribe_file(str(wav_path))
+    try:
+        words = transcribe.transcribe_file(str(wav_path))
+    except ImportError:
+        raise HTTPException(503, "Transcription not available on this deployment")
 
     if p.captions:
         p.captions.words = words

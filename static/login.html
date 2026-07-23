@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reels Editor — Login</title>
+<link rel="stylesheet" href="/static/css/tokens.css">
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/components/login.css">
+</head>
+<body>
+<div id="login-page">
+  <form id="login-form" method="POST" action="/login">
+    <h1>Reels Editor</h1>
+    <input type="password" name="password" placeholder="Password" autocomplete="current-password" autofocus required>
+    <p id="login-error" hidden>Incorrect password.</p>
+    <button type="submit">Log in</button>
+  </form>
+</div>
+<script src="/static/login.js"></script>
+</body>
+</html>
