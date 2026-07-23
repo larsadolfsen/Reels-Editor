@@ -238,7 +238,7 @@ def test_media_filmstrip_route_returns_file_response(monkeypatch, tmp_path):
     monkeypatch.setattr("app.main.filmstrip.generate_filmstrip",
                          lambda media_id, path, data_dir: fake_path)
     result = media_filmstrip("abc123", "clip.mp4")
-    assert result.path == str(fake_path)
+    assert result.path == fake_path
 
 def test_pick_file_route_passes_kind_through(monkeypatch):
     from app.main import pick_file as pick_file_route

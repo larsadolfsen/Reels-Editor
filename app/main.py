@@ -132,7 +132,7 @@ def media_thumbnail(media_id: str, path: str) -> FileResponse:
 @app.get("/api/media/{media_id}/filmstrip")
 def media_filmstrip(media_id: str, path: str) -> FileResponse:
     filmstrip_path = filmstrip.generate_filmstrip(media_id, path, DATA_DIR)
-    return FileResponse(str(filmstrip_path))
+    return FileResponse(filmstrip_path)
 
 @app.get("/media")
 def media_file(path: str):
