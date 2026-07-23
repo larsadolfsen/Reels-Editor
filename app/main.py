@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack
-from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform
+from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
 DATA_DIR = Path("data")
@@ -128,6 +128,11 @@ def transcribe_project(pid: str) -> Project:
 def media_thumbnail(media_id: str, path: str) -> FileResponse:
     thumb_path = media.generate_thumbnail(media_id, path, DATA_DIR)
     return FileResponse(thumb_path)
+
+@app.get("/api/media/{media_id}/filmstrip")
+def media_filmstrip(media_id: str, path: str) -> FileResponse:
+    filmstrip_path = filmstrip.generate_filmstrip(media_id, path, DATA_DIR)
+    return FileResponse(str(filmstrip_path))
 
 @app.get("/media")
 def media_file(path: str):
