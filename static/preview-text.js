@@ -75,10 +75,9 @@ window.PreviewText = (() => {
     }
     for (const block of (project.text_blocks || [])) {
       const isSelected = block.id === selectedTextBlockId;
-      // An empty heading normally means "nothing to show" — but the selected block must still
-      // render (even empty) so there's something on the stage to click into and start typing;
-      // this is the only way to enter a heading now that the side-panel textarea is gone.
-      if (!block.heading && !isSelected) continue;
+      // An empty heading shows the "Add your text here" placeholder (below) instead of being
+      // hidden, so any untouched block stays visible and clickable on the stage even when it
+      // isn't the selected one.
       if (!(block.start <= timelineTime && timelineTime < block.end)) continue;
       const preset = presets[block.preset_id];
       if (!preset) continue;
@@ -140,7 +139,14 @@ window.PreviewText = (() => {
         span.style.backgroundColor = highlighted ? ((run && run.highlight_color) || preset.highlight_color) : "transparent";
         div.appendChild(span);
       }
-      if (!heading) { div.style.minWidth = "40px"; div.style.minHeight = "1em"; } // stay clickable while empty
+      if (!heading) {
+        // Placeholder text: purely visual (never written to block.heading), cleared the moment
+        // edit mode starts (onEditStart below) so typing begins from a truly empty div.
+        div.style.minWidth = "40px";
+        div.style.minHeight = "1em";
+        div.textContent = "Add your text here";
+        div.classList.add("text-block--placeholder");
+      }
       overlay.appendChild(div);
 
       // Always clickable/editable, regardless of which right-panel section is open (not just
@@ -149,9 +155,14 @@ window.PreviewText = (() => {
       div.style.pointerEvents = "auto";
       div.style.cursor = "text";
       interactionHandles.set(block.id, UI.textInteraction(div, {
+        isPlaceholder: !heading,
         onEditStart: () => {
           editingBlockId = block.id;
           editingDiv = div;
+          if (!block.heading) {
+            div.textContent = "";
+            div.classList.remove("text-block--placeholder");
+          }
           // Entering edit mode only happens on a plain (non-drag) click, which collapses any
           // prior text selection — clear the tracked format-range selection so FONT accordion
           // controls fall back to editing the base preset again (matches getActiveFormatSelection's
