@@ -1,7 +1,7 @@
 # Tests for app.media: ffprobe command construction, duration parsing, and -progress line parsing.
 from unittest.mock import patch
 import pytest
-from app.media import ffprobe_cmd, probe_duration, has_audio_stream, percent_from_progress_line, run_export, is_image_path, _filedialog_options
+from app.media import ffprobe_cmd, probe_duration, has_audio_stream, percent_from_progress_line, run_export, is_image_path, _filedialog_options, generate_thumbnail
 
 def test_ffprobe_cmd():
     assert ffprobe_cmd("c.mp4") == ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -128,3 +128,42 @@ def test_filedialog_options_audio():
 def test_filedialog_options_unknown_kind_falls_back_to_video():
     title, filetypes = _filedialog_options("bogus")
     assert title == "Choose a clip"
+
+def test_generate_thumbnail_video_extracts_frame_at_1s(tmp_path, monkeypatch):
+    captured_cmd = {}
+    def fake_run(cmd, **kwargs):
+        captured_cmd["cmd"] = cmd
+        (tmp_path / "thumbnails" / "media-1.jpg").write_bytes(b"fake-jpeg")
+    monkeypatch.setattr("app.media.subprocess.run", fake_run)
+
+    result = generate_thumbnail("media-1", "c.mp4", tmp_path)
+
+    assert result == tmp_path / "thumbnails" / "media-1.jpg"
+    assert "-ss" in captured_cmd["cmd"]
+    assert "1" in captured_cmd["cmd"]
+    assert "-vframes" in captured_cmd["cmd"]
+
+def test_generate_thumbnail_image_skips_frame_seek(tmp_path, monkeypatch):
+    captured_cmd = {}
+    def fake_run(cmd, **kwargs):
+        captured_cmd["cmd"] = cmd
+        (tmp_path / "thumbnails" / "media-2.jpg").write_bytes(b"fake-jpeg")
+    monkeypatch.setattr("app.media.subprocess.run", fake_run)
+
+    generate_thumbnail("media-2", "c.jpg", tmp_path)
+
+    assert "-ss" not in captured_cmd["cmd"]
+    assert "-vframes" not in captured_cmd["cmd"]
+
+def test_generate_thumbnail_reuses_cached_file(tmp_path, monkeypatch):
+    thumb_dir = tmp_path / "thumbnails"
+    thumb_dir.mkdir()
+    cached = thumb_dir / "media-3.jpg"
+    cached.write_bytes(b"already-cached")
+
+    def fake_run(cmd, **kwargs):
+        raise AssertionError("should not invoke ffmpeg when a cached thumbnail exists")
+    monkeypatch.setattr("app.media.subprocess.run", fake_run)
+
+    result = generate_thumbnail("media-3", "c.mp4", tmp_path)
+    assert result == cached

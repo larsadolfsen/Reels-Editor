@@ -62,6 +62,18 @@ window.MediaPanel = window.MediaPanel || {};
     thumb.className = "clip-thumb";
     li.appendChild(thumb);
 
+    // Load thumbnail asynchronously
+    (async () => {
+      const thumbUrl = await Api.getMediaThumbnail(m.id, m.file_path);
+      if (thumbUrl) {
+        const img = document.createElement("img");
+        img.className = "clip-thumb-img";
+        img.src = thumbUrl;
+        thumb.innerHTML = "";
+        thumb.appendChild(img);
+      }
+    })();
+
     const info = document.createElement("div");
     info.className = "clip-info";
     const name = document.createElement("span");
