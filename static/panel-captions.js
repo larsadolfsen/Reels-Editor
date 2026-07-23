@@ -98,7 +98,14 @@ UI.divider(document.getElementById("caption-box-width-height-divider"));
 UI.divider(document.getElementById("caption-box-background-border-divider"));
 UI.divider(document.getElementById("caption-box-border-position-divider"));
 
-document.getElementById("caption-auto-btn").addEventListener("click", async () => {
+// Runs transcription and merges the result into `project`. Shared by the CAPTIONS panel's
+// Auto-caption button and editor.js's drop handler (auto-caption-on-video-add) — the button's
+// disabled/label state only has a visible effect when the CAPTIONS panel happens to be open;
+// otherwise this just quietly updates captions/timeline once done, same "background enhancement,
+// no loading UI" pattern as thumbnail/waveform/filmstrip fetches elsewhere in this app. Failures
+// (e.g. 503 when the `ml` extra isn't installed) are swallowed — this is a nice-to-have, not a
+// blocking step in whatever flow triggered it.
+async function runAutoCaption() {
   ensureCaptionTrack();
   const btn = document.getElementById("caption-auto-btn");
   const label = btn.querySelector(".label");
@@ -106,6 +113,7 @@ document.getElementById("caption-auto-btn").addEventListener("click", async () =
   label.textContent = "Transcribing…";
   try {
     const res = await fetch(`/api/projects/${project.id}/transcribe`, { method: "POST" });
+    if (!res.ok) return;
     project = await res.json();
     await renderCaptionPanel();
     renderTimeline();
@@ -113,4 +121,6 @@ document.getElementById("caption-auto-btn").addEventListener("click", async () =
     btn.disabled = false;
     label.textContent = "Auto-caption";
   }
-});
+}
+
+document.getElementById("caption-auto-btn").addEventListener("click", runAutoCaption);

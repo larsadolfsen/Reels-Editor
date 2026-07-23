@@ -254,6 +254,7 @@ document.getElementById("row-video").addEventListener("drop", async (e) => {
   const dropTime = Timeline.timeAtX(project.clips, rect, e.clientX);
   const mediaId = e.dataTransfer.getData("text/media-id");
   const boxId = e.dataTransfer.getData("text/video-box-id");
+  let addedAudibleClip = false;
   if (mediaId) {
     const m = project.media_library.find((x) => x.id === mediaId);
     if (!m) return;
@@ -262,10 +263,12 @@ document.getElementById("row-video").addEventListener("drop", async (e) => {
       dropTime,
     );
     clipDurations[clip.id] = m.duration;
+    addedAudibleClip = m.kind !== "image"; // an image clip has no audio worth transcribing
   } else if (boxId) {
     const box = project.video_boxes.find((v) => v.id === boxId);
     if (!box) return;
     stitchVideoBoxIntoSequence(box, dropTime);
+    addedAudibleClip = true;
   } else {
     return;
   }
@@ -275,6 +278,7 @@ document.getElementById("row-video").addEventListener("drop", async (e) => {
   if (boxId && selected && selected.type === "video-box" && selected.item && selected.item.id === boxId) {
     openFilesPanel(); // the selected box no longer exists — fall back to a safe default panel
   }
+  if (addedAudibleClip) await runAutoCaption(); // re-transcribes the whole (now-changed) sequence
 });
 
 function nudgeTime(delta) {
