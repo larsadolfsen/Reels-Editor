@@ -10,7 +10,10 @@ window.UI = window.UI || {};
 window.UI.numberField = function numberField(container, { label, unit, value, step = 1, min, max, decimals, disabled = false, span = 8, onChange }) {
   container.innerHTML = "";
   container.classList.add("style-field", `col-${span}`);
-  container.textContent = unit ? `${label} (${unit})` : label;
+  const labelEl = document.createElement("span");
+  labelEl.className = "number-field-label";
+  labelEl.textContent = unit ? `${label} (${unit})` : label;
+  container.appendChild(labelEl);
 
   const format = (v) => (decimals !== undefined ? v.toFixed(decimals) : v);
 

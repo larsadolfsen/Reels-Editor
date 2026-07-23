@@ -90,7 +90,12 @@
 .col-7 { grid-column: span 7; }
 .col-8 { grid-column: span 8; }
 
-#text-size-row { gap: 6px; }
+/* end-aligned so the flanking quick-size buttons (28px) sit flush with the field's bottom
+   edge instead of centering against the row's full height (label + input). */
+#text-size-row { gap: 6px; align-items: end; }
+/* Pulls the SIZE (PX) label flush with the decrease-button's left edge (col-1 width + row gap),
+   instead of starting under the field itself (col-2). */
+#text-size-row .number-field-label { margin-left: -34px; }
 
 .style-field {
   display: flex;
@@ -107,7 +112,7 @@
 .style-field input { width: 100%; }
 
 .style-field input[type="number"] {
-  height: 32px;
+  height: 28px;
   padding: 0 12px;
   font-size: 14px;
   text-align: right;
