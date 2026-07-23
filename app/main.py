@@ -153,7 +153,10 @@ def transcribe_project(pid: str) -> Project:
     wav_path = out_dir / f"{p.id[:8]}-audio.wav"
 
     media.run_export(ffmpeg_cmd.build_audio_cmd(p, str(wav_path)))
-    words = transcribe.transcribe_file(str(wav_path))
+    try:
+        words = transcribe.transcribe_file(str(wav_path))
+    except ImportError:
+        raise HTTPException(503, "Transcription not available on this deployment")
 
     if p.captions:
         p.captions.words = words

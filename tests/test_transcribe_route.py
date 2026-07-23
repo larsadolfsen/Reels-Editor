@@ -37,3 +37,15 @@ def test_transcribe_overwrites_words_keeps_existing_preset_id(tmp_path, monkeypa
     assert [w["text"] for w in body["captions"]["words"]] == ["new"]
     assert body["captions"]["preset_id"] == preset.id
     assert body["text_presets"][preset.id]["size_px"] == 50
+
+def test_transcribe_returns_503_when_ml_extra_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    p = Project(name="r")
+    store.save_project(p, tmp_path)
+
+    with patch("app.main.media.run_export"), \
+         patch("app.main.transcribe.transcribe_file", side_effect=ImportError("faster_whisper not installed")):
+        res = client.post(f"/api/projects/{p.id}/transcribe")
+
+    assert res.status_code == 503
+    assert res.json()["detail"] == "Transcription not available on this deployment"
