@@ -15,6 +15,7 @@ def _get_model():
         _model = WhisperModel("large-v3", device="cuda", compute_type="float16")
     return _model
 
-def transcribe_file(path: str) -> list[CaptionWord]:
-    segments, _info = _get_model().transcribe(path, word_timestamps=True)
+def transcribe_file(path: str, language: str | None = None) -> list[CaptionWord]:
+    """language is an ISO 639-1 code (e.g. "da"); None or "" auto-detects."""
+    segments, _info = _get_model().transcribe(path, word_timestamps=True, language=language or None)
     return words_from_segments(segments)

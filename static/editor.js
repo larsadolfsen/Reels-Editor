@@ -7,6 +7,23 @@ const player = document.getElementById("player");
 
 const AVAILABLE_FONTS = ["Public Sans", "JetBrains Mono"]; // the only vendored font families (static/fonts/)
 
+// ISO 639-1 codes passed to faster-whisper (CaptionTrack.language); "" auto-detects.
+const AVAILABLE_LANGUAGES = [
+  { code: "", label: "Auto-detect" },
+  { code: "da", label: "Danish" },
+  { code: "nl", label: "Dutch" },
+  { code: "en", label: "English" },
+  { code: "fi", label: "Finnish" },
+  { code: "fr", label: "French" },
+  { code: "de", label: "German" },
+  { code: "it", label: "Italian" },
+  { code: "no", label: "Norwegian" },
+  { code: "pl", label: "Polish" },
+  { code: "pt", label: "Portuguese" },
+  { code: "es", label: "Spanish" },
+  { code: "sv", label: "Swedish" },
+];
+
 function showEditorShell() {
   document.getElementById("project-picker").hidden = true;
   document.getElementById("app").hidden = false;

@@ -156,8 +156,9 @@ def transcribe_project(pid: str) -> Project:
     wav_path = out_dir / f"{p.id[:8]}-audio.wav"
 
     media.run_export(ffmpeg_cmd.build_audio_cmd(p, str(wav_path)))
+    language = p.captions.language if p.captions else ""
     try:
-        words = transcribe.transcribe_file(str(wav_path))
+        words = transcribe.transcribe_file(str(wav_path), language=language)
     except ImportError:
         raise HTTPException(503, "Transcription not available on this deployment")
 
@@ -192,7 +193,7 @@ def detect_auto_slice(pid: str) -> dict:
     if p.captions and p.captions.words:
         ranges += [
             {"start": s, "end": e, "kind": "filler", "label": text}
-            for s, e, text in auto_slice.detect_filler_ranges(p.captions.words)
+            for s, e, text in auto_slice.detect_filler_ranges(p.captions.words, p.filler_words)
         ]
     ranges.sort(key=lambda r: r["start"])
     return {"ranges": ranges}

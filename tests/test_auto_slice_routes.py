@@ -36,6 +36,21 @@ def test_detect_returns_silence_and_filler_ranges(tmp_path, monkeypatch):
     assert any(r["kind"] == "silence" for r in ranges)
     assert ranges == sorted(ranges, key=lambda r: r["start"])
 
+def test_detect_uses_projects_custom_filler_words(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    words = [CaptionWord(text="um", t_start=3.0, t_end=3.4), CaptionWord(text="øh", t_start=4.0, t_end=4.4)]
+    p = Project(name="r", clips=[clip(0, 10, 0)], captions=CaptionTrack(words=words, preset_id="p1"),
+                filler_words=["øh"])
+    store.save_project(p, tmp_path)
+
+    with patch("app.main.media.run_export"), \
+         patch("app.main.waveform.peaks_from_file", return_value=[0.5] * 20):
+        res = client.post(f"/api/projects/{p.id}/auto-slice/detect")
+
+    ranges = res.json()["ranges"]
+    labels = {r["label"] for r in ranges if r["kind"] == "filler"}
+    assert labels == {"øh"}   # "um" isn't in this project's custom list, so it's not flagged
+
 def test_detect_skips_filler_detection_without_captions(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
     p = Project(name="r", clips=[clip(0, 10, 0)])

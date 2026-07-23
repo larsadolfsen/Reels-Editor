@@ -72,8 +72,9 @@ window.AutoSlicePanel = window.AutoSlicePanel || {};
 
   async function runDetect() {
     const btn = document.getElementById("auto-slice-detect-btn");
+    const label = btn.querySelector(".label");
     btn.disabled = true;
-    btn.textContent = "Detecting…";
+    label.textContent = "Detecting…";
     try {
       const result = await Api.detectAutoSlice(project.id);
       if (!result) return;
@@ -82,7 +83,7 @@ window.AutoSlicePanel = window.AutoSlicePanel || {};
       renderResultsList();
     } finally {
       btn.disabled = false;
-      btn.textContent = "Detect Silence & Filler Words";
+      label.textContent = "Detect Silence & Filler Words";
     }
   }
 

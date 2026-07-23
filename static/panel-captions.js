@@ -29,7 +29,7 @@ function ensureCaptionTrack() {
   if (!track) {
     track = {
       id: crypto.randomUUID().replaceAll("-", ""), words: [], z_index: 0,
-      preset_id: crypto.randomUUID().replaceAll("-", ""),
+      preset_id: crypto.randomUUID().replaceAll("-", ""), language: "",
     };
     project.captions = track;
   }
@@ -47,11 +47,13 @@ async function renderCaptionPanel() {
   document.getElementById("panel-captions-font").hidden = true;
   document.getElementById("panel-captions-weight").hidden = true;
   document.getElementById("panel-captions-style").hidden = true;
+  document.getElementById("panel-captions-language").hidden = true;
   document.getElementById("panel-captions-main").hidden = false;
 
   const track = ensureCaptionTrack();
   document.getElementById("caption-empty-state").hidden = track.words.length > 0;
 
+  CaptionPanel.renderLanguage();
   CaptionPanel.renderStyle();
   CaptionPanel.renderFontFamily();
   await CaptionPanel.renderFontWeight();
@@ -60,6 +62,7 @@ async function renderCaptionPanel() {
   CaptionPanel.renderShadow();
   CaptionPanel.renderBox();
   CaptionPanel.renderHighlight();
+  CaptionPanel.renderFillerWords();
   CaptionPanel.renderWords();
 
   renderCaptionPreview();
@@ -98,8 +101,9 @@ UI.divider(document.getElementById("caption-box-border-position-divider"));
 document.getElementById("caption-auto-btn").addEventListener("click", async () => {
   ensureCaptionTrack();
   const btn = document.getElementById("caption-auto-btn");
+  const label = btn.querySelector(".label");
   btn.disabled = true;
-  btn.textContent = "Transcribing…";
+  label.textContent = "Transcribing…";
   try {
     const res = await fetch(`/api/projects/${project.id}/transcribe`, { method: "POST" });
     project = await res.json();
@@ -107,6 +111,6 @@ document.getElementById("caption-auto-btn").addEventListener("click", async () =
     renderTimeline();
   } finally {
     btn.disabled = false;
-    btn.textContent = "Auto-caption";
+    label.textContent = "Auto-caption";
   }
 });

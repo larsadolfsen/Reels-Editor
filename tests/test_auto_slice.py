@@ -28,6 +28,17 @@ def test_detect_filler_ranges_ignores_non_filler_words():
 def test_detect_filler_ranges_empty_words_is_empty():
     assert detect_filler_ranges([], DEFAULT_FILLER_WORDS) == []
 
+def test_detect_filler_ranges_custom_list_supports_other_languages():
+    # Danish filler words, e.g. "øh"/"øhm" — a user-supplied list overrides the English default.
+    words = [w("øh,", 0, 0.3), w("um", 0.3, 0.6), w("altså", 0.6, 1.0)]
+    ranges = detect_filler_ranges(words, ["øh", "altså"])
+    assert ranges == [(0, 0.3, "øh,"), (0.6, 1.0, "altså")]
+
+def test_detect_filler_ranges_normalizes_filler_words_list_casing():
+    # A filler word stored with different casing/punctuation than how it's typed still matches.
+    words = [w("Um,", 0, 0.3)]
+    assert detect_filler_ranges(words, ["UM"]) == [(0, 0.3, "Um,")]
+
 # --- detect_silence_ranges ---
 
 def test_detect_silence_ranges_finds_middle_run():

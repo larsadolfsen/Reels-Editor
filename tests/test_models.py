@@ -289,3 +289,39 @@ def test_project_old_saved_json_without_music_loads_as_none():
     old_json = json.dumps({"id": "x", "name": "r"})
     loaded = Project.model_validate_json(old_json)
     assert loaded.music is None
+
+def test_project_filler_words_defaults_to_default_list():
+    from app.models import Project, DEFAULT_FILLER_WORDS
+    p = Project(name="r")
+    assert p.filler_words == DEFAULT_FILLER_WORDS
+
+def test_project_filler_words_round_trip():
+    from app.models import Project
+    p = Project(name="r", filler_words=["øh", "øhm", "altså"])
+    loaded = Project.model_validate_json(p.model_dump_json())
+    assert loaded.filler_words == ["øh", "øhm", "altså"]
+
+def test_project_old_saved_json_without_filler_words_loads_with_default():
+    from app.models import Project, DEFAULT_FILLER_WORDS
+    import json
+    old_json = json.dumps({"id": "x", "name": "r"})
+    loaded = Project.model_validate_json(old_json)
+    assert loaded.filler_words == DEFAULT_FILLER_WORDS
+
+def test_caption_track_language_defaults_empty():
+    from app.models import CaptionTrack
+    t = CaptionTrack()
+    assert t.language == ""
+
+def test_caption_track_language_round_trip():
+    from app.models import CaptionTrack
+    t = CaptionTrack(language="da")
+    loaded = CaptionTrack.model_validate_json(t.model_dump_json())
+    assert loaded.language == "da"
+
+def test_caption_track_old_saved_json_without_language_loads_as_auto():
+    from app.models import CaptionTrack
+    import json
+    old_json = json.dumps({"id": "x", "words": [], "z_index": 0, "preset_id": "p1"})
+    loaded = CaptionTrack.model_validate_json(old_json)
+    assert loaded.language == ""

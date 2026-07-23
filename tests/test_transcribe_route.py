@@ -38,6 +38,30 @@ def test_transcribe_overwrites_words_keeps_existing_preset_id(tmp_path, monkeypa
     assert body["captions"]["preset_id"] == preset.id
     assert body["text_presets"][preset.id]["size_px"] == 50
 
+def test_transcribe_passes_captions_language_through(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    preset = TextPreset(name="Caption")
+    p = Project(name="r", text_presets={preset.id: preset},
+                captions=CaptionTrack(words=[], preset_id=preset.id, language="da"))
+    store.save_project(p, tmp_path)
+
+    with patch("app.main.media.run_export"), \
+         patch("app.main.transcribe.transcribe_file", return_value=[]) as transcribe_mock:
+        client.post(f"/api/projects/{p.id}/transcribe")
+
+    assert transcribe_mock.call_args.kwargs["language"] == "da"
+
+def test_transcribe_with_no_existing_captions_auto_detects(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    p = Project(name="r")
+    store.save_project(p, tmp_path)
+
+    with patch("app.main.media.run_export"), \
+         patch("app.main.transcribe.transcribe_file", return_value=[]) as transcribe_mock:
+        client.post(f"/api/projects/{p.id}/transcribe")
+
+    assert transcribe_mock.call_args.kwargs["language"] == ""
+
 def test_transcribe_returns_503_when_ml_extra_missing(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
     p = Project(name="r")

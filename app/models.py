@@ -130,11 +130,14 @@ class CaptionWord(BaseModel):
     t_start: float
     t_end: float
 
+DEFAULT_FILLER_WORDS = ["um", "umm", "uh", "uhh", "erm", "hmm", "mm"]
+
 class CaptionTrack(BaseModel):
     id: str = Field(default_factory=new_id)
     words: list[CaptionWord] = []
     z_index: int = 0
     preset_id: str = Field(default_factory=new_id)   # points at a TextPreset, same pattern as TextBlockLayer.preset_id
+    language: str = ""   # ISO 639-1 code (e.g. "da") passed to faster-whisper; "" = auto-detect
 
 class MusicTrack(BaseModel):
     id: str = Field(default_factory=new_id)
@@ -160,6 +163,7 @@ class Project(BaseModel):
     music: MusicTrack | None = None
     export_filename: str = ""
     export_quality: str = "high"
+    filler_words: list[str] = Field(default_factory=lambda: list(DEFAULT_FILLER_WORDS))
 
 class AutoSliceRange(BaseModel):
     start: float

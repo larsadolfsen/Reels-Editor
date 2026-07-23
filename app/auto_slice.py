@@ -4,10 +4,9 @@
 # removal through text_blocks/video_boxes/captions. No I/O — app.main builds the assembled wav
 # and calls into here.
 import re
-from app.models import CaptionWord, ClipLayer, Project
+from app.models import CaptionWord, ClipLayer, Project, DEFAULT_FILLER_WORDS
 from app import timeline
 
-DEFAULT_FILLER_WORDS = {"um", "umm", "uh", "uhh", "erm", "hmm", "mm"}
 SILENCE_PEAK_THRESHOLD = 0.02  # matches static/panel-media.js's checkSilentAudio silence threshold
 SILENCE_MIN_DURATION = 0.4
 DETECTION_SAMPLES_PER_SECOND = 20
@@ -17,8 +16,11 @@ _PUNCT_RE = re.compile(r"^[^\w']+|[^\w']+$")
 def normalize_word(text: str) -> str:
     return _PUNCT_RE.sub("", text).lower()
 
-def detect_filler_ranges(words: list[CaptionWord], filler_words: set[str] = DEFAULT_FILLER_WORDS) -> list[tuple[float, float, str]]:
-    return [(w.t_start, w.t_end, w.text) for w in words if normalize_word(w.text) in filler_words]
+def detect_filler_ranges(words: list[CaptionWord], filler_words=DEFAULT_FILLER_WORDS) -> list[tuple[float, float, str]]:
+    """filler_words may be typed/stored with any casing or punctuation (user-editable, see
+    Project.filler_words) — normalize both sides so matching doesn't depend on how they were entered."""
+    normalized_fillers = {normalize_word(f) for f in filler_words}
+    return [(w.t_start, w.t_end, w.text) for w in words if normalize_word(w.text) in normalized_fillers]
 
 def detect_silence_ranges(
     peaks: list[float],
