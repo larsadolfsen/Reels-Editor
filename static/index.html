@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="/static/css/components/accordion.css">
 <link rel="stylesheet" href="/static/css/components/settings-row.css">
 <link rel="stylesheet" href="/static/css/components/sub-panel.css">
+<link rel="stylesheet" href="/static/css/components/style-preset-card.css">
 <link rel="stylesheet" href="/static/css/components/divider.css">
 <link rel="stylesheet" href="/static/css/components/resize-handles.css">
 <link rel="stylesheet" href="/static/css/components/safe-zones.css">
@@ -215,10 +216,7 @@
               <button id="caption-style-save" class="panel-button col-8" type="button">+ Save current style</button>
             </div>
             <div class="style-group">
-              <ul id="caption-style-most-used" class="font-list col-8"></ul>
-            </div>
-            <div class="style-group">
-              <div id="caption-style-browse-row" class="col-8"></div>
+              <ul id="caption-style-list" class="font-list col-8"></ul>
             </div>
           </div>
 
@@ -414,11 +412,6 @@
           </div>
         </div>
 
-        <div id="panel-captions-style" hidden>
-          <div id="caption-style-subpanel-header"></div>
-          <ul id="caption-style-list" class="font-list"></ul>
-        </div>
-
         <div id="panel-captions-language" hidden>
           <div id="caption-language-subpanel-header"></div>
           <ul id="caption-language-list" class="font-list"></ul>
@@ -599,10 +592,7 @@
             <button id="text-style-save" class="panel-button col-8" type="button">+ Save current style</button>
           </div>
           <div class="style-group">
-            <ul id="text-style-most-used" class="font-list col-8"></ul>
-          </div>
-          <div class="style-group">
-            <div id="text-style-browse-row" class="col-8"></div>
+            <ul id="text-style-list" class="font-list col-8"></ul>
           </div>
         </div>
 
@@ -715,12 +705,14 @@
           </div>
         </div>
 
+        <div id="text-edit-actions">
         <div class="style-group">
           <button id="text-duplicate" class="panel-button col-8" type="button">Duplicate text</button>
         </div>
 
         <div class="style-group">
           <button id="text-delete" class="panel-button panel-button-danger col-8" type="button">Delete text</button>
+        </div>
         </div>
 
         </div>
@@ -773,10 +765,6 @@
           </div>
         </div>
 
-        <div id="panel-text-style" hidden>
-          <div id="text-style-subpanel-header"></div>
-          <ul id="text-style-list" class="font-list"></ul>
-        </div>
       </div>
     </aside>
   </main>
@@ -796,6 +784,7 @@
 <script src="/static/ui-tab-bar.js"></script>
 <script src="/static/ui-button.js"></script>
 <script src="/static/ui-list-row.js"></script>
+<script src="/static/ui-style-preset-card.js"></script>
 <script src="/static/ui-save-indicator.js"></script>
 <script src="/static/ui-project-list-row.js"></script>
 <script src="/static/ui-project-picker.js"></script>

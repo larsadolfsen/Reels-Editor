@@ -139,7 +139,6 @@ function renderTextPreview() {
 async function renderTextPanel() {
   document.getElementById("panel-text-font").hidden = true;
   document.getElementById("panel-text-weight").hidden = true;
-  document.getElementById("panel-text-style").hidden = true;
   document.getElementById("panel-text-main").hidden = false;
 
   const block = currentTextBlock();
@@ -292,6 +291,9 @@ let activeTextTab = "style";
 function showTextTab(value) {
   activeTextTab = value;
   Object.entries(textTabPanes).forEach(([k, el]) => { el.hidden = k !== value; });
+  // Duplicate/Delete act on the whole text block, not on picking a saved style — hide them
+  // while the Style tab (the saved-style library) is open.
+  document.getElementById("text-edit-actions").hidden = value === "style";
 }
 UI.tabBar(document.getElementById("text-tab-bar"), TEXT_TABS, activeTextTab, showTextTab);
 showTextTab(activeTextTab);
