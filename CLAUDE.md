@@ -22,7 +22,7 @@ Local web editor that assembles 4–6 mp4 clips into one vertical reel with trim
 ```
 app/
   __init__.py       # package marker
-  main.py           # FastAPI app wiring only (routes -> modules, static mount)
+  main.py           # FastAPI app wiring only (routes -> modules, static mount); DATA_DIR resolves via _resolve_data_dir() from the DATA_DIR env var (default "data"), added 2026-07-23 for cloud hosting
   models.py         # Pydantic data model (Project, ProjectSummary, MediaItem, ClipLayer, VideoBoxLayer, TextPreset, FormatRun, TextBlockLayer, CaptionWord, CaptionTrack)
   store.py          # project JSON persistence (save/load/list/delete) + global presets.json
   media.py           # ffprobe command building/duration parsing, extension-based image detection (is_image_path, added 2026-07-21, image/photo clips), serves media files, native file picker (`pick_file(kind="video"|"audio")`/`_filedialog_options(kind)`, audio filter added 2026-07-22 for music import)

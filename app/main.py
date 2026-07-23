@@ -1,5 +1,6 @@
 # FastAPI composition root: mounts static UI and wires API routes to modules.
 # No feature logic lives here. Run: uvicorn app.main:app --reload
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -10,7 +11,10 @@ from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack
 from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
-DATA_DIR = Path("data")
+def _resolve_data_dir() -> Path:
+    return Path(os.environ.get("DATA_DIR", "data"))
+
+DATA_DIR = _resolve_data_dir()
 app = FastAPI()
 
 _UNSAFE_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')

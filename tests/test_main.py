@@ -1,5 +1,6 @@
 # Tests for app.main's export route: confirms ASS subtitles are rendered to a file and
 # burned into the ffmpeg command when a project has text blocks, and skipped otherwise.
+from pathlib import Path
 from unittest.mock import patch
 from app import export_jobs
 from app.main import export_project, list_presets, create_preset, probe, sanitize_export_filename, resolve_export_path, media_peaks
@@ -251,3 +252,13 @@ def test_pick_file_route_defaults_to_video_kind(monkeypatch):
     monkeypatch.setattr("app.main.media.pick_file", fake_pick_file)
     pick_file_route()
     assert captured["kind"] == "video"
+
+def test_resolve_data_dir_uses_env_var(monkeypatch):
+    monkeypatch.setenv("DATA_DIR", "/tmp/custom-data")
+    from app.main import _resolve_data_dir
+    assert _resolve_data_dir() == Path("/tmp/custom-data")
+
+def test_resolve_data_dir_defaults_to_data(monkeypatch):
+    monkeypatch.delenv("DATA_DIR", raising=False)
+    from app.main import _resolve_data_dir
+    assert _resolve_data_dir() == Path("data")
