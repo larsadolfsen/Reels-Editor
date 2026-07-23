@@ -1,14 +1,15 @@
 # FastAPI composition root: mounts static UI and wires API routes to modules.
 # No feature logic lives here. Run: uvicorn app.main:app --reload
+import hmac
 import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Form
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack
-from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform
+from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, auth
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
 def _resolve_data_dir() -> Path:
@@ -16,6 +17,9 @@ def _resolve_data_dir() -> Path:
 
 DATA_DIR = _resolve_data_dir()
 app = FastAPI()
+
+APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
+SESSION_SECRET = os.environ.get("SESSION_SECRET", "")
 
 _UNSAFE_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')
 
@@ -40,6 +44,24 @@ def resolve_export_path(out_dir: Path, stem: str) -> Path:
 @app.get("/")
 def index():
     return FileResponse("static/index.html")
+
+@app.get("/login")
+def login_page():
+    return FileResponse("static/login.html")
+
+@app.post("/login")
+def login_submit(password: str = Form(...)):
+    if APP_PASSWORD and hmac.compare_digest(password, APP_PASSWORD):
+        resp = RedirectResponse("/", status_code=303)
+        resp.set_cookie(
+            auth.SESSION_COOKIE_NAME,
+            auth.create_session_token(SESSION_SECRET),
+            max_age=auth.SESSION_MAX_AGE_SECONDS,
+            httponly=True,
+            samesite="lax",
+        )
+        return resp
+    return RedirectResponse("/login?error=1", status_code=303)
 
 @app.post("/api/projects")
 def create_project(body: dict) -> Project:

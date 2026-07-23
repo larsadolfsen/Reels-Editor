@@ -262,3 +262,34 @@ def test_resolve_data_dir_defaults_to_data(monkeypatch):
     monkeypatch.delenv("DATA_DIR", raising=False)
     from app.main import _resolve_data_dir
     assert _resolve_data_dir() == Path("data")
+
+def test_login_correct_password_sets_cookie_and_redirects(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app as fastapi_app
+    monkeypatch.setattr("app.main.APP_PASSWORD", "correct-horse")
+    monkeypatch.setattr("app.main.SESSION_SECRET", "test-secret")
+    client = TestClient(fastapi_app)
+    res = client.post("/login", data={"password": "correct-horse"}, follow_redirects=False)
+    assert res.status_code == 303
+    assert res.headers["location"] == "/"
+    assert "session" in res.cookies
+
+def test_login_wrong_password_redirects_without_cookie(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app as fastapi_app
+    monkeypatch.setattr("app.main.APP_PASSWORD", "correct-horse")
+    monkeypatch.setattr("app.main.SESSION_SECRET", "test-secret")
+    client = TestClient(fastapi_app)
+    res = client.post("/login", data={"password": "wrong"}, follow_redirects=False)
+    assert res.status_code == 303
+    assert res.headers["location"] == "/login?error=1"
+    assert "session" not in res.cookies
+
+def test_login_page_serves_html(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app as fastapi_app
+    monkeypatch.setattr("app.main.APP_PASSWORD", "")
+    client = TestClient(fastapi_app)
+    res = client.get("/login")
+    assert res.status_code == 200
+    assert "login-form" in res.text

@@ -64,6 +64,8 @@ static/
   panel-layers.js        # LAYERS context-panel section: drag-and-drop reorderable z-order list of text blocks + video boxes
   panel-export.js        # EXPORT context-panel section: FILENAME text input + QUALITY (HIGH/MEDIUM) button group, above the export button (added 2026-07-20)
   export-progress.js     # ExportProgress.start(jobId, {onDone, onFailed}): polls Api.exportStatus every 500ms, drives #panel-export's progress bar
+  login.html              # standalone login page (added 2026-07-23, cloud hosting) served at GET /login — password field posting to POST /login, not part of the index.html SPA
+  login.js                # login.html's script: shows #login-error when redirected back with ?error=1 (added 2026-07-23, cloud hosting)
   ui-icon-rail.js         # UI.iconRail: left-panel icon rail nav, single-select
   ui-button.js             # UI.button: generic button variant styling (icon/outline/accent) applied to existing <button> elements
   ui-list-row.js           # UI.listRow(el, {selected, subtle}): stamps shared clickable-row card/hover/selected styling (list-row.css) onto an existing element, applied variant-style like UI.button; used by PROJECTS/LAYERS/FILES clip rows/font-style drill-down lists (added 2026-07-22, list-row component — also fixed a bug where FILES' VIDEOS/IMAGES section-label rows incorrectly inherited card styling from a too-broad #clip-list li selector)
@@ -144,6 +146,7 @@ static/
       project-picker.css       # #project-picker full-screen cold-start picker
       project-list-row.css     # .project-list-row name/meta/action-buttons + shared list reset (UI.projectListRow); row card/hover/selected styling moved to list-row.css 2026-07-22, this file now holds only the row's own flex layout
       safe-zones.css               # #safe-zones: 4 `.safe-zone-*` guide bands (top nav / right action rail / caption area / bottom nav, percentages matching TikTok's real UI chrome) overlaid on #stage — shaded tint + solid accent edge (not dashed) plus opaque label chips (same recipe as .slice-btn) for legibility over arbitrary video content, toggled via [hidden]; #safe-zones-toggle lives in the timeline toolbar (`#timeline-toolbar`, next to zoom −/+, shield icon), preview-only, persisted in localStorage
+      login.css                    # full-screen centered password form for GET/POST /login (added 2026-07-23, cloud hosting)
   fonts/                # vendored variable woff2 (JetBrainsMono-Regular, PublicSans-Regular, 400-700) + static per-weight .ttf files baked by scripts/generate_font_weights.py (for PIL measurement + libass fontsdir)
 scripts/
   generate_font_weights.py  # one-off dev script: bakes the static per-weight .ttf files from the vendored variable fonts
@@ -325,6 +328,8 @@ Shared preset library (distinct from a block's live working style) used by both 
 Added 2026-07-23 for the "run this app on Android" project's piece 1 (cloud hosting + access gate) — see `docs/superpowers/specs/2026-07-23-cloud-hosting-auth-design.md`.
 
 - `app/auth.py` — `create_session_token(secret) -> str`/`verify_session_token(token, secret) -> bool`: signs/verifies a stateless session cookie (itsdangerous `URLSafeTimedSerializer`, 30-day max age). No accounts or DB — one shared `APP_PASSWORD`, not per-user.
+- `app/main.py` — `GET /login` serves `static/login.html`; `POST /login` (form-encoded `password`) compares against `APP_PASSWORD` via `hmac.compare_digest`, sets a signed session cookie and redirects to `/` on match, else redirects to `/login?error=1`.
+- `static/login.html`/`static/login.js`/`static/css/components/login.css` — standalone login page (not part of the `index.html` SPA): password field, posts to `/login`, `login.js` shows `#login-error` when redirected back with `?error=1`.
 
 ### Settings & safe zones
 
