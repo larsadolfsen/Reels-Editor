@@ -124,6 +124,11 @@ def transcribe_project(pid: str) -> Project:
     store.save_project(p, DATA_DIR)
     return p
 
+@app.get("/api/media/{media_id}/thumbnail")
+def media_thumbnail(media_id: str, path: str) -> FileResponse:
+    thumb_path = media.generate_thumbnail(media_id, path, DATA_DIR)
+    return FileResponse(thumb_path)
+
 @app.get("/media")
 def media_file(path: str):
     return media.media_response(path)

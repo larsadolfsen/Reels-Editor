@@ -147,3 +147,24 @@ def pick_file(kind: str = "video") -> str | None:
     path = filedialog.askopenfilename(title=title, filetypes=filetypes)
     root.destroy()
     return path or None
+
+def generate_thumbnail(media_id: str, file_path: str, data_dir: Path) -> Path:
+    """Generate a JPEG thumbnail for a media file. For videos, extracts a frame at 1 second;
+    for images, copies directly. Returns the path to the cached thumbnail."""
+    thumb_dir = data_dir / "thumbnails"
+    thumb_dir.mkdir(parents=True, exist_ok=True)
+    thumb_path = thumb_dir / f"{media_id}.jpg"
+
+    if thumb_path.exists():
+        return thumb_path
+
+    if is_image_path(file_path):
+        # For images, just copy to thumbnail (ffmpeg will scale it)
+        cmd = ["ffmpeg", "-y", "-i", file_path, "-vf", "scale=68:102:force_original_aspect_ratio=decrease,pad=68:102:(ow-iw)/2:(oh-ih)/2", "-q:v", "5", str(thumb_path)]
+    else:
+        # For videos, extract frame at 1 second
+        cmd = ["ffmpeg", "-y", "-ss", "1", "-i", file_path, "-vf", "scale=68:102:force_original_aspect_ratio=decrease,pad=68:102:(ow-iw)/2:(oh-ih)/2", "-vframes", "1", "-q:v", "5", str(thumb_path)]
+
+    resolved, env = _resolve_cmd(cmd, _refreshed_path())
+    subprocess.run(resolved, capture_output=True, check=True, env=env)
+    return thumb_path
