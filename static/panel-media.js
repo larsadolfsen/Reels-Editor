@@ -3,12 +3,41 @@
 // group is empty), click-to-select, hover-reveal inline rename (pencil icon) and remove (trash
 // icon, disabled with a usage-count chip when the media item is referenced by any ClipLayer).
 // Clip rows use UI.listRow()/list-row.css (static/ui-list-row.js) for shared card styling
-// (background/border/hover/selected); section-label rows are untouched by it.
+// (background/border/hover/selected); section-label rows are untouched by it. A "no audio" icon
+// is shown for clips with no audio stream (m.has_audio === false) and, for video clips that do
+// have a stream, also when its cached waveform peaks are all silent (checkSilentAudio, added
+// 2026-07-23 — an audio stream can technically exist but carry no actual sound).
 // Exposes window.MediaPanel.render().
 window.MediaPanel = window.MediaPanel || {};
 
 (() => {
   let selectedMediaId = null; // MEDIA panel row highlight only — independent of timeline `selected`
+  const silentCache = {}; // media id -> bool, avoids re-fetching peaks on every render
+  const SILENCE_THRESHOLD = 0.02;
+
+  const MUTED_ICON_SVG = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg>';
+
+  function appendMutedIcon(durationRow) {
+    if (durationRow.querySelector(".clip-audio-muted-icon")) return;
+    const muted = document.createElement("span");
+    muted.className = "clip-audio-muted-icon";
+    muted.title = "No audio";
+    muted.innerHTML = MUTED_ICON_SVG;
+    durationRow.appendChild(muted);
+  }
+
+  function checkSilentAudio(m, durationRow) {
+    if (m.id in silentCache) {
+      if (silentCache[m.id]) appendMutedIcon(durationRow);
+      return;
+    }
+    (async () => {
+      const peaks = await Api.getMediaPeaks(m.id, m.file_path);
+      const silent = peaks.length > 0 && peaks.every((p) => p <= SILENCE_THRESHOLD);
+      silentCache[m.id] = silent;
+      if (silent) appendMutedIcon(durationRow);
+    })();
+  }
 
   function formatClipDuration(seconds) {
     const m = Math.floor(seconds / 60);
@@ -86,11 +115,9 @@ window.MediaPanel = window.MediaPanel || {};
     duration.textContent = formatClipDuration(m.duration);
     durationRow.appendChild(duration);
     if (m.has_audio === false) {
-      const muted = document.createElement("span");
-      muted.className = "clip-audio-muted-icon";
-      muted.title = "No audio";
-      muted.innerHTML = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg>';
-      durationRow.appendChild(muted);
+      appendMutedIcon(durationRow);
+    } else if (m.kind !== "image" && m.kind !== "audio") {
+      checkSilentAudio(m, durationRow);
     }
     info.appendChild(name);
     info.appendChild(durationRow);
