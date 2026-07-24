@@ -9,7 +9,7 @@ function showPanel(type) {
   if (type !== "text") Preview.setSelectedTextBlock(null, null);
   if (type !== "video-box") VideoBoxPreview.setSelectedVideoBox(null, null);
   document.getElementById("style-panel").hidden = false;
-  ["files", "video", "text", "captions", "video-box", "layers", "settings", "export", "projects", "audio", "auto-slice"].forEach((t) => {
+  ["files", "video", "text", "captions", "video-box", "settings", "export", "projects", "audio", "auto-slice"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;
   });
 }
@@ -67,11 +67,6 @@ const PANEL_NAV_ITEMS = [
     value: "audio",
     label: "AUDIO",
     icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
-  },
-  {
-    value: "layers",
-    label: "LAYERS",
-    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="1"/><rect x="7" y="7" width="14" height="14" rx="1"/></svg>`,
   },
   {
     value: "auto-slice",
@@ -142,13 +137,6 @@ function openAudioPanel() {
   renderTimeline();
 }
 
-function openLayersPanel() {
-  selected = { type: "layers" };
-  showPanel("layers");
-  LayersPanel.render();
-  renderTimeline();
-}
-
 function openAutoSlicePanel() {
   selected = { type: "auto-slice" };
   showPanel("auto-slice");
@@ -205,7 +193,7 @@ function reRenderAfterRestore() {
   }
 }
 
-const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, layers: openLayersPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel, "auto-slice": openAutoSlicePanel };
+const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel, "auto-slice": openAutoSlicePanel };
 
 // Rail = insert (creation). TEXT inserts a new block and drops into on-stage edit; the other
 // rail buttons open their panel (CAPTIONS's openCaptionsPanel already create-or-opens the track).
