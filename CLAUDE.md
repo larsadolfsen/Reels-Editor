@@ -106,6 +106,7 @@ static/
   api-list-font-weights.js # Api.listFontWeights(fontName) -> Promise<{value, label}[]>: GET /api/fonts/{name}/weights
   api-list-presets.js     # Api.listPresets: GET /api/presets -> saved TextPreset[]
   api-save-preset.js      # Api.savePreset: POST /api/presets -> saves/updates a saved TextPreset
+  api-delete-preset.js    # Api.deletePreset: DELETE /api/presets/{id}
   text-panel-font-family.js  # TEXT panel Design tab: font-family row + drill-down
   text-panel-font-weight.js  # TEXT panel Design tab: font-weight settings row + drill-down, replacing the old Bold toggle (added 2026-07-19). Mirrors text-panel-font-family.js's pattern exactly — fetches available weights for the current font via Api.listFontWeights(), click-to-apply (no hover-preview), checkmark on the current selection.
   text-panel-font-style.js   # TEXT panel Design tab: size/bold/italic/underline/color (Outline lives in its own text-panel-outline.js subpage, moved 2026-07-22); controls are selection-aware as of 2026-07-19 (Phase 5), writing a per-range FormatRun instead of the base preset when Preview.getActiveFormatSelection() is active
@@ -288,8 +289,8 @@ Shared preset library (distinct from a block's live working style) used by both 
 - `static/text-panel-style.js` — `TextPanel.renderStyle()`/`loadSavedPresets()`: "+ Save current style" (snapshots via `styleFieldsOf()`, includes `shadow`/`shadow_color`/`shadow_offset_x`/`shadow_offset_y`/`shadow_blur` as of 2026-07-23 — previously omitted, so a saved style silently lost its shadow), full list of saved presets rendered inline as `UI.stylePresetCard`s (no more "Browse all styles" drill-down, removed 2026-07-23). `applySavedPreset()` copies fields onto the block's live preset, bumps `usage_count`, clears `block.formatting_runs = []` (a saved preset resets the whole look, not a partial patch).
 - `static/caption-panel-style.js` — `CaptionPanel.renderStyle()`: near-identical mirror, extended to also carry `highlight_color`/`highlight_mode`/`max_words_per_line`, targeting the caption track's preset.
 - `static/ui-style-preset-card.js` — `UI.stylePresetCard(preset, {onClick}) -> <li>` (added 2026-07-23): renders a saved `TextPreset` as a grey `.list-row` card showing its actual rendered styling (font/size/weight/italic/underline/color/outline/shadow, scaled down from the 1080x1920 canvas basis to a fixed preview width) plus its name — replacing the old plain-text-name row, shared by both TEXT and CAPTIONS Style tabs.
-- `static/api-list-presets.js` / `api-save-preset.js` — `Api.listPresets()`/`Api.savePreset(preset)`: `GET`/`POST /api/presets`.
-- `app/main.py` — `GET/POST /api/presets`.
+- `static/api-list-presets.js` / `api-save-preset.js` / `api-delete-preset.js` — `Api.listPresets()`/`Api.savePreset(preset)`/`Api.deletePreset(presetId)`: `GET`/`POST`/`DELETE /api/presets`.
+- `app/main.py` — `GET/POST/DELETE /api/presets`.
 - `app/store.py` — `save_preset`, `load_presets` (global `<data>/presets.json`).
 
 ### Captions & transcription
