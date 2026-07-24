@@ -98,7 +98,15 @@ window.PreviewCaptions = (() => {
         } else {
           isHighlighted = timelineTime >= word.t_start && timelineTime < word.t_end;
         }
-        span.style.color = isHighlighted ? preset.highlight_color : preset.color;
+        if (preset.highlight_mode === "background") {
+          span.style.color = preset.color;
+          span.style.backgroundColor = isHighlighted ? preset.highlight_color : "transparent";
+          span.style.borderRadius = isHighlighted ? ((preset.highlight_border_radius / 1920 * stageH) + "px") : "0";
+        } else {
+          span.style.color = isHighlighted ? preset.highlight_color : preset.color;
+          span.style.backgroundColor = "transparent";
+          span.style.borderRadius = "0";
+        }
         span.textContent = word.text + (i < line.length - 1 ? " " : "");
         lineDiv.appendChild(span);
       });
