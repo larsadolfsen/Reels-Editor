@@ -261,35 +261,52 @@ def test_render_ass_subset_empty_list_has_no_dialogue_lines():
     out = render_ass(p, {pr.id: pr}, text_blocks=[])
     assert not any(l.startswith("Dialogue:") for l in out.splitlines())
 
-def test_group_words_respects_max_words():
-    from app.ass_render import group_words
-    words = [w(str(i), i, i + 0.5) for i in range(6)]
-    groups = group_words(words, max_words=4)
-    assert [len(g) for g in groups] == [4, 2]
+def test_karaoke_dialogue_joins_lines_with_ass_hard_break():
+    from app.ass_render import _karaoke_dialogue
+    pr = TextPreset(name="Cap")
+    page = [[w("Hello", 0.0, 0.5)], [w("world", 0.5, 1.0)]]
+    line = _karaoke_dialogue(page, pr)
+    assert "\\N" in line
+    assert "Hello" in line and "world" in line
+    assert line.startswith("Dialogue: 0,0:00:00.00,0:00:01.00")
 
-def test_group_words_sorts_by_start_time():
-    from app.ass_render import group_words
-    words = [w("b", 1.0, 1.5), w("a", 0.0, 0.5)]
-    groups = group_words(words, max_words=4)
-    assert [x.text for x in groups[0]] == ["a", "b"]
+def test_current_word_dialogues_highlight_word_on_any_line():
+    from app.ass_render import _current_word_dialogues
+    pr = TextPreset(name="Cap", color="#FFFFFF", highlight_color="#FFD400")
+    page = [[w("Hello", 0.0, 0.5)], [w("world", 0.5, 1.0)]]
+    dialogues = _current_word_dialogues(page, pr)
+    assert len(dialogues) == 2
+    assert "\\N" in dialogues[0] and "\\N" in dialogues[1]
+    assert dialogues[0].count("{\\1c") == 2  # highlight-color tag + reset-to-normal tag around the active word
 
-def test_group_words_empty():
-    from app.ass_render import group_words
-    assert group_words([], max_words=4) == []
+def test_render_caption_ass_wraps_to_multiple_lines_when_box_is_narrow():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Cap", highlight_mode="progressive_fill",
+                     box_width_mode="fixed", box_width=1, box_height_mode="fixed", box_height=1000)
+    p = Project(name="r", captions=CaptionTrack(words=[w("Hello", 0.0, 0.5), w("world", 0.5, 1.0)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    line = next(l for l in out.splitlines() if l.startswith("Dialogue:"))
+    assert "\\N" in line  # box_width=1 forces every word onto its own line
 
-def test_group_words_expands_multi_word_entries():
-    from app.ass_render import group_words
-    words = [w("talks about this", 0.0, 3.0)]
-    groups = group_words(words, max_words=4)
-    assert len(groups) == 1
-    assert [x.text for x in groups[0]] == ["talks", "about", "this"]
+def test_render_caption_ass_paginates_when_box_is_short():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Cap", highlight_mode="progressive_fill", size_px=96,
+                     box_width_mode="fixed", box_width=1, box_height_mode="fixed", box_height=50)
+    # box_height=50 is smaller than one line (size_px*1.15 ~ 110) -> 1 line/page
+    p = Project(name="r", captions=CaptionTrack(words=[w("Hello", 0.0, 0.5), w("world", 0.5, 1.0)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    dialogues = [l for l in out.splitlines() if l.startswith("Dialogue:")]
+    assert len(dialogues) == 2
+    assert "\\N" not in dialogues[0]
 
-def test_group_words_expansion_still_respects_max_words():
-    from app.ass_render import group_words
-    # "a b c" expands to 3 words; combined with 2 more single-word entries that's 5 total
-    words = [w("a b c", 0.0, 1.5), w("d", 1.5, 2.0), w("e", 2.0, 2.5)]
-    groups = group_words(words, max_words=4)
-    assert [len(g) for g in groups] == [4, 1]
+def test_render_caption_ass_falls_back_to_default_box_when_not_fixed():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Cap", highlight_mode="progressive_fill")  # box_width_mode defaults "fit"
+    p = Project(name="r", captions=CaptionTrack(words=[w("Hello", 0.0, 0.5), w("world", 0.5, 1.0)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    line = next(l for l in out.splitlines() if l.startswith("Dialogue:"))
+    assert "Hello" in line and "world" in line
+    assert "\\N" not in line  # fits comfortably inside the 900x350 default box
 
 def test_progressive_fill_style_uses_highlight_as_primary():
     from app.ass_render import render_caption_ass
@@ -303,7 +320,7 @@ def test_progressive_fill_style_uses_highlight_as_primary():
 
 def test_progressive_fill_emits_one_k_tagged_dialogue_per_group():
     from app.ass_render import render_caption_ass
-    pr = TextPreset(name="Caption", highlight_mode="progressive_fill", max_words_per_line=4)
+    pr = TextPreset(name="Caption", highlight_mode="progressive_fill")
     p = Project(name="r", captions=CaptionTrack(
         words=[w("Hello", 1.0, 1.5), w("world", 1.5, 2.2)], preset_id=pr.id))
     out = render_caption_ass(p, pr)
@@ -360,7 +377,7 @@ def test_karaoke_dialogue_shadow_off_emits_no_tags():
 
 def test_render_caption_ass_expands_multi_word_entry_into_karaoke_segments():
     from app.ass_render import render_caption_ass
-    pr = TextPreset(name="Caption", highlight_mode="progressive_fill", max_words_per_line=4)
+    pr = TextPreset(name="Caption", highlight_mode="progressive_fill")
     p = Project(name="r", captions=CaptionTrack(words=[w("talks about this", 0.0, 3.0)], preset_id=pr.id))
     out = render_caption_ass(p, pr)
     line = next(l for l in out.splitlines() if "talks" in l)
