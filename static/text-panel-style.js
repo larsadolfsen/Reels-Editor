@@ -38,8 +38,7 @@ window.TextPanel = window.TextPanel || {};
     const saved = { ...styleFieldsOf(preset), id: crypto.randomUUID().replaceAll("-", ""), name, usage_count: 0 };
     await Api.savePreset(saved);
     saveMode = false;
-    await loadSavedPresets();
-    renderStyle();
+    await renderStyle();
   }
 
   // Save-mode card click: overwrite that saved style's look (id/name/usage_count kept).
@@ -48,14 +47,12 @@ window.TextPanel = window.TextPanel || {};
     Object.assign(saved, styleFieldsOf(preset));
     await Api.savePreset(saved);
     saveMode = false;
-    await loadSavedPresets();
-    renderStyle();
+    await renderStyle();
   }
 
   async function deleteSavedPreset(saved) {
     await Api.deletePreset(saved.id);
-    await loadSavedPresets();
-    renderStyle();
+    await renderStyle();
   }
 
   async function applySavedPreset(saved) {
@@ -70,7 +67,8 @@ window.TextPanel = window.TextPanel || {};
     renderTextPanel();
   }
 
-  function renderStyle() {
+  async function renderStyle() {
+    savedPresets = await Api.listPresets();
     const saveBtn = document.getElementById("text-style-save");
     const formEl = document.getElementById("text-style-form");
     saveBtn.hidden = saveMode;

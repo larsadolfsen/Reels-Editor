@@ -39,8 +39,7 @@ window.CaptionPanel = window.CaptionPanel || {};
     const saved = { ...styleFieldsOf(preset), id: crypto.randomUUID().replaceAll("-", ""), name, usage_count: 0 };
     await Api.savePreset(saved);
     saveMode = false;
-    await loadSavedPresets();
-    renderStyle();
+    await renderStyle();
   }
 
   // Save-mode card click: overwrite that saved style's look (id/name/usage_count kept).
@@ -49,14 +48,12 @@ window.CaptionPanel = window.CaptionPanel || {};
     Object.assign(saved, styleFieldsOf(preset));
     await Api.savePreset(saved);
     saveMode = false;
-    await loadSavedPresets();
-    renderStyle();
+    await renderStyle();
   }
 
   async function deleteSavedPreset(saved) {
     await Api.deletePreset(saved.id);
-    await loadSavedPresets();
-    renderStyle();
+    await renderStyle();
   }
 
   async function applySavedPreset(saved) {
@@ -69,7 +66,8 @@ window.CaptionPanel = window.CaptionPanel || {};
     renderCaptionPanel();
   }
 
-  function renderStyle() {
+  async function renderStyle() {
+    savedPresets = await Api.listPresets();
     const saveBtn = document.getElementById("caption-style-save");
     const formEl = document.getElementById("caption-style-form");
     saveBtn.hidden = saveMode;
