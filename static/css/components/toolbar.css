@@ -1,0 +1,12 @@
+/* Top toolbar strip: centers the tool-mode icon buttons (Select/Text) above the 3-column main layout. */
+/* Exposes #toolbar only; button styling comes from button-group.css's .icon-btn. Depends on tokens.css. */
+#toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 40px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-1);
+}

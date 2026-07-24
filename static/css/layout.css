@@ -1,4 +1,4 @@
-/* App shell: three-column main (left panel, center video+timeline column, right panel), full height — no top bar. */
+/* App shell: three-column main (left panel, center video+timeline column, right panel), full height, below the top #toolbar strip (added 2026-07-24, top-toolbar — see toolbar.css, a sibling of <main> inside #app). */
 /* Exposes #app/main/#center-col layout only; component internals live in css/components/*. Depends on tokens.css. */
 #app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 

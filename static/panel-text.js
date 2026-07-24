@@ -2,9 +2,11 @@
 // text block (empty-state aware when zero blocks exist), plus the stage resize/move handlers.
 // Plain globals (renderTextPanel, currentTextBlock, selectTextBlock, addTextBlock, ...) shared
 // with text-panel-*.js; reaches into editor.js's `project`/`saveProject`/`selected`/`showPanel` globals.
-// addTextBlockAndEdit() (wired to both the empty-state "+ Add text" button and the left icon
-// rail's TEXT entry) creates the block, opens the panel, and immediately enters on-stage
-// contentEditable edit mode via Preview.enterTextEditMode() so the user can type right away.
+// addTextBlockAndEdit(position?) (wired to the empty-state "+ Add text" button, the left icon
+// rail's TEXT entry, and stage-click-router.js's Text-tool insert-at-click) creates the block,
+// opens the panel, and immediately enters on-stage contentEditable edit mode via
+// Preview.enterTextEditMode() so the user can type right away; an optional {x, y} canvas-px
+// position overrides the new block's default centered placement.
 
 // Position grid anchors: edge-flush against the 1080x1920 canvas, using the box's own actual
 // rendered width/height (from Preview.getTextBoxSize/getCaptionBoxSize) so TOP/BTM/LEFT/RIGHT
@@ -123,8 +125,16 @@ async function duplicateTextBlock(blockId) {
   renderTimeline();
 }
 
-async function addTextBlockAndEdit() {
+// `position` ({x, y} in 1080x1920 canvas px), when given, overrides the new block's default
+// centered placement — used by stage-click-router.js's Text-tool insert-at-click (added
+// 2026-07-24, top-toolbar). Omitted, this is identical to the pre-existing behavior.
+async function addTextBlockAndEdit(position) {
   const block = addTextBlock();
+  if (position) {
+    const preset = ensureTextPreset(block.preset_id);
+    preset.x = position.x;
+    preset.y = position.y;
+  }
   selected = { type: "text", item: block };
   showPanel("text");
   await renderTextPanel();

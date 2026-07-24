@@ -129,8 +129,22 @@ Preview.setOnStageTextActivate((blockId) => {
   openTextPanel();
 });
 
+// Select-tool click on an unselected video box (video-box-preview.js's setOnActivate, added
+// 2026-07-24, top-toolbar): open the VIDEO BOX panel for it, same as picking it from a timeline
+// click, then explicitly re-render the stage so its drag/resize handles mount immediately —
+// VideoBoxPanel.render()'s VideoBoxPreview.setSelectedVideoBox() call alone only updates which
+// box is selected, it doesn't itself trigger a render pass.
+VideoBoxPreview.setOnActivate((boxId) => {
+  const box = project.video_boxes.find((b) => b.id === boxId);
+  if (!box) return;
+  onTimelineSelect({ type: "video-box", item: box });
+  VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+});
+
 UI.button(document.getElementById("theme-toggle"), { variant: "icon" });
 UI.button(document.getElementById("export"), { variant: "accent" });
+
+UI.toolbar(document.getElementById("toolbar"));
 
 function setSafeZonesVisible(visible) {
   document.getElementById("safe-zones").hidden = !visible;

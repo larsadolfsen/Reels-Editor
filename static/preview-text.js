@@ -188,6 +188,13 @@ window.PreviewText = (() => {
           activeFormatSelection = { blockId: block.id, start: offsets.start, end: offsets.end };
           if (boxResizeCallbacks && boxResizeCallbacks.onSelectionChange) boxResizeCallbacks.onSelectionChange(activeFormatSelection);
         },
+        // Select-tool plain click (ui-text-interaction.js's handlePlainClick when the active tool
+        // isn't "text"): select this block without entering edit, same activation path onEditStart
+        // uses for the Text tool so both tools route through the one place that switches the right
+        // panel to TEXT (editor.js's Preview.setOnStageTextActivate wiring).
+        onSelectClick: () => {
+          if (block.id !== selectedTextBlockId && onStageTextActivate) onStageTextActivate(block.id);
+        },
       }));
       if (block.id === selectedTextBlockId && boxResizeCallbacks) {
         UI.resizeHandles(div, {

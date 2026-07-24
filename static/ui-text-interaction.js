@@ -8,9 +8,16 @@
 // or format, and classifying it as a glyph made any click on it fragile (native text-selection
 // treats the smallest mouse jitter as a drag, so the click silently fails to enter edit mode
 // instead of always landing on the padding/click-vs-move threshold logic below).
+// Tool-mode gating (added 2026-07-24, top-toolbar): a plain click only enters edit mode when the
+// active tool (window.ToolMode) is "text". Outside Text mode (i.e. in Select mode), a plain click
+// fires onSelectClick instead (select-without-edit), and glyph hit-testing/native text-selection
+// is skipped entirely — every mousedown is treated as the box-move drag branch, so dragging still
+// moves the box regardless of tool, only the plain-click outcome differs. enterEditMode() itself
+// (the returned handle) is NOT gated — a caller invoking it programmatically always enters edit
+// mode, tool mode notwithstanding.
 window.UI = window.UI || {};
 
-window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput, onEditEnd, onMove, onMoveEnd, onSelectionChange, isPlaceholder } = {}) {
+window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput, onEditEnd, onMove, onMoveEnd, onSelectionChange, onSelectClick, isPlaceholder } = {}) {
   function enterEditMode() {
     if (div.contentEditable === "true") return;
     div.contentEditable = "true";
@@ -27,29 +34,39 @@ window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput
     div.addEventListener("blur", onBlur);
   }
 
+  function isTextToolActive() {
+    return !window.ToolMode || window.ToolMode.get() === "text";
+  }
+
+  function handlePlainClick() {
+    if (isTextToolActive()) enterEditMode();
+    else if (onSelectClick) onSelectClick();
+  }
+
   div.addEventListener("mousedown", (e) => {
     if (e.target.closest(".resize-handle")) return; // let resize handles work unmodified
     if (div.contentEditable === "true") return; // already editing, let native caret placement work
 
-    if (!isPlaceholder && UI.rangeContainsPoint(div, e.clientX, e.clientY)) {
-      // Landed on a glyph: let the browser's native text-selection drag run completely
-      // unmodified (no preventDefault, no custom mousemove tracking) and classify the
-      // outcome on mouseup — a real drag produces a non-collapsed selection (format-range
-      // intent), a plain click leaves it collapsed (edit intent, same as before).
+    if (!isPlaceholder && isTextToolActive() && UI.rangeContainsPoint(div, e.clientX, e.clientY)) {
+      // Landed on a glyph while the Text tool is active: let the browser's native text-selection
+      // drag run completely unmodified (no preventDefault, no custom mousemove tracking) and
+      // classify the outcome on mouseup — a real drag produces a non-collapsed selection
+      // (format-range intent), a plain click leaves it collapsed (edit intent, same as before).
       const onMouseUp = () => {
         document.removeEventListener("mouseup", onMouseUp);
         const offsets = UI.textSelectionOffsets(div);
         if (offsets && offsets.end > offsets.start) {
           if (onSelectionChange) onSelectionChange(offsets);
         } else {
-          enterEditMode();
+          handlePlainClick();
         }
       };
       document.addEventListener("mouseup", onMouseUp);
       return;
     }
 
-    // Landed on empty box padding: box-move drag, unchanged from Phase 1.
+    // Landed on empty box padding — or the Select tool is active, so glyphs are treated the same
+    // as padding: box-move drag, unchanged from Phase 1.
     e.preventDefault();
     const startX = e.clientX, startY = e.clientY;
     let moved = false;
@@ -65,7 +82,7 @@ window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput
         const dx = upEvent.clientX - startX, dy = upEvent.clientY - startY;
         if (onMoveEnd) onMoveEnd({ dx, dy });
       } else {
-        enterEditMode();
+        handlePlainClick();
       }
     };
     document.addEventListener("mousemove", onMouseMove);
