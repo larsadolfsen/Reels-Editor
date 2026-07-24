@@ -3,7 +3,9 @@
 // CSS z-index from their model's z_index so stacking follows the project's cross-layer
 // z-order), keeps each element's position/size/currentTime in sync with the timeline clock,
 // and wires drag-to-move (UI.videoBoxDrag)/resize (UI.resizeHandles) onto the selected box.
-// Exposes window.VideoBoxPreview.{render, setSelectedVideoBox}. Muted always (no PiP audio).
+// Exposes window.VideoBoxPreview.{render, setSelectedVideoBox, setOnActivate}. Muted always (no
+// PiP audio). setOnActivate(fn) (added 2026-07-24, top-toolbar) fires fn(boxId) on a plain click
+// on an unselected box while the Select tool is active — see the click listener below.
 window.VideoBoxPreview = (() => {
   const overlay = document.getElementById("overlay");
   const mounted = new Map(); // boxId -> <video>
