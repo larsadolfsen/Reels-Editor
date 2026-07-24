@@ -1,6 +1,6 @@
 # Tests for app.models: entity construction, IDs, JSON round-trip.
 from datetime import datetime as _datetime
-from app.models import Project, ClipLayer, MediaItem, TextPreset, TextBlockLayer, CaptionTrack, CaptionWord, VideoBoxLayer, FormatRun
+from app.models import Project, ClipLayer, MediaItem, TextPreset, TextBlockLayer, CaptionTrack, CaptionWord, VideoBoxLayer, ImageBoxLayer, FormatRun
 
 def test_ids_are_unique():
     a, b = ClipLayer(media_id="m1", file_path="a.mp4", in_point=0, out_point=5, order=0), ClipLayer(media_id="m2", file_path="b.mp4", in_point=0, out_point=5, order=1)
@@ -324,3 +324,20 @@ def test_caption_track_old_saved_json_without_language_loads_as_auto():
     old_json = json.dumps({"id": "x", "words": [], "z_index": 0, "preset_id": "p1"})
     loaded = CaptionTrack.model_validate_json(old_json)
     assert loaded.language == ""
+
+def test_image_box_layer_defaults_and_round_trip():
+    box = ImageBoxLayer(media_id="m1", file_path="pic.jpg", height=1920)
+    assert box.start == 0.0
+    assert box.duration == 3.0
+    assert box.x == 0 and box.y == 0
+    assert box.width == 1080
+    assert box.z_index == -1
+    assert box.id  # auto-generated
+
+    data = box.model_dump()
+    restored = ImageBoxLayer(**data)
+    assert restored == box
+
+def test_project_image_boxes_defaults_to_empty_list():
+    p = Project(name="r")
+    assert p.image_boxes == []

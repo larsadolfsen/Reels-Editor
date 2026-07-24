@@ -48,6 +48,18 @@ class VideoBoxLayer(BaseModel):
     height: int                # px; set from source aspect ratio at creation, kept locked on resize
     z_index: int = -1          # new boxes default just below the default text z_index (0)
 
+class ImageBoxLayer(BaseModel):
+    id: str = Field(default_factory=new_id)
+    media_id: str
+    file_path: str
+    start: float = 0.0        # timeline seconds
+    duration: float = 3.0     # seconds the box is visible; images have no source timeline to trim
+    x: int = 0                 # px, left edge on the 1080x1920 canvas
+    y: int = 0                 # px, top edge
+    width: int = 1080
+    height: int                # px; set from the image's aspect ratio at creation, kept locked on resize
+    z_index: int = -1          # same convention as VideoBoxLayer: new boxes default just below text (0)
+
 class TextPreset(BaseModel):
     id: str = Field(default_factory=new_id)
     name: str
@@ -157,6 +169,7 @@ class Project(BaseModel):
     media_library: list[MediaItem] = []
     clips: list[ClipLayer] = []
     video_boxes: list[VideoBoxLayer] = []
+    image_boxes: list[ImageBoxLayer] = []
     text_blocks: list[TextBlockLayer] = []
     text_presets: dict[str, TextPreset] = {}
     captions: CaptionTrack | None = None
