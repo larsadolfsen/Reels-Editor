@@ -1,7 +1,7 @@
 # Tests for app.timeline: pure sequence math over ordered, trimmed clips.
 import pytest
-from app.models import ClipLayer, VideoBoxLayer, TextBlockLayer, Project
-from app.timeline import ordered, clip_duration, sequence_duration, locate, video_box_end, banded_layers, slice_clip, clip_starts
+from app.models import ClipLayer, VideoBoxLayer, ImageBoxLayer, TextBlockLayer, Project
+from app.timeline import ordered, clip_duration, sequence_duration, locate, video_box_end, image_box_end, banded_layers, slice_clip, clip_starts
 
 def c(i, o, order): return ClipLayer(media_id=f"m{order}", file_path=f"{order}.mp4", in_point=i, out_point=o, order=order)
 
@@ -39,6 +39,28 @@ def test_locate_out_of_range():
 def test_video_box_end_derived_from_trim():
     v = VideoBoxLayer(media_id="m1", file_path="a.mp4", in_point=1.0, out_point=4.0, start=2.0, height=1920)
     assert video_box_end(v) == 5.0  # 2.0 + (4.0 - 1.0)
+
+def test_image_box_end_derived_from_start_and_duration():
+    b = ImageBoxLayer(media_id="m1", file_path="a.jpg", start=2.0, duration=3.0, height=1920)
+    assert image_box_end(b) == 5.0
+
+def test_banded_layers_image_box_between_two_text_blocks():
+    low = TextBlockLayer(heading="LOW", preset_id="p1", z_index=0)
+    high = TextBlockLayer(heading="HIGH", preset_id="p2", z_index=10)
+    box = ImageBoxLayer(media_id="m1", file_path="a.jpg", duration=5.0, height=1920, z_index=5)
+    p = Project(name="r", text_blocks=[low, high], image_boxes=[box])
+    bands = banded_layers(p)
+    assert [b["kind"] for b in bands] == ["text", "image_box", "text"]
+    assert bands[0]["text_blocks"] == [low]
+    assert bands[1]["image_box"] == box
+    assert bands[2]["text_blocks"] == [high]
+
+def test_banded_layers_image_box_and_video_box_together_sorted_by_z_index():
+    img = ImageBoxLayer(media_id="m1", file_path="a.jpg", duration=5.0, height=1920, z_index=1)
+    vid = VideoBoxLayer(media_id="m2", file_path="b.mp4", out_point=5.0, height=1920, z_index=2)
+    p = Project(name="r", image_boxes=[img], video_boxes=[vid])
+    bands = banded_layers(p)
+    assert [b["kind"] for b in bands] == ["image_box", "video_box"]  # ascending z_index order (img=1 first, vid=2 second)
 
 def test_banded_layers_no_video_boxes_is_one_text_band():
     p = Project(name="r", text_blocks=[TextBlockLayer(heading="A", preset_id="p1", z_index=0)])

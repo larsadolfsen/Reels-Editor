@@ -1,5 +1,5 @@
-# Pure timeline math: order clips, durations, map timeline time to (clip, source time), and merge text/video-box layers into z-order export bands.
-from app.models import ClipLayer, VideoBoxLayer, Project
+# Pure timeline math: order clips, durations, map timeline time to (clip, source time), and merge text/video-box/image-box layers into z-order export bands.
+from app.models import ClipLayer, VideoBoxLayer, ImageBoxLayer, Project
 
 def ordered(clips: list[ClipLayer]) -> list[ClipLayer]:
     return sorted(clips, key=lambda c: c.order)
@@ -56,13 +56,18 @@ def slice_clip(clips: list[ClipLayer], t: float, eps: float = 0.05) -> tuple[lis
 def video_box_end(v: VideoBoxLayer) -> float:
     return v.start + (v.out_point - v.in_point)
 
+def image_box_end(b: ImageBoxLayer) -> float:
+    return b.start + b.duration
+
 def banded_layers(project: Project) -> list[dict]:
-    """Partitions text blocks and video boxes into z-order bands for export compositing:
-    consecutive text blocks accumulate into one 'text' band; each video box is its own
-    'video_box' band. Consumed by app.main's export route to decide how many ASS files to
+    """Partitions text blocks, video boxes, and image boxes into z-order bands for export
+    compositing: consecutive text blocks accumulate into one 'text' band; each video/image box
+    is its own band. Consumed by app.main's export route to decide how many ASS files to
     render, and by app.ffmpeg_cmd to build the alternating ass-burn/overlay filter chain."""
     entries = sorted(
-        [("text", b) for b in project.text_blocks] + [("video_box", v) for v in project.video_boxes],
+        [("text", b) for b in project.text_blocks]
+        + [("video_box", v) for v in project.video_boxes]
+        + [("image_box", i) for i in project.image_boxes],
         key=lambda e: e[1].z_index,
     )
     bands: list[dict] = []
@@ -74,7 +79,7 @@ def banded_layers(project: Project) -> list[dict]:
             if pending_text:
                 bands.append({"kind": "text", "text_blocks": pending_text})
                 pending_text = []
-            bands.append({"kind": "video_box", "video_box": item})
+            bands.append({"kind": kind, kind: item})
     if pending_text:
         bands.append({"kind": "text", "text_blocks": pending_text})
     return bands
