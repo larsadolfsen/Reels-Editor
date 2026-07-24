@@ -5,7 +5,8 @@
 // in filmstripCache; fetches are fire-and-forget — onReady fires once a fetch
 // resolves so the caller can re-render with the now-cached image. A clip whose
 // sprite hasn't loaded yet (or failed to fetch) is left showing the block's existing
-// CSS striped-placeholder background, since no canvas is mounted in that case.
+// CSS striped-placeholder background, since no canvas is mounted in that case — a
+// block narrower than one tile gets the same fallback rather than a squeezed sliver.
 // Redrawing on every timeline render() (including zoom changes) is what makes the
 // filmstrip resample to more/fewer distinct frames as px/sec changes.
 // Each drawn thumbnail is a fixed TILE_W x TILE_H box, centered vertically in the row;
@@ -47,7 +48,7 @@ window.TimelineVideoRow = (() => {
   function drawFilmstrip(blockDiv, clip, media, px, img) {
     const rowHeight = blockDiv.clientHeight || 56;
     const widthPx = parseFloat(blockDiv.style.width) || 0;
-    if (widthPx <= 0) return;
+    if (widthPx < TILE_W) return;
 
     const canvas = document.createElement("canvas");
     canvas.className = "video-clip-filmstrip";
