@@ -3,7 +3,9 @@
 // page active at a given timelineTime, and renders it as one .caption-block div containing one
 // .caption-line div per line, each with per-word highlight color per preset.highlight_mode.
 // Memoizes the paginated pages per (words, box size, font) so a full re-measure only happens when
-// something relevant actually changed — mirrors preview-text.js's fitCache pattern.
+// something relevant actually changed — mirrors preview-text.js's fitCache pattern. Case styling
+// (preset.text_case): displayed via CSS text-transform, paginated using a measurer wrapped through
+// TextCase.apply so line-wrapping matches what CSS actually draws.
 // getBoxSizeCanvasPx() reads the caption block's live on-stage rendered size (in 1080x1920 canvas
 // px) for the POSITION anchor-grid shortcut. Exposes window.PreviewCaptions.
 // {renderCaptions(project, presets, timelineTime), getBoxSizeCanvasPx}.
@@ -20,14 +22,15 @@ window.PreviewCaptions = (() => {
   function paginationKey(track, preset) {
     return JSON.stringify([
       track.words.map((w) => [w.id, w.text, w.t_start, w.t_end]),
-      preset.box_width, preset.box_height, preset.size_px, preset.font, preset.weight, preset.italic,
+      preset.box_width, preset.box_height, preset.size_px, preset.font, preset.weight, preset.italic, preset.text_case,
     ]);
   }
 
   function getPaginatedPages(track, preset) {
     const key = paginationKey(track, preset);
     if (paginationCache && paginationCache.key === key) return paginationCache.pages;
-    const measure = FontFit.canvasMeasurer(preset.font, preset.size_px, { weight: preset.weight, italic: preset.italic });
+    const rawMeasure = FontFit.canvasMeasurer(preset.font, preset.size_px, { weight: preset.weight, italic: preset.italic });
+    const measure = (s) => rawMeasure(TextCase.apply(s, preset.text_case));
     const padX = 0.35 * preset.size_px * 2;
     const padY = 0.15 * preset.size_px * 2;
     const pages = CaptionLayout.paginateWords(track.words, measure,
@@ -66,6 +69,7 @@ window.PreviewCaptions = (() => {
     div.style.width = (preset.box_width / 1080 * stageW) + "px";
     div.style.height = (preset.box_height / 1920 * stageH) + "px";
     div.style.textAlign = preset.align;
+    div.style.textTransform = TextCase.cssValue(preset.text_case);
     div.style.fontFamily = `"${preset.font}", sans-serif`;
     div.style.fontWeight = String(preset.weight);
     div.style.fontStyle = preset.italic ? "italic" : "normal";
