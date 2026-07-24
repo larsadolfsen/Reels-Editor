@@ -17,10 +17,12 @@ function anchorPositionX(value, boxWidth, align) {
   // same edge-flush x must be shifted by that same fraction of the box width to compensate.
   const w = boxWidth || 0;
   const offsetFactor = align === "center" ? 0.5 : align === "right" ? 1 : 0;
+  const canvasW = SafeZoneGeometry.CANVAS_W;
+  const margin = SafeZoneGeometry.HORIZONTAL_MARGIN;
   let visualLeft;
-  if (value === "left") visualLeft = 0;
-  else if (value === "right") visualLeft = Math.max(0, 1080 - w);
-  else visualLeft = Math.max(0, (1080 - w) / 2);
+  if (value === "left") visualLeft = margin;
+  else if (value === "right") visualLeft = Math.max(margin, canvasW - margin - w);
+  else visualLeft = Math.max(0, (canvasW - w) / 2);
   return visualLeft + offsetFactor * w;
 }
 
