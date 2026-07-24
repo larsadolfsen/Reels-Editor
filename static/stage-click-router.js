@@ -19,11 +19,15 @@ function canvasPointFromClient(clientX, clientY, rect) {
   return { x: Math.max(0, Math.min(1080, x)), y: Math.max(0, Math.min(1920, y)) };
 }
 
-document.getElementById("stage").addEventListener("click", async (e) => {
+document.getElementById("stage").addEventListener("click", (e) => {
   if (!window.ToolMode || ToolMode.get() !== "text") return;
   if (e.target.closest(".text-block")) return; // let the block's own click-to-edit handle it
   const rect = document.getElementById("overlay").getBoundingClientRect();
   const point = canvasPointFromClient(e.clientX, e.clientY, rect);
-  await addTextBlockAndEdit(point);
+  // Revert to Select before the (async) insert resolves, not after — a second click landing
+  // while addTextBlockAndEdit is still in flight must see "select" already, or it would start a
+  // second concurrent insert. enterEditMode() is never tool-gated, so reverting early doesn't
+  // block the new block from still opening in edit mode.
   ToolMode.set("select");
+  addTextBlockAndEdit(point);
 });
