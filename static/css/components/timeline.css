@@ -342,6 +342,21 @@
   cursor: grabbing;
 }
 
+.overlay-lane-handle {
+  display: inline-flex;
+  align-items: center;
+  opacity: 0;
+  cursor: grab;
+  color: var(--text-tertiary);
+  margin-right: 4px;
+}
+.overlay-lane-label:hover .overlay-lane-handle { opacity: 1; }
+.overlay-lane-label.dragging {
+  z-index: 5;
+  opacity: 0.85;
+  cursor: grabbing;
+}
+
 .clip-drop-indicator {
   position: absolute;
   top: 0;
