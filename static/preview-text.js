@@ -139,6 +139,7 @@ window.PreviewText = (() => {
         span.style.webkitTextStroke = `${runOutlinePx}px ${(run && run.outline_color) || preset.outline_color}`;
         const highlighted = run && run.highlight != null ? run.highlight : preset.highlight;
         span.style.backgroundColor = highlighted ? ((run && run.highlight_color) || preset.highlight_color) : "transparent";
+        span.style.borderRadius = highlighted ? ((preset.highlight_border_radius / 1920 * stageH) + "px") : "";
         div.appendChild(span);
       }
       if (!heading) {

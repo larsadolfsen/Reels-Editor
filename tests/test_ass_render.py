@@ -279,6 +279,37 @@ def test_current_word_dialogues_highlight_word_on_any_line():
     assert "\\N" in dialogues[0] and "\\N" in dialogues[1]
     assert dialogues[0].count("{\\1c") == 2  # highlight-color tag + reset-to-normal tag around the active word
 
+def test_background_word_dialogues_emit_rect_before_text_per_active_word():
+    from app.ass_render import _background_word_dialogues
+    pr = TextPreset(name="Cap", x=540, y=700, size_px=48, highlight_color="#FFD400", highlight_border_radius=8)
+    page = [[w("Hello", 0.0, 0.5), w("world", 0.5, 1.0)]]
+    dialogues = _background_word_dialogues(page, pr)
+    assert len(dialogues) == 4  # 2 words * (rect + text)
+    # First pair covers "Hello"'s window; the rect line comes before the text line.
+    first_window = [d for d in dialogues if d.startswith("Dialogue: 0,0:00:00.00,0:00:00.50")]
+    assert len(first_window) == 2
+    assert "\\p1" in first_window[0]          # rect first
+    assert "\\p1" not in first_window[1]      # text second
+    assert "Hello" in first_window[1] and "world" in first_window[1]  # full page text, not just the active word
+
+def test_background_word_dialogues_use_preset_radius():
+    from app.ass_render import _background_word_dialogues
+    pr_default = TextPreset(name="Cap", x=540, y=700, size_px=48)  # highlight_border_radius default 4
+    pr_custom = TextPreset(name="Cap", x=540, y=700, size_px=48, highlight_border_radius=12)
+    page = [[w("Hi", 0.0, 0.5)]]
+    rect_default = next(d for d in _background_word_dialogues(page, pr_default) if "\\p1" in d)
+    rect_custom = next(d for d in _background_word_dialogues(page, pr_custom) if "\\p1" in d)
+    assert rect_default != rect_custom  # different radius produces a different rect path, not a hardcoded value
+
+def test_render_caption_ass_background_mode_routes_to_background_dialogues():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Cap", highlight_mode="background", highlight_border_radius=6)
+    p = Project(name="r", captions=CaptionTrack(words=[w("Hi", 0.0, 0.5), w("there", 0.5, 1.0)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    dialogues = [l for l in out.splitlines() if l.startswith("Dialogue:")]
+    assert len(dialogues) == 4  # 2 words * (rect + text), same shape as _background_word_dialogues alone
+    assert any("\\p1" in d for d in dialogues)
+
 def test_render_caption_ass_wraps_to_multiple_lines_when_box_is_narrow():
     from app.ass_render import render_caption_ass
     pr = TextPreset(name="Cap", highlight_mode="progressive_fill",
@@ -488,3 +519,15 @@ def test_caption_text_case_upper_transforms_dialogues_not_words():
     assert "HELLO" in out and "THERE" in out
     assert "Hello" not in out
     assert words[0].text == "Hello"   # stored words untouched
+
+def test_highlighted_run_uses_preset_border_radius_not_hardcoded_constant():
+    run = FormatRun(start=0, end=3, highlight=True, highlight_color="#00FF00")
+    pr_default = TextPreset(name="Pop", x=100, y=200, size_px=50, box_width_mode="fit")  # highlight_border_radius default 4
+    pr_custom = TextPreset(name="Pop", x=100, y=200, size_px=50, box_width_mode="fit", highlight_border_radius=20)
+    p_default = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG NEWS", preset_id=pr_default.id, start=0, end=2, formatting_runs=[run])])
+    p_custom = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG NEWS", preset_id=pr_custom.id, start=0, end=2, formatting_runs=[run])])
+    out_default = render_ass(p_default, {pr_default.id: pr_default})
+    out_custom = render_ass(p_custom, {pr_custom.id: pr_custom})
+    line_default = next(l for l in out_default.splitlines() if "hl0" in l)
+    line_custom = next(l for l in out_custom.splitlines() if "hl0" in l)
+    assert line_default != line_custom  # different radius produces a different rect path
