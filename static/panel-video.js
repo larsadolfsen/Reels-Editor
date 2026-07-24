@@ -56,8 +56,8 @@ UI.divider(document.getElementById("video-order-divider"));
       { label: "OUT", unit: "SEC", value: c.out_point, step: 0.1, span: 4,
         onChange: (v) => applyTrim(c.in_point, v) });
 
-    document.getElementById("video-set-in").onclick = () => applyTrim(player.currentTime, c.out_point);
-    document.getElementById("video-set-out").onclick = () => applyTrim(c.in_point, player.currentTime);
+    document.getElementById("video-set-in").onclick = () => applyTrim(Preview.currentSourceTime(), c.out_point);
+    document.getElementById("video-set-out").onclick = () => applyTrim(c.in_point, Preview.currentSourceTime());
 
     const ordered = [...project.clips].sort((a, b) => a.order - b.order);
     const idx = ordered.findIndex((x) => x.id === c.id);
