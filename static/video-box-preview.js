@@ -10,6 +10,7 @@ window.VideoBoxPreview = (() => {
   const handlesDestroyers = new Map(); // boxId -> () => void, for resize/drag cleanup
   let selectedBoxId = null;
   let callbacks = null;
+  let onActivate = null; // (boxId) => void, fired by a plain click on an unselected box in Select mode
 
   function boxEnd(v) {
     return v.start + (v.out_point - v.in_point);
@@ -53,6 +54,17 @@ window.VideoBoxPreview = (() => {
         video.muted = true;
         video.src = "/media?path=" + encodeURIComponent(v.file_path);
         video.style.pointerEvents = "auto";
+        // Click-to-select (added 2026-07-24, top-toolbar): a plain click on a not-yet-selected
+        // box selects it, Select-tool only — once selected, mountHandles' own drag listener owns
+        // clicks/drags on this element instead, so this returns early for the selected box. In
+        // Text-tool mode this deliberately does nothing, so the click bubbles up to #stage's
+        // click listener (stage-click-router.js) and is treated as "insert text on top" per the
+        // top-toolbar design spec.
+        video.addEventListener("click", () => {
+          if (v.id === selectedBoxId) return;
+          if (!window.ToolMode || ToolMode.get() !== "select") return;
+          if (onActivate) onActivate(v.id);
+        });
         overlay.appendChild(video);
         mounted.set(v.id, video);
       }
@@ -91,5 +103,9 @@ window.VideoBoxPreview = (() => {
     callbacks = cb || null;
   }
 
-  return { render, setSelectedVideoBox };
+  function setOnActivate(fn) {
+    onActivate = fn || null;
+  }
+
+  return { render, setSelectedVideoBox, setOnActivate };
 })();
