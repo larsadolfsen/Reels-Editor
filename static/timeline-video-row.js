@@ -9,10 +9,13 @@
 // block narrower than one tile gets the same fallback rather than a squeezed sliver.
 // Redrawing on every timeline render() (including zoom changes) is what makes the
 // filmstrip resample to more/fewer distinct frames as px/sec changes.
-// Each drawn thumbnail is a fixed TILE_W x TILE_H box, centered vertically in the row;
-// tiles are spaced at least TILE_W apart so they never overlap — at low zoom (many
-// sampled frames per pixel) that means some frames are skipped rather than the same
-// frame being duplicated to fill the gap.
+// Each drawn thumbnail is a fixed TILE_W x TILE_H box, centered vertically in the row,
+// tiled edge-to-edge every TILE_W px (no gaps) so the block's own background never
+// shows through as a seam between frames. The frame shown at each tile is picked from
+// that tile's real elapsed source time, so at low zoom (many sampled frames per
+// TILE_W span) some frames are simply skipped rather than overlapping, and at high
+// zoom (a frame's sampled span wider than one tile) the same frame repeats across
+// consecutive tiles rather than leaving a blank gap between them.
 // Exposes window.TimelineVideoRow.render(blockDiv, clip, media, px, onReady).
 window.TimelineVideoRow = (() => {
   const filmstripCache = {}; // mediaId -> "loading" | "error" | HTMLImageElement
@@ -60,11 +63,9 @@ window.TimelineVideoRow = (() => {
     const interval = Filmstrip.frameInterval(media.duration);
     const count = Filmstrip.frameCount(media.duration, interval);
     const speed = clip.speed || 1;
-    const frameSpanPx = Math.max(1, (interval / speed) * px);
     const tileY = (rowHeight - TILE_H) / 2;
-    const step = Math.max(frameSpanPx, TILE_W);
 
-    for (let x = 0; x < widthPx; x += step) {
+    for (let x = 0; x < widthPx; x += TILE_W) {
       const sourceTime = clip.in_point + (x / px) * speed;
       const frameIndex = Math.min(count - 1, Math.max(0, Math.round(sourceTime / interval)));
       const tileW = Math.min(TILE_W, widthPx - x);
