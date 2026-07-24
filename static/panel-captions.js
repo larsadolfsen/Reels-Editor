@@ -12,7 +12,7 @@ function defaultCaptionPreset(id) {
     box_width_mode: "fit", box_height_mode: "fit", box_width: 0, box_height: 0,
     box_background: false, box_background_color: "#000000", box_background_opacity: 100,
     box_border_width: 0, box_border_color: "#FFFFFF", box_border_radius: 0,
-    align: "center", x: 540, y: 1520, entrance: "none",
+    align: "center", x: 540, y: Math.round(SafeZoneGeometry.CAPTION_ZONE_TOP), entrance: "none",
     highlight_color: "#FFD400", highlight_mode: "current_word", max_words_per_line: 4,
   };
 }
