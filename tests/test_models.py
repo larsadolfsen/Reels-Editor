@@ -142,6 +142,11 @@ def test_text_preset_highlight_and_grouping_defaults():
     assert p.highlight_color == "#FFD400"
     assert p.highlight_mode == "current_word"
 
+def test_text_preset_highlight_border_radius_defaults_to_four():
+    from app.models import TextPreset
+    pr = TextPreset(name="Pop")
+    assert pr.highlight_border_radius == 4
+
 def test_caption_track_has_preset_id():
     from app.models import CaptionTrack, CaptionWord
     t = CaptionTrack(words=[CaptionWord(text="hi", t_start=0.0, t_end=0.5)])
