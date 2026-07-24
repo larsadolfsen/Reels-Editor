@@ -168,6 +168,7 @@ async function renderTextPanel() {
   TextPanel.renderFontStyle();
   TextPanel.renderOutline();
   TextPanel.renderShadow();
+  TextPanel.renderHighlight();
   TextPanel.renderCase();
   TextPanel.renderStyle();
   renderBoxPanel();
