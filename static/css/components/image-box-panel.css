@@ -1,0 +1,4 @@
+/* #panel-image-box internal layout: add-picker list + size/position/time detail view.
+   Mirrors video-box-panel.css's layout (same grid/spacing), renamed to image-box-* ids. */
+/* Exposes #panel-image-box's internal layout only. Depends on tokens.css, style-panel.css. */
+#image-box-picker-list { max-height: 320px; overflow-y: auto; }

@@ -28,6 +28,7 @@
 <link rel="stylesheet" href="/static/css/components/project-list-row.css">
 <link rel="stylesheet" href="/static/css/components/project-picker.css">
 <link rel="stylesheet" href="/static/css/components/video-box-panel.css">
+<link rel="stylesheet" href="/static/css/components/image-box-panel.css">
 <link rel="stylesheet" href="/static/css/components/auto-slice-panel.css">
 <link rel="stylesheet" href="/static/css/components/export-progress.css">
 </head><body>
@@ -508,6 +509,49 @@
         </div>
       </div>
 
+      <div id="panel-image-box" class="context-panel" hidden>
+        <div class="style-panel-header">IMAGE BOX</div>
+        <div class="style-group">
+          <button id="image-box-add" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD IMAGE BOX</span></button>
+        </div>
+        <div id="image-box-picker" hidden>
+          <ul id="image-box-picker-list" class="font-list"></ul>
+        </div>
+        <div id="image-box-detail" hidden>
+          <div id="image-box-name" class="context-panel-name"></div>
+
+          <div id="image-box-tab-bar"></div>
+
+          <div id="image-box-box-body">
+            <div class="style-group-label">SIZE &amp; POSITION</div>
+            <div class="style-group">
+              <div class="style-row">
+                <label id="image-box-x-field"></label>
+                <label id="image-box-y-field"></label>
+              </div>
+              <div class="style-row">
+                <label id="image-box-width-field"></label>
+                <label id="image-box-height-field"></label>
+              </div>
+            </div>
+          </div>
+
+          <div id="image-box-time-body">
+            <div class="style-group-label">TIME</div>
+            <div class="style-group">
+              <div class="style-row">
+                <label id="image-box-start-field"></label>
+                <label id="image-box-duration-field"></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="style-group">
+            <button id="image-box-delete" type="button" class="panel-button panel-button-danger col-8">Delete image box</button>
+          </div>
+        </div>
+      </div>
+
       <div id="panel-audio" class="context-panel" hidden>
         <div class="style-panel-header">AUDIO</div>
         <div id="audio-empty-state" class="style-group">
@@ -840,6 +884,7 @@
 <script src="/static/video-box-preview.js"></script>
 <script src="/static/image-box-preview.js"></script>
 <script src="/static/panel-video-box.js"></script>
+<script src="/static/panel-image-box.js"></script>
 <script src="/static/panel-audio.js"></script>
 <script src="/static/panel-media.js"></script>
 <script src="/static/panel-video.js"></script>
