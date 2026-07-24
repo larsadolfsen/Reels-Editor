@@ -8,8 +8,9 @@
 function showPanel(type) {
   if (type !== "text") Preview.setSelectedTextBlock(null, null);
   if (type !== "video-box") VideoBoxPreview.setSelectedVideoBox(null, null);
+  if (type !== "image-box") ImageBoxPreview.setSelectedImageBox(null, null);
   document.getElementById("style-panel").hidden = false;
-  ["files", "video", "text", "captions", "video-box", "settings", "export", "projects", "audio", "auto-slice"].forEach((t) => {
+  ["files", "video", "text", "captions", "video-box", "image-box", "settings", "export", "projects", "audio", "auto-slice"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;
   });
 }
@@ -36,6 +37,9 @@ async function onTimelineSelect({ type, item, groupIndex }) {
   } else if (type === "video-box") {
     showPanel("video-box");
     VideoBoxPanel.render(item.id);
+  } else if (type === "image-box") {
+    showPanel("image-box");
+    ImageBoxPanel.render(item.id);
   }
   renderTimeline();
 }
@@ -62,6 +66,11 @@ const PANEL_NAV_ITEMS = [
     value: "video-box",
     label: "VIDEO BOX",
     icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="12" y="12" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg>`,
+  },
+  {
+    value: "image-box",
+    label: "IMAGE BOX",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`,
   },
   {
     value: "audio",
@@ -130,6 +139,13 @@ function openVideoBoxPanel() {
   renderTimeline();
 }
 
+function openImageBoxPanel() {
+  selected = { type: "image-box", item: null };
+  showPanel("image-box");
+  ImageBoxPanel.render(null);
+  renderTimeline();
+}
+
 function openAudioPanel() {
   selected = { type: "audio" };
   showPanel("audio");
@@ -180,6 +196,9 @@ function reRenderAfterRestore() {
   } else if (t === "video-box") {
     const box = project.video_boxes.find((v) => selected.item && v.id === selected.item.id);
     if (box) onTimelineSelect({ type: "video-box", item: box }); else openFilesPanel();
+  } else if (t === "image-box") {
+    const box = project.image_boxes.find((b) => selected.item && b.id === selected.item.id);
+    if (box) onTimelineSelect({ type: "image-box", item: box }); else openFilesPanel();
   } else if (t === "text") {
     openTextPanel();      // renderTextPanel()/currentTextBlock() self-heal to first block or empty state
   } else if (t === "captions" || t === "caption") {
@@ -193,7 +212,7 @@ function reRenderAfterRestore() {
   }
 }
 
-const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel, "auto-slice": openAutoSlicePanel };
+const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, "image-box": openImageBoxPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel, "auto-slice": openAutoSlicePanel };
 
 // Rail = insert (creation). TEXT inserts a new block and drops into on-stage edit; the other
 // rail buttons open their panel (CAPTIONS's openCaptionsPanel already create-or-opens the track).
