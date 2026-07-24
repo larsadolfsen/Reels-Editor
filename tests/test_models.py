@@ -141,7 +141,6 @@ def test_text_preset_highlight_and_grouping_defaults():
     p = TextPreset(name="Caption")
     assert p.highlight_color == "#FFD400"
     assert p.highlight_mode == "current_word"
-    assert p.max_words_per_line == 4
 
 def test_caption_track_has_preset_id():
     from app.models import CaptionTrack, CaptionWord

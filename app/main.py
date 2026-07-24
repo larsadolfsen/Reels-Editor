@@ -172,7 +172,8 @@ def transcribe_project(pid: str) -> Project:
         p.captions.words = words
     else:
         preset = TextPreset(name="Caption", size_px=72, x=540, y=1520, align="center",
-                             highlight_color="#FFD400", highlight_mode="current_word", max_words_per_line=4)
+                             highlight_color="#FFD400", highlight_mode="current_word",
+                             box_width_mode="fixed", box_height_mode="fixed", box_width=900, box_height=350)
         p.text_presets[preset.id] = preset
         p.captions = CaptionTrack(words=words, preset_id=preset.id)
 

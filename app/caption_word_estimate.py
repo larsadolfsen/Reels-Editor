@@ -1,7 +1,7 @@
 # Splits a multi-word CaptionWord (e.g. "talks about this" authored as one subtitle chunk)
 # into per-word estimated sub-ranges, interpolated by character offset within its own
 # [t_start, t_end]; a single-word entry passes through unchanged.
-# Exposes estimate_word_timings. Consumed by app.ass_render.group_words. Depends on app.models.
+# Exposes estimate_word_timings. Consumed by app.caption_layout.paginate_words. Depends on app.models.
 from app.models import CaptionWord
 
 def estimate_word_timings(word: CaptionWord) -> list[CaptionWord]:

@@ -1,13 +1,16 @@
-# Generates the ASS subtitle files burned into exports: text-block dialogues via render_ass() (accepts an optional text_blocks subset so app/main.py can render one ASS file per z-order band, see app.timeline.banded_layers), and karaoke caption dialogues via render_caption_ass().
-# Exposes render_ass, render_caption_ass, group_words, ass_time, hex_to_ass. Consumed by the export route; rendered by libass.
+# Generates the ASS subtitle files burned into exports: text-block dialogues via render_ass() (accepts an optional text_blocks subset so app/main.py can render one ASS file per z-order band, see app.timeline.banded_layers), and karaoke caption dialogues via render_caption_ass() (word-wrap/pagination against the caption box's fixed size via app.caption_layout.paginate_words).
+# Exposes render_ass, render_caption_ass, ass_time, hex_to_ass. Consumed by the export route; rendered by libass.
 from typing import Callable
 from app.models import Project, TextPreset, CaptionWord
 from app.font_metrics import wrap_text, wrap_text_runs, pil_font_measurer, WEIGHT_LABELS, nearest_available_weight
-from app.caption_word_estimate import estimate_word_timings
+from app.caption_layout import paginate_words
 
 BOX_PAD_X_EM = 0.35
 BOX_PAD_Y_EM = 0.15
 LINE_HEIGHT = 1.15
+
+CAPTION_DEFAULT_BOX_WIDTH = 900    # px on the 1080x1920 canvas — used when the preset predates fixed-size captions
+CAPTION_DEFAULT_BOX_HEIGHT = 350   # px
 
 def ass_time(s: float) -> str:
     cs = int(s * 100)  # truncate to centiseconds (ASS precision)
@@ -254,11 +257,6 @@ def render_ass(project: Project, presets: dict[str, TextPreset], text_blocks: li
 
 CAPTION_STYLE_NAME = "Caption"
 
-def group_words(words: list[CaptionWord], max_words: int) -> list[list[CaptionWord]]:
-    expanded = [w for word in words for w in estimate_word_timings(word)]
-    sorted_words = sorted(expanded, key=lambda w: w.t_start)
-    return [sorted_words[i:i + max_words] for i in range(0, len(sorted_words), max_words)]
-
 def _caption_style(p: TextPreset, weight: int) -> str:
     fontname = f"{p.font} {WEIGHT_LABELS[weight]}"
     alignment = {"left": 7, "right": 9}.get(p.align, 8)
@@ -272,26 +270,34 @@ def _caption_style(p: TextPreset, weight: int) -> str:
             f"{hex_to_ass(p.outline_color)},&H00000000,"
             f"0,{italic},{underline},0,100,100,0,0,1,{p.outline_px},0,{alignment},0,0,0,1")
 
-def _karaoke_dialogue(group: list[CaptionWord], p: TextPreset) -> str:
+def _karaoke_dialogue(page: list[list[CaptionWord]], p: TextPreset) -> str:
     fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
-    body = "".join(f"{{\\k{max(1, round((w.t_end - w.t_start) * 100))}}}{w.text} " for w in group).rstrip()
-    start, end = group[0].t_start, group[-1].t_end
+    line_bodies = []
+    for line in page:
+        body = "".join(f"{{\\k{max(1, round((w.t_end - w.t_start) * 100))}}}{w.text} " for w in line).rstrip()
+        line_bodies.append(body)
+    body = "\\N".join(line_bodies)
+    start, end = page[0][0].t_start, page[-1][-1].t_end
     return f"Dialogue: 0,{ass_time(start)},{ass_time(end)},{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{body}"
 
-def _current_word_dialogues(group: list[CaptionWord], p: TextPreset) -> list[str]:
+def _current_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> list[str]:
     fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
     highlight = _ass_override_color(p.highlight_color)
     normal = _ass_override_color(p.color)
-    lines = []
-    for i, active in enumerate(group):
-        segments = []
-        for j, other in enumerate(group):
-            seg = other.text + (" " if j < len(group) - 1 else "")
-            segments.append(f"{{\\1c{highlight}}}{seg}{{\\1c{normal}}}" if j == i else seg)
-        body = "".join(segments)
-        lines.append(f"Dialogue: 0,{ass_time(active.t_start)},{ass_time(active.t_end)},"
-                      f"{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{body}")
-    return lines
+    flat = [word for line in page for word in line]
+    dialogues = []
+    for active in flat:
+        line_bodies = []
+        for line in page:
+            segments = []
+            for j, other in enumerate(line):
+                seg = other.text + (" " if j < len(line) - 1 else "")
+                segments.append(f"{{\\1c{highlight}}}{seg}{{\\1c{normal}}}" if other is active else seg)
+            line_bodies.append("".join(segments))
+        body = "\\N".join(line_bodies)
+        dialogues.append(f"Dialogue: 0,{ass_time(active.t_start)},{ass_time(active.t_end)},"
+                          f"{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{body}")
+    return dialogues
 
 def render_caption_ass(project: Project, preset: TextPreset) -> str:
     words = project.captions.words if project.captions else []
@@ -302,13 +308,18 @@ def render_caption_ass(project: Project, preset: TextPreset) -> str:
               "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
               "Alignment, MarginL, MarginR, MarginV, Encoding\n")
     styles = _caption_style(preset, weight)
-    groups = group_words(words, preset.max_words_per_line)
+    box_width = preset.box_width if preset.box_width_mode == "fixed" and preset.box_width > 0 else CAPTION_DEFAULT_BOX_WIDTH
+    box_height = preset.box_height if preset.box_height_mode == "fixed" and preset.box_height > 0 else CAPTION_DEFAULT_BOX_HEIGHT
+    pad_x = BOX_PAD_X_EM * preset.size_px * 2
+    pad_y = BOX_PAD_Y_EM * preset.size_px * 2
+    measure = pil_font_measurer(preset.font, preset.size_px, weight)
+    pages = paginate_words(words, measure, max(1, box_width - pad_x), max(1, box_height - pad_y), preset.size_px, LINE_HEIGHT)
     event_lines = []
-    for g in groups:
+    for page in pages:
         if preset.highlight_mode == "current_word":
-            event_lines.extend(_current_word_dialogues(g, preset))
+            event_lines.extend(_current_word_dialogues(page, preset))
         else:
-            event_lines.append(_karaoke_dialogue(g, preset))
+            event_lines.append(_karaoke_dialogue(page, preset))
     events = ("\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
               + "\n".join(event_lines))
     return header + styles + events + "\n"

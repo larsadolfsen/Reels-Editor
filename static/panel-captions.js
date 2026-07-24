@@ -9,11 +9,11 @@ function defaultCaptionPreset(id) {
     id, name: "Caption", font: "Public Sans", size_px: 72, color: "#FFFFFF",
     outline_color: "#000000", outline_px: 4, weight: 400, italic: false, underline: false,
     shadow: false, shadow_color: "#000000", shadow_offset_x: 4, shadow_offset_y: 4, shadow_blur: 0,
-    box_width_mode: "fit", box_height_mode: "fit", box_width: 0, box_height: 0,
+    box_width_mode: "fixed", box_height_mode: "fixed", box_width: 900, box_height: 350,
     box_background: false, box_background_color: "#000000", box_background_opacity: 100,
     box_border_width: 0, box_border_color: "#FFFFFF", box_border_radius: 0,
     align: "center", x: 540, y: Math.round(SafeZoneGeometry.CAPTION_ZONE_TOP), entrance: "none",
-    highlight_color: "#FFD400", highlight_mode: "current_word", max_words_per_line: 4,
+    highlight_color: "#FFD400", highlight_mode: "current_word",
   };
 }
 
@@ -21,7 +21,16 @@ function ensureCaptionPreset(id) {
   if (!project.text_presets[id]) {
     project.text_presets[id] = defaultCaptionPreset(id);
   }
-  return project.text_presets[id];
+  const preset = project.text_presets[id];
+  // Self-heal presets saved before captions always used a fixed-size box.
+  if (preset.box_width_mode !== "fixed" || preset.box_height_mode !== "fixed" ||
+      !(preset.box_width > 0) || !(preset.box_height > 0)) {
+    preset.box_width_mode = "fixed";
+    preset.box_height_mode = "fixed";
+    preset.box_width = preset.box_width > 0 ? preset.box_width : 900;
+    preset.box_height = preset.box_height > 0 ? preset.box_height : 350;
+  }
+  return preset;
 }
 
 function ensureCaptionTrack() {
