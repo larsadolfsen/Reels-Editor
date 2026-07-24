@@ -5,22 +5,17 @@
 // in filmstripCache; fetches are fire-and-forget — onReady fires once a fetch
 // resolves so the caller can re-render with the now-cached image. A clip whose
 // sprite hasn't loaded yet (or failed to fetch) is left showing the block's existing
-// CSS striped-placeholder background, since no canvas is mounted in that case — a
-// block narrower than one tile gets the same fallback rather than a squeezed sliver.
-// Redrawing on every timeline render() (including zoom changes) is what makes the
-// filmstrip resample to more/fewer distinct frames as px/sec changes.
-// Each drawn thumbnail is a fixed TILE_W x TILE_H box, centered vertically in the row,
-// tiled edge-to-edge every TILE_W px (no gaps) so the block's own background never
-// shows through as a seam between frames. The frame shown at each tile is picked from
-// that tile's real elapsed source time, so at low zoom (many sampled frames per
-// TILE_W span) some frames are simply skipped rather than overlapping, and at high
-// zoom (a frame's sampled span wider than one tile) the same frame repeats across
-// consecutive tiles rather than leaving a blank gap between them.
-// Exposes window.TimelineVideoRow.render(blockDiv, clip, media, px, onReady).
+// CSS striped-placeholder background, since no canvas is mounted in that case.
+// Tiles are full block height and 9:16 (tileW = height * 9/16), laid out on a
+// GLOBAL row-coordinate grid via Filmstrip.tilesForBlock (filmstrip-layout.js):
+// tile positions don't restart at slice boundaries, so adjacent slices of the same
+// source read as one continuous filmstrip, and a block of any width (even narrower
+// than one tile) draws its cropped window of the underlying tiles — frames are
+// cropped by the canvas bounds, never squashed. Redrawing on every timeline
+// render() (including zoom changes) is what makes the filmstrip resample as
+// px/sec changes. Exposes window.TimelineVideoRow.render(blockDiv, clip, media, px, onReady).
 window.TimelineVideoRow = (() => {
   const filmstripCache = {}; // mediaId -> "loading" | "error" | HTMLImageElement
-  const TILE_W = 32.4;
-  const TILE_H = 50.4;
 
   // Returns a loaded sprite image synchronously if cached; otherwise kicks off a
   // fetch (once per media id) and returns null. onReady fires when that fetch
@@ -50,8 +45,11 @@ window.TimelineVideoRow = (() => {
 
   function drawFilmstrip(blockDiv, clip, media, px, img) {
     const rowHeight = blockDiv.clientHeight || 56;
+    const blockLeft = parseFloat(blockDiv.style.left) || 0;
     const widthPx = parseFloat(blockDiv.style.width) || 0;
-    if (widthPx < TILE_W) return;
+    if (widthPx <= 0) return;
+    const tileH = rowHeight;
+    const tileW = tileH * 9 / 16;
 
     const canvas = document.createElement("canvas");
     canvas.className = "video-clip-filmstrip";
@@ -62,17 +60,14 @@ window.TimelineVideoRow = (() => {
     const ctx = canvas.getContext("2d");
     const interval = Filmstrip.frameInterval(media.duration);
     const count = Filmstrip.frameCount(media.duration, interval);
-    const speed = clip.speed || 1;
-    const tileY = (rowHeight - TILE_H) / 2;
-
-    for (let x = 0; x < widthPx; x += TILE_W) {
-      const sourceTime = clip.in_point + (x / px) * speed;
-      const frameIndex = Math.min(count - 1, Math.max(0, Math.round(sourceTime / interval)));
-      const tileW = Math.min(TILE_W, widthPx - x);
+    const tiles = Filmstrip.tilesForBlock(
+      blockLeft, widthPx, tileW, px, clip.in_point, clip.speed || 1, interval, count
+    );
+    for (const t of tiles) {
       ctx.drawImage(
         img,
-        frameIndex * Filmstrip.FRAME_W, 0, Filmstrip.FRAME_W, Filmstrip.FRAME_H,
-        x, tileY, tileW, TILE_H
+        t.frameIndex * Filmstrip.FRAME_W, 0, Filmstrip.FRAME_W, Filmstrip.FRAME_H,
+        t.drawX, 0, tileW, tileH
       );
     }
   }
