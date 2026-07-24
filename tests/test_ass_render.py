@@ -488,3 +488,15 @@ def test_caption_text_case_upper_transforms_dialogues_not_words():
     assert "HELLO" in out and "THERE" in out
     assert "Hello" not in out
     assert words[0].text == "Hello"   # stored words untouched
+
+def test_highlighted_run_uses_preset_border_radius_not_hardcoded_constant():
+    run = FormatRun(start=0, end=3, highlight=True, highlight_color="#00FF00")
+    pr_default = TextPreset(name="Pop", x=100, y=200, size_px=50, box_width_mode="fit")  # highlight_border_radius default 4
+    pr_custom = TextPreset(name="Pop", x=100, y=200, size_px=50, box_width_mode="fit", highlight_border_radius=20)
+    p_default = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG NEWS", preset_id=pr_default.id, start=0, end=2, formatting_runs=[run])])
+    p_custom = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG NEWS", preset_id=pr_custom.id, start=0, end=2, formatting_runs=[run])])
+    out_default = render_ass(p_default, {pr_default.id: pr_default})
+    out_custom = render_ass(p_custom, {pr_custom.id: pr_custom})
+    line_default = next(l for l in out_default.splitlines() if "hl0" in l)
+    line_custom = next(l for l in out_custom.splitlines() if "hl0" in l)
+    assert line_default != line_custom  # different radius produces a different rect path

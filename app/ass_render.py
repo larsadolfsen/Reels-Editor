@@ -177,8 +177,6 @@ def _tagged_text(b, p: TextPreset, text: str) -> str:
         out.append("\\N" if ch == "\n" else ch)
     return "".join(out)
 
-HIGHLIGHT_RADIUS = 4
-
 def _highlight_dialogues(b, p: TextPreset, weight: int | None = None) -> list[str]:
     if not b.formatting_runs:
         return []
@@ -207,7 +205,7 @@ def _highlight_dialogues(b, p: TextPreset, weight: int | None = None) -> list[st
             rect_width = measure_range(s, e)
             rect_height = p.size_px * LINE_HEIGHT
             top = p.y + line_i * rect_height
-            path = _rounded_rect_path(rect_width, rect_height, HIGHLIGHT_RADIUS)
+            path = _rounded_rect_path(rect_width, rect_height, p.highlight_border_radius)
             fx = f"\\an7\\pos({left_origin + x_offset:.0f},{top:.0f})\\1a&H00&\\3a&HFF&\\1c{fill}\\p1"
             out.append(f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},"
                         f"P{p.id[:8]}hl{run_i}_{line_i},,0,0,0,,{{{fx}}}{path}{{\\p0}}")
