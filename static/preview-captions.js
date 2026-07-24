@@ -1,21 +1,47 @@
-// Stage caption overlay rendering: groups project.captions.words via Timeline.groupWords
-// (max_words_per_line), finds the group active at a given timelineTime, and renders it as one
-// .caption-block div with per-word highlight color per preset.highlight_mode. Stateless.
+// Stage caption overlay rendering: paginates project.captions.words via CaptionLayout.paginateWords
+// (word-wrap by the caption box's fixed width, line-pagination by its fixed height), finds the
+// page active at a given timelineTime, and renders it as one .caption-block div containing one
+// .caption-line div per line, each with per-word highlight color per preset.highlight_mode.
+// Memoizes the paginated pages per (words, box size, font) so a full re-measure only happens when
+// something relevant actually changed — mirrors preview-text.js's fitCache pattern.
 // getBoxSizeCanvasPx() reads the caption block's live on-stage rendered size (in 1080x1920 canvas
 // px) for the POSITION anchor-grid shortcut. Exposes window.PreviewCaptions.
 // {renderCaptions(project, presets, timelineTime), getBoxSizeCanvasPx}.
 window.PreviewCaptions = (() => {
   const overlay = document.getElementById("overlay");
   const stage = document.getElementById("stage");
+  let paginationCache = null; // { key, pages }
 
   function hexToRgba(hex, opacityPercent) {
     const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
     return `rgba(${r}, ${g}, ${b}, ${opacityPercent / 100})`;
   }
 
-  function activeCaptionGroup(words, maxWords, timelineTime) {
-    const groups = Timeline.groupWords(words, maxWords);
-    return groups.find((g) => timelineTime >= g[0].t_start && timelineTime < g[g.length - 1].t_end) || null;
+  function paginationKey(track, preset) {
+    return JSON.stringify([
+      track.words.map((w) => [w.id, w.text, w.t_start, w.t_end]),
+      preset.box_width, preset.box_height, preset.size_px, preset.font, preset.weight, preset.italic,
+    ]);
+  }
+
+  function getPaginatedPages(track, preset) {
+    const key = paginationKey(track, preset);
+    if (paginationCache && paginationCache.key === key) return paginationCache.pages;
+    const measure = FontFit.canvasMeasurer(preset.font, preset.size_px, { weight: preset.weight, italic: preset.italic });
+    const padX = 0.35 * preset.size_px * 2;
+    const padY = 0.15 * preset.size_px * 2;
+    const pages = CaptionLayout.paginateWords(track.words, measure,
+      Math.max(1, preset.box_width - padX), Math.max(1, preset.box_height - padY), preset.size_px);
+    paginationCache = { key, pages };
+    return pages;
+  }
+
+  function activeCaptionPage(track, preset, timelineTime) {
+    const pages = getPaginatedPages(track, preset);
+    return pages.find((page) => {
+      const words = page.flat();
+      return timelineTime >= words[0].t_start && timelineTime < words[words.length - 1].t_end;
+    }) || null;
   }
 
   function renderCaptions(project, presets, timelineTime) {
@@ -25,8 +51,8 @@ window.PreviewCaptions = (() => {
     const preset = presets[track.preset_id];
     if (!preset) return;
 
-    const group = activeCaptionGroup(track.words, preset.max_words_per_line, timelineTime);
-    if (!group) return;
+    const page = activeCaptionPage(track, preset, timelineTime);
+    if (!page) return;
 
     let stageW = overlay.clientWidth || stage.clientWidth;
     let stageH = overlay.clientHeight || stage.clientHeight;
@@ -37,6 +63,8 @@ window.PreviewCaptions = (() => {
     div.style.zIndex = String(track.z_index ?? 0);
     div.style.left = (preset.x / 1080 * stageW) + "px";
     div.style.top = (preset.y / 1920 * stageH) + "px";
+    div.style.width = (preset.box_width / 1080 * stageW) + "px";
+    div.style.height = (preset.box_height / 1920 * stageH) + "px";
     div.style.textAlign = preset.align;
     div.style.fontFamily = `"${preset.font}", sans-serif`;
     div.style.fontWeight = String(preset.weight);
@@ -55,17 +83,22 @@ window.PreviewCaptions = (() => {
     div.style.borderRadius = (preset.box_border_radius / 1080 * stageW) + "px";
     div.style.pointerEvents = "none";
 
-    group.forEach((word, i) => {
-      const span = document.createElement("span");
-      let isHighlighted;
-      if (preset.highlight_mode === "progressive_fill") {
-        isHighlighted = timelineTime >= word.t_start;
-      } else {
-        isHighlighted = timelineTime >= word.t_start && timelineTime < word.t_end;
-      }
-      span.style.color = isHighlighted ? preset.highlight_color : preset.color;
-      span.textContent = word.text + (i < group.length - 1 ? " " : "");
-      div.appendChild(span);
+    page.forEach((line) => {
+      const lineDiv = document.createElement("div");
+      lineDiv.className = "caption-line";
+      line.forEach((word, i) => {
+        const span = document.createElement("span");
+        let isHighlighted;
+        if (preset.highlight_mode === "progressive_fill") {
+          isHighlighted = timelineTime >= word.t_start;
+        } else {
+          isHighlighted = timelineTime >= word.t_start && timelineTime < word.t_end;
+        }
+        span.style.color = isHighlighted ? preset.highlight_color : preset.color;
+        span.textContent = word.text + (i < line.length - 1 ? " " : "");
+        lineDiv.appendChild(span);
+      });
+      div.appendChild(lineDiv);
     });
 
     overlay.appendChild(div);

@@ -39,8 +39,14 @@
 
 .caption-block {
   position: absolute;
-  white-space: pre;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.caption-line {
+  white-space: pre;
 }
 
 .text-block--placeholder { color: var(--text-muted); }
