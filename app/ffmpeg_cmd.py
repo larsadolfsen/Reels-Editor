@@ -14,6 +14,9 @@
 # volume, and amix=inputs=2:duration=first-mixes it with the concatenated clip audio — replacing
 # the final audio map target [a] with [amix]. amix's default normalization (no normalize=0) is
 # used as-is. No music: output is byte-identical to the pre-music baseline.
+# Banded export additionally supports "image_box" bands: a `-loop 1 -t <duration>` looped
+# still-image input, scaled and overlaid with `enable='between(t,start,start+duration)'` —
+# same overlay/enable pattern as video-box bands, minus trim/setpts (no source timeline to trim).
 from app.models import Project
 from app.timeline import ordered, sequence_duration
 
@@ -114,7 +117,7 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
             out_label = f"[ass{step}]"
             fc += f";{current}ass='{escape_filter_path(band['path'])}':fontsdir='{escape_filter_path('static/fonts')}'{out_label}"
             current = out_label
-        else:
+        elif band["kind"] == "video_box":
             v = band["video_box"]
             cmd += ["-i", v.file_path]
             end = v.start + (v.out_point - v.in_point)
@@ -123,6 +126,16 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
                    f"setpts=PTS-STARTPTS+{_num(v.start)}/TB,scale={v.width}:{v.height}[box{step}]"
                    f";{current}[box{step}]overlay=x={v.x}:y={v.y}:"
                    f"enable='between(t\\,{_num(v.start)}\\,{_num(end)})'{out_label}")
+            current = out_label
+            next_input_index += 1
+        else:  # "image_box"
+            b = band["image_box"]
+            cmd += ["-loop", "1", "-t", _num(b.duration), "-i", b.file_path]
+            end = b.start + b.duration
+            out_label = f"[ov{step}]"
+            fc += (f";[{next_input_index}:v]scale={b.width}:{b.height}[box{step}]"
+                   f";{current}[box{step}]overlay=x={b.x}:y={b.y}:"
+                   f"enable='between(t\\,{_num(b.start)}\\,{_num(end)})'{out_label}")
             current = out_label
             next_input_index += 1
 

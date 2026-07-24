@@ -140,6 +140,14 @@ VideoBoxPreview.setOnActivate((boxId) => {
   VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
 });
 
+// Same wiring as VideoBoxPreview.setOnActivate above, mirrored for image boxes.
+ImageBoxPreview.setOnActivate((boxId) => {
+  const box = project.image_boxes.find((b) => b.id === boxId);
+  if (!box) return;
+  onTimelineSelect({ type: "image-box", item: box });
+  ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+});
+
 UI.button(document.getElementById("theme-toggle"), { variant: "icon" });
 UI.button(document.getElementById("export"), { variant: "accent" });
 

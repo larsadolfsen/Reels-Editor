@@ -1,6 +1,6 @@
 // Drag-to-reorder for the unified overlay z-order stack: mousedown on a lane's hover-reveal
 // grip handle (.overlay-lane-handle, static/timeline.js's renderOverlaysRow) + vertical drag
-// past a threshold reorders that entry (a text block or video box) among all overlay lanes.
+// past a threshold reorders that entry (a text block, video box, or image box) among all overlay lanes.
 // Releasing renumbers every entry's z_index to match the new order (OverlayLayers.renumber),
 // saves, and re-renders — this replaces the removed #panel-layers side-panel's drag-and-drop
 // list with the same mergedEntries/renumber logic, moved onto the timeline. Delegated on

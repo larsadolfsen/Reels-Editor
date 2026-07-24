@@ -382,3 +382,17 @@ def test_delete_preset_route_removes_and_is_idempotent(tmp_path, monkeypatch):
     delete_preset(p.id)
     assert list_presets() == []
     delete_preset(p.id)  # unknown id: still no error (204 route)
+
+def test_export_image_box_only_project_uses_banded_path(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
+    from app.models import ImageBoxLayer
+    box = ImageBoxLayer(media_id="m1", file_path="pic.jpg", start=0, duration=2, height=1920, z_index=5)
+    p = Project(name="r", image_boxes=[box])
+    with patch("app.main.store.load_project", return_value=p), \
+         patch("app.main.media.run_export") as run_export:
+        export_project(p.id)
+    cmd = run_export.call_args[0][0]
+    assert "pic.jpg" in cmd
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "overlay=x=" in fc

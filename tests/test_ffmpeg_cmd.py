@@ -1,5 +1,5 @@
 # Tests for app.ffmpeg_cmd: pure construction of the trim+concat+burn export command.
-from app.models import Project, ClipLayer, VideoBoxLayer, MediaItem
+from app.models import Project, ClipLayer, VideoBoxLayer, ImageBoxLayer, MediaItem
 from app.ffmpeg_cmd import build_export_cmd, escape_filter_path
 
 def proj():
@@ -396,3 +396,30 @@ def test_music_input_index_bookkeeping_with_video_box_band():
     assert "[3:v]" in fc      # pip.mp4 is input index 3 (0=a.mp4, 1=b.mp4, 2=song.mp3, 3=pip.mp4)
     map_indices = [i for i, x in enumerate(cmd) if x == "-map"]
     assert cmd[map_indices[-1] + 1] == "[amix]"
+
+def test_bands_with_single_image_box_adds_looped_input_and_overlay():
+    box = ImageBoxLayer(media_id="m1", file_path="pic.jpg",
+                         start=1.0, duration=3.0, x=100, y=200, width=300, height=500, z_index=5)
+    bands = [{"kind": "image_box", "image_box": box}]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    assert "pic.jpg" in cmd
+    idx = cmd.index("pic.jpg")
+    assert cmd[idx - 5:idx] == ["-loop", "1", "-t", "3", "-i"]  # -loop 1 -t <duration> -i pic.jpg
+    i = cmd.index("-filter_complex"); fc = cmd[i + 1]
+    assert "scale=300:500" in fc
+    assert "overlay=x=100:y=200" in fc
+    assert "between(t\\,1\\,4)" in fc  # end = start(1.0) + duration(3.0) = 4.0
+    assert "trim=" not in fc.split("overlay=x=100:y=200")[0].split("scale=300:500")[0].split(";")[-1]
+
+def test_bands_image_box_and_video_box_both_alternate_correctly():
+    img = ImageBoxLayer(media_id="m1", file_path="pic.jpg", start=0, duration=2, height=1920, z_index=5)
+    vid = VideoBoxLayer(media_id="m2", file_path="pip.mp4", out_point=2, start=0, height=1920, z_index=3)
+    bands = [
+        {"kind": "image_box", "image_box": img},
+        {"kind": "video_box", "video_box": vid},
+    ]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    assert "pic.jpg" in cmd and "pip.mp4" in cmd
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    map_indices = [i for i, x in enumerate(cmd) if x == "-map"]
+    assert cmd[map_indices[0] + 1] == "[ov1]"  # second band (index 1) is the final output label

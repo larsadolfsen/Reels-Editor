@@ -246,7 +246,7 @@ window.Timeline = (() => {
       laneLabel.dataset.entryId = entry.id;
       laneLabel.innerHTML = `<span class="overlay-lane-handle"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>`;
       const text = document.createElement("span");
-      text.textContent = entry.kind === "text" ? "TEXT" : "VIDEO BOX";
+      text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO BOX" : "IMAGE BOX";
       laneLabel.appendChild(text);
       labelContainer.appendChild(laneLabel);
 
@@ -260,7 +260,7 @@ window.Timeline = (() => {
         addBlock(laneTrack, b.start * px, (b.end - b.start) * px, b.heading, isSel,
           () => onSelect({ type: "text", item: b }), { resizable: true });
         laneTrack.lastElementChild.dataset.blockId = b.id;
-      } else {
+      } else if (entry.kind === "video_box") {
         const v = entry.item;
         const isSel = !!selected && selected.type === "video-box" && !!selected.item && selected.item.id === v.id;
         const name = v.file_path.split(/[\\/]/).pop();
@@ -269,6 +269,12 @@ window.Timeline = (() => {
         const el = laneTrack.lastElementChild;
         el.draggable = true;
         el.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/video-box-id", v.id));
+      } else {
+        const b = entry.item;
+        const isSel = !!selected && selected.type === "image-box" && !!selected.item && selected.item.id === b.id;
+        const name = b.file_path.split(/[\\/]/).pop();
+        addBlock(laneTrack, b.start * px, b.duration * px, name, isSel,
+          () => onSelect({ type: "image-box", item: b }));
       }
     }
   }
@@ -340,7 +346,7 @@ window.Timeline = (() => {
       const media = mediaById.get(c.media_id);
       return media && media.has_audio;
     });
-    setRowVisible("overlays", (project.text_blocks || []).length > 0 || (project.video_boxes || []).length > 0);
+    setRowVisible("overlays", (project.text_blocks || []).length > 0 || (project.video_boxes || []).length > 0 || (project.image_boxes || []).length > 0);
     setRowVisible("captions", groups.length > 0);
     setRowVisible("audio", hasAudioContent);
   }
