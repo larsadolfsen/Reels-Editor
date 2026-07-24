@@ -132,6 +132,14 @@ Preview.setOnStageTextActivate((blockId) => {
 UI.button(document.getElementById("theme-toggle"), { variant: "icon" });
 UI.button(document.getElementById("export"), { variant: "accent" });
 
+document.title = "BEFORE-TOOLBAR-MOUNT";
+try {
+  UI.toolbar(document.getElementById("toolbar"));
+  document.title = "TOOLBAR-MOUNT-OK";
+} catch (e) {
+  document.title = "TOOLBAR-MOUNT-ERROR: " + e.message;
+}
+
 function setSafeZonesVisible(visible) {
   document.getElementById("safe-zones").hidden = !visible;
   document.getElementById("safe-zones-toggle").setAttribute("aria-pressed", String(visible));
