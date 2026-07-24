@@ -1,6 +1,7 @@
-// CAPTIONS panel Design tab (HIGHLIGHT group): karaoke mode toggle, highlight color, max words per
-// line — captions-only controls with no TEXT-panel equivalent. Exposes
-// window.CaptionPanel.renderHighlight().
+// CAPTIONS panel Design tab (HIGHLIGHT group): karaoke mode toggle + highlight color —
+// captions-only controls with no TEXT-panel equivalent. Word-per-line/line-per-page counts are
+// no longer manual (see the Box tab's fixed WIDTH/HEIGHT + app/caption_layout.py's
+// paginate_words). Exposes window.CaptionPanel.renderHighlight().
 window.CaptionPanel = window.CaptionPanel || {};
 
 window.CaptionPanel.renderHighlight = function renderHighlight() {
@@ -14,8 +15,4 @@ window.CaptionPanel.renderHighlight = function renderHighlight() {
   UI.colorSwatch(document.getElementById("caption-highlight-color-field"),
     { label: "Highlight color", value: preset.highlight_color, span: 8,
       onChange: (v) => { preset.highlight_color = v; saveProject(); renderCaptionPreview(); } });
-
-  UI.numberField(document.getElementById("caption-max-words-field"),
-    { label: "MAX WORDS PER LINE", value: preset.max_words_per_line, step: 1, min: 1, max: 12, span: 8,
-      onChange: (v) => { preset.max_words_per_line = Math.round(v); saveProject(); renderCaptionPreview(); } });
 };

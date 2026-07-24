@@ -1,25 +1,13 @@
-// CAPTIONS panel Box tab: width/height SIZE mode, background/border, TEXT ALIGN, and
-// absolute POSITION fields — same shape as editor.js's renderBoxPanel() + text-panel-align.js
-// + text-panel-position.js combined, pointed at the caption track's preset. POSITION anchor grid
-// shares panel-text.js's anchorPositionX/Y helpers + Preview.getCaptionBoxSize() (edge-flush
-// against the caption block's actual on-stage rendered size).
+// CAPTIONS panel Box tab: fixed WIDTH/HEIGHT, background/border, TEXT ALIGN, and absolute
+// POSITION fields — same shape as editor.js's renderBoxPanel() + text-panel-align.js
+// + text-panel-position.js combined, pointed at the caption track's preset. The box is always a
+// fixed size for captions (word-wrap/pagination adapts to it — see preview-captions.js /
+// app/ass_render.py), unlike TEXT blocks which keep FIT/FREE/FILL. POSITION anchor grid shares
+// panel-text.js's anchorPositionX/Y helpers + Preview.getCaptionBoxSize().
 window.CaptionPanel = window.CaptionPanel || {};
 
 window.CaptionPanel.renderBox = function renderBox() {
   const preset = ensureCaptionPreset(ensureCaptionTrack().preset_id);
-
-  UI.buttonGroup(document.getElementById("caption-box-size-mode-group"),
-    [{ value: "fit", label: "FIT", span: 3 }, { value: "fixed", label: "FREE", span: 2 }, { value: "fill", label: "FILL", span: 3 }],
-    preset.box_width_mode,
-    (value) => {
-      preset.box_width_mode = value;
-      preset.box_height_mode = value;
-      renderCaptionPreview(); saveProject(); CaptionPanel.renderBox();
-    });
-
-  const boxSizeFieldsHidden = preset.box_width_mode === "fit";
-  document.getElementById("caption-box-width-field").hidden = boxSizeFieldsHidden;
-  document.getElementById("caption-box-height-field").hidden = boxSizeFieldsHidden;
 
   UI.numberField(document.getElementById("caption-box-width-field"),
     { label: "WIDTH", unit: "PX", value: preset.box_width, min: 1, max: 1080, span: 4,
