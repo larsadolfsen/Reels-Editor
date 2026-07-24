@@ -65,6 +65,11 @@
   object-fit: cover;
 }
 
+.image-box {
+  position: absolute;
+  object-fit: cover;
+}
+
 #transport {
   display: flex;
   align-items: center;
