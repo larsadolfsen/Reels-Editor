@@ -1,9 +1,10 @@
-# Generates the ASS subtitle files burned into exports: text-block dialogues via render_ass() (accepts an optional text_blocks subset so app/main.py can render one ASS file per z-order band, see app.timeline.banded_layers), and karaoke caption dialogues via render_caption_ass() (word-wrap/pagination against the caption box's fixed size via app.caption_layout.paginate_words).
+# Generates the ASS subtitle files burned into exports: text-block dialogues via render_ass() (accepts an optional text_blocks subset so app/main.py can render one ASS file per z-order band, see app.timeline.banded_layers), and karaoke caption dialogues via render_caption_ass() (word-wrap/pagination against the caption box's fixed size via app.caption_layout.paginate_words); both apply TextPreset.text_case via app.text_case before measuring/emitting.
 # Exposes render_ass, render_caption_ass, ass_time, hex_to_ass. Consumed by the export route; rendered by libass.
 from typing import Callable
 from app.models import Project, TextPreset, CaptionWord
 from app.font_metrics import wrap_text, wrap_text_runs, pil_font_measurer, WEIGHT_LABELS, nearest_available_weight
 from app.caption_layout import paginate_words
+from app.text_case import apply_text_case
 
 BOX_PAD_X_EM = 0.35
 BOX_PAD_Y_EM = 0.15
@@ -245,6 +246,10 @@ def render_ass(project: Project, presets: dict[str, TextPreset], text_blocks: li
     event_lines = []
     for b in blocks:
         p = presets[b.preset_id]
+        if p.text_case != "none":
+            # Substitute a transformed copy so measurement, wrapping, run tagging, and highlight
+            # dialogues all see the same string; the caller's model stays as typed.
+            b = b.model_copy(update={"heading": apply_text_case(b.heading, p.text_case)})
         weight = _resolved_weight(p)
         box_line = _box_dialogue(b, p, weight)
         if box_line:
@@ -301,6 +306,8 @@ def _current_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> lis
 
 def render_caption_ass(project: Project, preset: TextPreset) -> str:
     words = project.captions.words if project.captions else []
+    if preset.text_case != "none":
+        words = [w.model_copy(update={"text": apply_text_case(w.text, preset.text_case)}) for w in words]
     weight = _resolved_weight(preset)
     header = ("[Script Info]\nScriptType: v4.00+\n"
               f"PlayResX: {project.width}\nPlayResY: {project.height}\nWrapStyle: 2\n\n"

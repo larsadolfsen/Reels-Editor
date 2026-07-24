@@ -1,6 +1,6 @@
 # Tests for app.ass_render: ASS time/color helpers and text-block dialogue generation.
 from app.models import Project, TextBlockLayer, TextPreset, CaptionTrack, CaptionWord, FormatRun
-from app.ass_render import ass_time, hex_to_ass, render_ass
+from app.ass_render import ass_time, hex_to_ass, render_ass, render_caption_ass
 
 def w(t, a, b): return CaptionWord(text=t, t_start=a, t_end=b)
 
@@ -459,3 +459,32 @@ def test_highlighted_run_from_base_preset_default():
                                                         formatting_runs=[run])])
     out = render_ass(p, {pr.id: pr})
     assert any("hl0" in l for l in out.splitlines())
+
+def test_block_text_case_upper_transforms_dialogue_not_model():
+    pr = TextPreset(name="Pop", text_case="upper")
+    b = TextBlockLayer(heading="Big news", preset_id=pr.id, start=0, end=2)
+    p = Project(name="r", text_blocks=[b])
+    out = render_ass(p, {pr.id: pr})
+    assert "BIG NEWS" in out and "Big news" not in out
+    assert b.heading == "Big news"   # stored text untouched
+
+def test_block_text_case_lower():
+    pr = TextPreset(name="Pop", text_case="lower")
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="BIG News", preset_id=pr.id, start=0, end=2)])
+    out = render_ass(p, {pr.id: pr})
+    assert "big news" in out and "BIG News" not in out
+
+def test_block_text_case_none_is_byte_identical_to_default():
+    pr = TextPreset(name="Pop")
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="MiXeD", preset_id=pr.id, start=0, end=2)])
+    assert render_ass(p, {pr.id: pr}) == render_ass(p, {pr.id: TextPreset(**{**pr.model_dump(), "text_case": "none"})})
+
+def test_caption_text_case_upper_transforms_dialogues_not_words():
+    pr = TextPreset(name="Cap", text_case="upper", box_width_mode="fixed", box_height_mode="fixed",
+                    box_width=900, box_height=350)
+    words = [w("Hello", 0.0, 0.5), w("there", 0.5, 1.0)]
+    p = Project(name="r", captions=CaptionTrack(words=words, preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    assert "HELLO" in out and "THERE" in out
+    assert "Hello" not in out
+    assert words[0].text == "Hello"   # stored words untouched

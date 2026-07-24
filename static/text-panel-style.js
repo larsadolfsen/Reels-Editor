@@ -16,12 +16,12 @@ window.TextPanel = window.TextPanel || {};
   // identity (id/name) and usage stats. Position (x/y) is included, matching the pre-existing
   // behavior of saved styles carrying a position.
   function styleFieldsOf(preset) {
-    const { font, size_px, color, outline_color, outline_px, weight, italic, underline,
+    const { font, size_px, color, outline_color, outline_px, weight, italic, underline, text_case,
       box_width_mode, box_height_mode, box_width, box_height, box_background, box_background_color,
       box_border_width, box_border_color, box_border_radius, align, entrance,
       shadow, shadow_color, shadow_offset_x, shadow_offset_y, shadow_blur,
       x, y } = preset;
-    return { font, size_px, color, outline_color, outline_px, weight, italic, underline,
+    return { font, size_px, color, outline_color, outline_px, weight, italic, underline, text_case,
       box_width_mode, box_height_mode, box_width, box_height, box_background, box_background_color,
       box_border_width, box_border_color, box_border_radius, align, entrance,
       shadow, shadow_color, shadow_offset_x, shadow_offset_y, shadow_blur,

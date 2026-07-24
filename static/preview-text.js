@@ -5,7 +5,8 @@
 // block id, cleared/rebuilt each renderText() call) so a newly-created block can be dropped
 // straight into on-stage edit mode via enterEditMode(blockId). getBoxSizeCanvasPx(blockId) reads
 // a block's live on-stage rendered size (in 1080x1920 canvas px) for the POSITION anchor-grid
-// shortcut. Exposes window.PreviewText.
+// shortcut. Case styling (preset.text_case): displayed via CSS text-transform, measured via
+// TextCase.apply so BOX FILL sizing matches. Exposes window.PreviewText.
 // {renderText, setSelectedTextBlock, getActiveFormatSelection, setOnStageTextActivate, enterEditMode, getBoxSizeCanvasPx}.
 window.PreviewText = (() => {
   let textProject = null;
@@ -27,7 +28,7 @@ window.PreviewText = (() => {
   }
 
   function fitCacheKey(preset, heading) {
-    return JSON.stringify([heading, preset.box_width, preset.box_height, preset.font, preset.weight, preset.italic]);
+    return JSON.stringify([heading, preset.box_width, preset.box_height, preset.font, preset.weight, preset.italic, preset.text_case]);
   }
 
   function maybeRefitFillText(block, preset) {
@@ -40,7 +41,7 @@ window.PreviewText = (() => {
     }
     const measurerFactory = (size) =>
       FontFit.canvasMeasurer(preset.font, size, { weight: preset.weight, italic: preset.italic });
-    const { size } = FontFit.fitFontSize(block.heading || "", measurerFactory, preset.box_width, preset.box_height);
+    const { size } = FontFit.fitFontSize(TextCase.apply(block.heading || "", preset.text_case), measurerFactory, preset.box_width, preset.box_height);
     preset.size_px = size;
     fitCache.set(block.id, { key, size });
   }
@@ -92,6 +93,7 @@ window.PreviewText = (() => {
       div.style.left = (preset.x / 1080 * stageW) + "px";
       div.style.top = (preset.y / 1920 * stageH) + "px";
       div.style.textAlign = preset.align;
+      div.style.textTransform = TextCase.cssValue(preset.text_case);
 
       const sizePx = preset.size_px / 1920 * stageH;
       div.style.fontSize = sizePx + "px";
