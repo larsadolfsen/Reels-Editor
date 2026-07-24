@@ -274,4 +274,12 @@ def export_status(job_id: str) -> dict:
         raise HTTPException(404, f"unknown export job: {job_id}")
     return job
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+class NoCacheStaticFiles(StaticFiles):
+    """StaticFiles that disables caching, so edited JS/CSS is never served stale."""
+
+    def file_response(self, *args, **kwargs) -> Response:
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        return response
+
+app.mount("/static", NoCacheStaticFiles(directory="static"), name="static")
