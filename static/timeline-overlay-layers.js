@@ -8,7 +8,7 @@ window.OverlayLayers = (() => {
   function mergedEntries(project) {
     const text = (project.text_blocks || []).map((b) => ({ id: b.id, kind: "text", item: b }));
     const boxes = (project.video_boxes || []).map((v) => ({ id: v.id, kind: "video_box", item: v }));
-    return [...text, ...boxes].sort((a, b) => b.item.z_index - a.item.z_index);
+    return [...text, ...boxes].sort((a, b) => (b.item.z_index ?? 0) - (a.item.z_index ?? 0));
   }
 
   // `entries` is already in the desired top-to-bottom (front-to-back) order; assign z_index
