@@ -195,7 +195,7 @@
   width: 100%;
   height: 100%;
 }
-.overlay-lane-track {
+#row-overlays .overlay-lane-track {
   height: 44px;
   flex-shrink: 0;
 }
