@@ -94,9 +94,8 @@
         <div id="timeline-body">
           <div id="timeline-labels">
             <div class="row-label" id="ruler-label"></div>
-            <div class="row-label" id="label-text">TEXT</div>
+            <div id="label-overlays"></div>
             <div class="row-label" id="label-captions">CAPTIONS</div>
-            <div class="row-label" id="label-videobox">VIDEO BOX</div>
             <div class="row-label" id="label-video">VIDEO</div>
             <div class="row-label" id="label-audio">AUDIO</div>
           </div>
@@ -104,14 +103,11 @@
             <div id="timeline-content">
               <div id="playhead"></div>
               <div id="timeline-ruler"></div>
-              <div class="timeline-row" data-row="text">
-                <div class="row-track" id="row-text"></div>
+              <div class="timeline-row" data-row="overlays">
+                <div id="row-overlays"></div>
               </div>
               <div class="timeline-row" data-row="captions">
                 <div class="row-track" id="row-captions"></div>
-              </div>
-              <div class="timeline-row" data-row="videobox">
-                <div class="row-track" id="row-videobox"></div>
               </div>
               <div class="timeline-row" data-row="video">
                 <div class="row-track" id="row-video"></div>

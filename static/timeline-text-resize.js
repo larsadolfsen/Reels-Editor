@@ -1,15 +1,17 @@
 // Drag-to-resize for TEXT-row blocks: mousedown on a block's right-edge
 // `.timeline-resize-handle` (rendered by timeline.js's addBlock when { resizable: true })
 // changes that TextBlockLayer's `end`, extending or shrinking its duration, clamped to a
-// 0.3s minimum. Delegated on #row-text itself (persists across renders; only its children
-// are rebuilt by Timeline.render), same pattern as timeline-clip-drag.js.
+// 0.3s minimum. Delegated on #row-overlays itself (the merged overlay stack; persists across
+// renders; only its children are rebuilt by Timeline.render), same pattern as
+// timeline-clip-drag.js. Video box lanes in the same container have no resize handle, so
+// this delegation is unaffected by the TEXT/VIDEO BOX merge.
 // Reaches into editor.js's `project`/`selected`/`saveProject`/`renderTimeline` globals and
 // panel-text.js's `renderTextPanel`; depends on window.Timeline (PX_PER_SEC) already
 // existing, so this file must load after timeline.js.
 (() => {
   const MIN_DURATION = 0.3;
 
-  const row = document.getElementById("row-text");
+  const row = document.getElementById("row-overlays");
 
   row.addEventListener("mousedown", (e) => {
     const handle = e.target.closest(".timeline-resize-handle");
