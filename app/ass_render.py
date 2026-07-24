@@ -302,6 +302,55 @@ def _current_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> lis
                           f"{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{body}")
     return dialogues
 
+def _background_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> list[str]:
+    """CAPTIONS 'background' highlight mode: draws a rounded rect behind the currently-active
+    word (no text-color swap, unlike _current_word_dialogues), following the same per-line
+    x-offset/width math _highlight_dialogues uses for TEXT-block marker highlights, and the same
+    align-relative left-origin convention _caption_style's Alignment field expects (p.x is the
+    line's left/right/center anchor depending on p.align). One rect+text dialogue pair is emitted
+    per active word, with the rect appended first so it renders underneath the text."""
+    weight = _resolved_weight(p)
+    measure = pil_font_measurer(p.font, p.size_px, weight)
+    fill = _ass_override_color(p.highlight_color)
+    rect_height = p.size_px * LINE_HEIGHT
+    text_fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
+
+    line_layout = []  # per line: (list of (word_x_offset, word_width), line_total_width)
+    for line in page:
+        offsets = []
+        x = 0.0
+        for j, word in enumerate(line):
+            seg = word.text + (" " if j < len(line) - 1 else "")
+            offsets.append((x, measure(word.text)))
+            x += measure(seg)
+        line_layout.append((offsets, x))
+
+    line_bodies = []
+    for line in page:
+        line_bodies.append("".join(word.text + (" " if j < len(line) - 1 else "") for j, word in enumerate(line)))
+    text_body = "\\N".join(line_bodies)
+
+    dialogues = []
+    for line_i, line in enumerate(page):
+        offsets, line_width = line_layout[line_i]
+        if p.align == "left":
+            left_origin = p.x
+        elif p.align == "right":
+            left_origin = p.x - line_width
+        else:
+            left_origin = p.x - line_width / 2
+        for word_i, active in enumerate(line):
+            word_x, word_w = offsets[word_i]
+            left = left_origin + word_x
+            top = p.y + line_i * rect_height
+            path = _rounded_rect_path(word_w, rect_height, p.highlight_border_radius)
+            rect_fx = f"\\an7\\pos({left:.0f},{top:.0f})\\1a&H00&\\3a&HFF&\\1c{fill}\\p1"
+            dialogues.append(f"Dialogue: 0,{ass_time(active.t_start)},{ass_time(active.t_end)},"
+                              f"{CAPTION_STYLE_NAME},,0,0,0,,{{{rect_fx}}}{path}{{\\p0}}")
+            dialogues.append(f"Dialogue: 0,{ass_time(active.t_start)},{ass_time(active.t_end)},"
+                              f"{CAPTION_STYLE_NAME},,0,0,0,,{{{text_fx}}}{text_body}")
+    return dialogues
+
 def render_caption_ass(project: Project, preset: TextPreset) -> str:
     words = project.captions.words if project.captions else []
     if preset.text_case != "none":
@@ -323,6 +372,8 @@ def render_caption_ass(project: Project, preset: TextPreset) -> str:
     for page in pages:
         if preset.highlight_mode == "current_word":
             event_lines.extend(_current_word_dialogues(page, preset))
+        elif preset.highlight_mode == "background":
+            event_lines.extend(_background_word_dialogues(page, preset))
         else:
             event_lines.append(_karaoke_dialogue(page, preset))
     events = ("\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
