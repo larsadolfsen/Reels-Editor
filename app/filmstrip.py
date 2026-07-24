@@ -12,8 +12,8 @@ import subprocess
 from pathlib import Path
 from app.media import _resolve_cmd, _refreshed_path, is_image_path, probe_duration
 
-FRAME_W = 40
-FRAME_H = 60
+FRAME_W = 36
+FRAME_H = 64
 
 def frame_interval(duration: float, max_frames: int = 120) -> float:
     if duration <= 0:

@@ -4,8 +4,8 @@
 // logic identical to app/filmstrip.py; a change to one should prompt a check of
 // the other. Exposes window.Filmstrip.{frameInterval, frameCount, FRAME_W, FRAME_H}.
 window.Filmstrip = (() => {
-  const FRAME_W = 40;
-  const FRAME_H = 60;
+  const FRAME_W = 36;
+  const FRAME_H = 64;
 
   function frameInterval(duration, maxFrames = 120) {
     if (duration <= 0) return 1.0;
