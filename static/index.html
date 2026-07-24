@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="/static/css/components/settings-row.css">
 <link rel="stylesheet" href="/static/css/components/sub-panel.css">
 <link rel="stylesheet" href="/static/css/components/style-preset-card.css">
+<link rel="stylesheet" href="/static/css/components/style-save-form.css">
 <link rel="stylesheet" href="/static/css/components/divider.css">
 <link rel="stylesheet" href="/static/css/components/resize-handles.css">
 <link rel="stylesheet" href="/static/css/components/safe-zones.css">
@@ -215,6 +216,7 @@
             <div class="style-group">
               <button id="caption-style-save" class="panel-button col-8" type="button">+ Save current style</button>
             </div>
+            <div id="caption-style-form" class="style-group" hidden></div>
             <div class="style-group">
               <ul id="caption-style-list" class="font-list col-8"></ul>
             </div>
@@ -591,6 +593,7 @@
           <div class="style-group">
             <button id="text-style-save" class="panel-button col-8" type="button">+ Save current style</button>
           </div>
+          <div id="text-style-form" class="style-group" hidden></div>
           <div class="style-group">
             <ul id="text-style-list" class="font-list col-8"></ul>
           </div>
@@ -785,6 +788,7 @@
 <script src="/static/ui-button.js"></script>
 <script src="/static/ui-list-row.js"></script>
 <script src="/static/ui-style-preset-card.js"></script>
+<script src="/static/ui-style-save-form.js"></script>
 <script src="/static/ui-save-indicator.js"></script>
 <script src="/static/ui-project-list-row.js"></script>
 <script src="/static/ui-project-picker.js"></script>
@@ -803,6 +807,7 @@
 <script src="/static/api-export-status.js"></script>
 <script src="/static/api-list-presets.js"></script>
 <script src="/static/api-save-preset.js"></script>
+<script src="/static/api-delete-preset.js"></script>
 <script src="/static/caption-panel-style.js"></script>
 <script src="/static/caption-panel-font-family.js"></script>
 <script src="/static/caption-panel-font-weight.js"></script>

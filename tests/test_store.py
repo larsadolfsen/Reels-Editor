@@ -1,6 +1,6 @@
 # Tests for app.store: project and preset persistence to JSON files.
 from app.models import Project, TextPreset
-from app.store import save_project, load_project, save_preset, load_presets, list_projects, delete_project
+from app.store import save_project, load_project, save_preset, load_presets, list_projects, delete_project, delete_preset
 
 def test_project_round_trip(tmp_path):
     p = Project(name="reel1")
@@ -45,3 +45,15 @@ def test_delete_project_removes_file(tmp_path):
 
 def test_delete_project_missing_file_is_noop(tmp_path):
     delete_project("nonexistent-id", tmp_path)  # must not raise
+
+def test_delete_preset_removes_by_id(tmp_path):
+    a = TextPreset(name="Pop")
+    save_preset(a, tmp_path)
+    save_preset(TextPreset(name="Clean"), tmp_path)
+    delete_preset(a.id, tmp_path)
+    assert {x.name for x in load_presets(tmp_path)} == {"Clean"}
+
+def test_delete_preset_unknown_id_is_noop(tmp_path):
+    save_preset(TextPreset(name="Pop"), tmp_path)
+    delete_preset("nope", tmp_path)
+    assert {x.name for x in load_presets(tmp_path)} == {"Pop"}

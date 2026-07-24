@@ -148,6 +148,10 @@ def create_preset(preset: TextPreset) -> TextPreset:
     store.save_preset(preset, DATA_DIR)
     return preset
 
+@app.delete("/api/presets/{preset_id}", status_code=204)
+def delete_preset(preset_id: str) -> None:
+    store.delete_preset(preset_id, DATA_DIR)
+
 @app.post("/api/projects/{pid}/transcribe")
 def transcribe_project(pid: str) -> Project:
     p = store.load_project(pid, DATA_DIR)

@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import patch
 import pytest
 from app import export_jobs
-from app.main import export_project, list_presets, create_preset, probe, sanitize_export_filename, resolve_export_path, media_peaks
+from app.main import export_project, list_presets, create_preset, delete_preset, probe, sanitize_export_filename, resolve_export_path, media_peaks
 from app.models import Project, TextBlockLayer, TextPreset, MediaItem
 
 def test_export_writes_ass_file_and_burns_it_in(tmp_path, monkeypatch):
@@ -374,3 +374,11 @@ def test_missing_session_secret_with_app_password_raises_at_import(monkeypatch):
     finally:
         monkeypatch.delenv("APP_PASSWORD", raising=False)
         importlib.reload(main_module)
+
+def test_delete_preset_route_removes_and_is_idempotent(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    p = TextPreset(name="Pop")
+    create_preset(p)
+    delete_preset(p.id)
+    assert list_presets() == []
+    delete_preset(p.id)  # unknown id: still no error (204 route)

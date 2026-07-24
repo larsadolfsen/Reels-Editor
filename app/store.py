@@ -38,3 +38,7 @@ def load_presets(data_dir) -> list[TextPreset]:
 def save_preset(preset: TextPreset, data_dir) -> None:
     items = [x for x in load_presets(data_dir) if x.id != preset.id] + [preset]
     _presets_path(data_dir).write_text(json.dumps([x.model_dump() for x in items], indent=2), encoding="utf-8")
+
+def delete_preset(preset_id: str, data_dir) -> None:
+    items = [x for x in load_presets(data_dir) if x.id != preset_id]
+    _presets_path(data_dir).write_text(json.dumps([x.model_dump() for x in items], indent=2), encoding="utf-8")
