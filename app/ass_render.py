@@ -351,6 +351,28 @@ def _background_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> 
                               f"{CAPTION_STYLE_NAME},,0,0,0,,{{{text_fx}}}{text_body}")
     return dialogues
 
+def _caption_highlight_dialogue(p: TextPreset, words: list[CaptionWord], box_width: float, box_height: float) -> str | None:
+    """CAPTIONS always-on marker highlight (preset.highlight): a rounded rect drawn behind the
+    whole caption box for as long as any caption word is on screen, independent of highlight_mode's
+    per-word karaoke rendering (current_word/progressive_fill/background). Spans the caption
+    track's full active lifetime (first word's t_start to last word's t_end), not any single
+    word's window. Same _rounded_rect_path construction as _box_dialogue, sized to the caption
+    box instead of a text block."""
+    if not p.highlight or not words:
+        return None
+    if p.align == "left":
+        left = p.x
+    elif p.align == "right":
+        left = p.x - box_width
+    else:
+        left = p.x - box_width / 2
+    top = p.y
+    path = _rounded_rect_path(box_width, box_height, p.highlight_border_radius)
+    fill = _ass_override_color(p.highlight_color)
+    fx = f"\\an7\\pos({left:.0f},{top:.0f})\\1a&H00&\\3a&HFF&\\1c{fill}\\p1"
+    start, end = words[0].t_start, words[-1].t_end
+    return f"Dialogue: 0,{ass_time(start)},{ass_time(end)},{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{path}{{\\p0}}"
+
 def render_caption_ass(project: Project, preset: TextPreset) -> str:
     words = project.captions.words if project.captions else []
     if preset.text_case != "none":
@@ -369,6 +391,9 @@ def render_caption_ass(project: Project, preset: TextPreset) -> str:
     measure = pil_font_measurer(preset.font, preset.size_px, weight)
     pages = paginate_words(words, measure, max(1, box_width - pad_x), max(1, box_height - pad_y), preset.size_px, LINE_HEIGHT)
     event_lines = []
+    highlight_line = _caption_highlight_dialogue(preset, words, box_width, box_height)
+    if highlight_line:
+        event_lines.append(highlight_line)
     for page in pages:
         if preset.highlight_mode == "current_word":
             event_lines.extend(_current_word_dialogues(page, preset))
