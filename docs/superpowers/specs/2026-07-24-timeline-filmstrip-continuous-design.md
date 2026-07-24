@@ -44,9 +44,10 @@ Drop the hardcoded `TILE_W = 32.4` / `TILE_H = 50.4` constants. At draw time:
 
 ### 2. Global tile grid
 
-`static/timeline.js` passes each block's row-coordinate left edge (`acc * px`,
-already computed in the VIDEO-row loop) into `TimelineVideoRow.render` as a new
-parameter. Tiles sit at fixed positions `n * tileW` in row coordinates. Each
+Each block's row-coordinate left edge is already on the DOM as `style.left`
+(set by `timeline.js`'s `addBlock`), so `timeline-video-row.js` reads
+`parseFloat(blockDiv.style.left)` — no signature or `timeline.js` change
+needed. Tiles sit at fixed positions `n * tileW` in row coordinates. Each
 block draws every grid tile overlapping `[blockLeft, blockLeft + width)`:
 
 - For grid tile `n`, `drawX = n * tileW - blockLeft` (may be negative for the
@@ -75,10 +76,10 @@ helper `Filmstrip.tilesForBlock(...)` in `static/filmstrip-layout.js`, keeping
 ## Files touched
 
 - `static/filmstrip-layout.js` — add pure `tilesForBlock()`.
-- `static/timeline-video-row.js` — new `blockLeft` param, tile sizing from block
-  height, draw loop consumes `tilesForBlock()`, remove min-width bailout.
-- `static/timeline.js` — pass `acc * px` into `TimelineVideoRow.render`.
-- `CLAUDE.md` — update the map entries for the three files.
+- `static/timeline-video-row.js` — read `blockLeft` from `style.left`, tile
+  sizing from block height, draw loop consumes `tilesForBlock()`, remove
+  min-width bailout.
+- `CLAUDE.md` — update the map entries for the two files.
 
 ## Error handling
 
