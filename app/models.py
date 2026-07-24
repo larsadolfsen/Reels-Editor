@@ -64,6 +64,7 @@ class TextPreset(BaseModel):
     weight: int = 400              # 400 | 500 | 600 | 700 — replaces the old `bold: bool`
     italic: bool = False
     underline: bool = False
+    text_case: str = "none"        # "none" | "upper" | "lower" — display/export transform, stored text stays as typed
     box_width_mode: str = "fit"        # "fit" | "fixed"
     box_height_mode: str = "fit"       # "fit" | "fixed"
     box_width: int = 0                 # px on 1080x1920 canvas; used when box_width_mode == "fixed"
