@@ -2,6 +2,7 @@
    rendered-style text preview + name label below. Used by TEXT/CAPTIONS Style tabs
    (static/ui-style-preset-card.js). Depends on tokens.css, list-row.css. */
 .style-preset-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -25,4 +26,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+}
+
+.style-preset-card-delete {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  opacity: 0;
+}
+
+.style-preset-card:hover .style-preset-card-delete {
+  opacity: 1;
 }

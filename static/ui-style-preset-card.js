@@ -1,6 +1,7 @@
 // Reusable presentational UI helper, framework-free. Attaches to window.UI.
 // Renders a saved TextPreset as a clickable grey card showing the preset's actual rendered
 // styling (font/size/weight/italic/underline/color/outline/shadow) rather than just its name.
+// Optional hover-revealed delete action when onDelete callback is provided.
 // Depends on the .list-row card recipe (UI.listRow) and the .style-preset-card CSS component.
 window.UI = window.UI || {};
 
@@ -25,8 +26,8 @@ window.UI = window.UI || {};
       : "none";
   }
 
-  // stylePresetCard(preset, {onClick}) -> <li class="style-preset-card list-row">
-  window.UI.stylePresetCard = function stylePresetCard(preset, { onClick } = {}) {
+  // stylePresetCard(preset, {onClick, onDelete}) -> <li class="style-preset-card list-row">
+  window.UI.stylePresetCard = function stylePresetCard(preset, { onClick, onDelete } = {}) {
     const li = document.createElement("li");
     li.className = "style-preset-card";
     UI.listRow(li);
@@ -41,6 +42,19 @@ window.UI = window.UI || {};
     nameEl.className = "style-preset-card-name";
     nameEl.textContent = preset.name;
     li.appendChild(nameEl);
+
+    if (onDelete) {
+      const trashBtn = document.createElement("button");
+      trashBtn.type = "button";
+      trashBtn.className = "icon-btn style-preset-card-delete";
+      trashBtn.title = "Delete style";
+      trashBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+      trashBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onDelete(preset);
+      });
+      li.appendChild(trashBtn);
+    }
 
     return li;
   };
