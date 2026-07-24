@@ -293,10 +293,16 @@ document.getElementById("step-forward").addEventListener("click", () => nudgeTim
 
 document.addEventListener("keydown", (e) => {
   const el = document.activeElement;
-  if (["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName) || el.isContentEditable) return;
+  const inFormField = ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName);
   const mod = e.ctrlKey || e.metaKey;
-  if (mod && (e.key === "z" || e.key === "Z") && !e.shiftKey) { e.preventDefault(); undoEdit(); return; }
-  if (mod && ((e.key === "z" || e.key === "Z") && e.shiftKey || e.key === "y" || e.key === "Y")) { e.preventDefault(); redoEdit(); return; }
+  // Ctrl/Cmd+Z/Y must work even while a stage text block is in on-stage edit mode
+  // (contentEditable) — that's the app's primary text-editing surface, and the browser's
+  // native contentEditable undo doesn't track project state (renderText() rewrites the div's
+  // content on every render, so it can't undo our data model). Real form fields (number/text
+  // inputs, selects) keep their native undo since those aren't project-state edits per keystroke.
+  if (!inFormField && mod && (e.key === "z" || e.key === "Z") && !e.shiftKey) { e.preventDefault(); undoEdit(); return; }
+  if (!inFormField && mod && ((e.key === "z" || e.key === "Z") && e.shiftKey || e.key === "y" || e.key === "Y")) { e.preventDefault(); redoEdit(); return; }
+  if (inFormField || el.isContentEditable) return;
   if (mod && (e.key === "d" || e.key === "D")) {
     e.preventDefault();
     if (selected && selected.type === "video") VideoPanel.duplicateClip(selected.item.id);
