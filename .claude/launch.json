@@ -6,7 +6,8 @@
       "runtimeExecutable": "C:/Users/adolf/Documents/GitHub/TikTok-Reels/.venv/Scripts/python.exe",
       "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--reload"],
       "port": 8000,
-      "autoPort": true
+      "autoPort": true,
+      "cwd": "C:/Users/adolf/Documents/GitHub/TikTok-Reels/.claude/worktrees/text-timeline-insertion-074004"
     }
   ]
 }
