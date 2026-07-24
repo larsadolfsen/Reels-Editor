@@ -29,6 +29,7 @@
 // heavier full render() calls. Depends on Preview (preview.js).
 window.Timeline = (() => {
   const LABEL_WIDTH = 88;
+  const LANE_HEIGHT = 44; // px per overlay-stack lane, matches CAPTIONS row height
   const MIN_PX_PER_SEC_FLOOR = 60; // fallback if the scroll container can't be measured yet
   const DEFAULT_VISIBLE_SECONDS = 30;
   const ZOOM_STEP_SECONDS = 10;
@@ -222,6 +223,56 @@ window.Timeline = (() => {
     }
   }
 
+  // Merges TEXT blocks + VIDEO BOX layers into one z_index-ordered stack of 44px lanes
+  // inside #row-overlays (top = highest z_index = frontmost), replacing the old separate
+  // TEXT/VIDEO BOX rows. Each lane still renders its item exactly as before (time-positioned
+  // block, resize handle for text, drag-to-timeline for video boxes) — only the vertical
+  // grouping/order changed. #label-overlays gets one "TEXT"/"VIDEO BOX" label per lane,
+  // height-matched to its lane. Reordering (drag handle) is wired in
+  // static/timeline-overlay-layer-drag.js via OverlayLayers.mergedEntries/renumber.
+  function renderOverlaysRow(project, px, selected, onSelect) {
+    const entries = OverlayLayers.mergedEntries(project);
+    const rowEl = document.querySelector('.timeline-row[data-row="overlays"]');
+    const totalHeight = `${Math.max(entries.length, 1) * LANE_HEIGHT}px`;
+    rowEl.style.height = totalHeight;
+    document.getElementById("label-overlays").style.height = totalHeight;
+
+    const row = clearTrack("row-overlays");
+    const labelContainer = clearTrack("label-overlays");
+
+    for (const entry of entries) {
+      const laneLabel = document.createElement("div");
+      laneLabel.className = "row-label overlay-lane-label";
+      laneLabel.dataset.entryId = entry.id;
+      laneLabel.innerHTML = `<span class="overlay-lane-handle"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>`;
+      const text = document.createElement("span");
+      text.textContent = entry.kind === "text" ? "TEXT" : "VIDEO BOX";
+      laneLabel.appendChild(text);
+      labelContainer.appendChild(laneLabel);
+
+      const laneTrack = document.createElement("div");
+      laneTrack.className = "row-track overlay-lane-track";
+      row.appendChild(laneTrack);
+
+      if (entry.kind === "text") {
+        const b = entry.item;
+        const isSel = !!selected && selected.type === "text" && !!selected.item && selected.item.id === b.id;
+        addBlock(laneTrack, b.start * px, (b.end - b.start) * px, b.heading, isSel,
+          () => onSelect({ type: "text", item: b }), { resizable: true });
+        laneTrack.lastElementChild.dataset.blockId = b.id;
+      } else {
+        const v = entry.item;
+        const isSel = !!selected && selected.type === "video-box" && !!selected.item && selected.item.id === v.id;
+        const name = v.file_path.split(/[\\/]/).pop();
+        addBlock(laneTrack, v.start * px, (videoBoxEnd(v) - v.start) * px, name, isSel,
+          () => onSelect({ type: "video-box", item: v }));
+        const el = laneTrack.lastElementChild;
+        el.draggable = true;
+        el.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/video-box-id", v.id));
+      }
+    }
+  }
+
   function render(project, timelineTime, selected, onSelect, actions = {}) {
     const clips = ordered(project.clips || []);
     const duration = totalDuration(project);
@@ -268,24 +319,7 @@ window.Timeline = (() => {
     }
     if (actions.onAddClip) addRowAddButton(videoTrack, acc * px, "Add clip", actions.onAddClip);
 
-    const textTrack = clearTrack("row-text");
-    for (const b of project.text_blocks || []) {
-      const isSel = !!selected && selected.type === "text" && !!selected.item && selected.item.id === b.id;
-      addBlock(textTrack, b.start * px, (b.end - b.start) * px, b.heading, isSel,
-        () => onSelect({ type: "text", item: b }), { resizable: true });
-      textTrack.lastElementChild.dataset.blockId = b.id;
-    }
-
-    const videoBoxTrack = clearTrack("row-videobox");
-    for (const v of project.video_boxes || []) {
-      const isSel = !!selected && selected.type === "video-box" && !!selected.item && selected.item.id === v.id;
-      const name = v.file_path.split(/[\\/]/).pop();
-      addBlock(videoBoxTrack, v.start * px, (videoBoxEnd(v) - v.start) * px, name, isSel,
-        () => onSelect({ type: "video-box", item: v }));
-      const el = videoBoxTrack.lastElementChild;
-      el.draggable = true;
-      el.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/video-box-id", v.id));
-    }
+    renderOverlaysRow(project, px, selected, onSelect);
 
     const capTrack = clearTrack("row-captions");
     const groups = project.captions ? groupWords(project.captions.words) : [];
@@ -306,9 +340,8 @@ window.Timeline = (() => {
       const media = mediaById.get(c.media_id);
       return media && media.has_audio;
     });
-    setRowVisible("text", (project.text_blocks || []).length > 0);
+    setRowVisible("overlays", (project.text_blocks || []).length > 0 || (project.video_boxes || []).length > 0);
     setRowVisible("captions", groups.length > 0);
-    setRowVisible("videobox", (project.video_boxes || []).length > 0);
     setRowVisible("audio", hasAudioContent);
   }
 
