@@ -1,5 +1,9 @@
-// TEXT panel Style tab: saved-style preset library — save current style as new, shown as a
-// grid of style-preset cards (rendered-style preview, not just a name) applied on click.
+// TEXT panel Style tab: saved-style preset library, shown as a grid of style-preset cards
+// (rendered-style preview, not just a name). "+ Save current style" opens an inline themed
+// form (UI.styleSaveForm, replacing the old native prompt()) to save as a new preset; while
+// that form is open ("save mode"), clicking an existing card overwrites its style fields
+// (keeping id/name/usage_count) instead of applying it. Every card also gets a hover-revealed
+// trash icon that deletes it immediately via Api.deletePreset (no confirmation step).
 // Exposes window.TextPanel.renderStyle()/loadSavedPresets().
 // Distinct from project.text_presets (per-block live working style) — this is the separate global
 // library persisted via GET/POST /api/presets (app/main.py).
@@ -24,12 +28,32 @@ window.TextPanel = window.TextPanel || {};
       x, y };
   }
 
-  async function saveCurrentStyleAsPreset() {
-    const name = prompt("Name this style:");
-    if (!name) return;
+  let saveMode = false; // true while the inline save form is open: cards become overwrite targets
+
+  function enterSaveMode() { saveMode = true; renderStyle(); }
+  function exitSaveMode() { saveMode = false; renderStyle(); }
+
+  async function saveNewPreset(name) {
     const preset = ensureTextPreset(currentTextBlock().preset_id);
     const saved = { ...styleFieldsOf(preset), id: crypto.randomUUID().replaceAll("-", ""), name, usage_count: 0 };
     await Api.savePreset(saved);
+    saveMode = false;
+    await loadSavedPresets();
+    renderStyle();
+  }
+
+  // Save-mode card click: overwrite that saved style's look (id/name/usage_count kept).
+  async function overwriteSavedPreset(saved) {
+    const preset = ensureTextPreset(currentTextBlock().preset_id);
+    Object.assign(saved, styleFieldsOf(preset));
+    await Api.savePreset(saved);
+    saveMode = false;
+    await loadSavedPresets();
+    renderStyle();
+  }
+
+  async function deleteSavedPreset(saved) {
+    await Api.deletePreset(saved.id);
     await loadSavedPresets();
     renderStyle();
   }
@@ -47,17 +71,27 @@ window.TextPanel = window.TextPanel || {};
   }
 
   function renderStyle() {
+    const saveBtn = document.getElementById("text-style-save");
+    const formEl = document.getElementById("text-style-form");
+    saveBtn.hidden = saveMode;
+    formEl.hidden = !saveMode;
+    formEl.innerHTML = "";
+    if (saveMode) UI.styleSaveForm(formEl, { onSave: saveNewPreset, onCancel: exitSaveMode });
+
     const sorted = [...savedPresets].sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
     const listEl = document.getElementById("text-style-list");
     listEl.innerHTML = "";
-    sorted.forEach((saved) => listEl.appendChild(UI.stylePresetCard(saved, { onClick: applySavedPreset })));
+    sorted.forEach((saved) => listEl.appendChild(UI.stylePresetCard(saved, {
+      onClick: saveMode ? overwriteSavedPreset : applySavedPreset,
+      onDelete: deleteSavedPreset,
+    })));
   }
 
   async function loadSavedPresets() {
     savedPresets = await Api.listPresets();
   }
 
-  document.getElementById("text-style-save").addEventListener("click", saveCurrentStyleAsPreset);
+  document.getElementById("text-style-save").addEventListener("click", enterSaveMode);
 
   window.TextPanel.renderStyle = renderStyle;
   window.TextPanel.loadSavedPresets = loadSavedPresets;
