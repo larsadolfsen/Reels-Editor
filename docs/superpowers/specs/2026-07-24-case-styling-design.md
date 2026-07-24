@@ -45,13 +45,22 @@ this app targets, documented here rather than engineered around.
 Transform-at-the-boundary: layout modules (`caption_layout.py` / `caption-layout.js`,
 `font_metrics.py`, `FontFit`) stay untouched — callers hand them already-transformed text.
 
-Frontend:
-- `static/preview-text.js` — `renderText` computes the block's effective heading via
-  `TextCase.apply(block.heading, preset.text_case)` once and uses it for both run-span
-  rendering and BOX FILL measurement; `fitCache` key gains `preset.text_case`.
-- `static/preview-captions.js` — transforms each word's text (copies, never mutating
-  `project.captions.words`) before calling `CaptionLayout.paginateWords`; memo key gains
-  `preset.text_case`.
+Frontend — display via CSS, measurement via transformed strings. The DOM text must stay
+as-typed: on-stage editing (contentEditable) writes the div's text back to `block.heading`,
+so rendering a transformed string would corrupt stored text the moment the user clicks into
+the block. CSS `text-transform` displays the case change while the DOM keeps the raw string
+(edit mode, selection offsets, and FormatRun offsets all stay correct); only *measurement*
+paths get the transformed string, matching what CSS actually draws:
+- `static/text-case.js` also exposes `TextCase.cssValue(textCase)` →
+  `"uppercase" | "lowercase" | "none"`.
+- `static/preview-text.js` — block div gets `style.textTransform = TextCase.cssValue(...)`;
+  BOX FILL's `FontFit.fitFontSize` input is `TextCase.apply(block.heading, preset.text_case)`;
+  `fitCache` key gains `preset.text_case`. Fixed-width wrap and fit-mode box sizing need no
+  change — the browser lays out the transformed glyphs natively.
+- `static/preview-captions.js` — caption block div gets the same `textTransform`; the measure
+  function handed to `CaptionLayout.paginateWords` wraps the canvas measurer with
+  `TextCase.apply`, so pagination agrees with the displayed glyph widths; memo key gains
+  `preset.text_case`. Word objects are never touched (timing intact).
 
 Backend (`app/ass_render.py`):
 - Text blocks: at the top of the per-block render, when `p.text_case != "none"`, substitute a
