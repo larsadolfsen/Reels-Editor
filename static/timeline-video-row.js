@@ -54,11 +54,15 @@ window.TimelineVideoRow = (() => {
     const count = Filmstrip.frameCount(media.duration, interval);
     const speed = clip.speed || 1;
     const frameSpanPx = Math.max(1, (interval / speed) * px);
+    // Each drawn thumbnail keeps the sprite's true 9:16 aspect ratio (scaled to
+    // row height) instead of stretching to fill frameSpanPx — so at low zoom
+    // gaps appear between frames rather than smearing one frame across the gap.
+    const frameW = Math.min(frameSpanPx, rowHeight * (Filmstrip.FRAME_W / Filmstrip.FRAME_H));
 
     for (let x = 0; x < widthPx; x += frameSpanPx) {
       const sourceTime = clip.in_point + (x / px) * speed;
       const frameIndex = Math.min(count - 1, Math.max(0, Math.round(sourceTime / interval)));
-      const spanW = Math.min(frameSpanPx, widthPx - x);
+      const spanW = Math.min(frameW, widthPx - x);
       ctx.drawImage(
         img,
         frameIndex * Filmstrip.FRAME_W, 0, Filmstrip.FRAME_W, Filmstrip.FRAME_H,
