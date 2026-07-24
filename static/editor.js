@@ -3,7 +3,6 @@
 let project = null;
 let selected = null; // currently selected clip/text/caption; drives which right-panel section (VIDEO/TEXT/CAPTIONS) is open
 const clipDurations = {}; // clip.id -> source duration (seconds), populated on add-clip
-const player = document.getElementById("player");
 
 const AVAILABLE_FONTS = ["Public Sans", "JetBrains Mono"]; // the only vendored font families (static/fonts/)
 
@@ -219,7 +218,11 @@ document.getElementById("export").addEventListener("click", exportProject);
   }
 })();
 
-player.addEventListener("timeupdate", renderTimeline);
+// Preview.onTimeUpdate/onPlayStateChange (not a direct #player listener) since preview.js
+// crossfades between two <video> elements to avoid a black flash at clip cuts — which of them
+// is "active" changes over time, so editor.js subscribes through Preview's stable API instead
+// of binding to one DOM node.
+Preview.onTimeUpdate(renderTimeline);
 
 // Smooth playhead motion: timeupdate only fires a few times a second, which reads as
 // choppy. While playing, nudge just the playhead/SLICE button/time readout every
@@ -230,8 +233,10 @@ function tickLoop() {
   Timeline.tick(Preview.currentTimelineTime());
   tickRaf = requestAnimationFrame(tickLoop);
 }
-player.addEventListener("play", () => { if (!tickRaf) tickRaf = requestAnimationFrame(tickLoop); });
-player.addEventListener("pause", () => { cancelAnimationFrame(tickRaf); tickRaf = null; });
+Preview.onPlayStateChange((isPlaying) => {
+  if (isPlaying) { if (!tickRaf) tickRaf = requestAnimationFrame(tickLoop); }
+  else { cancelAnimationFrame(tickRaf); tickRaf = null; }
+});
 
 document.getElementById("timeline-ruler").addEventListener("click", (e) => {
   const rect = e.currentTarget.getBoundingClientRect();

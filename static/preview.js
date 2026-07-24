@@ -5,20 +5,26 @@
 // elements (see video-box-preview.js) are siblings inside #overlay and each set an explicit CSS
 // z-index from their model's z_index field, so browser stacking follows the project's cross-layer
 // z-order.
-// applyFillModeClass(clip) toggles #player's .fill-mode-fill class (stage.css) to switch between
-// FIT (object-fit: contain) and FILL (object-fit: cover) per ClipLayer.fill_mode; called from both
-// playClipAt and seek's clip-switch branch, the two places player.src changes for a new clip.
-// Image clips (MediaItem.kind === "image") hand off between #player (<video>) and #image-player
-// (<img>) per-clip: playClipAt/seek show whichever element applies and drive timing via either
-// the <video> element's own timeupdate event or window.ImageClipPlayback (see
+// applyFillModeClass(clip, el) toggles el's .fill-mode-fill class (stage.css) to switch between
+// FIT (object-fit: contain) and FILL (object-fit: cover) per ClipLayer.fill_mode.
+// Image clips (MediaItem.kind === "image") hand off between the active <video> element and
+// #image-player (<img>) per-clip: playClipAt/seek show whichever element applies and drive timing
+// via either the <video> element's own timeupdate event or window.ImageClipPlayback (see
 // static/image-clip-playback.js) for images. renderOverlaysAt(timelineTime) is the single place
 // that refreshes the time readout + text/caption/video-box overlays, shared by both paths plus
 // the zero-clip virtual clock.
-// playClipAt() also prefetches the *next* clip's file into a hidden second <video> element
-// (preloadPlayer) as soon as the current clip starts, so the browser's HTTP cache is warm by the
-// time the real player.src swap happens at the join — smooths the visible stall that a cold
-// network fetch at the clip boundary otherwise causes.
-// Exposes window.Preview.{load, seek, renderText, renderCaptions, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection, enterTextEditMode, getTextBoxSize, getCaptionBoxSize}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
+// Two real <video> elements (playerA = #player, playerB created here) alternate as "active"
+// (visible, on-stage) and "standby" (hidden). As soon as a clip starts playing, prepareStandby()
+// loads the *next* clip into the standby element and seeks it to that clip's in-point — fully
+// decoded and paused, off-stage. At the clip boundary, playClipAt() swaps which element is active
+// (an instant class toggle) instead of setting .src on the visible element: setting .src on a
+// <video> synchronously clears its displayed frame (the "emptied" event), which is what caused
+// the black flash between cuts even with a warm HTTP cache. If the standby element isn't ready in
+// time (e.g. a very short clip), playClipAt falls back to the old direct-swap-on-active path.
+// Because "active" moves between two physical elements, editor.js can no longer bind listeners to
+// one DOM node directly — it subscribes via Preview.onTimeUpdate/onPlayStateChange instead, which
+// this module fires from whichever element is currently active.
+// Exposes window.Preview.{load, seek, renderText, renderCaptions, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection, enterTextEditMode, getTextBoxSize, getCaptionBoxSize, onTimeUpdate, onPlayStateChange}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
 // getTextBoxSize(blockId)/getCaptionBoxSize() are thin delegating wrappers onto
 // PreviewText.getBoxSizeCanvasPx/PreviewCaptions.getBoxSizeCanvasPx, used by the POSITION
 // anchor-grid shortcut (text-panel-position.js/caption-panel-box.js) to compute edge-flush x/y
@@ -44,19 +50,57 @@ window.Preview = (() => {
   let virtualPlaying = false;
   let virtualRafId = null;
   let virtualLastTs = 0;
-  const player = document.getElementById("player");
   const imagePlayer = document.getElementById("image-player");
   const timeEl = document.getElementById("time");
   const stage = document.getElementById("stage");
-  // Hidden second <video> used only to prefetch the next clip's file into the browser's HTTP
-  // cache while the current clip is still playing, so the real player.src swap at the clip
-  // boundary (playClipAt) hits a warm cache instead of a cold network fetch.
-  const preloadPlayer = document.createElement("video");
-  preloadPlayer.preload = "auto";
-  preloadPlayer.muted = true;
-  preloadPlayer.style.display = "none";
-  document.body.appendChild(preloadPlayer);
-  let preloadedIndex = -1;
+  // Two real <video> elements alternate as "active" (on-stage) and "standby" (hidden,
+  // preloading + pre-seeked to the next clip's in-point) — see file header for why.
+  const playerA = document.getElementById("player");
+  const playerB = document.createElement("video");
+  playerB.className = "stage-media stage-hidden";
+  playerA.after(playerB);
+  let activePlayer = playerA;
+  let standbyPlayer = playerB;
+  let standbyReadyIndex = -1;
+  let standbySeeked = false;
+
+  const timeUpdateListeners = [];
+  const playStateListeners = [];
+  function onTimeUpdate(fn) { timeUpdateListeners.push(fn); }
+  function onPlayStateChange(fn) { playStateListeners.push(fn); }
+
+  function installPlayerListeners(el) {
+    el.addEventListener("seeked", () => {
+      if (el === standbyPlayer && standbyReadyIndex >= 0) standbySeeked = true;
+    });
+    el.addEventListener("timeupdate", () => {
+      if (el !== activePlayer || activeIndex < 0 || isImageActive()) return;
+      const c = clips[activeIndex];
+      const timelineTime = computeTimelineTime();
+      renderOverlaysAt(timelineTime);
+      timeUpdateListeners.forEach((fn) => fn(timelineTime));
+      if (el.currentTime >= c.out_point) {
+        if (activeIndex + 1 < clips.length) {
+          playClipAt(activeIndex + 1);
+        } else {
+          el.pause();
+          PreviewAudio.pause();
+        }
+      }
+    });
+    el.addEventListener("play", () => {
+      if (el !== activePlayer) return;
+      setPlayingIcon(true);
+      playStateListeners.forEach((fn) => fn(true));
+    });
+    el.addEventListener("pause", () => {
+      if (el !== activePlayer || isImageActive()) return;
+      setPlayingIcon(false);
+      playStateListeners.forEach((fn) => fn(false));
+    });
+  }
+  installPlayerListeners(playerA);
+  installPlayerListeners(playerB);
 
   function ordered(list) {
     return [...list].sort((a, b) => a.order - b.order);
@@ -98,11 +142,12 @@ window.Preview = (() => {
 
   function playClipAt(index, autoplay = true) {
     ImageClipPlayback.stop();
-    activeIndex = index;
     const c = clips[index];
     if (clipKind(c) === "image") {
-      player.pause();
-      player.classList.add("stage-hidden");
+      activeIndex = index;
+      activePlayer.pause();
+      activePlayer.classList.add("stage-hidden");
+      standbyPlayer.classList.add("stage-hidden");
       imagePlayer.classList.remove("stage-hidden");
       applyFillModeClass(c, imagePlayer);
       imagePlayer.src = "/media?path=" + encodeURIComponent(c.file_path);
@@ -124,40 +169,73 @@ window.Preview = (() => {
       }
       return;
     }
-    imagePlayer.classList.add("stage-hidden");
-    player.classList.remove("stage-hidden");
-    applyFillModeClass(c, player);
-    applyClipAudio(c);
-    player.src = "/media?path=" + encodeURIComponent(c.file_path);
-    player.onloadedmetadata = () => {
-      player.currentTime = c.in_point;
-      player.playbackRate = c.speed || 1;
-      if (autoplay) player.play();
-    };
-    maybePreloadNext(index);
+    if (standbyReadyIndex === index && standbySeeked) {
+      // Standby already has this clip decoded and paused at its in-point — swap which element
+      // is on-stage instead of touching .src, so no frame is ever cleared.
+      const oldActive = activePlayer;
+      activeIndex = index;
+      activePlayer = standbyPlayer;
+      standbyPlayer = oldActive;
+      imagePlayer.classList.add("stage-hidden");
+      activePlayer.classList.remove("stage-hidden");
+      applyFillModeClass(c, activePlayer);
+      applyClipAudio(c);
+      oldActive.pause();
+      oldActive.classList.add("stage-hidden");
+      standbyReadyIndex = -1;
+      standbySeeked = false;
+      if (autoplay) activePlayer.play();
+    } else {
+      // Standby wasn't ready in time (e.g. a very short clip) — fall back to swapping .src
+      // directly on the active element, same as before this feature existed.
+      activeIndex = index;
+      imagePlayer.classList.add("stage-hidden");
+      activePlayer.classList.remove("stage-hidden");
+      applyFillModeClass(c, activePlayer);
+      applyClipAudio(c);
+      activePlayer.src = "/media?path=" + encodeURIComponent(c.file_path);
+      activePlayer.onloadedmetadata = () => {
+        activePlayer.currentTime = c.in_point;
+        activePlayer.playbackRate = c.speed || 1;
+        if (autoplay) activePlayer.play();
+      };
+    }
+    prepareStandby(index + 1);
   }
 
   // Toggles the CSS class stage.css uses to switch the given element between letterboxed (FIT,
   // object-fit: contain) and cropped-to-fill (FILL, object-fit: cover) per ClipLayer.fill_mode.
-  function applyFillModeClass(clip, el = player) {
+  function applyFillModeClass(clip, el) {
     el.classList.toggle("fill-mode-fill", clip.fill_mode === "fill");
   }
 
-  // Sets #player's volume/mute from the active clip's ClipLayer.volume/muted. HTML5 <video>
+  // Sets the active element's volume/mute from the clip's ClipLayer.volume/muted. HTML5 <video>
   // volume caps at 1.0 — a volume > 1.0 (export's exact ffmpeg gain) is clamped here, same
   // approximation the VOLUME UI documents. Only called for real video clips — image clips
   // (MediaItem.kind === "image") never have an audio track, so there is nothing to mute/adjust.
   function applyClipAudio(clip) {
-    player.volume = Math.max(0, Math.min(clip.volume ?? 1, 1));
-    player.muted = !!clip.muted;
+    activePlayer.volume = Math.max(0, Math.min(clip.volume ?? 1, 1));
+    activePlayer.muted = !!clip.muted;
   }
 
-  function maybePreloadNext(index) {
-    const nextIndex = index + 1;
-    if (nextIndex >= clips.length || nextIndex === preloadedIndex) return;
-    if (clipKind(clips[nextIndex]) === "image") return;
-    preloadedIndex = nextIndex;
-    preloadPlayer.src = "/media?path=" + encodeURIComponent(clips[nextIndex].file_path);
+  // Loads the given clip into the standby (off-stage) <video> element and seeks it to that
+  // clip's in-point, so playClipAt can swap it in instantly at the boundary. No-ops for an
+  // image clip (images hand off through #image-player, not the dual-video buffer) and for a
+  // clip already prepared.
+  function prepareStandby(nextIndex) {
+    if (nextIndex < 0 || nextIndex >= clips.length || clipKind(clips[nextIndex]) === "image") {
+      standbyReadyIndex = -1;
+      standbySeeked = false;
+      return;
+    }
+    if (standbyReadyIndex === nextIndex) return;
+    standbyReadyIndex = nextIndex;
+    standbySeeked = false;
+    const nextClip = clips[nextIndex];
+    standbyPlayer.pause();
+    standbyPlayer.src = "/media?path=" + encodeURIComponent(nextClip.file_path);
+    standbyPlayer.playbackRate = nextClip.speed || 1;
+    standbyPlayer.onloadedmetadata = () => { standbyPlayer.currentTime = nextClip.in_point; };
   }
 
   function zeroClipDuration() {
@@ -207,15 +285,18 @@ window.Preview = (() => {
     activeIndex = -1;
     cancelVirtualPlayback();
     virtualTime = 0;
-    preloadedIndex = -1;
+    standbyReadyIndex = -1;
+    standbySeeked = false;
     PreviewAudio.load(project);
     if (clips.length > 0) {
       playClipAt(0, false);
     } else {
-      player.removeAttribute("src");
-      player.load();
+      activePlayer.removeAttribute("src");
+      activePlayer.load();
+      standbyPlayer.removeAttribute("src");
+      standbyPlayer.classList.add("stage-hidden");
       imagePlayer.classList.add("stage-hidden");
-      player.classList.remove("stage-hidden");
+      activePlayer.classList.remove("stage-hidden");
       timeEl.textContent = "0.0";
     }
   }
@@ -242,6 +323,10 @@ window.Preview = (() => {
 
   function getCaptionBoxSize() { return PreviewCaptions.getBoxSizeCanvasPx(); }
 
+  // The active video element's raw currentTime in source-clip coordinates (not timeline time) —
+  // used by the VIDEO panel's Set In/Set Out buttons. Only meaningful for a real video clip.
+  function currentSourceTime() { return activePlayer.currentTime; }
+
   function computeTimelineTime() {
     if (clips.length === 0) return virtualTime;
     if (activeIndex < 0) return 0;
@@ -249,24 +334,8 @@ window.Preview = (() => {
     let t = 0;
     for (let i = 0; i < activeIndex; i++) t += clipDuration(clips[i]);
     if (isImageActive()) return t + ImageClipPlayback.getElapsed();
-    return t + (player.currentTime - c.in_point) / (c.speed || 1);
+    return t + (activePlayer.currentTime - c.in_point) / (c.speed || 1);
   }
-
-  player.addEventListener("timeupdate", () => {
-    if (activeIndex < 0 || isImageActive()) return;
-    const c = clips[activeIndex];
-    const timelineTime = computeTimelineTime();
-    renderOverlaysAt(timelineTime);
-
-    if (player.currentTime >= c.out_point) {
-      if (activeIndex + 1 < clips.length) {
-        playClipAt(activeIndex + 1);
-      } else {
-        player.pause();
-        PreviewAudio.pause();
-      }
-    }
-  });
 
   new ResizeObserver(() => {
     if (textProject) renderText(textProject, textPresets, computeTimelineTime());
@@ -289,9 +358,9 @@ window.Preview = (() => {
       return;
     }
     const atEnd = activeIndex >= 0 && activeIndex === clips.length - 1
-      && player.currentTime >= clips[activeIndex].out_point;
+      && activePlayer.currentTime >= clips[activeIndex].out_point;
     if (atEnd) playClipAt(0);
-    else player.play();
+    else activePlayer.play();
     PreviewAudio.seek(computeTimelineTime());
     PreviewAudio.play();
   }
@@ -299,7 +368,7 @@ window.Preview = (() => {
     PreviewAudio.pause();
     if (clips.length === 0) { cancelVirtualPlayback(); setPlayingIcon(false); return; }
     if (isImageActive()) { ImageClipPlayback.pause(); setPlayingIcon(false); return; }
-    player.pause();
+    activePlayer.pause();
   }
   function doRestart() {
     PreviewAudio.seek(0);
@@ -310,7 +379,7 @@ window.Preview = (() => {
   function isPaused() {
     if (clips.length === 0) return !virtualPlaying;
     if (isImageActive()) return !ImageClipPlayback.isPlaying();
-    return player.paused;
+    return activePlayer.paused;
   }
 
   document.getElementById("play-pause").addEventListener("click", () => {
@@ -329,8 +398,6 @@ window.Preview = (() => {
     iconPlay.classList.toggle("icon-hidden", isPlaying);
     iconPause.classList.toggle("icon-hidden", !isPlaying);
   }
-  player.addEventListener("play", () => setPlayingIcon(true));
-  player.addEventListener("pause", () => { if (!isImageActive()) setPlayingIcon(false); });
 
   function seek(t) {
     PreviewAudio.seek(t);
@@ -343,10 +410,11 @@ window.Preview = (() => {
     if (!loc) return;
     const newIndex = clips.indexOf(loc.clip);
     if (newIndex !== activeIndex) {
-      if (isImageActive()) ImageClipPlayback.stop(); else player.pause();
+      if (isImageActive()) ImageClipPlayback.stop(); else activePlayer.pause();
       activeIndex = newIndex;
       if (clipKind(loc.clip) === "image") {
-        player.classList.add("stage-hidden");
+        activePlayer.classList.add("stage-hidden");
+        standbyPlayer.classList.add("stage-hidden");
         imagePlayer.classList.remove("stage-hidden");
         applyFillModeClass(loc.clip, imagePlayer);
         imagePlayer.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
@@ -364,20 +432,22 @@ window.Preview = (() => {
         renderOverlaysAt(computeTimelineTime());
       } else {
         imagePlayer.classList.add("stage-hidden");
-        player.classList.remove("stage-hidden");
-        applyFillModeClass(loc.clip, player);
+        activePlayer.classList.remove("stage-hidden");
+        applyFillModeClass(loc.clip, activePlayer);
         applyClipAudio(loc.clip);
-        player.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
-        player.onloadedmetadata = () => { player.currentTime = loc.src; player.playbackRate = loc.clip.speed || 1; };
+        activePlayer.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
+        activePlayer.onloadedmetadata = () => { activePlayer.currentTime = loc.src; activePlayer.playbackRate = loc.clip.speed || 1; };
       }
+      // A scrub jump invalidates whatever the standby element was prepared for.
+      prepareStandby(newIndex + 1);
     } else if (isImageActive()) {
       ImageClipPlayback.seekTo(loc.src - loc.clip.in_point);
       renderOverlaysAt(computeTimelineTime());
     } else {
-      player.currentTime = loc.src;
-      player.playbackRate = loc.clip.speed || 1;
+      activePlayer.currentTime = loc.src;
+      activePlayer.playbackRate = loc.clip.speed || 1;
     }
   }
 
-  return { load, locate, sequenceDuration, seek, renderText, renderCaptions, currentTimelineTime: computeTimelineTime, play: doPlay, pause: doPause, restart: doRestart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection, enterTextEditMode, getTextBoxSize, getCaptionBoxSize };
+  return { load, locate, sequenceDuration, seek, renderText, renderCaptions, currentTimelineTime: computeTimelineTime, currentSourceTime, play: doPlay, pause: doPause, restart: doRestart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection, enterTextEditMode, getTextBoxSize, getCaptionBoxSize, onTimeUpdate, onPlayStateChange };
 })();
