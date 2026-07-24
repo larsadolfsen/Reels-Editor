@@ -45,6 +45,7 @@ function defaultTextPreset(id) {
     box_background: false, box_background_color: "#000000", box_background_opacity: 100,
     box_border_width: 0, box_border_color: "#FFFFFF", box_border_radius: 0,
     align: "center", x: 540, y: Math.round(SafeZoneGeometry.TOP_ZONE_BOTTOM), entrance: "fade_pop",
+    highlight: false, highlight_color: "#FFD400", highlight_mode: "current_word", highlight_border_radius: 4,
   };
 }
 
