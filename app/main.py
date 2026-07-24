@@ -243,7 +243,7 @@ def export_project(pid: str) -> dict:
         cap_file.write_text(ass_render.render_caption_ass(p, caption_preset), encoding="utf-8")
         caption_ass_path = str(cap_file)
 
-    if p.video_boxes:
+    if p.video_boxes or p.image_boxes:
         bands = []
         for i, band in enumerate(timeline.banded_layers(p)):
             if band["kind"] == "text":
@@ -252,8 +252,10 @@ def export_project(pid: str) -> dict:
                     ass_render.render_ass(p, p.text_presets, text_blocks=band["text_blocks"]),
                     encoding="utf-8")
                 bands.append({"kind": "ass", "path": str(ass_file)})
-            else:
+            elif band["kind"] == "video_box":
                 bands.append({"kind": "video_box", "video_box": band["video_box"]})
+            else:
+                bands.append({"kind": "image_box", "image_box": band["image_box"]})
         cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), bands=bands, caption_ass_path=caption_ass_path)
     else:
         ass_path = None
