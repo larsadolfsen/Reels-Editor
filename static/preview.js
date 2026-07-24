@@ -14,13 +14,18 @@
 // that refreshes the time readout + text/caption/video-box overlays, shared by both paths plus
 // the zero-clip virtual clock.
 // Two real <video> elements (playerA = #player, playerB created here) alternate as "active"
-// (visible, on-stage) and "standby" (hidden). As soon as a clip starts playing, prepareStandby()
-// loads the *next* clip into the standby element and seeks it to that clip's in-point — fully
-// decoded and paused, off-stage. At the clip boundary, playClipAt() swaps which element is active
-// (an instant class toggle) instead of setting .src on the visible element: setting .src on a
-// <video> synchronously clears its displayed frame (the "emptied" event), which is what caused
-// the black flash between cuts even with a warm HTTP cache. If the standby element isn't ready in
-// time (e.g. a very short clip), playClipAt falls back to the old direct-swap-on-active path.
+// (visible, on-stage) and "standby" (invisible, overlapping via .video-standby — opacity:0, NOT
+// display:none). As soon as a clip starts playing, prepareStandby() loads the *next* clip into
+// the standby element and seeks it to that clip's in-point — fully decoded and paused, off-stage.
+// At the clip boundary, playClipAt() swaps which element is active (an instant class toggle)
+// instead of setting .src on the visible element: setting .src on a <video> synchronously clears
+// its displayed frame (the "emptied" event), which caused the original black flash between cuts
+// even with a warm HTTP cache. The standby/active toggle deliberately uses .video-standby
+// (opacity:0) rather than .stage-hidden (display:none): hiding a <video> via display:none
+// suspends its decode/paint pipeline in most browsers, so a preloaded, pre-seeked standby element
+// still showed a black frame on unhide — display:none reintroduced the same flash this feature
+// exists to remove. If the standby element isn't ready in time (e.g. a very short clip),
+// playClipAt falls back to the old direct-swap-on-active path.
 // Because "active" moves between two physical elements, editor.js can no longer bind listeners to
 // one DOM node directly — it subscribes via Preview.onTimeUpdate/onPlayStateChange instead, which
 // this module fires from whichever element is currently active.
@@ -57,7 +62,7 @@ window.Preview = (() => {
   // preloading + pre-seeked to the next clip's in-point) — see file header for why.
   const playerA = document.getElementById("player");
   const playerB = document.createElement("video");
-  playerB.className = "stage-media stage-hidden";
+  playerB.className = "stage-media video-standby";
   playerA.after(playerB);
   let activePlayer = playerA;
   let standbyPlayer = playerB;
@@ -146,8 +151,8 @@ window.Preview = (() => {
     if (clipKind(c) === "image") {
       activeIndex = index;
       activePlayer.pause();
-      activePlayer.classList.add("stage-hidden");
-      standbyPlayer.classList.add("stage-hidden");
+      activePlayer.classList.add("video-standby");
+      standbyPlayer.classList.add("video-standby");
       imagePlayer.classList.remove("stage-hidden");
       applyFillModeClass(c, imagePlayer);
       imagePlayer.src = "/media?path=" + encodeURIComponent(c.file_path);
@@ -177,11 +182,11 @@ window.Preview = (() => {
       activePlayer = standbyPlayer;
       standbyPlayer = oldActive;
       imagePlayer.classList.add("stage-hidden");
-      activePlayer.classList.remove("stage-hidden");
+      activePlayer.classList.remove("video-standby");
       applyFillModeClass(c, activePlayer);
       applyClipAudio(c);
       oldActive.pause();
-      oldActive.classList.add("stage-hidden");
+      oldActive.classList.add("video-standby");
       standbyReadyIndex = -1;
       standbySeeked = false;
       if (autoplay) activePlayer.play();
@@ -190,7 +195,7 @@ window.Preview = (() => {
       // directly on the active element, same as before this feature existed.
       activeIndex = index;
       imagePlayer.classList.add("stage-hidden");
-      activePlayer.classList.remove("stage-hidden");
+      activePlayer.classList.remove("video-standby");
       applyFillModeClass(c, activePlayer);
       applyClipAudio(c);
       activePlayer.src = "/media?path=" + encodeURIComponent(c.file_path);
@@ -294,9 +299,9 @@ window.Preview = (() => {
       activePlayer.removeAttribute("src");
       activePlayer.load();
       standbyPlayer.removeAttribute("src");
-      standbyPlayer.classList.add("stage-hidden");
+      standbyPlayer.classList.add("video-standby");
       imagePlayer.classList.add("stage-hidden");
-      activePlayer.classList.remove("stage-hidden");
+      activePlayer.classList.remove("video-standby");
       timeEl.textContent = "0.0";
     }
   }
@@ -413,8 +418,8 @@ window.Preview = (() => {
       if (isImageActive()) ImageClipPlayback.stop(); else activePlayer.pause();
       activeIndex = newIndex;
       if (clipKind(loc.clip) === "image") {
-        activePlayer.classList.add("stage-hidden");
-        standbyPlayer.classList.add("stage-hidden");
+        activePlayer.classList.add("video-standby");
+        standbyPlayer.classList.add("video-standby");
         imagePlayer.classList.remove("stage-hidden");
         applyFillModeClass(loc.clip, imagePlayer);
         imagePlayer.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);
@@ -432,7 +437,7 @@ window.Preview = (() => {
         renderOverlaysAt(computeTimelineTime());
       } else {
         imagePlayer.classList.add("stage-hidden");
-        activePlayer.classList.remove("stage-hidden");
+        activePlayer.classList.remove("video-standby");
         applyFillModeClass(loc.clip, activePlayer);
         applyClipAudio(loc.clip);
         activePlayer.src = "/media?path=" + encodeURIComponent(loc.clip.file_path);

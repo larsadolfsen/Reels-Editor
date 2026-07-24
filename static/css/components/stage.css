@@ -25,9 +25,14 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-.stage-media { width: 100%; height: 100%; object-fit: contain; }
+.stage-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .stage-media.fill-mode-fill { object-fit: cover; }
 .stage-hidden { display: none; }
+/* Used instead of .stage-hidden for the two alternating <video> elements (see preview.js):
+   display:none suspends a browser's video decode/paint pipeline, so unhiding a preloaded,
+   pre-seeked standby element still shows a black frame until it catches up — defeating the
+   whole point of preloading. Opacity keeps the element decoding/rendering while invisible. */
+.video-standby { opacity: 0; pointer-events: none; }
 #overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 
 .text-block {
