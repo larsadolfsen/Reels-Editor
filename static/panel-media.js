@@ -137,12 +137,6 @@ window.MediaPanel = window.MediaPanel || {};
     actions.appendChild(renameBtn);
 
     const count = project.clips.filter((c) => c.media_id === m.id).length;
-    if (count > 0) {
-      const chip = document.createElement("span");
-      chip.className = "clip-usage-chip";
-      chip.textContent = String(count);
-      actions.appendChild(chip);
-    }
 
     const trashBtn = document.createElement("button");
     trashBtn.type = "button";
