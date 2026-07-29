@@ -6,6 +6,8 @@
 // Exposes window.VideoBoxPreview.{render, setSelectedVideoBox, setOnActivate}. Muted always (no
 // PiP audio). setOnActivate(fn) (added 2026-07-24, top-toolbar) fires fn(boxId) on a plain click
 // on an unselected box while the Select tool is active — see the click listener below.
+// Applies BoxMask.clipPath(box) as the element's CSS clip-path so a mask_enabled box is cut
+// along its straight line (added 2026-07-29, box edge mask); unmasked boxes get "" (no clipping).
 window.VideoBoxPreview = (() => {
   const overlay = document.getElementById("overlay");
   const mounted = new Map(); // boxId -> <video>
@@ -76,6 +78,9 @@ window.VideoBoxPreview = (() => {
       video.style.width = (v.width / 1080 * stageW) + "px";
       video.style.height = (v.height / 1920 * stageH) + "px";
       video.style.zIndex = String(v.z_index);
+      // Straight-edge mask (box-mask.js): a percentage polygon, so it survives stage resizes
+      // untouched. "" when the box is unmasked, which is exactly the pre-feature rendering.
+      video.style.clipPath = BoxMask.clipPath(v);
 
       const inWindow = v.start <= timelineTime && timelineTime < boxEnd(v);
       if (inWindow) {

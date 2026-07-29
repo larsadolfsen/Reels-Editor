@@ -6,6 +6,8 @@
 // resize (UI.resizeHandles) onto the selected box. Exposes
 // window.ImageBoxPreview.{render, setSelectedImageBox, setOnActivate}. No playback sync needed
 // (static image) — simpler than video-box-preview.js's currentTime/play/pause handling.
+// Applies BoxMask.clipPath(box) as the element's CSS clip-path so a mask_enabled box is cut
+// along its straight line (added 2026-07-29, box edge mask); unmasked boxes get "" (no clipping).
 window.ImageBoxPreview = (() => {
   const overlay = document.getElementById("overlay");
   const mounted = new Map(); // boxId -> <img>
@@ -72,6 +74,9 @@ window.ImageBoxPreview = (() => {
       img.style.width = (b.width / 1080 * stageW) + "px";
       img.style.height = (b.height / 1920 * stageH) + "px";
       img.style.zIndex = String(b.z_index);
+      // Straight-edge mask (box-mask.js): a percentage polygon, so it survives stage resizes
+      // untouched. "" when the box is unmasked, which is exactly the pre-feature rendering.
+      img.style.clipPath = BoxMask.clipPath(b);
 
       if (b.id === selectedBoxId && callbacks) mountHandles(b.id, img, b);
       else unmountHandles(b.id);
