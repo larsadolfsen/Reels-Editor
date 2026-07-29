@@ -92,7 +92,7 @@ static/
   ui-divider.js            # UI.divider: plain static 1px separator line
   ui-settings-row.js       # UI.settingsRow: clickable label/value/chevron row that opens a drill-down; optional swatchColor renders a small color square before the value text (added 2026-07-22, Outline subpage)
   ui-sub-panel-header.js   # UI.subPanelHeader: back-arrow + title header for drill-down sub-panels
-  ui-save-indicator.js     # UI.saveIndicator: "Saving…/Saved/Save failed — retry" dot+label in #panel-brand, setSaving()/setSaved()/setFailed(retryFn); in-flight-save counting + 2s fade-to-icon on Saved (added 2026-07-20)
+  ui-save-indicator.js     # UI.saveIndicator: "Saving…/Saved/Save failed — retry" label in #panel-brand (the grey status dot was removed 2026-07-29 — label only), setSaving()/setSaved()/setFailed(retryFn); in-flight-save counting + 2s fade-out on Saved (added 2026-07-20)
   ui-project-list-row.js   # UI.projectListRow: one project row (inline-editable name, meta, optional duplicate/delete) — shared by picker + PROJECTS panel
   ui-project-picker.js     # UI.projectPicker: full-screen cold-start project picker (list + "+ NEW PROJECT")
   ui-resize-handles.js    # generic 8-handle drag-resize overlay for any positioned element (text box + video box)
@@ -162,7 +162,7 @@ static/
       icon-rail.css            # .icon-rail/.icon-rail-btn vertical icon+label nav rail (UI.iconRail)
       settings-row.css         # .settings-row label/value/chevron drill-down row (UI.settingsRow)
       sub-panel.css            # .sub-panel-header back+title + .font-list drill-down list styling (UI.subPanelHeader); .font-list-row's card/hover styling moved to list-row.css's .list-row--subtle variant 2026-07-22, this file keeps only the row's own flex layout; .font-list-row-name-group (added 2026-07-23) groups a .font-list-row-name with an inline status icon (e.g. the filler-words tab's "found in transcript" warning) so they sit together instead of being spread apart by .font-list-row's space-between
-      save-indicator.css       # .save-indicator "Saving…/Saved" dot+label in #panel-brand (UI.saveIndicator)
+      save-indicator.css       # .save-indicator "Saving…/Saved" label in #panel-brand (UI.saveIndicator; dot removed 2026-07-29)
       export-progress.css      # .export-progress track + .export-progress-fill: background export job percent bar in #panel-export
       video-box-panel.css      # #panel-video-box internal layout: add-picker list + trim/time/position/size detail view
       image-box-panel.css      # #panel-image-box internal layout, mirrors video-box-panel.css (image/photo PiP feature)
@@ -228,7 +228,7 @@ Full-screen picker at cold start, plus an in-editor PROJECTS panel — open/rena
 - `static/ui-project-picker.js` — `UI.projectPicker(container, {onOpen})`: full-screen cold-start picker (`#project-picker`); always re-fetches the list via `Api.listProjects()` on mount, "+ NEW PROJECT" creates via `Api.createProject()` then calls `onOpen`.
 - `static/ui-project-list-row.js` — `UI.projectListRow(project, {onOpen, onRename, onDelete, onDuplicate}) -> <li>`: one project row (inline-editable name, relative last-edited meta, optional duplicate/delete icon buttons). Shared by the full-screen picker (open-only) and the in-editor PROJECTS panel; callers own persisting any change.
 - `static/panel-projects.js` — `ProjectsPanel.render(currentProjectId, callbacks)`: the `#panel-projects` context section — project list (open/rename/delete/duplicate via `Api.*`) + "+ New Project" (`callbacks.onCreateRequested`); never navigates or saves the currently-open project itself.
-- `static/ui-save-indicator.js` — `UI.saveIndicator(container) -> {setSaving, setSaved}`: "Saving…/Saved" dot+label mounted in `#panel-brand`.
+- `static/ui-save-indicator.js` — `UI.saveIndicator(container) -> {setSaving, setSaved}`: "Saving…/Saved" label mounted in `#panel-brand` (grey status dot removed 2026-07-29).
 - `static/editor.js` — startup calls `Api.ensureProject()`: a still-valid saved project id opens directly via `openProject(target)` (fetches, loads, sets `document.title`), otherwise `showPickerScreen()` mounts `UI.projectPicker`. `openProjectsPanel()` renders `ProjectsPanel` with switch/create routed through `confirmFlushAndSwitch(action)` (saves the current project before switching) and `onDeletedCurrent` falling back to `showPickerScreen()`. A `keepalive: true` PUT on page unload flushes the last unsaved state. `saveProject()` wraps `Api.saveProject` with the `#panel-brand` save indicator (`setSaving()`/`setSaved()`).
 - `static/css/components/project-picker.css` — `#project-picker` full-screen cold-start picker + `.new-project-btn` (shared with `panel-projects.js`).
 - `static/css/components/project-list-row.css` — `.project-list-row` name/meta/action-buttons + shared list reset.
