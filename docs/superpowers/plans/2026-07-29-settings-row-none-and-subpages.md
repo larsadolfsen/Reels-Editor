@@ -1051,7 +1051,9 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ### Task 7: CAPTIONS Highlight row + subpage
 
-Converts the CAPTIONS Design tab's inline HIGHLIGHT group (mode + colour + radius) into a `Highlight` row fronting a subpage, so the Design tab reads as one uniform list of rows. This row is never `None` — a highlight mode is always set.
+Converts the CAPTIONS Design tab's inline HIGHLIGHT group (MARKER toggle + MODE + colour + radius) into a `Highlight` row fronting a subpage, so the Design tab reads as one uniform list of rows. This row is never `None` — a karaoke mode is always set, so the row shows the mode label regardless of the MARKER toggle.
+
+**Note:** the MARKER on/off group (`#caption-highlight-marker-group`, writing `preset.highlight` — a background behind *all* caption text, parity with TEXT's highlight) landed on main after this plan was first written. It moves into the subpage unchanged alongside MODE; it does **not** drive the row's value.
 
 **Files:**
 - Modify: `static/caption-panel-highlight.js` (whole file rewritten)
@@ -1067,10 +1069,11 @@ Converts the CAPTIONS Design tab's inline HIGHLIGHT group (mode + colour + radiu
 Replace the entire contents of `static/caption-panel-highlight.js` with:
 
 ```js
-// CAPTIONS panel Design tab: Highlight row + drill-down subpanel (karaoke mode + highlight
-// color + border radius), same row+subpanel pattern as caption-panel-shadow.js. Captions-only —
-// TEXT's highlight is its own text-panel-highlight.js. The row is never "None": a highlight mode
-// is always set. Radius only applies to Background mode and is hidden otherwise.
+// CAPTIONS panel Design tab: Highlight row + drill-down subpanel (MARKER on/off, karaoke MODE,
+// highlight color + border radius), same row+subpanel pattern as caption-panel-shadow.js.
+// Captions-only — TEXT's highlight is its own text-panel-highlight.js. The row is never "None":
+// a karaoke mode is always set, so the row shows the mode label and the MARKER toggle does not
+// drive it. MARKER and MODE's "Background" option share highlight_color/highlight_border_radius.
 // Exposes window.CaptionPanel.renderHighlight().
 window.CaptionPanel = window.CaptionPanel || {};
 
@@ -1114,6 +1117,11 @@ window.CaptionPanel = window.CaptionPanel || {};
       });
     }
 
+    UI.buttonGroup(document.getElementById("caption-highlight-marker-group"),
+      [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
+      preset.highlight ? "on" : "off",
+      (v) => { preset.highlight = v === "on"; saveProject(); renderCaptionPreview(); renderHighlight(); });
+
     UI.buttonGroup(document.getElementById("caption-highlight-mode-group"), MODES,
       preset.highlight_mode,
       (v) => { preset.highlight_mode = v; saveProject(); renderCaptionPreview(); renderHighlight(); });
@@ -1122,7 +1130,8 @@ window.CaptionPanel = window.CaptionPanel || {};
       { label: "Highlight color", value: preset.highlight_color, span: 8,
         onChange: (v) => { preset.highlight_color = v; saveProject(); renderCaptionPreview(); renderHighlight(); } });
 
-    document.getElementById("caption-highlight-border-radius-field").hidden = preset.highlight_mode !== "background";
+    document.getElementById("caption-highlight-border-radius-field").hidden =
+      preset.highlight_mode !== "background" && !preset.highlight;
 
     UI.numberField(document.getElementById("caption-highlight-border-radius-field"),
       { label: "RADIUS", unit: "PX", value: preset.highlight_border_radius, min: 0, max: 40, span: 8,
@@ -1161,6 +1170,10 @@ In `static/index.html`, delete this entire block (near line 323):
 
 ```html
           <div id="caption-highlight-body">
+            <div class="style-group-label">MARKER</div>
+            <div class="style-group">
+              <div id="caption-highlight-marker-group"></div>
+            </div>
             <div class="style-group-label">MODE</div>
             <div class="style-group">
               <div id="caption-highlight-mode-group"></div>
@@ -1181,6 +1194,10 @@ In `static/index.html`, immediately after the `#panel-captions-border` div added
 ```html
         <div id="panel-captions-highlight" hidden>
           <div id="caption-highlight-subpanel-header"></div>
+          <div class="style-group-label">MARKER</div>
+          <div class="style-group">
+            <div id="caption-highlight-marker-group"></div>
+          </div>
           <div class="style-group-label">MODE</div>
           <div class="style-group">
             <div id="caption-highlight-mode-group"></div>
@@ -1238,10 +1255,11 @@ to
 
 Reload in the throwaway project. CAPTIONS panel → Design tab.
 
-1. The Design tab is one list: Font Family, Weight, size/italic/underline, Case, Color, Outline, Shadow, Highlight. No separate MODE group at the bottom.
+1. The Design tab is one list: Font Family, Weight, size/italic/underline, Case, Color, Outline, Shadow, Highlight. No separate MARKER/MODE groups at the bottom.
 2. The Highlight row shows a colour square and the current mode label (`Current word` by default).
-3. Click it → the subpage opens with MODE, colour and (hidden) RADIUS.
+3. Click it → the subpage opens with MARKER, MODE, colour and (hidden) RADIUS.
 4. Pick `Background` → RADIUS appears. Back → the row reads `Background`.
+4b. Set MODE back to `Current word` and toggle MARKER ON → RADIUS stays visible (marker uses it too), the caption text gains a background block on the stage, and the row still reads `Current word`.
 5. Run a transcription or add caption words, scrub the playhead, and confirm the stage caption highlights per the selected mode.
 6. Change the highlight colour → the row's square follows.
 7. Switch to the Box tab and back to Design → the Highlight row is still there and correct.
