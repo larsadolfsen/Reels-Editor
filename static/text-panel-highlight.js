@@ -22,11 +22,14 @@ window.TextPanel = window.TextPanel || {};
   window.TextPanel.renderHighlight = function renderHighlight() {
     const preset = ensureTextPreset(currentTextBlock().preset_id);
 
+    const highlightValue = SettingsRowValue.orNone(preset.highlight, preset.highlight_color);
+    const highlightSwatch = preset.highlight ? preset.highlight_color : null;
+
     if (highlightRowSetValue) {
-      highlightRowSetValue(preset.highlight ? "ON" : "OFF", null, preset.highlight ? preset.highlight_color : null);
+      highlightRowSetValue(highlightValue, null, highlightSwatch);
     } else {
       highlightRowSetValue = UI.settingsRow(document.getElementById("text-highlight-row"), {
-        label: "Highlight", value: preset.highlight ? "ON" : "OFF", swatchColor: preset.highlight ? preset.highlight_color : null,
+        label: "Highlight", value: highlightValue, swatchColor: highlightSwatch,
         onClick: openHighlightPanel,
       });
     }
