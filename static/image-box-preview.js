@@ -21,6 +21,8 @@ window.ImageBoxPreview = (() => {
   let onMaskChange = null;   // ({angle, offset}, done) => void, fired by the mask-line drag guide
   let maskGuide = null;      // the UI.maskLineDrag handle for the selected box, if it is masked
   let maskGuideBoxId = null; // which box the mounted guide belongs to
+  let maskGuideBox = null;   // the box object the guide's getRect/getMask closures should read live
+  let maskGuideEl = null;    // the <img> element the guide's getRect closure should read live
 
   function boxEnd(b) {
     return b.start + b.duration;
@@ -48,22 +50,34 @@ window.ImageBoxPreview = (() => {
   function unmountMaskGuide() {
     if (maskGuide) { maskGuide.destroy(); maskGuide = null; }
     maskGuideBoxId = null;
+    maskGuideBox = null;
+    maskGuideEl = null;
   }
 
   // The guide only exists for the selected box while its mask is on; every other case tears it
   // down, so switching selection or turning the mask off leaves no stray SVG in #overlay.
   // Only tears down the guide when THIS box owns it — render() calls this once per visible box,
   // so an unrelated box must not destroy the selected box's guide (it would never paint).
+  //
+  // maskGuideBox/maskGuideEl are refreshed on every call (before the `if (!maskGuide)` create
+  // gate), and the guide's getRect/getMask closures read those module vars instead of closing
+  // over this call's `box`/`el` arguments directly. Without that indirection, a later render
+  // with a *different* box object for the same id — e.g. after undo/redo, where applyRestore()
+  // reparses `project` into brand-new objects — would leave the guide's closures pinned to the
+  // stale pre-restore box/element: `maskGuide` already exists, so the create gate is skipped and
+  // the closures are never rebuilt, and the guide keeps drawing/dragging the superseded state.
   function syncMaskGuide(box, el) {
     if (!box.mask_enabled || box.id !== selectedBoxId) {
       if (maskGuideBoxId === box.id) unmountMaskGuide();
       return;
     }
+    maskGuideBox = box;
+    maskGuideEl = el;
     if (!maskGuide) {
       maskGuide = UI.maskLineDrag(overlay, {
-        getRect: () => ({ left: el.offsetLeft, top: el.offsetTop,
-                          width: el.offsetWidth, height: el.offsetHeight }),
-        getMask: () => ({ angle: box.mask_angle || 0, offset: box.mask_offset || 0 }),
+        getRect: () => ({ left: maskGuideEl.offsetLeft, top: maskGuideEl.offsetTop,
+                          width: maskGuideEl.offsetWidth, height: maskGuideEl.offsetHeight }),
+        getMask: () => ({ angle: maskGuideBox.mask_angle || 0, offset: maskGuideBox.mask_offset || 0 }),
         onChange: (mask) => { if (onMaskChange) onMaskChange(mask, false); },
         onChangeEnd: (mask) => { if (onMaskChange) onMaskChange(mask, true); },
       });

@@ -4,6 +4,9 @@
   position: absolute;
   overflow: hidden;
   pointer-events: none;
+  /* Must always paint above every #overlay child, including text blocks/video/image boxes whose
+     own z-index is model-driven (TextBlockLayer.z_index etc., in practice small ints) — 999 is
+     comfortably higher than any of those so the guide never gets buried under a reordered layer. */
   z-index: 999;
 }
 

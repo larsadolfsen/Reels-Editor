@@ -37,9 +37,20 @@ async function onTimelineSelect({ type, item, groupIndex }) {
   } else if (type === "video-box") {
     showPanel("video-box");
     VideoBoxPanel.render(item.id);
+    // VideoBoxPanel.render()'s VideoBoxPreview.setSelectedVideoBox() call alone only updates
+    // which box is selected, it doesn't itself trigger a render pass (same gap editor.js's
+    // VideoBoxPreview.setOnActivate wiring already works around for the stage-click case) — so
+    // an explicit repaint here keeps the on-stage element (position AND its mask clip-path) in
+    // sync with the just-selected box on every route into this branch, including the
+    // undo/redo restore path (reRenderAfterRestore re-selects via this same function after
+    // `project` has been reassigned to a freshly-parsed object; without this call the mounted
+    // <video> kept showing whatever box data was current at its last repaint).
+    VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
   } else if (type === "image-box") {
     showPanel("image-box");
     ImageBoxPanel.render(item.id);
+    // Same repaint gap as the video-box branch above, same fix.
+    ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
   }
   renderTimeline();
 }

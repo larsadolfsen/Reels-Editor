@@ -133,6 +133,9 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
             if mask_path:
                 # alphamerge must see both streams starting at t=0, so the timeline offset
                 # (setpts ... +start/TB) is applied after the merge rather than before it.
+                # The mask PNG at mask_path must be exactly v.width x v.height — alphamerge requires
+                # its two input streams to have matching dimensions, and the box stream is scaled to
+                # v.width:v.height below, so any mismatch fails at ffmpeg runtime with an opaque error.
                 cmd += ["-loop", "1", "-t", _num(v.out_point - v.in_point), "-i", mask_path]
                 mask_input = next_input_index
                 next_input_index += 1
@@ -156,6 +159,9 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
             out_label = f"[ov{step}]"
             mask_path = band.get("mask_path")
             if mask_path:
+                # The mask PNG at mask_path must be exactly b.width x b.height — alphamerge requires
+                # its two input streams to have matching dimensions, and the box stream is scaled to
+                # b.width:b.height below, so any mismatch fails at ffmpeg runtime with an opaque error.
                 cmd += ["-loop", "1", "-t", _num(b.duration), "-i", mask_path]
                 mask_input = next_input_index
                 next_input_index += 1

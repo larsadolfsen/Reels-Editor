@@ -457,7 +457,9 @@ def test_mask_input_is_a_looped_still_matching_the_box_duration():
     assert cmd[i - 5:i] == ["-loop", "1", "-t", "3", "-i"]   # "3" = out_point - in_point
 
 def test_unmasked_band_command_is_unchanged_by_the_mask_feature():
-    # The whole mask feature must be invisible when no box is masked: same command, byte for byte.
+    # The whole mask feature must be invisible when no box is masked: no alphamerge/alphaextract
+    # filter is added, and each band's own scale/overlay filter chain (video_box and image_box)
+    # is asserted verbatim against its pre-mask-feature form.
     box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", in_point=0, out_point=3,
                         start=1.0, x=100, y=200, width=300, height=500, z_index=5)
     img = ImageBoxLayer(media_id="m2", file_path="pic.jpg", start=0, duration=2.0,
