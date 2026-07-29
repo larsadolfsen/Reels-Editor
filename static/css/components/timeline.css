@@ -249,8 +249,10 @@
   color: var(--text-secondary);
 }
 
-/* Filmstrip canvas (static/timeline-video-row.js): fills the block behind the label,
-   which gets a bottom scrim so the filename stays legible over arbitrary video content. */
+/* Filmstrip canvas (static/timeline-video-row.js): fills the block behind the label.
+   The label is kept legible over arbitrary video content with a text-shadow rather than a
+   background band — the span is full-block-width and vertically centred by .timeline-block's
+   flex layout, so any band on it painted one continuous stripe straight across the row. */
 .video-clip-filmstrip {
   position: absolute;
   top: 0;
@@ -261,7 +263,7 @@
 .timeline-row[data-row="video"] .timeline-block span {
   position: relative;
   z-index: 1;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.7);
   display: inline-block;
   width: 100%;
   padding: 2px 7px;
