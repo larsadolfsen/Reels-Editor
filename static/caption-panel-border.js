@@ -73,6 +73,6 @@ window.CaptionPanel = window.CaptionPanel || {};
 
     UI.colorSwatch(document.getElementById("caption-box-border-color-field"),
       { label: "Border", value: preset.box_border_color, span: 8,
-        onChange: (v) => { preset.box_border_color = v; saveProject(); renderCaptionPreview(); renderBorder(); } });
+        onChange: (v) => { preset.box_border_color = v; saveProject(); renderCaptionPreview(); refreshBorderRow(preset); } });
   };
 })();

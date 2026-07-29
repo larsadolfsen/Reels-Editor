@@ -34,9 +34,7 @@ window.TextPanel = window.TextPanel || {};
 
   UI.subPanelHeader(document.getElementById("text-outline-subpanel-header"), { title: "Outline", onBack: closeOutlinePanel });
 
-  window.TextPanel.renderOutline = function renderOutline() {
-    const preset = ensureTextPreset(currentTextBlock().preset_id);
-
+  function refreshOutlineRow(preset) {
     const outlineOn = preset.outline_px > 0;
     const outlineValue = SettingsRowValue.orNone(outlineOn, `${preset.outline_px}px`);
     const outlineSwatch = outlineOn ? preset.outline_color : null;
@@ -49,6 +47,12 @@ window.TextPanel = window.TextPanel || {};
         onClick: openOutlinePanel,
       });
     }
+  }
+
+  window.TextPanel.renderOutline = function renderOutline() {
+    const preset = ensureTextPreset(currentTextBlock().preset_id);
+
+    refreshOutlineRow(preset);
 
     UI.colorSwatch(document.getElementById("text-outline-color-field"),
       { label: "Outline", value: preset.outline_color, span: 8,
@@ -62,7 +66,7 @@ window.TextPanel = window.TextPanel || {};
           }
           saveProject();
           renderTextPreview();
-          renderOutline();
+          refreshOutlineRow(preset);
         } });
 
     UI.numberField(document.getElementById("text-outline-px-field"),
@@ -77,7 +81,7 @@ window.TextPanel = window.TextPanel || {};
           }
           saveProject();
           renderTextPreview();
-          renderOutline();
+          refreshOutlineRow(preset);
         } });
   };
 })();

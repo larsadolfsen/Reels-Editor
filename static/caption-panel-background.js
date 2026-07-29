@@ -53,7 +53,7 @@ window.CaptionPanel = window.CaptionPanel || {};
 
     UI.colorSwatch(document.getElementById("caption-box-background-color-field"),
       { label: "Background", value: preset.box_background_color, span: 8,
-        onChange: (v) => { preset.box_background_color = v; saveProject(); renderCaptionPreview(); renderBackground(); } });
+        onChange: (v) => { preset.box_background_color = v; saveProject(); renderCaptionPreview(); refreshBackgroundRow(preset); } });
 
     UI.numberField(document.getElementById("caption-box-background-opacity-field"),
       { label: "OPACITY", unit: "%", value: preset.box_background_opacity, min: 0, max: 100, span: 8,

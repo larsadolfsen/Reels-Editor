@@ -56,7 +56,7 @@ window.TextPanel = window.TextPanel || {};
 
     UI.colorSwatch(document.getElementById("text-shadow-color-field"),
       { label: "Shadow", value: preset.shadow_color, span: 8,
-        onChange: (v) => { preset.shadow_color = v; saveProject(); renderTextPreview(); renderShadow(); } });
+        onChange: (v) => { preset.shadow_color = v; saveProject(); renderTextPreview(); refreshShadowRow(preset); } });
 
     UI.numberField(document.getElementById("text-shadow-offset-x-field"),
       { label: "OFFSET X", unit: "PX", value: preset.shadow_offset_x, min: -40, max: 40, span: 4,

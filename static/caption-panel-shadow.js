@@ -55,7 +55,7 @@ window.CaptionPanel = window.CaptionPanel || {};
 
     UI.colorSwatch(document.getElementById("caption-shadow-color-field"),
       { label: "Shadow", value: preset.shadow_color, span: 8,
-        onChange: (v) => { preset.shadow_color = v; saveProject(); renderCaptionPreview(); renderShadow(); } });
+        onChange: (v) => { preset.shadow_color = v; saveProject(); renderCaptionPreview(); refreshShadowRow(preset); } });
 
     UI.numberField(document.getElementById("caption-shadow-offset-x-field"),
       { label: "OFFSET X", unit: "PX", value: preset.shadow_offset_x, min: -40, max: 40, span: 4,

@@ -54,7 +54,7 @@ window.TextPanel = window.TextPanel || {};
 
     UI.colorSwatch(document.getElementById("text-box-background-color-field"),
       { label: "Background", value: preset.box_background_color, span: 8,
-        onChange: (v) => { preset.box_background_color = v; saveProject(); renderTextPreview(); renderBackground(); } });
+        onChange: (v) => { preset.box_background_color = v; saveProject(); renderTextPreview(); refreshBackgroundRow(preset); } });
 
     UI.numberField(document.getElementById("text-box-background-opacity-field"),
       { label: "OPACITY", unit: "%", value: preset.box_background_opacity, min: 0, max: 100, span: 8,

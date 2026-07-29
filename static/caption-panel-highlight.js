@@ -60,7 +60,7 @@ window.CaptionPanel = window.CaptionPanel || {};
 
     UI.colorSwatch(document.getElementById("caption-highlight-color-field"),
       { label: "Highlight color", value: preset.highlight_color, span: 8,
-        onChange: (v) => { preset.highlight_color = v; saveProject(); renderCaptionPreview(); renderHighlight(); } });
+        onChange: (v) => { preset.highlight_color = v; saveProject(); renderCaptionPreview(); refreshHighlightRow(preset); } });
 
     document.getElementById("caption-highlight-border-radius-field").hidden =
       preset.highlight_mode !== "background" && !preset.highlight;
