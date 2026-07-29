@@ -85,6 +85,10 @@ window.PreviewCaptions = (() => {
       ? `${preset.shadow_offset_x / 1920 * stageH}px ${preset.shadow_offset_y / 1920 * stageH}px ${preset.shadow_blur / 1920 * stageH}px ${preset.shadow_color}`
       : "none";
     div.style.borderRadius = (preset.box_border_radius / 1080 * stageW) + "px";
+    if (preset.highlight) {
+      div.style.backgroundColor = preset.highlight_color;
+      div.style.borderRadius = (preset.highlight_border_radius / 1080 * stageW) + "px";
+    }
     div.style.pointerEvents = "none";
 
     page.forEach((line) => {
@@ -98,7 +102,15 @@ window.PreviewCaptions = (() => {
         } else {
           isHighlighted = timelineTime >= word.t_start && timelineTime < word.t_end;
         }
-        span.style.color = isHighlighted ? preset.highlight_color : preset.color;
+        if (preset.highlight_mode === "background") {
+          span.style.color = preset.color;
+          span.style.backgroundColor = isHighlighted ? preset.highlight_color : "transparent";
+          span.style.borderRadius = isHighlighted ? ((preset.highlight_border_radius / 1920 * stageH) + "px") : "0";
+        } else {
+          span.style.color = isHighlighted ? preset.highlight_color : preset.color;
+          span.style.backgroundColor = "transparent";
+          span.style.borderRadius = "0";
+        }
         span.textContent = word.text + (i < line.length - 1 ? " " : "");
         lineDiv.appendChild(span);
       });

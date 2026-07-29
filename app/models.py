@@ -93,8 +93,9 @@ class TextPreset(BaseModel):
     entrance: str = "fade_pop"     # fade_pop|none
     usage_count: int = 0    # how many times this saved preset has been applied to a block; drives the STYLE accordion's "most used" list
     highlight_color: str = "#FFD400"   # shared: caption karaoke highlight color AND rich-text highlight color
-    highlight_mode: str = "current_word"   # current_word | progressive_fill; unused by TextBlockLayer consumers
+    highlight_mode: str = "current_word"   # current_word | progressive_fill | background; unused by TextBlockLayer consumers except "background" mode's own rect radius
     highlight: bool = False            # block-level highlight default (off); highlight_color above is shared with captions
+    highlight_border_radius: int = 4   # px on the 1080x1920 canvas; shared by TEXT's marker-highlight rect and CAPTIONS' "background" mode word rect
 
     @model_validator(mode="before")
     @classmethod

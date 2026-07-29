@@ -167,12 +167,6 @@ window.MediaPanel = window.MediaPanel || {};
     actions.appendChild(renameBtn);
 
     const count = project.clips.filter((c) => c.media_id === m.id).length;
-    if (count > 0) {
-      const chip = document.createElement("span");
-      chip.className = "clip-usage-chip";
-      chip.textContent = String(count);
-      actions.appendChild(chip);
-    }
 
     const trashBtn = document.createElement("button");
     trashBtn.type = "button";
@@ -216,8 +210,10 @@ window.MediaPanel = window.MediaPanel || {};
     list.innerHTML = "";
     const videos = project.media_library.filter((m) => m.kind !== "image" && m.kind !== "audio");
     const images = project.media_library.filter((m) => m.kind === "image");
+    const audios = project.media_library.filter((m) => m.kind === "audio");
     appendGroup(list, "VIDEOS", videos);
     appendGroup(list, "IMAGES", images);
+    appendGroup(list, "AUDIO", audios);
   }
 
   window.MediaPanel.render = render;
