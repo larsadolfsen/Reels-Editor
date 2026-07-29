@@ -85,6 +85,10 @@ window.PreviewCaptions = (() => {
       ? `${preset.shadow_offset_x / 1920 * stageH}px ${preset.shadow_offset_y / 1920 * stageH}px ${preset.shadow_blur / 1920 * stageH}px ${preset.shadow_color}`
       : "none";
     div.style.borderRadius = (preset.box_border_radius / 1080 * stageW) + "px";
+    if (preset.highlight) {
+      div.style.backgroundColor = preset.highlight_color;
+      div.style.borderRadius = (preset.highlight_border_radius / 1080 * stageW) + "px";
+    }
     div.style.pointerEvents = "none";
 
     page.forEach((line) => {
