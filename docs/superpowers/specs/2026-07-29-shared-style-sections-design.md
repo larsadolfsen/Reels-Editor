@@ -25,13 +25,27 @@ Several copies were incomplete, so the two panels have visibly diverged:
 `static/caption-panel-case.js` is a byte-for-byte copy of `static/text-panel-case.js`
 with three tokens changed. That is the shape of the whole problem.
 
-### Bug this surfaced
+### Bugs this surfaced
+
+Two, both caused by an incomplete hand-copy.
+
+#### 1. TEXT's step-up button moves the size down
 
 `panel-text.js:41` defaults a new text block to `size_px: 96`, but TEXT's step scale
 tops out at 56. `stepFontSizePreset(96, +1)` finds no larger preset and falls back to
 the last entry, so clicking **step up** on a fresh text block moves the size *down* to
 56. CAPTIONS' scale includes 72 and 96 and behaves correctly. Adopting the CAPTIONS
 scale for both fixes this.
+
+#### 2. CAPTIONS' saved styles silently drop the MARKER state
+
+`text-panel-style.js:19-30`'s `styleFieldsOf` lists `highlight` among the fields a saved
+style carries. `caption-panel-style.js:15-27`'s copy of the same function omits it while
+keeping `highlight_color`, `highlight_mode` and `highlight_border_radius`. Saving a
+caption style with MARKER on and re-applying it therefore comes back with MARKER off.
+
+This is also why the `extraFields` option is unnecessary: the two field lists are
+already meant to be identical, and one shared list — including `highlight` — is the fix.
 
 ## What actually differs between the pairs
 
@@ -111,7 +125,6 @@ Genuine per-panel differences become named options, never copied markup:
 |---|---|---|---|
 | `boxSize` | `sizeModes` | `true` (FIT/FREE/FILL) | `false` (always fixed) |
 | `highlight` | `modes` | `false` | `true` (current word / progressive fill / background) |
-| `presetLibrary` | `extraFields` | `[]` | `["highlight_color", "highlight_mode"]` |
 
 ### Layer 4 — Tab composers
 
@@ -126,7 +139,7 @@ conventional.
 
 ## Files
 
-### New (20)
+### New (21)
 
 ```
 static/style-target-text.js          # StyleTarget.forTextBlock()
@@ -134,6 +147,7 @@ static/style-target-caption.js       # StyleTarget.forCaptionTrack()
 static/style-panel-host.js           # StylePanelHost: generic drill-down subpages
 static/font-size-scale.js            # pure: FONT_SIZE_PRESETS + stepFontSizePreset
 static/format-run-write.js           # pure: upsertFormatRun
+static/style-fields.js               # pure: styleFieldsOf — the shared saved-style field list
 static/style-section-font-family.js
 static/style-section-font-weight.js
 static/style-section-size.js         # size steppers + SIZE field
@@ -179,7 +193,7 @@ genuinely single-panel and have no counterpart to share with.
 
 - `static/index.html` — loses ~250 lines of duplicated markup (the `#text-font-body`
   and `#caption-font-body` bodies and both Box-tab bodies become empty mount points),
-  loses 19 script tags, gains 20.
+  loses 19 script tags, gains 21.
 - `static/panel-text.js` — `renderTextPanel()` builds a target once and calls the tab
   composers.
 - `static/panel-captions.js` — same.
@@ -197,10 +211,10 @@ The user chose "TEXT wins" where the two panels differ by accident.
 | Font-size scale | one scale `[12, 14, 16, 18, 21, 24, 36, 45, 56, 72, 96]` (CAPTIONS' superset) — fixes the TEXT step-up bug |
 | TEXT Box tab | unchanged; keeps FIT/FREE/FILL via `sizeModes: true` |
 | CAPTIONS Box tab | unchanged; stays always-fixed via `sizeModes: false` |
-| Saved styles | one shared field list; CAPTIONS keeps `highlight_color`/`highlight_mode` via `extraFields` |
+| Saved styles | one shared `styleFieldsOf` list — TEXT's, which includes `highlight`; fixes bug 2 |
 
 The font-size scale is the one place CAPTIONS' version wins, because TEXT's is a
-straightforward bug.
+straightforward bug. Everywhere else TEXT's version is the more complete one.
 
 ## Data model
 
@@ -236,6 +250,7 @@ Covered:
 | `format-run-write.js` | creates a run for a new range; updates in place on an exact-range re-edit rather than duplicating; initialises `formatting_runs` when the key is absent on a freshly created block |
 | `style-target-text.js` | `setField` writes a `FormatRun` when a selection on the current block is active; writes the base preset when there is no selection; writes the base preset when the selection belongs to a *different* block |
 | `style-target-caption.js` | `setField` always writes the preset |
+| `style-fields.js` | the shared `styleFieldsOf` list includes `highlight` (the regression test for bug 2) |
 
 The targets are testable because they take their collaborators (`getSelection`,
 `save`, `rerender`) as injected functions rather than reaching for globals — which is
