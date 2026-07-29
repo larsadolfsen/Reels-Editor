@@ -2,7 +2,7 @@
 
 > Part of `docs/superpowers/plans/2026-07-29-shared-style-sections.md`. Read the master plan's **Global Constraints** and **Interface contract** first — they apply to every task here.
 
-**Deliverable:** the three pure modules, the two style targets, the panel host, and the `node --test tests/js` suite. Nothing is wired into the panels yet, so the app is visually unchanged. Verified by the test run alone.
+**Deliverable:** the three pure modules, the two style targets, the panel host, and the `node --test "tests/js/**/*.test.js"` suite. Nothing is wired into the panels yet, so the app is visually unchanged. Verified by the test run alone.
 
 **Why this batch is first:** every later batch calls `target.setField` and `host.page`. Pinning those with tests before any UI moves means a later batch that misuses them fails loudly rather than silently.
 
@@ -967,7 +967,7 @@ Expected: no errors. The panels look and behave exactly as before — nothing is
 - [ ] **Step 5: Run the whole JS suite**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Expected: PASS, 42 tests across 5 files.
@@ -995,13 +995,13 @@ git commit -m "feat: generic drill-down subpage host for the style panels"
 In `CLAUDE.md`, under `## Run commands`, immediately after the `- Tests: ...pytest -q` line, add:
 
 ```markdown
-- Frontend tests: `node --test tests/js` (pure JS modules only — no DOM, no dependencies)
+- Frontend tests: `node --test "tests/js/**/*.test.js"` (pure JS modules only — no DOM, no dependencies)
 ```
 
 - [ ] **Step 2: Verify both suites pass**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Expected: PASS, 42 tests.
@@ -1023,7 +1023,7 @@ git commit -m "docs: record the node --test frontend test command"
 
 ## Batch 1 done when
 
-- `node --test tests/js` passes with 42 tests across 5 files.
+- `node --test "tests/js/**/*.test.js"` passes with 42 tests across 5 files.
 - `.venv/Scripts/python -m pytest -q` passes.
 - The app loads with no console errors and both panels behave exactly as before.
 - `StyleTarget.forTextBlock`, `StyleTarget.forCaptionTrack` and `StylePanelHost` are available in the browser console.

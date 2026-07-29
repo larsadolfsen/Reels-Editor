@@ -184,7 +184,7 @@ If `host.closeAll()` is missing from either render function, add it now — with
 - [ ] **Step 3: Confirm `node --test` is green before touching anything**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Expected: PASS. If it already fails, fix that before starting — a failure introduced here must be attributable to this batch.
@@ -431,7 +431,7 @@ Still in the throwaway project:
 - [ ] **Step 10: Run the JS suite**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Expected: PASS, unchanged from Task 0's run (this batch adds no pure modules).
@@ -733,7 +733,7 @@ With the server running, in the **throwaway** project:
 - [ ] **Step 10: Run the JS suite**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Expected: PASS, unchanged.
@@ -1102,7 +1102,7 @@ Still in the throwaway project, CAPTIONS panel:
 
 - [ ] **Step 13: Run the master plan's full verification procedure**
 
-1. `node --test tests/js` — PASS, unchanged from Task 0.
+1. `node --test "tests/js/**/*.test.js"` — PASS, unchanged from Task 0.
 2. `.venv/Scripts/python -m pytest -q` — PASS, unchanged (this batch touches no Python).
 3. In the throwaway project, exercise every control this batch touched on **both** panels: Outline colour/width, Shadow on/off/colour/offsets/blur, Highlight on/off/colour/radius, plus CAPTIONS' MODE. Confirm the stage updates for each.
 4. Reload the page (`F5`) and re-open both panels. Expected: every value from step 3 persisted, and both Design tabs still show all eight rows in the fixed order.
@@ -1132,6 +1132,6 @@ git commit -m "refactor: one shared Highlight style section; captions MARKER/MOD
 - [ ] The CAPTIONS Design tab has a Highlight drill-down row and no inline MARKER/MODE block; its subpage shows MARKER, MODE, colour and radius.
 - [ ] The TEXT Design tab and Highlight subpage look and behave exactly as before, except that Highlight is now selection-aware (see the behaviour note above).
 - [ ] Selecting part of a TEXT heading and changing outline colour/width or highlight on/colour affects only the selection.
-- [ ] `node --test tests/js` passes; `.venv/Scripts/python -m pytest -q` passes.
+- [ ] `node --test "tests/js/**/*.test.js"` passes; `.venv/Scripts/python -m pytest -q` passes.
 - [ ] Values survive a page reload on both panels.
 - [ ] Three commits (four if Task 0's `host.closeAll()` fix was needed), and the app works in the browser at rest after each one.

@@ -31,7 +31,7 @@ Every task's requirements implicitly include this section.
 - **Recurring CSS values are tokens** in `static/css/tokens.css`, referenced with `var(...)`. No literal repeated twice.
 - **Icon SVGs are hand-inlined Lucide paths** with the wrapper attributes already used in this codebase: `viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`. Copy existing icon markup verbatim rather than inventing new paths.
 - **Pure modules and the two style targets export twice:** a guarded `if (typeof window !== "undefined") window.X = api;` for the browser and a guarded `if (typeof module !== "undefined") module.exports = api;` for the test runner. `style-target-text.js` / `style-target-caption.js` need this even though their *default* `deps` fallback reaches into browser globals (`currentTextBlock`, `Preview`, …) — that fallback is only evaluated when the factory is called with no argument, which never happens in a test (tests always inject `deps`), so the guard is enough to make the factory itself Node-requireable with no shim. DOM-building sections (`StyleSection.*`, `StylePanelHost`, `StyleTab.*`) are not required to and do not.
-- **Tests:** `node --test tests/js` must pass before every commit from Batch 1 onward. The Python suite (`.venv/Scripts/python -m pytest -q`) is unaffected by this work but must still pass at the end of Batch 6.
+- **Tests:** `node --test "tests/js/**/*.test.js"` must pass before every commit from Batch 1 onward. The Python suite (`.venv/Scripts/python -m pytest -q`) is unaffected by this work but must still pass at the end of Batch 6.
 - **Behaviour is preserved** except for the **nine** changes listed in "Resolved divergences" in the spec. If a batch changes anything else that a user can see, that is a bug in the batch. Two candidate changes were raised during planning and **declined** — the shared component must actively preserve both: CAPTIONS' size-row alignment (via `size`'s `compactRow` option) and non-selection-aware font family (via `setPresetField("font", …)`).
 - **Live verification never runs against real project data.** Create a throwaway project in the picker first — the app's unload keepalive-save flushes in-memory state to disk.
 - **Commit after every task.** Never leave a batch half-applied at rest: at the end of each task both panels must open and work in the browser.
@@ -330,7 +330,7 @@ Each batch adds only its own tags. The sections register into `window.StyleSecti
 
 Run at the end of every batch, before its final commit.
 
-1. `node --test tests/js` — passes.
+1. `node --test "tests/js/**/*.test.js"` — passes.
 2. Start the server: `.venv/Scripts/python -m uvicorn app.main:app --reload`
 3. Open `http://127.0.0.1:8000`, create a **throwaway** project, import any clip.
 4. Add a text block. Open the TEXT panel, Design tab. Exercise every control the batch touched; confirm the stage updates.

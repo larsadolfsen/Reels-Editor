@@ -877,7 +877,7 @@ As of 2026-07-29 (shared-style-sections batch 2) it does the same as panel-text.
 - [ ] **Step 4: Run the JS test suite**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Expected: PASS, 39 tests across 5 files — unchanged. This batch adds no pure modules; the sections build DOM and are verified in the browser instead (the stated gap in the spec).
@@ -918,6 +918,6 @@ git commit -m "docs: map the shared font family/weight sections and Design tab c
 - Both panels build their target, host and Design tab **once** at load and call `render()` on every panel render — `UI.settingsRow` is never called from inside a `render()`.
 - TEXT's Design tab is visually unchanged. CAPTIONS' Design tab shows Font Family → Weight → SIZE, and its Weight row reads e.g. `Regular 400`.
 - On TEXT with a partial heading selection active, changing Weight or Font Family changes only the selection.
-- `node --test tests/js` passes with 39 tests; `.venv/Scripts/python -m pytest -q` passes.
+- `node --test "tests/js/**/*.test.js"` passes with 39 tests; `.venv/Scripts/python -m pytest -q` passes.
 - No console errors on load or while exercising either panel; every change survives a reload.
 - Six commits, one per task.
