@@ -301,8 +301,156 @@ git commit -m "feat: add plus icon to MEDIA panel rows for one-click add-to-time
 
 ---
 
+---
+
+### Task 4: Wire the plus icon for AUDIO rows
+
+**Context:** Added after Tasks 1-3 landed, when merging `origin/main` (25 commits ahead) surfaced
+an unrelated change already on main — `fix: show audio files in the FILES panel media list`
+(commit `a3f4f23`) — that adds an "AUDIO" group to the FILES list alongside VIDEOS/IMAGES.
+Tasks 1-3's plus icon only branched on `m.kind === "image"` vs. else (treating "else" as always
+video), so after the merge an audio row's plus icon would wrongly call
+`appendMediaClipToSequence(m)` and try to insert the audio file as a VIDEO-track `ClipLayer`.
+See the spec's "Addendum: audio rows" section
+(`docs/superpowers/specs/2026-07-24-media-panel-plus-icon-design.md`) for the decision record:
+an audio row's plus icon sets/replaces `Project.music` (same effect as the AUDIO panel's
+"ADD MUSIC"/"Replace"), then opens the AUDIO panel.
+
+**Files:**
+- Modify: `static/panel-media.js` (the `addBtn` click handler added in Task 3, currently at
+  approximately lines 138-155)
+
+**Interfaces:**
+- Consumes: `AudioPanel.render()` (existing, `static/panel-audio.js`, already exposed on
+  `window.AudioPanel`); `showPanel(type)` (existing global, `static/panel-nav.js`); `saveProject()`,
+  `renderTimeline()` (existing globals). `Project.music`'s shape, mirrored from
+  `static/panel-audio.js`'s `addMusic()`: `{id: <new uuid>, media_id: <string>, volume: 0.3,
+  muted: false}`.
+- Produces: nothing new for later tasks — this is the final piece of the feature.
+
+- [ ] **Step 1: Add the audio branch**
+
+In `static/panel-media.js`, find the `addBtn` click handler (added by Task 3):
+
+```js
+    addBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (m.kind === "image") {
+        const box = await ImageBoxPanel.createImageBox(m);
+        await saveProject();
+        renderTimeline();
+        showPanel("image-box");
+        ImageBoxPanel.render(box.id);
+        // ImageBoxPanel.render()'s ImageBoxPreview.setSelectedImageBox() call alone only updates
+        // which box is selected, it doesn't itself trigger a render pass (same gap documented on
+        // ImageBoxPreview.setOnActivate in editor.js) — without this, the new box never mounts
+        // into #overlay, so it renders invisibly with no resize handles until the next unrelated
+        // stage render.
+        ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+      } else {
+        await appendMediaClipToSequence(m);
+      }
+    });
+```
+
+Replace with:
+
+```js
+    addBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (m.kind === "image") {
+        const box = await ImageBoxPanel.createImageBox(m);
+        await saveProject();
+        renderTimeline();
+        showPanel("image-box");
+        ImageBoxPanel.render(box.id);
+        // ImageBoxPanel.render()'s ImageBoxPreview.setSelectedImageBox() call alone only updates
+        // which box is selected, it doesn't itself trigger a render pass (same gap documented on
+        // ImageBoxPreview.setOnActivate in editor.js) — without this, the new box never mounts
+        // into #overlay, so it renders invisibly with no resize handles until the next unrelated
+        // stage render.
+        ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+      } else if (m.kind === "audio") {
+        // Mirrors static/panel-audio.js's addMusic()/replaceMusic() — one music track only (v1),
+        // so this always replaces any existing Project.music rather than erroring or disabling.
+        project.music = { id: crypto.randomUUID().replaceAll("-", ""), media_id: m.id, volume: 0.3, muted: false };
+        await saveProject();
+        renderTimeline();
+        showPanel("audio");
+        AudioPanel.render();
+      } else {
+        await appendMediaClipToSequence(m);
+      }
+    });
+```
+
+- [ ] **Step 2: Update the button's title for audio rows**
+
+In the same file, find:
+
+```js
+    addBtn.title = m.kind === "image" ? "Add as image box" : "Add to timeline";
+```
+
+Replace with:
+
+```js
+    addBtn.title = m.kind === "image" ? "Add as image box" : m.kind === "audio" ? "Add audio" : "Add to timeline";
+```
+
+- [ ] **Step 3: Update the file's header comment**
+
+Find:
+
+```js
+// and a plus icon (added 2026-07-24) that adds the item directly: a video row appends a new
+// clip to the end of the VIDEO timeline sequence (appendMediaClipToSequence, clip-sequence.js);
+// an image row creates a new IMAGE BOX overlay (ImageBoxPanel.createImageBox, panel-image-box.js)
+// and opens the IMAGE BOX panel with it selected.
+```
+
+Replace with:
+
+```js
+// and a plus icon (added 2026-07-24) that adds the item directly: a video row appends a new
+// clip to the end of the VIDEO timeline sequence (appendMediaClipToSequence, clip-sequence.js);
+// an image row creates a new IMAGE BOX overlay (ImageBoxPanel.createImageBox, panel-image-box.js)
+// and opens the IMAGE BOX panel with it selected; an audio row sets/replaces Project.music with
+// that file (mirrors panel-audio.js's addMusic()/replaceMusic(), one music track only) and opens
+// the AUDIO panel.
+```
+
+- [ ] **Step 4: Manual verification**
+
+Start the dev server if not already running, open the browser preview against a **throwaway test
+project** (never the real project — check `GET /api/projects` first), with at least one audio
+media item in its library (`kind: "audio"`, pushed the same way `static/panel-audio.js`'s
+`importMusicFile()` does — probe a real local audio file via `Api.probeMedia`/`/api/probe`, push
+`{id, file_path, duration, has_audio, kind: "audio"}` into `project.media_library`).
+
+Reload the page fresh. Confirm the FILES panel now shows an "AUDIO" section-label row (from
+main's `a3f4f23` change) with your test audio row underneath it, hover it, and confirm the plus
+icon's title reads "Add audio". Click it. Confirm:
+- `project.music` is now set: `{id, media_id: <your test item's id>, volume: 0.3, muted: false}`.
+- The right-hand panel switches to AUDIO, showing the file name and a 100%/unmuted detail view (0.3 → 30%).
+- Repeat by adding a *second* audio item's plus icon (a different `kind: "audio"` media item) and
+  confirm `project.music.media_id` updates to the second item's id (replace behavior, not a second
+  track).
+
+Delete the throwaway project when done (`DELETE /api/projects/{id}`).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add static/panel-media.js
+git commit -m "feat: plus icon on AUDIO rows sets/replaces Project.music"
+```
+
+---
+
 ## Self-Review Notes
 
 - **Spec coverage:** Video-append behavior (Task 2 + Task 3 Step 1/3), image-box-creation behavior (Task 1 + Task 3 Step 1/4), reuse of existing helpers (all three tasks lean on `insertClipIntoSequence`/`createImageBox`/`showPanel` rather than duplicating logic), no new CSS (Task 3 reuses `.icon-btn.clip-action`), no new data model (confirmed — no model file touched), manual-verification-only testing strategy (each task's Step 3/4 is a manual check, matching the spec's stated testing approach) — all covered.
 - **Placeholder scan:** No TBD/TODO markers; every step has literal code or literal verification commands.
 - **Type consistency:** `appendMediaClipToSequence(m)` (Task 2) takes a `MediaItem`-shaped object and is called with `m` in Task 3 — consistent. `ImageBoxPanel.createImageBox(mediaItem)` (Task 1, unchanged signature) is called with `m` in Task 3 — consistent. Both return the created entity (`ClipLayer` / `ImageBoxLayer`), matching how Task 3 uses the return value (`box.id` for `ImageBoxPanel.render`).
+- **Task 4 addendum (2026-07-29):** added after merging `origin/main` surfaced a real gap — main's unrelated `a3f4f23` change added an AUDIO group to the FILES list that Tasks 1-3 never accounted for, so an audio row's plus icon would have wrongly tried to insert the file as a VIDEO clip. Task 4 covers this per the spec's "Addendum: audio rows" section. `project.music`'s shape in Task 4 (`{id, media_id, volume: 0.3, muted: false}`) matches `static/panel-audio.js`'s `addMusic()` exactly — verified by reading that file.

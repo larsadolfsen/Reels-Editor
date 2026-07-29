@@ -84,3 +84,31 @@ new pure logic is introduced that would benefit from a unit test. Verified manua
 browser preview: add a video clip via plus icon and confirm it appears at the end of the VIDEO
 timeline row; add an image via plus icon and confirm a new IMAGE BOX lane appears and the
 IMAGE BOX panel opens with it selected.
+
+## Addendum: audio rows (2026-07-29)
+
+While this feature was mid-implementation, `origin/main` gained an unrelated change (`fix: show
+audio files in the FILES panel media list`) that adds an "AUDIO" group to the FILES list
+alongside VIDEOS/IMAGES — audio media items (`kind === "audio"`) weren't listed there before, so
+this feature's original design never considered them. Merging that change in means an audio
+row's plus icon needs its own defined behavior instead of silently falling into the video-row
+branch (which would wrongly try to insert it as a VIDEO-track `ClipLayer`).
+
+**Decision:** an audio row's plus icon sets/replaces `Project.music` with that file — the same
+effect as the AUDIO panel's "ADD MUSIC" / "Replace" buttons (`static/panel-audio.js`'s
+`addMusic()`/`replaceMusic()`) — then opens the AUDIO panel. The app supports one music track
+only (v1, per `panel-audio.js`'s own header comment), so this always replaces any existing
+`Project.music` rather than erroring or being disabled; the audio file doesn't have to be
+literal background music (could be a short sound effect used as the one music slot), so the
+button's title reads "Add audio" rather than "Add as music" — same underlying mechanism either
+way, no new data model.
+
+**Reused code:** `static/panel-audio.js`'s `addMusic()`/`replaceMusic()` logic is duplicated
+inline (not extracted into a shared export) because the existing functions both call
+`importMusicFile()` first (native file-picker + probe), which the MEDIA-panel case doesn't need
+— the media item already exists in `project.media_library`. The new branch is a ~4-line
+`project.music = {...}` assignment mirroring exactly what `addMusic()` builds
+(`{id: new_id(), media_id: m.id, volume: 0.3, muted: false}`), then `saveProject()`,
+`renderTimeline()`, `showPanel("audio")`, `AudioPanel.render()`.
+
+No new data model, no new CSS. Verified manually the same way as the other two branches.
