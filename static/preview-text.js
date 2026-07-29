@@ -98,8 +98,6 @@ window.PreviewText = (() => {
       const sizePx = preset.size_px / 1920 * stageH;
       div.style.fontSize = sizePx + "px";
 
-      div.style.padding = "0.15em 0.35em";
-
       div.style.backgroundColor = preset.box_background ? hexToRgba(preset.box_background_color, preset.box_background_opacity) : "transparent";
       div.style.borderWidth = (preset.box_border_width / 1080 * stageW) + "px";
       div.style.borderStyle = preset.box_border_width > 0 ? "solid" : "none";
