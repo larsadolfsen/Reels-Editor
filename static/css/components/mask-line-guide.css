@@ -1,0 +1,23 @@
+/* .mask-line-guide: the draggable straight-line cut guide drawn over a selected masked box
+   on the stage (UI.maskLineDrag, static/ui-mask-line-drag.js). */
+.mask-line-guide {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.mask-line-guide-line {
+  stroke: var(--accent);
+  stroke-width: 2;
+  pointer-events: stroke;
+  cursor: move;
+}
+
+.mask-line-guide-handle {
+  fill: var(--accent);
+  stroke: var(--on-accent);
+  stroke-width: 2;
+  pointer-events: all;
+  cursor: grab;
+}

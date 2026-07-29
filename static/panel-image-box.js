@@ -117,6 +117,16 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
       await saveProject();
       repaintStage();
     };
+
+    ImageBoxPreview.setOnMaskChange(async (mask, done) => {
+      box.mask_angle = mask.angle;
+      box.mask_offset = Math.round(mask.offset);
+      repaintStage();
+      if (done) {
+        await saveProject();
+        renderMask(box);   // number fields track the drag once it settles
+      }
+    });
   }
 
   function renderDetail(box) {

@@ -8,6 +8,9 @@
 // (static image) — simpler than video-box-preview.js's currentTime/play/pause handling.
 // Applies BoxMask.clipPath(box) as the element's CSS clip-path so a mask_enabled box is cut
 // along its straight line (added 2026-07-29, box edge mask); unmasked boxes get "" (no clipping).
+// Also mounts the on-stage cut-line guide (UI.maskLineDrag, static/ui-mask-line-drag.js) for the
+// selected box while its mask is on, reporting drags through setOnMaskChange(fn) as
+// fn({angle, offset}, done) — done=false live during the drag, true once on mouseup.
 window.ImageBoxPreview = (() => {
   const overlay = document.getElementById("overlay");
   const mounted = new Map(); // boxId -> <img>
@@ -15,6 +18,8 @@ window.ImageBoxPreview = (() => {
   let selectedBoxId = null;
   let callbacks = null;
   let onActivate = null; // (boxId) => void, fired by a plain click on an unselected box in Select mode
+  let onMaskChange = null;   // ({angle, offset}, done) => void, fired by the mask-line drag guide
+  let maskGuide = null;      // the UI.maskLineDrag handle for the selected box, if it is masked
 
   function boxEnd(b) {
     return b.start + b.duration;
@@ -37,6 +42,26 @@ window.ImageBoxPreview = (() => {
   function unmountHandles(boxId) {
     const destroy = handlesDestroyers.get(boxId);
     if (destroy) { destroy(); handlesDestroyers.delete(boxId); }
+  }
+
+  function unmountMaskGuide() {
+    if (maskGuide) { maskGuide.destroy(); maskGuide = null; }
+  }
+
+  // The guide only exists for the selected box while its mask is on; every other case tears it
+  // down, so switching selection or turning the mask off leaves no stray SVG in #overlay.
+  function syncMaskGuide(box, el) {
+    if (!box.mask_enabled || box.id !== selectedBoxId) { unmountMaskGuide(); return; }
+    if (!maskGuide) {
+      maskGuide = UI.maskLineDrag(overlay, {
+        getRect: () => ({ left: el.offsetLeft, top: el.offsetTop,
+                          width: el.offsetWidth, height: el.offsetHeight }),
+        getMask: () => ({ angle: box.mask_angle || 0, offset: box.mask_offset || 0 }),
+        onChange: (mask) => { if (onMaskChange) onMaskChange(mask, false); },
+        onChangeEnd: (mask) => { if (onMaskChange) onMaskChange(mask, true); },
+      });
+    }
+    maskGuide.render();
   }
 
   function render(imageBoxes, timelineTime) {
@@ -77,6 +102,7 @@ window.ImageBoxPreview = (() => {
       // Straight-edge mask (box-mask.js): a percentage polygon, so it survives stage resizes
       // untouched. "" when the box is unmasked, which is exactly the pre-feature rendering.
       img.style.clipPath = BoxMask.clipPath(b);
+      syncMaskGuide(b, img);
 
       if (b.id === selectedBoxId && callbacks) mountHandles(b.id, img, b);
       else unmountHandles(b.id);
@@ -84,6 +110,7 @@ window.ImageBoxPreview = (() => {
 
     for (const [id, img] of mounted) {
       if (!activeIds.has(id)) {
+        if (id === selectedBoxId) unmountMaskGuide();
         unmountHandles(id);
         img.remove();
         mounted.delete(id);
@@ -93,6 +120,7 @@ window.ImageBoxPreview = (() => {
 
   function setSelectedImageBox(boxId, cb) {
     if (selectedBoxId && selectedBoxId !== boxId) unmountHandles(selectedBoxId);
+    if (selectedBoxId !== boxId) unmountMaskGuide();
     selectedBoxId = boxId;
     callbacks = cb || null;
   }
@@ -101,5 +129,9 @@ window.ImageBoxPreview = (() => {
     onActivate = fn || null;
   }
 
-  return { render, setSelectedImageBox, setOnActivate };
+  function setOnMaskChange(fn) {
+    onMaskChange = fn || null;
+  }
+
+  return { render, setSelectedImageBox, setOnActivate, setOnMaskChange };
 })();
