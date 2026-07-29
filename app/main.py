@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack, AutoSliceApplyRequest
-from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip, auth, auto_slice
+from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip, auth, auto_slice, mask_image
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
 def _resolve_data_dir() -> Path:
@@ -253,9 +253,23 @@ def export_project(pid: str) -> dict:
                     encoding="utf-8")
                 bands.append({"kind": "ass", "path": str(ass_file)})
             elif band["kind"] == "video_box":
-                bands.append({"kind": "video_box", "video_box": band["video_box"]})
+                v = band["video_box"]
+                entry = {"kind": "video_box", "video_box": v}
+                if v.mask_enabled:
+                    png = out_dir / f"{p.name}-{p.id[:8]}-band{i}-mask.png"
+                    mask_image.write_mask_png(str(png), v.width, v.height,
+                                              v.mask_angle, v.mask_offset, v.mask_flip)
+                    entry["mask_path"] = str(png)
+                bands.append(entry)
             else:
-                bands.append({"kind": "image_box", "image_box": band["image_box"]})
+                b = band["image_box"]
+                entry = {"kind": "image_box", "image_box": b}
+                if b.mask_enabled:
+                    png = out_dir / f"{p.name}-{p.id[:8]}-band{i}-mask.png"
+                    mask_image.write_mask_png(str(png), b.width, b.height,
+                                              b.mask_angle, b.mask_offset, b.mask_flip)
+                    entry["mask_path"] = str(png)
+                bands.append(entry)
         cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), bands=bands, caption_ass_path=caption_ass_path)
     else:
         ass_path = None

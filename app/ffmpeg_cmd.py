@@ -17,6 +17,11 @@
 # Banded export additionally supports "image_box" bands: a `-loop 1 -t <duration>` looped
 # still-image input, scaled and overlaid with `enable='between(t,start,start+duration)'` —
 # same overlay/enable pattern as video-box bands, minus trim/setpts (no source timeline to trim).
+# A band dict may carry an optional "mask_path" (a PNG written by app/main.py via app/mask_image.py):
+# the PNG is added as a `-loop 1 -t <box duration>` input, alphaextract pulls its alpha channel out,
+# and alphamerge writes it as the box stream's alpha immediately before the existing overlay — for a
+# video box, before the setpts timeline offset so both alphamerge inputs start at t=0. No "mask_path"
+# on any band produces a byte-identical command to the pre-mask baseline.
 from app.models import Project
 from app.timeline import ordered, sequence_duration
 
@@ -120,24 +125,48 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
         elif band["kind"] == "video_box":
             v = band["video_box"]
             cmd += ["-i", v.file_path]
+            box_input = next_input_index
+            next_input_index += 1
             end = v.start + (v.out_point - v.in_point)
             out_label = f"[ov{step}]"
-            fc += (f";[{next_input_index}:v]trim=start={_num(v.in_point)}:end={_num(v.out_point)},"
-                   f"setpts=PTS-STARTPTS+{_num(v.start)}/TB,scale={v.width}:{v.height}[box{step}]"
-                   f";{current}[box{step}]overlay=x={v.x}:y={v.y}:"
+            mask_path = band.get("mask_path")
+            if mask_path:
+                # alphamerge must see both streams starting at t=0, so the timeline offset
+                # (setpts ... +start/TB) is applied after the merge rather than before it.
+                cmd += ["-loop", "1", "-t", _num(v.out_point - v.in_point), "-i", mask_path]
+                mask_input = next_input_index
+                next_input_index += 1
+                fc += (f";[{box_input}:v]trim=start={_num(v.in_point)}:end={_num(v.out_point)},"
+                       f"setpts=PTS-STARTPTS,scale={v.width}:{v.height}[boxs{step}]"
+                       f";[{mask_input}:v]alphaextract[maskv{step}]"
+                       f";[boxs{step}][maskv{step}]alphamerge,"
+                       f"setpts=PTS-STARTPTS+{_num(v.start)}/TB[box{step}]")
+            else:
+                fc += (f";[{box_input}:v]trim=start={_num(v.in_point)}:end={_num(v.out_point)},"
+                       f"setpts=PTS-STARTPTS+{_num(v.start)}/TB,scale={v.width}:{v.height}[box{step}]")
+            fc += (f";{current}[box{step}]overlay=x={v.x}:y={v.y}:"
                    f"enable='between(t\\,{_num(v.start)}\\,{_num(end)})'{out_label}")
             current = out_label
-            next_input_index += 1
         else:  # "image_box"
             b = band["image_box"]
             cmd += ["-loop", "1", "-t", _num(b.duration), "-i", b.file_path]
+            box_input = next_input_index
+            next_input_index += 1
             end = b.start + b.duration
             out_label = f"[ov{step}]"
-            fc += (f";[{next_input_index}:v]scale={b.width}:{b.height}[box{step}]"
-                   f";{current}[box{step}]overlay=x={b.x}:y={b.y}:"
+            mask_path = band.get("mask_path")
+            if mask_path:
+                cmd += ["-loop", "1", "-t", _num(b.duration), "-i", mask_path]
+                mask_input = next_input_index
+                next_input_index += 1
+                fc += (f";[{box_input}:v]scale={b.width}:{b.height}[boxs{step}]"
+                       f";[{mask_input}:v]alphaextract[maskv{step}]"
+                       f";[boxs{step}][maskv{step}]alphamerge[box{step}]")
+            else:
+                fc += f";[{box_input}:v]scale={b.width}:{b.height}[box{step}]"
+            fc += (f";{current}[box{step}]overlay=x={b.x}:y={b.y}:"
                    f"enable='between(t\\,{_num(b.start)}\\,{_num(end)})'{out_label}")
             current = out_label
-            next_input_index += 1
 
     if caption_ass_path:
         fc += f";{current}ass='{escape_filter_path(caption_ass_path)}':fontsdir='{escape_filter_path('static/fonts')}'[vcap]"

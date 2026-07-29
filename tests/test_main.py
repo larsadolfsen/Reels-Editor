@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from app import export_jobs
 from app.main import export_project, list_presets, create_preset, delete_preset, probe, sanitize_export_filename, resolve_export_path, media_peaks
-from app.models import Project, TextBlockLayer, TextPreset, MediaItem
+from app.models import Project, TextBlockLayer, TextPreset, MediaItem, VideoBoxLayer
 
 def test_export_writes_ass_file_and_burns_it_in(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
@@ -396,3 +396,33 @@ def test_export_image_box_only_project_uses_banded_path(tmp_path, monkeypatch):
     assert "pic.jpg" in cmd
     fc = cmd[cmd.index("-filter_complex") + 1]
     assert "overlay=x=" in fc
+
+def test_export_writes_a_mask_png_and_alphamerges_it_for_a_masked_video_box(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", out_point=2.0,
+                        width=300, height=500, mask_enabled=True, mask_angle=0.0,
+                        mask_offset=0.0, mask_flip=False)
+    p = Project(name="r", video_boxes=[box])
+    with patch("app.main.store.load_project", return_value=p), \
+         patch("app.main.media.run_export") as run_export:
+        export_project(p.id)
+    pngs = list((tmp_path / "exports").glob("*-mask.png"))
+    assert len(pngs) == 1
+    cmd = run_export.call_args[0][0]
+    assert str(pngs[0]) in cmd
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "alphamerge" in fc
+
+def test_export_writes_no_mask_png_for_an_unmasked_video_box(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", out_point=2.0, width=300, height=500)
+    p = Project(name="r", video_boxes=[box])
+    with patch("app.main.store.load_project", return_value=p), \
+         patch("app.main.media.run_export") as run_export:
+        export_project(p.id)
+    assert list((tmp_path / "exports").glob("*-mask.png")) == []
+    cmd = run_export.call_args[0][0]
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "alphamerge" not in fc

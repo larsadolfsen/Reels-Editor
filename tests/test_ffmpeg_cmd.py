@@ -423,3 +423,63 @@ def test_bands_image_box_and_video_box_both_alternate_correctly():
     fc = cmd[cmd.index("-filter_complex") + 1]
     map_indices = [i for i, x in enumerate(cmd) if x == "-map"]
     assert cmd[map_indices[0] + 1] == "[ov1]"  # second band (index 1) is the final output label
+
+def test_masked_video_box_adds_one_mask_input_and_one_alphamerge():
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", in_point=0, out_point=3,
+                        start=1.0, x=100, y=200, width=300, height=500, z_index=5,
+                        mask_enabled=True)
+    bands = [{"kind": "video_box", "video_box": box, "mask_path": "C:/tmp/band0-mask.png"}]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    assert cmd.count("C:/tmp/band0-mask.png") == 1
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert fc.count("alphamerge") == 1
+    assert fc.count("alphaextract") == 1
+    # alphamerge runs before the timeline offset, so both its inputs start at t=0
+    assert fc.index("alphamerge") < fc.index("setpts=PTS-STARTPTS+1/TB")
+    assert fc.index("alphamerge") < fc.index("overlay=x=100:y=200")
+
+def test_masked_image_box_adds_one_mask_input_and_one_alphamerge():
+    box = ImageBoxLayer(media_id="m1", file_path="pic.jpg", start=2.0, duration=4.0,
+                        x=10, y=20, width=200, height=300, z_index=3, mask_enabled=True)
+    bands = [{"kind": "image_box", "image_box": box, "mask_path": "C:/tmp/band0-mask.png"}]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    assert cmd.count("C:/tmp/band0-mask.png") == 1
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert fc.count("alphamerge") == 1 and fc.count("alphaextract") == 1
+    assert fc.index("alphamerge") < fc.index("overlay=x=10:y=20")
+
+def test_mask_input_is_a_looped_still_matching_the_box_duration():
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", in_point=1, out_point=4,
+                        start=0, height=1920, z_index=5, mask_enabled=True)
+    bands = [{"kind": "video_box", "video_box": box, "mask_path": "mask.png"}]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    i = cmd.index("mask.png")
+    assert cmd[i - 5:i] == ["-loop", "1", "-t", "3", "-i"]   # "3" = out_point - in_point
+
+def test_unmasked_band_command_is_unchanged_by_the_mask_feature():
+    # The whole mask feature must be invisible when no box is masked: same command, byte for byte.
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", in_point=0, out_point=3,
+                        start=1.0, x=100, y=200, width=300, height=500, z_index=5)
+    img = ImageBoxLayer(media_id="m2", file_path="pic.jpg", start=0, duration=2.0,
+                        width=100, height=100, z_index=4)
+    bands = [{"kind": "video_box", "video_box": box}, {"kind": "image_box", "image_box": img}]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "alphamerge" not in fc and "alphaextract" not in fc
+    assert ";[2:v]trim=start=0:end=3,setpts=PTS-STARTPTS+1/TB,scale=300:500[box0]" in fc
+    assert ";[vc][box0]overlay=x=100:y=200" in fc
+    assert ";[3:v]scale=100:100[box1]" in fc
+
+def test_masked_band_input_indices_stay_consistent_across_two_boxes():
+    a = VideoBoxLayer(media_id="m1", file_path="a-pip.mp4", in_point=0, out_point=2,
+                      start=0, height=1920, z_index=5, mask_enabled=True)
+    b = VideoBoxLayer(media_id="m2", file_path="b-pip.mp4", in_point=0, out_point=2,
+                      start=0, height=1920, z_index=6)
+    bands = [{"kind": "video_box", "video_box": a, "mask_path": "m0.png"},
+             {"kind": "video_box", "video_box": b}]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    # inputs: 0 = a.mp4 clip, 1 = b.mp4 clip, 2 = a-pip.mp4, 3 = m0.png, 4 = b-pip.mp4
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "[2:v]trim=start=0:end=2" in fc
+    assert "[3:v]alphaextract" in fc
+    assert "[4:v]trim=start=0:end=2" in fc

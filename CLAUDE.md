@@ -39,6 +39,7 @@ app/
   caption_word_estimate.py # pure estimate_word_timings(word) -> list[CaptionWord]: splits a multi-word CaptionWord into per-word estimated sub-ranges, character-offset-proportional
   caption_layout.py     # pure paginate_words(words, measure, box_width_px, box_height_px, font_size_px, line_height=1.15) -> list[list[list[CaptionWord]]] (added 2026-07-24, caption box sizing): packs words onto lines by measured pixel width, paginates lines by box height, so caption rendering always fits the fixed box instead of a manual max-words-per-line count
   box_mask.py           # pure straight-line mask geometry (added 2026-07-29, box edge mask): mask_polygon(width, height, angle, offset, flip) -> clockwise polygon of the KEPT region in box-local px, Sutherland-Hodgman half-plane clip of the box rect; mirrored in static/box-mask.js, pinned by tests/test_box_mask_js.py
+  mask_image.py         # export-side mask rasterization (added 2026-07-29, box edge mask): write_mask_png(path, width, height, angle, offset, flip) draws app/box_mask.py's kept-region polygon with Pillow as an RGBA PNG — opaque white inside, transparent outside — written next to the .ass sidecars for ffmpeg to alphaextract/alphamerge
   export_jobs.py         # in-memory export job registry: start_job/get_job/update_progress, jobs run on a background thread (real or injectable-sync in tests), not persisted
 static/
   tool-mode.js       # window.ToolMode.{get, set, onChange} (added 2026-07-24, top-toolbar): DOM-free current-tool ("select"|"text") state holder for the top toolbar; no persistence, resets to "select" on reload
@@ -191,6 +192,7 @@ tests/
   test_export_smoke.py  # Phase 6: whole-pipeline smoke test, every layer type combined
   test_box_mask.py      # the pure polygon function: vertical/horizontal/angled cuts, flip, line-outside-both-ways, bounds clipping
   test_box_mask_js.py   # runs static/box-mask.js under Node against the same case table, pinning the JS mirror to the Python original
+  test_mask_image.py   # generated PNG size/mode plus sampled alpha on the kept and cut sides
 data/               # gitignored: projects/*.json, presets.json, exports/, peaks/{media_id}.json, thumbnails/{media_id}.jpg
 ```
 
@@ -296,6 +298,9 @@ Added 2026-07-29 — see `docs/superpowers/specs/2026-07-29-box-edge-mask-design
 - `VideoBoxLayer` / `ImageBoxLayer` in `app/models.py` — four defaulted fields carry the cut: `mask_enabled: bool = False`, `mask_angle: float = 0.0` (degrees, 0 = vertical, increasing clockwise), `mask_offset: float = 0.0` (signed canvas px from the box's center, perpendicular to the line), `mask_flip: bool = False` (which side is kept). All defaulted, so projects saved before this feature load and behave unchanged; the line is expressed relative to the box's own center, so moving/resizing the box carries the mask with it.
 - `static/video-box-preview.js` / `static/image-box-preview.js` — each `render()` sets `el.style.clipPath = BoxMask.clipPath(box)` right after the position/size/z-index assignments. A static CSS property recomputed only on render — no per-frame work, no libraries — and it composites correctly against the layers below because the boxes already live as siblings in `#overlay` with explicit z-indexes. An unmasked box gets `""`, i.e. today's exact rendering.
 - `static/panel-video-box.js` / `static/panel-image-box.js` — a third **Mask** tab (`UI.tabBar`, beside Box and Time; `#video-box-mask-body` / `#image-box-mask-body`) holding an OFF/ON `UI.buttonGroup` bound to `mask_enabled`, ANGLE (degrees) and OFFSET (px) `UI.numberField`s — both disabled while the mask is off — and a "Flip side" `.panel-button` toggling `mask_flip`. Every control saves the project and re-renders the stage preview immediately, the same way the panels' existing X/Y/WIDTH/HEIGHT fields do.
+- `app/mask_image.py` — `write_mask_png(path, width, height, angle, offset, flip)`: rasterizes `mask_polygon`'s output with Pillow into a `width x height` RGBA PNG, alpha 255 inside the kept region and 0 outside. An empty polygon writes a fully transparent PNG, correctly hiding the box.
+- `app/ffmpeg_cmd.py` — a `"video_box"`/`"image_box"` band dict may carry an optional `"mask_path"`. When present, the PNG is added as a `-loop 1 -t <box duration>` input, `alphaextract` pulls its alpha into a gray stream, and `alphamerge` writes that as the box stream's alpha immediately before the existing `overlay`. For a video box the merge happens **before** the `setpts=...+start/TB` timeline offset, so both `alphamerge` inputs start at t=0. Trimming, scaling, positioning, band ordering, and audio are untouched; a project with no masked box produces a byte-identical command to the pre-mask baseline.
+- `app/main.py` — the export route's banded branch writes one `{name}-{id[:8]}-band{i}-mask.png` sidecar per masked box (same directory and naming convention as the `.ass` sidecars) and passes its path as the band's `"mask_path"`. Deciding *whether* a box is masked lives here; `build_export_cmd` stays pure and keys only off the presence of `"mask_path"`.
 
 ### Video & image boxes (picture-in-picture)
 
