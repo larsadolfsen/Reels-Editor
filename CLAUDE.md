@@ -38,6 +38,7 @@ app/
   transcribe.py          # faster-whisper wrapper -> CaptionWords (words_from_segments pure, transcribe_file lazy-loads CUDA model)
   caption_word_estimate.py # pure estimate_word_timings(word) -> list[CaptionWord]: splits a multi-word CaptionWord into per-word estimated sub-ranges, character-offset-proportional
   caption_layout.py     # pure paginate_words(words, measure, box_width_px, box_height_px, font_size_px, line_height=1.15) -> list[list[list[CaptionWord]]] (added 2026-07-24, caption box sizing): packs words onto lines by measured pixel width, paginates lines by box height, so caption rendering always fits the fixed box instead of a manual max-words-per-line count
+  box_mask.py           # pure straight-line mask geometry (added 2026-07-29, box edge mask): mask_polygon(width, height, angle, offset, flip) -> clockwise polygon of the KEPT region in box-local px, Sutherland-Hodgman half-plane clip of the box rect; mirrored in static/box-mask.js, pinned by tests/test_box_mask_js.py
   export_jobs.py         # in-memory export job registry: start_job/get_job/update_progress, jobs run on a background thread (real or injectable-sync in tests), not persisted
 static/
   tool-mode.js       # window.ToolMode.{get, set, onChange} (added 2026-07-24, top-toolbar): DOM-free current-tool ("select"|"text") state holder for the top toolbar; no persistence, resets to "select" on reload
@@ -59,6 +60,7 @@ static/
   timeline-video-row.js  # window.TimelineVideoRow.render(blockDiv, clip, media, px, onReady) (added 2026-07-23, timeline thumbnails; reworked 2026-07-24 continuous-filmstrip fix): draws a per-clip `<canvas class="video-clip-filmstrip">` inside each VIDEO-row timeline block — full-block-height 9:16 tiles on a GLOBAL row grid (Filmstrip.tilesForBlock, so slice boundaries never shift/clip thumbnails and any-width blocks show their cropped tile window instead of the old <1-tile stripe fallback); mirrors timeline-audio-row.js's fetch-once-cache-client-side pattern — a clip whose filmstrip hasn't loaded (or failed) keeps the existing striped CSS placeholder
   caption-word-estimate.js # Timeline.estimateWordTimings(word): pure, mirrors app/caption_word_estimate.py — splits a multi-word CaptionWord into per-word estimated sub-ranges
   caption-layout.js     # window.CaptionLayout.paginateWords(words, measureFn, boxWidthPx, boxHeightPx, fontSizePx, lineHeightEm=1.15) (added 2026-07-24, caption box sizing): pure JS mirror of app/caption_layout.py's paginate_words, same page/line/word output shape; depends on Timeline.estimateWordTimings (loaded after caption-word-estimate.js), consumed by preview-captions.js at render time
+  box-mask.js           # window.BoxMask.{maskPolygon, clipPath} (added 2026-07-29, box edge mask): exact JS mirror of app/box_mask.py's mask_polygon, plus clipPath(box) formatting the polygon as a percentage-based CSS clip-path value; consumed by video-box-preview.js/image-box-preview.js
   filler-word-ranges.js  # window.FillerWords.{normalizeWord, detectRanges} (added 2026-07-23): pure JS mirror of app/auto_slice.py's normalize_word/detect_filler_ranges (Unicode-aware punctuation stripping via \p{L}/\p{N}, so non-ASCII filler words like Danish "øh" normalize the same on both sides); consumed by caption-panel-filler-words.js's Auto-remove button
   filmstrip-layout.js     # window.Filmstrip.{frameInterval, frameCount, tilesForBlock, FRAME_W, FRAME_H} (added 2026-07-23, timeline thumbnails): pure JS mirror of app/filmstrip.py layout math plus tilesForBlock (frontend-only, added 2026-07-24 continuous-filmstrip fix): global-row-grid tile positions + nearest-frame indices for one clip block, consumed by timeline-video-row.js
   timeline-snap.js        # Timeline.snapTime/collectBoundaries (added 2026-07-20) — pure, dependency-free snap-to-boundary helpers attached onto window.Timeline; loaded after timeline.js, before editor.js
@@ -187,6 +189,8 @@ tests/
   test_transcribe.py
   test_transcribe_route.py
   test_export_smoke.py  # Phase 6: whole-pipeline smoke test, every layer type combined
+  test_box_mask.py      # the pure polygon function: vertical/horizontal/angled cuts, flip, line-outside-both-ways, bounds clipping
+  test_box_mask_js.py   # runs static/box-mask.js under Node against the same case table, pinning the JS mirror to the Python original
 data/               # gitignored: projects/*.json, presets.json, exports/, peaks/{media_id}.json, thumbnails/{media_id}.jpg
 ```
 
@@ -283,6 +287,12 @@ Added 2026-07-22, batches 2–7 of the audio subsystem (Batch 1 data model — `
 - `static/panel-nav.js` — AUDIO entry in `PANEL_NAV_ITEMS`/`PANEL_NAV_HANDLERS` opens `#panel-audio` via `openAudioPanel()`.
 - `static/timeline.js` — `render()`'s `actions` param gained `onSelectAudio`, wired to a one-time click listener on `#row-audio` (same `dataset.selectBound` guard pattern as the `+` row buttons), so clicking the AUDIO row opens the AUDIO panel.
 - `static/css/components/timeline.css` — `.audio-clip-waveform`/`.audio-music-waveform`: absolutely-positioned canvases (same coordinate system as `.timeline-block`) replacing the old flex dummy-bar row.
+
+### Box edge mask (straight-line cut)
+
+Added 2026-07-29 — see `docs/superpowers/specs/2026-07-29-box-edge-mask-design.md`. Cuts a video/image box along one straight line so the layers beneath show through ("clone yourself" without green screen or ML segmentation).
+
+- `app/box_mask.py` / `static/box-mask.js` — `mask_polygon(width, height, angle, offset, flip)` / `BoxMask.maskPolygon(...)`: the one shared geometry function, mirrored across the two languages the same way `app/text_case.py` / `static/text-case.js` are. Returns the KEPT region as a clockwise polygon in box-local px, clipped to the box: `[]` when nothing is kept, the full rectangle when the line misses the box. `angle` is degrees with 0 = vertical and increasing rotating clockwise; `offset` is signed canvas px from the box's center, perpendicular to the line; `flip` selects the other side. `BoxMask.clipPath(box)` additionally formats that polygon as a percentage-based CSS `clip-path` value (JS only, no Python counterpart — same shape as `TextCase.cssValue`).
 
 ### Video & image boxes (picture-in-picture)
 
