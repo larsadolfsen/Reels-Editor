@@ -4,6 +4,8 @@
 // UI.tabBar (Box default), with Delete as an always-visible footer. Exposes
 // window.ImageBoxPanel.render(selectedId). One image box selected at a time; multiple boxes
 // live in project.image_boxes (see app/models.py's ImageBoxLayer). Mirrors panel-video-box.js;
+// createImageBox() is also exposed as window.ImageBoxPanel.createImageBox so the MEDIA panel's
+// plus-icon "add to timeline" button (static/panel-media.js) can create a box directly;
 // no in/out trim (images have no source timeline) — DURATION is the only length control.
 window.ImageBoxPanel = window.ImageBoxPanel || {};
 
@@ -170,4 +172,5 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
   }
 
   window.ImageBoxPanel.render = render;
+  window.ImageBoxPanel.createImageBox = createImageBox;
 })();
