@@ -231,7 +231,7 @@ window.PreviewText = (() => {
   }
 
   // Returns the currently-rendered box's size in canvas (1080x1920) px, for the POSITION
-  // anchor-grid shortcut to compute edge-flush x/y from — null if the block isn't on stage
+  // single-row icon anchor shortcut to compute edge-flush x/y from — null if the block isn't on stage
   // (e.g. hidden by its own time range) to render against.
   function getBoxSizeCanvasPx(blockId) {
     const div = overlay.querySelector(`.text-block[data-block-id="${blockId}"]`);

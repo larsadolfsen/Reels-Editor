@@ -32,7 +32,7 @@
 // Exposes window.Preview.{load, seek, renderText, renderCaptions, currentTimelineTime, play, pause, restart, isPaused, setSelectedTextBlock, setOnStageTextActivate, getActiveFormatSelection, enterTextEditMode, getTextBoxSize, getCaptionBoxSize, onTimeUpdate, onPlayStateChange}. Mirrors app/timeline.py's ordered/locate. Thin — DOM wiring only.
 // getTextBoxSize(blockId)/getCaptionBoxSize() are thin delegating wrappers onto
 // PreviewText.getBoxSizeCanvasPx/PreviewCaptions.getBoxSizeCanvasPx, used by the POSITION
-// anchor-grid shortcut (text-panel-position.js/caption-panel-box.js) to compute edge-flush x/y
+// single-row icon anchor shortcut (text-panel-position.js/caption-panel-box.js) to compute edge-flush x/y
 // from the block's actual on-stage rendered size.
 // enterTextEditMode(blockId) is a thin delegating wrapper onto PreviewText.enterEditMode, used to
 // drop a newly-created text block straight into on-stage contentEditable edit mode.

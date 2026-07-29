@@ -11,8 +11,8 @@
 // Position grid anchors: edge-flush against the 1080x1920 canvas, using the box's own actual
 // rendered width/height (from Preview.getTextBoxSize/getCaptionBoxSize) so TOP/BTM/LEFT/RIGHT
 // place the box's edge (not its top-left corner) flush with the canvas edge, and MID centers it.
-// Used only as a stateless one-shot shortcut in the POSITION accordion's 3x3 grid — clicking a
-// cell writes the computed value straight into TextPreset.x/y with no persisted anchor selection.
+// Used only as a stateless one-shot shortcut in the POSITION single row of icon buttons — clicking
+// one writes the computed value straight into TextPreset.x/y with no persisted anchor selection.
 function anchorPositionX(value, boxWidth, align) {
   // The box's rendered left edge is offset from `x` by a CSS transform keyed on text align
   // (stage.css's .text-block--align-*: 0 for left, -50% for center, -100% for right), so the
