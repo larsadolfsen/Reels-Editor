@@ -39,7 +39,8 @@
 // renderText/renderCaptions/setSelectedTextBlock/getActiveFormatSelection/setOnStageTextActivate
 // are thin delegating wrappers onto PreviewText/PreviewCaptions (kept here so no external caller
 // changes); textProject/textPresets stay in this file too since virtualTick/zeroClipDuration read
-// them directly.
+// them directly, and load() refreshes them so every later repaint renders the current project
+// (see the comment in load() — this is what makes undo/redo repaint the stage).
 // When project.clips is empty, playback runs on an internal virtual clock (performance.now()-based)
 // instead of the <video> element's timeupdate/play/pause events, so text/caption-only projects
 // stay scrubbable/playable in preview. Preview.isPaused() abstracts over both modes for callers.
@@ -287,6 +288,17 @@ window.Preview = (() => {
   }
 
   function load(project) {
+    // Every overlay repaint (timeupdate, seek, the virtual-clock tick) renders from this module's
+    // textProject/textPresets, so load() — the "reload the whole stage from this project" entry
+    // point — has to refresh them, not just the clip list. They used to be assigned only by
+    // renderText(), which meant undo/redo left them pinned to the superseded objects:
+    // applyRestore() (editor.js) reparses `project` into brand-new objects and calls load(), and
+    // the next repaint then painted the pre-undo text blocks, captions and video/image boxes back
+    // over whatever fresh state a panel had just rendered. Panels that re-render the stage
+    // themselves (the box panels' X/Y/W/H fields) looked correct only because no repaint had run
+    // yet — which is why adding a render call to the undo path alone never fixed it.
+    textProject = project;
+    textPresets = project.text_presets || {};
     clips = ordered(project.clips || []);
     mediaById = new Map((project.media_library || []).map((m) => [m.id, m]));
     activeIndex = -1;
@@ -306,6 +318,9 @@ window.Preview = (() => {
       activePlayer.classList.remove("video-standby");
       timeEl.textContent = "0.0";
     }
+    // load() resets playback to the start of the sequence, so paint the overlays there right
+    // away instead of waiting for the first timeupdate — a zero-clip project never fires one.
+    renderOverlaysAt(0);
   }
 
   function renderText(project, presets, timelineTime) {
