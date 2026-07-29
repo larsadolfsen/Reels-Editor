@@ -55,15 +55,13 @@ function renderCaptionPreview() {
 }
 
 async function renderCaptionPanel() {
-  document.getElementById("panel-captions-font").hidden = true;
-  document.getElementById("panel-captions-weight").hidden = true;
-  document.getElementById("panel-captions-main").hidden = false;
+  // closeAll() hides every host subpage and un-hides #panel-captions-main.
+  captionStyleHost.closeAll();
 
   ensureCaptionTrack();
 
   CaptionPanel.renderStyle();
-  CaptionPanel.renderFontFamily();
-  await CaptionPanel.renderFontWeight();
+  await captionDesignTab.render();
   CaptionPanel.renderFontStyle();
   CaptionPanel.renderOutline();
   CaptionPanel.renderShadow();
@@ -106,6 +104,23 @@ function showCaptionTab(value) {
 }
 UI.tabBar(document.getElementById("caption-tab-bar"), CAPTION_TABS, activeCaptionTab, showCaptionTab);
 showCaptionTab(activeCaptionTab);
+
+// Built ONCE, mirroring panel-text.js — the sections are re-rendered afterwards, never rebuilt.
+const captionStyleTarget = StyleTarget.forCaptionTrack();
+const captionStyleHost = StylePanelHost(
+  document.getElementById("panel-captions-main"),
+  document.getElementById("panel-captions"),
+);
+const captionDesignTab = StyleTab.design(
+  document.getElementById("caption-design-mount"),
+  captionStyleTarget,
+  {
+    host: captionStyleHost,
+    // A caption track has no single heading to preview — its text is a per-word transcript spread
+    // across pages — so the Weight list shows the fixed sample caption-panel-font-weight.js used.
+    sampleText: () => "kind of insane",
+  },
+);
 
 UI.divider(document.getElementById("caption-box-width-height-divider"));
 UI.divider(document.getElementById("caption-box-border-position-divider"));

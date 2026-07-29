@@ -150,9 +150,9 @@ function renderTextPreview() {
 }
 
 async function renderTextPanel() {
-  document.getElementById("panel-text-font").hidden = true;
-  document.getElementById("panel-text-weight").hidden = true;
-  document.getElementById("panel-text-main").hidden = false;
+  // closeAll() hides every host subpage and un-hides #panel-text-main — the same reset the two
+  // per-control lines did, minus the ids.
+  textStyleHost.closeAll();
 
   const block = currentTextBlock();
   document.getElementById("text-empty-state").hidden = !!block;
@@ -164,8 +164,7 @@ async function renderTextPanel() {
   }
   const preset = ensureTextPreset(block.preset_id);
 
-  TextPanel.renderFontFamily();
-  await TextPanel.renderFontWeight();
+  await textDesignTab.render();
   TextPanel.renderFontStyle();
   TextPanel.renderOutline();
   TextPanel.renderShadow();
@@ -301,6 +300,24 @@ function showTextTab(value) {
 }
 UI.tabBar(document.getElementById("text-tab-bar"), TEXT_TABS, activeTextTab, showTextTab);
 showTextTab(activeTextTab);
+
+// The shared style sections are built ONCE, here, and only re-rendered afterwards — never
+// rebuilt. The host appends every drill-down subpage as a new child of #panel-text itself,
+// the same place the pre-existing per-control subpanels (#panel-text-color, etc.) already live.
+const textStyleTarget = StyleTarget.forTextBlock();
+const textStyleHost = StylePanelHost(
+  document.getElementById("panel-text-main"),
+  document.getElementById("panel-text"),
+);
+const textDesignTab = StyleTab.design(
+  document.getElementById("text-design-mount"),
+  textStyleTarget,
+  {
+    host: textStyleHost,
+    // The Weight list previews the block's own heading, read fresh so it follows edits.
+    sampleText: () => (currentTextBlock() || {}).heading || "",
+  },
+);
 
 UI.divider(document.getElementById("text-box-width-height-divider"));
 UI.divider(document.getElementById("text-box-border-position-divider"));
