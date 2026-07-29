@@ -32,7 +32,7 @@ Every task's requirements implicitly include this section.
 - **Icon SVGs are hand-inlined Lucide paths** with the wrapper attributes already used in this codebase: `viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`. Copy existing icon markup verbatim rather than inventing new paths.
 - **Pure modules export twice:** `window.X = api` for the browser and a guarded `if (typeof module !== "undefined") module.exports = api;` for the test runner. Only the pure modules do this — DOM-building sections do not.
 - **Tests:** `node --test tests/js` must pass before every commit from Batch 1 onward. The Python suite (`.venv/Scripts/python -m pytest -q`) is unaffected by this work but must still pass at the end of Batch 6.
-- **Behaviour is preserved** except for the seven changes listed in "Resolved divergences" in the spec. If a batch changes anything else that a user can see, that is a bug in the batch.
+- **Behaviour is preserved** except for the **nine** changes listed in "Resolved divergences" in the spec. If a batch changes anything else that a user can see, that is a bug in the batch. Two candidate changes were raised during planning and **declined** — the shared component must actively preserve both: CAPTIONS' size-row alignment (via `size`'s `compactRow` option) and non-selection-aware font family (via `setPresetField("font", …)`).
 - **Live verification never runs against real project data.** Create a throwaway project in the picker first — the app's unload keepalive-save flushes in-memory state to disk.
 - **Commit after every task.** Never leave a batch half-applied at rest: at the end of each task both panels must open and work in the browser.
 
@@ -126,17 +126,24 @@ Both factories return an object with **exactly** this shape:
                                  //    the active FormatRun's override if there is one,
                                  //    else the preset's value
   setField(field, value),        // selection-aware write + save + preview re-render
+  setFields(obj),                // several fields, ONE save and ONE undo entry
   setPresetField(field, value),  // ALWAYS whole-preset write + save + preview re-render
   previewField(field, value),    // transient preview only — no write, no save (hover)
   cancelPreview(),               // undo a previewField()
   clearFormatRuns(),             // text: block.formatting_runs = []; caption: no-op
   rerenderPreview(),
-  rerenderPanel(),
+  rerenderPanel(),               // MUST `return` — both panel renderers are async
   getBoxSize(),                  // -> {width, height} | null, in 1080x1920 canvas px
 }
 ```
 
-`setField` vs `setPresetField`: use `setField` for anything a `FormatRun` can override — `font`, `size_px`, `color`, `outline_color`, `outline_px`, `weight`, `italic`, `underline`, `highlight`, `highlight_color`. Use `setPresetField` for everything else — shadow, box, align, position, text case, highlight mode, highlight radius. Getting this wrong is silent: on the caption panel both behave identically, so **verify on the TEXT panel with a partial text selection active**.
+`setField` vs `setPresetField`: use `setField` for `size_px`, `color`, `outline_color`, `outline_px`, `weight`, `italic`, `underline`, `highlight`, `highlight_color`. Use `setPresetField` for everything else — **`font`**, shadow, box, align, position, text case, highlight mode, highlight radius. Getting this wrong is silent: on the caption panel both behave identically, so **verify on the TEXT panel with a partial text selection active**.
+
+`font` is the one deliberate exception. A `FormatRun` *can* carry a `font` override and `preview-text.js` resolves it, but no current file writes one — `text-panel-font-family.js:29` sets `preset.font` unconditionally even with a live selection. Routing it through `setField` would add per-range fonts, a new capability outside this refactor's approved scope. It uses `setPresetField` to preserve today's behaviour. Per-range fonts are a separate feature if ever wanted.
+
+`setFields(obj)` exists because picking a font writes two fields in one user action (`font` plus a snapped `weight`). Two separate calls would mean two `saveProject()` calls and **two undo entries for one click**. `setFields` applies every key, then saves and re-renders once. It follows the same `FormatRun` rules as `setField`, per key.
+
+`rerenderPanel()` must `return` its delegate's result. `renderTextPanel()` and `renderCaptionPanel()` are both `async`; a section that cannot await a panel refresh cannot sequence anything after it.
 
 Both factories accept an optional `deps` object so tests can inject collaborators. In the browser they are called with no argument and fall back to the existing globals.
 
@@ -199,8 +206,8 @@ Section names and their options:
 | Name | Options | Batch |
 |---|---|---|
 | `fontFamily` | `{ host }` | 2 |
-| `fontWeight` | `{ host }` | 2 |
-| `size` | `{}` | 3 |
+| `fontWeight` | `{ host, sampleText }` | 2 |
+| `size` | `{ compactRow }` | 3 |
 | `emphasis` | `{}` | 3 |
 | `color` | `{ host }` | 3 |
 | `outline` | `{ host }` | 4 |
@@ -213,6 +220,11 @@ Section names and their options:
 
 `render()` may be async (`fontWeight` is, because it awaits `Api.listFontWeights`). Callers must tolerate a promise being returned and ignore it, exactly as `panel-text.js` does today.
 
+Two options exist purely to **preserve** a per-panel difference that the shared component would otherwise erase. They are explicit and contract-declared, unlike the accidental divergences this refactor removes:
+
+- **`fontWeight`'s `sampleText: () => string`.** The two old weight lists preview different text — TEXT renders the block's own heading (`text-panel-font-weight.js:60`), CAPTIONS a fixed sample string (`caption-panel-font-weight.js:51`). A caption track has no heading, so no target field can supply this; it has to be an option. TEXT passes `() => currentTextBlock().heading || ""`, CAPTIONS passes its fixed string.
+- **`size`'s `compactRow: boolean`.** TEXT passes `true`, CAPTIONS omits it. See "CSS divergence surface" below.
+
 ### `window.StyleTab.*` — the composers
 
 ```js
@@ -223,7 +235,62 @@ StyleTab.styleLibrary(container, target, options)  // -> { render() }
 
 `StyleTab.design` renders, in this fixed order: `fontFamily`, `fontWeight`, `size`, `emphasis`, `color`, `outline`, `shadow`, `highlight`. This order is the resolved TEXT layout and is the single place it is defined.
 
-`StyleTab.design` options: `{ host, highlightModes }`. `StyleTab.box` options: `{ sizeModes }`. `StyleTab.styleLibrary` options: `{}`.
+`StyleTab.design` options: `{ host, highlightModes, sampleText, compactSizeRow }`. `StyleTab.box` options: `{ sizeModes }`. `StyleTab.styleLibrary` options: `{}`.
+
+The composer forwards `sampleText` to `fontWeight` and `compactSizeRow` to `size` as its `compactRow`. **Every batch that rewrites `StyleTab.design` must carry all four options forward.** Batches 3 and 4 were drafted in parallel with Batch 2 and their composer snippets originally dropped `sampleText`; they have been corrected, but re-check when editing.
+
+---
+
+## CSS divergence surface
+
+The spec treats markup and JS as the places the two panels drift. They also drift in **id-scoped CSS**, and a markup-owning component forces every such rule to resolve. There are exactly three, all in `static/css/components/style-panel.css`:
+
+| Rule | Status | Resolution |
+|---|---|---|
+| `#text-size-row { gap: 6px; align-items: end }` and `#text-size-row .number-field-label { margin-left: -34px }` | TEXT only — CAPTIONS never had it | **Preserved as a difference.** `StyleSection.size` emits `.style-size-row` always, plus `.style-size-row--compact` when `options.compactRow` is true. TEXT passes `compactRow: true`; CAPTIONS does not. Batch 3. |
+| `#text-align-group button, #caption-align-group button` (28x28 icon squares) | Both panels — no drift | Renamed to `.style-align-group button`. Both id selectors stay live until each panel's markup is deleted, so no intermediate commit leaves the buttons unstyled. Batch 5. |
+
+The size row is the one place the panels stay visibly different by decision. Converging it was raised and declined: CAPTIONS' size row keeps its default `.style-row` gap, centre alignment and indented SIZE label. This is now an explicit option rather than a missing rule, so it can be flipped in one place by passing `compactRow: true` from the CAPTIONS panel.
+
+**Rule for new work:** a section that needs styling defines a **class** and puts it in `style-panel.css`. No section may emit an id, because it renders twice.
+
+---
+
+## Section wrapper convention
+
+Introduced in **Batch 2**, used by every batch after it. Batch 5 originally specified this independently; that step is now redundant and marked skippable there.
+
+`style-panel.css:56-62` is:
+
+```css
+.style-group { margin-bottom: var(--space-2); }
+.style-group:last-child { margin-bottom: 0; }
+```
+
+In the old flat markup exactly one `.style-group` per tab body matched `:last-child`. Once each section builds its own groups into a shared mount, every section's final group becomes a `:last-child` of its own subtree and silently loses its bottom margin — the gap between sections collapses. `:last-child` is structural, so `display: contents` on the wrapper does **not** avoid it.
+
+Each tab composer therefore wraps every section in its own `<div class="style-section">`, and `style-panel.css` gains:
+
+```css
+.style-section { display: contents; }
+.style-section:not(:last-child) > .style-group:last-child { margin-bottom: var(--space-2); }
+```
+
+`display: contents` keeps the wrapper layout-transparent so sections lay out exactly as the flat markup did; the second rule restores the inter-section gap for every wrapper except the last. Batch 2 adds both rules with the first mount; Batches 3–6 rely on them and must not re-add them.
+
+---
+
+## `UI.numberField` and the `disabled` state
+
+`ui-number-field.js:59` returns a bare `(v) => { input.value = format(v); }` — value only. `disabled` is settable at build time only (lines 29, 48, 53). The SIZE field must toggle `disabled` on every render, because `preset.box_width_mode === "fill"` can change from the Box tab, and the old code re-called `UI.numberField` on each render precisely for that. That collides with "build once, render many".
+
+**Resolution:** Batch 3 attaches a `setDisabled` property onto the returned function rather than changing its return type — functions are objects, so every existing caller is unaffected:
+
+```js
+setValue.setDisabled = (disabled) => { /* input + both stepper buttons */ };
+```
+
+This is a change to a shared primitive. Its existing behaviour must not change, and the Python suite plus every other `UI.numberField` caller must still work.
 
 ---
 

@@ -212,9 +212,41 @@ The user chose "TEXT wins" where the two panels differ by accident.
 | TEXT Box tab | unchanged; keeps FIT/FREE/FILL via `sizeModes: true` |
 | CAPTIONS Box tab | unchanged; stays always-fixed via `sizeModes: false` |
 | Saved styles | one shared `styleFieldsOf` list — TEXT's, which includes `highlight`; fixes bug 2 |
+| Weight row label | "Regular 400" (TEXT's format) for both; CAPTIONS showed just "Regular" |
+| Control state under a selection | Italic, Underline and the weight checkmark show the *selected range's* value, not the block's base value |
 
 The font-size scale is the one place CAPTIONS' version wins, because TEXT's is a
 straightforward bug. Everywhere else TEXT's version is the more complete one.
+
+The last two rows were found while drafting the batch plans, after the first seven
+were agreed, and are approved additions. The "control state" row is arguably a bug
+fix in its own right: today you can select bold text on the stage and the Bold button
+still reads unpressed, because `text-panel-font-style.js:42-45` updates `aria-pressed`
+only in the no-selection branch.
+
+### Raised and declined
+
+Two further convergences were considered and rejected. The shared components must
+actively **preserve** each difference rather than erase it.
+
+- **CAPTIONS' size-row alignment.** `style-panel.css` has
+  `#text-size-row { gap: 6px; align-items: end }` plus a `-34px` label offset, with no
+  `#caption-size-row` equivalent, so the two size rows have always been aligned
+  differently. `StyleSection.size` takes a `compactRow` option that TEXT passes and
+  CAPTIONS does not. Converging it later is a one-word change at the CAPTIONS call
+  site.
+- **Selection-aware font family.** Writing `font` through `setField` would add
+  per-range fonts within a single heading. `FormatRun.font` exists and
+  `preview-text.js` resolves it, but no current file ever writes one, so this would be
+  a new capability rather than a de-duplication. `font` uses `setPresetField`.
+
+### CSS is a third divergence surface
+
+The problem statement cites markup and JS. Id-scoped CSS is a third place the panels
+drift, and a markup-owning component forces every such rule to resolve — a shared
+section renders twice and so cannot carry an id. There are exactly three such rules,
+enumerated with their resolutions in the implementation plan's "CSS divergence
+surface" section. Going forward, a section that needs styling defines a class.
 
 ## Data model
 
