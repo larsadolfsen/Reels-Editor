@@ -219,13 +219,7 @@ function renderBoxPanel() {
     { label: "HEIGHT", unit: "PX", value: preset.box_height, min: 1, max: 1920, span: 4,
       onChange: (v) => { preset.box_height = v; renderTextPreview(); saveProject(); } });
 
-  UI.colorSwatch(document.getElementById("text-box-background-color-field"),
-    { label: "Background", showLabel: false, value: preset.box_background_color, span: 1,
-      onChange: (v) => { preset.box_background_color = v; preset.box_background = true; saveProject(); renderTextPreview(); } });
-
-  UI.numberField(document.getElementById("text-box-background-opacity-field"),
-    { label: "OPACITY", unit: "%", value: preset.box_background_opacity, min: 0, max: 100, span: 7,
-      onChange: (v) => { preset.box_background_opacity = v; saveProject(); renderTextPreview(); } });
+  TextPanel.renderBackground();
 
   UI.numberField(document.getElementById("text-box-border-width-field"),
     { label: "BORDER", unit: "PX", value: preset.box_border_width, min: 0, max: 40, span: 4,
