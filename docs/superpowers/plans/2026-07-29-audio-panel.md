@@ -180,17 +180,17 @@ with:
 
 - [ ] **Step 4: Swap the icon-rail entry**
 
-In `static/panel-nav.js`, replace the `auto-slice` entry in `PANEL_NAV_ITEMS` (lines 85–89) with an AUDIO entry in the same slot — directly after the `audio` (ADD AUDIO) entry:
+In `static/panel-nav.js`, replace the `auto-slice` entry in `PANEL_NAV_ITEMS` (lines 83–87) with an `AUTO` entry in the same slot — directly after the `audio` entry:
 
 ```js
   {
     value: "audio-track",
-    label: "AUDIO",
+    label: "AUTO",
     icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>`,
   },
 ```
 
-The `audio` entry above it (label `ADD AUDIO`, opening `#panel-audio` for music import) is left exactly as it is.
+The `audio` entry above it (label `AUDIO`, opening `#panel-audio` for music import) is left exactly as it is. The new entry is labelled `AUTO`, **not** `AUDIO` — the rail already has an `AUDIO` entry and a duplicate label would be ambiguous. The panel it opens is still headed `AUDIO`, matching the timeline row.
 
 - [ ] **Step 5: Update the panel show/hide list and handlers**
 
@@ -200,7 +200,7 @@ In `static/panel-nav.js`, in `showPanel()` (line 13), replace `"auto-slice"` wit
   ["files", "video", "text", "captions", "video-box", "image-box", "settings", "export", "projects", "audio", "audio-track"].forEach((t) => {
 ```
 
-Replace the whole `openAutoSlicePanel` function (lines 156–161) with:
+Replace the whole `openAutoSlicePanel` function (lines 154–159) with:
 
 ```js
 function openAudioTrackPanel() {
@@ -211,7 +211,7 @@ function openAudioTrackPanel() {
 }
 ```
 
-And in `PANEL_NAV_HANDLERS` (line 215), replace the `"auto-slice": openAutoSlicePanel` entry with `"audio-track": openAudioTrackPanel`:
+And in `PANEL_NAV_HANDLERS` (line 213), replace the `"auto-slice": openAutoSlicePanel` entry with `"audio-track": openAudioTrackPanel`:
 
 ```js
 const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, "image-box": openImageBoxPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel, "audio-track": openAudioTrackPanel };
@@ -234,10 +234,10 @@ Leave `static/panel-media.js:165`'s `openAudioPanel()` call alone — that is th
 Restart/reload the preview. Create a **new throwaway project**, import a video with audio, and add it to the timeline.
 
 Expected:
-1. The icon rail shows `… ADD IMAGE / ADD AUDIO / AUDIO / SETTINGS / EXPORT` — `AUTO SLICE` is gone.
-2. Clicking the rail's `AUDIO` opens a panel headed `AUDIO` with one tab button and an `AUTO SILENCE` group containing the "Detect Silence & Filler Words" button.
-3. Clicking the timeline's AUDIO row opens that same panel — **not** the ADD MUSIC panel.
-4. Clicking the rail's `ADD AUDIO` still opens the music panel with its `+ ADD MUSIC` button, and importing music still works.
+1. The icon rail shows `… IMAGE / AUDIO / AUTO / SETTINGS / EXPORT` — `AUTO SLICE` is gone.
+2. Clicking the rail's `AUTO` opens a panel headed `AUDIO` with one tab button and an `AUTO SILENCE` group containing the "Detect Silence & Filler Words" button.
+3. Clicking the timeline's AUDIO row opens that same panel — **not** the music panel.
+4. Clicking the rail's `AUDIO` still opens the music panel with its `+ ADD MUSIC` button, and importing music still works.
 5. `Detect Silence & Filler Words` → results list with checkboxes → `Continue` → `Confirm & Apply` still cuts ranges out of the timeline.
 6. No console errors on load or on any of the above.
 
@@ -647,21 +647,21 @@ git commit -m "feat: move the Auto-caption button into the AUDIO panel"
 
 In `CLAUDE.md`'s `static/` tree, make these edits:
 
-- Add `panel-audio-track.js` — `# AUDIO context-panel section (added 2026-07-29, audio panel): the timeline's audio track — one "Auto" tab (UI.tabBar) holding AUTO CAPTION (language row + Auto-caption button) and AUTO SILENCE (the auto-slice flow); window.AudioTrackPanel.render(). Opened by the icon rail's AUDIO entry and by clicking the timeline's AUDIO row.`
+- Add `panel-audio-track.js` — `# AUDIO context-panel section (added 2026-07-29, audio panel): the timeline's audio track — one "Auto" tab (UI.tabBar) holding AUTO CAPTION (language row + Auto-caption button) and AUTO SILENCE (the auto-slice flow); window.AudioTrackPanel.render(). Opened by the icon rail's AUTO entry (which replaced AUTO SLICE) and by clicking the timeline's AUDIO row — distinct from the rail's AUDIO entry, which still opens #panel-audio for music import.`
 - Add `audio-panel-language.js` — `# AUDIO panel Auto tab: transcription-language settings row + drill-down, writing CaptionTrack.language (moved from caption-panel-language.js 2026-07-29); window.AudioTrackPanel.renderLanguage()`
 - Add `audio-panel-auto-caption.js` — `# AUDIO panel Auto tab: the Auto-caption button + the global runAutoCaption() (moved out of panel-captions.js 2026-07-29); also called by clip-sequence.js/editor.js on audible-clip add`
 - Remove the `caption-panel-language.js` line.
 - Update the `panel-auto-slice.js` line to note its markup now lives inside `#panel-audio-track`, not a standalone `#panel-auto-slice` section, and that it is reached through the AUDIO panel.
 - Update the `index.html` entry: the `#panel-auto-slice` section is gone, `#panel-audio-track` is new, and `#panel-audio` (ADD MUSIC) is unchanged.
 - Update the `timeline.js` entry: the main clip row's label reads `MAIN` (the row key/id stay `video`/`label-video`).
-- Update the `panel-nav.js` entry: the `auto-slice` rail entry is now `audio-track` (label `AUDIO`) opening `#panel-audio-track` via `openAudioTrackPanel()`.
+- Update the `panel-nav.js` entry: the `auto-slice` rail entry is now `audio-track` (label `AUTO`) opening `#panel-audio-track` via `openAudioTrackPanel()`.
 - Update the `panel-captions.js` entry: it no longer owns `runAutoCaption` or the Language row.
 
 - [ ] **Step 2: Update the Inventory**
 
 In `CLAUDE.md`'s Inventory, under **Captions & transcription**, move the language/auto-caption bullets to reflect their new homes and add a short paragraph to the **Audio** section describing the AUDIO panel:
 
-> **AUDIO panel (timeline audio track).** Added 2026-07-29. `static/panel-audio-track.js` owns `#panel-audio-track` — a single `Auto` tab (`UI.tabBar`) holding the two audio-derived automations: AUTO CAPTION (`static/audio-panel-language.js`'s language settings row + `static/audio-panel-auto-caption.js`'s `runAutoCaption()`) and AUTO SILENCE (`static/panel-auto-slice.js`'s detect → approve → apply flow, whose markup moved here from the removed standalone `#panel-auto-slice` section). Reached from the icon rail's `AUDIO` entry (which replaced `AUTO SLICE`) and by clicking the timeline's AUDIO row (`static/editor.js`'s `onSelectAudio`). Distinct from the `ADD AUDIO` rail entry, which still opens `#panel-audio` for background-music import.
+> **AUDIO panel (timeline audio track).** Added 2026-07-29. `static/panel-audio-track.js` owns `#panel-audio-track` — a single `Auto` tab (`UI.tabBar`) holding the two audio-derived automations: AUTO CAPTION (`static/audio-panel-language.js`'s language settings row + `static/audio-panel-auto-caption.js`'s `runAutoCaption()`) and AUTO SILENCE (`static/panel-auto-slice.js`'s detect → approve → apply flow, whose markup moved here from the removed standalone `#panel-auto-slice` section). Reached from the icon rail's `AUTO` entry (which replaced `AUTO SLICE`) and by clicking the timeline's AUDIO row (`static/editor.js`'s `onSelectAudio`). Distinct from the rail's `AUDIO` entry, which still opens `#panel-audio` for background-music import — the new entry is labelled `AUTO` precisely to avoid a duplicate `AUDIO` label in the rail.
 
 - [ ] **Step 3: Run the full test suite**
 
@@ -674,9 +674,9 @@ Expected: PASS, with the same test count as before this branch — no Python was
 With the preview running and a **new throwaway project**, confirm end to end:
 
 1. Timeline main row label reads `MAIN`.
-2. Rail: `AUTO SLICE` is gone; `AUDIO` is present and opens the new panel.
-3. Timeline AUDIO row click opens the new panel, not ADD MUSIC.
-4. Rail `ADD AUDIO` still opens music import; adding, muting, and removing music all still work.
+2. Rail: `AUTO SLICE` is gone; `AUTO` is present and opens the new panel.
+3. Timeline AUDIO row click opens the new panel, not music import.
+4. Rail `AUDIO` still opens music import; adding, muting, and removing music all still work.
 5. Language row → drill-down → select → back, and the choice persists across a page reload.
 6. `Auto-caption` transcribes; the CAPTIONS transcript list fills; the timeline CAPTIONS row appears.
 7. `Detect Silence & Filler Words` → `Continue` → `Confirm & Apply` cuts ranges from the timeline.

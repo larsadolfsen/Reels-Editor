@@ -9,12 +9,17 @@ Three related changes to the editor's timeline and right-hand context panels:
 
 1. The timeline's main video row is labelled `MAIN` instead of `VIDEO`.
 2. Clicking the timeline's AUDIO row opens a new context panel dedicated to the timeline's
-   audio, not the existing ADD AUDIO (music import) panel.
+   audio, not the existing music-import panel.
 3. The two audio-derived automations — auto silence removal and auto-caption — move into that
    new panel, together, under one tab.
 
-The AUTO SLICE panel disappears as a standalone destination; its rail slot becomes the new
-AUDIO panel.
+The AUTO SLICE panel disappears as a standalone destination; its icon-rail slot becomes an
+`AUTO` entry opening the new panel.
+
+The rail's existing `AUDIO` entry is the *insert* action — it adds a background-music track to
+the timeline — and is not touched. The new entry is deliberately labelled `AUTO` rather than
+`AUDIO` to avoid a duplicate label beside it; the panel it opens is still headed `AUDIO`,
+matching the timeline row it belongs to.
 
 ## Rationale
 
@@ -27,7 +32,7 @@ it was clicked from.
 
 ## Non-goals
 
-- No change to the music track feature. `Project.music`, the `ADD AUDIO` rail entry, and
+- No change to the music track feature. `Project.music`, the rail's `AUDIO` entry, and
   `#panel-audio` keep working exactly as they do now.
 - No backend change. `CaptionTrack.language`, `POST /api/projects/{id}/transcribe`, and the
   `/auto-slice/*` routes are untouched.
@@ -94,7 +99,7 @@ Per the project's one-feature-per-file convention:
 | `static/audio-panel-language.js` | **new**, replaces `static/caption-panel-language.js` (deleted). Same settings-row + drill-down implementation, still writing `CaptionTrack.language` via `ensureCaptionTrack()`. Ids rename `caption-language-*` → `audio-language-*`, `#panel-captions-language` → `#panel-audio-track-language`. Exposes `window.AudioTrackPanel.renderLanguage()`. |
 | `static/panel-auto-slice.js` | Logic unchanged. Only the idle hint text changes: it currently points the user at the CAPTIONS panel to transcribe first, but auto-caption now sits directly above it in the same tab. |
 | `static/panel-captions.js` | Removes the `CaptionPanel.renderLanguage()` call, the `#panel-captions-language` hide, the `#caption-transcribe-error` reset, and `runAutoCaption()` + its listener. |
-| `static/panel-nav.js` | The `auto-slice` rail entry becomes `audio-track` (label `AUDIO`, Lucide `audio-lines` icon) in the same slot. `openAutoSlicePanel()` → `openAudioTrackPanel()` (sets `selected = { type: "audio-track" }`, calls `AudioTrackPanel.render()`). `showPanel()`'s section list and `PANEL_NAV_HANDLERS` updated to match. |
+| `static/panel-nav.js` | The `auto-slice` rail entry becomes `audio-track` (label `AUTO`, Lucide `audio-lines` icon) in the same slot. `openAutoSlicePanel()` → `openAudioTrackPanel()` (sets `selected = { type: "audio-track" }`, calls `AudioTrackPanel.render()`). `showPanel()`'s section list and `PANEL_NAV_HANDLERS` updated to match. |
 | `static/editor.js` | The `Timeline.render` action `onSelectAudio: () => openAudioPanel()` becomes `openAudioTrackPanel()`. |
 | `static/index.html` | Row label, the new panel markup, the removed caption-panel markup, and the `<script>` tag set. |
 | `static/css/components/auto-slice-panel.css` | Unchanged — every class name survives the move. |
@@ -104,14 +109,14 @@ Per the project's one-feature-per-file convention:
 - The CAPTIONS panel's Closed-captions tab keeps the editable transcript list
   (`#caption-transcript-section`). Only the language row, the Auto-caption button, and the
   transcribe error line leave it.
-- The `ADD AUDIO` rail entry still opens `#panel-audio` for music import. `panel-media.js`'s
+- The rail's `AUDIO` entry still opens `#panel-audio` for music import. `panel-media.js`'s
   audio-row plus icon still calls `openAudioPanel()`.
 
 ## Data flow
 
 Clicking the timeline AUDIO row → `Timeline.render`'s `onSelectAudio` → `openAudioTrackPanel()`
 → `showPanel("audio-track")` + `AudioTrackPanel.render()`. Identical entry from the rail's
-AUDIO button via `PANEL_NAV_HANDLERS`.
+`AUTO` button via `PANEL_NAV_HANDLERS`.
 
 `AudioTrackPanel.render()` calls `ensureCaptionTrack()` (so the language row has a track to
 read), `AudioTrackPanel.renderLanguage()`, and `AutoSlicePanel.render()` — the latter already
@@ -145,8 +150,8 @@ keepalive-save flushes in-memory mutations to disk):
 
 1. Timeline main row reads `MAIN`.
 2. Clicking the timeline AUDIO row opens the new AUDIO panel, not ADD MUSIC.
-3. The rail's AUDIO button opens the same panel; AUTO SLICE is gone from the rail.
-4. The rail's ADD AUDIO button still opens music import and music import still works.
+3. The rail's `AUTO` button opens the same panel; `AUTO SLICE` is gone from the rail.
+4. The rail's `AUDIO` button still opens music import and music import still works.
 5. Language row opens its drill-down, selects a language, and persists.
 6. Auto-caption runs and populates the CAPTIONS transcript list.
 7. Detect → approve → Confirm & Apply still cuts ranges out of the timeline.
