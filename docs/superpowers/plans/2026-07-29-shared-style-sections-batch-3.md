@@ -8,6 +8,28 @@
 
 ---
 
+
+## Amendments from the master-plan reconciliation (2026-07-29)
+
+Batches 2-6 were drafted in parallel and disagreed on three points. The master plan is
+now the single authority; where a snippet below contradicts it, **the master plan wins**.
+
+- **The composer snippet keeps `sampleText` and `compactSizeRow`.** Batch 2 added
+  `sampleText` after this file was drafted; the snippets here have been corrected. When
+  editing `style-tab-design.js`, carry all four options forward.
+- **`StyleSection.size` takes `{ compactRow }`.** CAPTIONS' size-row alignment was raised
+  and **declined**, so the difference must be preserved, not converged. The section emits
+  `.style-size-row` always and `.style-size-row--compact` when `compactRow` is true; TEXT
+  passes it, CAPTIONS does not. The old `#text-size-row` rules move to those classes.
+- **The `.style-section` wrapper and its CSS already exist** from Batch 2. Skip any step
+  that adds them; do not re-add the `:last-child` fix.
+- **`UI.numberField` gains a `setDisabled` property on its returned function** (master
+  plan, "`UI.numberField` and the `disabled` state`"). Attach it to the returned function
+  rather than changing the return type, so existing callers are unaffected. Do not reach
+  into the built DOM from `render()`.
+
+---
+
 ## Assumed state after Batch 2
 
 **`docs/superpowers/plans/2026-07-29-shared-style-sections-batch-2.md` did not exist when this file was written.** The pattern below is derived from the master plan's Interface contract and Script load order sections. Before starting Task 1, open `static/style-tab-design.js` and `static/panel-text.js` and confirm the four assumptions; where Batch 2 chose different names, use *its* names and do not introduce new ones.
@@ -439,8 +461,8 @@ window.StyleTab.design = function design(container, target, options) {
   // Font Family -> Weight -> SIZE -> Italic/Underline/case -> Color.
   const sections = [
     StyleSection.fontFamily(container, target, { host: opts.host }),
-    StyleSection.fontWeight(container, target, { host: opts.host }),
-    StyleSection.size(container, target, {}),
+    StyleSection.fontWeight(container, target, { host: opts.host, sampleText: opts.sampleText }),
+    StyleSection.size(container, target, { compactRow: opts.compactSizeRow }),
     StyleSection.emphasis(container, target, {}),
     StyleSection.color(container, target, { host: opts.host }),
   ];

@@ -10,6 +10,24 @@
 
 ---
 
+
+## Amendments from the master-plan reconciliation (2026-07-29)
+
+Batches 2-6 were drafted in parallel and disagreed on three points. The master plan is
+now the single authority; where a snippet below contradicts it, **the master plan wins**.
+
+- **The composer snippets keep `sampleText` and `compactSizeRow`.** Batches 2 and 3 added
+  them after this file was drafted; all three copies of the `StyleTab.design` rewrite here
+  have been corrected. Carry all four options forward.
+- **The `.style-section` wrapper and its CSS already exist** from Batch 2. Each section
+  still builds its own `.style-group`s; the composer owns the wrapper.
+- This batch's `setField` / `setPresetField` split was reviewed and is **correct as
+  written** — `outline_color`, `outline_px`, `highlight`, `highlight_color` use `setField`;
+  the five shadow fields, `highlight_mode` and `highlight_border_radius` use
+  `setPresetField`.
+
+---
+
 ## Divergence landed by this batch
 
 This batch lands **one of the seven resolved divergences** from the spec:
@@ -284,8 +302,8 @@ window.StyleTab.design = function design(container, target, options) {
   // Built once. Each entry returns a { render() } handle; the composer never re-runs a factory.
   const sections = [
     StyleSection.fontFamily(container, target, { host }),
-    StyleSection.fontWeight(container, target, { host }),
-    StyleSection.size(container, target, {}),
+    StyleSection.fontWeight(container, target, { host, sampleText: options.sampleText }),
+    StyleSection.size(container, target, { compactRow: options.compactSizeRow }),
     StyleSection.emphasis(container, target, {}),
     StyleSection.color(container, target, { host }),
     StyleSection.outline(container, target, { host }),
@@ -575,8 +593,8 @@ window.StyleTab.design = function design(container, target, options) {
   // Built once. Each entry returns a { render() } handle; the composer never re-runs a factory.
   const sections = [
     StyleSection.fontFamily(container, target, { host }),
-    StyleSection.fontWeight(container, target, { host }),
-    StyleSection.size(container, target, {}),
+    StyleSection.fontWeight(container, target, { host, sampleText: options.sampleText }),
+    StyleSection.size(container, target, { compactRow: options.compactSizeRow }),
     StyleSection.emphasis(container, target, {}),
     StyleSection.color(container, target, { host }),
     StyleSection.outline(container, target, { host }),
@@ -904,8 +922,8 @@ window.StyleTab.design = function design(container, target, options) {
   // CAPTIONS gets the karaoke MODE group inside the Highlight subpage, TEXT does not.
   const sections = [
     StyleSection.fontFamily(container, target, { host }),
-    StyleSection.fontWeight(container, target, { host }),
-    StyleSection.size(container, target, {}),
+    StyleSection.fontWeight(container, target, { host, sampleText: options.sampleText }),
+    StyleSection.size(container, target, { compactRow: options.compactSizeRow }),
     StyleSection.emphasis(container, target, {}),
     StyleSection.color(container, target, { host }),
     StyleSection.outline(container, target, { host }),

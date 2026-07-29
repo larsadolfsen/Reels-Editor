@@ -13,6 +13,25 @@
 
 ---
 
+
+## Amendments from the master-plan reconciliation (2026-07-29)
+
+Batches 2-6 were drafted in parallel and disagreed on three points. The master plan is
+now the single authority; where a snippet below contradicts it, **the master plan wins**.
+
+- **Skip Task 4 Step 2 — the `.style-section` wrapper class and its CSS rules.** Batch 2
+  now introduces both. This file specified them independently because Batches 2-4 had not
+  been written yet; re-adding them would duplicate the rules. The reasoning in Task 4 is
+  correct and is preserved in the master plan under "Section wrapper convention".
+- The `#text-align-group` / `#caption-align-group` -> `.style-align-group` rename, and the
+  transitional approach of keeping both id selectors live until each panel's markup is
+  deleted, are **correct as written** and are now recorded in the master plan's "CSS
+  divergence surface" section.
+- This batch's "every write is `setPresetField`, there is not one `setField` call" rule
+  was reviewed and is **correct as written**.
+
+---
+
 ## Read this before Task 1
 
 Three properties of this batch that are easy to get wrong.

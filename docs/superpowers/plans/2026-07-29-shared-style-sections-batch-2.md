@@ -8,6 +8,29 @@
 
 ---
 
+
+## Amendments from the master-plan reconciliation (2026-07-29)
+
+Batches 2-6 were drafted in parallel and disagreed on three points. The master plan is
+now the single authority; where a snippet below contradicts it, **the master plan wins**.
+
+- **`font` is written with `setPresetField`, not `setField`.** Routing it through
+  `setField` would add per-range fonts inside one heading — a new capability that was
+  raised and declined. `text-panel-font-family.js:29` writes `preset.font`
+  unconditionally today, and that behaviour is preserved.
+- **Picking a font uses `target.setFields({ font, weight })`, not two `setField` calls.**
+  Two calls mean two saves and two undo entries for one click. `setFields` is new in the
+  contract; Batch 1 must implement it.
+- **This batch introduces the `.style-section` wrapper convention and its two CSS rules**
+  (master plan, "Section wrapper convention"). `StyleTab.design` wraps each section in a
+  `<div class="style-section">`. Without it the gap between sections collapses, because
+  `.style-group:last-child { margin-bottom: 0 }` starts matching inside every section.
+  Batches 3-6 rely on this and must not re-add the rules.
+- **`StyleTab.design` options are `{ host, highlightModes, sampleText, compactSizeRow }`.**
+  All four must survive every later rewrite of the composer.
+
+---
+
 ## What both panels look like at the end of this batch
 
 This batch does **not** move SIZE — that is Batch 3. So the intermediate state is: the first two rows of each Design tab are built by shared components into a mount div, and everything below the mount is still each panel's own markup wired by its own old files.

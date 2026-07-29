@@ -8,6 +8,31 @@
 
 ---
 
+
+## Amendments from the master-plan reconciliation (2026-07-29)
+
+Batches 2-6 were drafted in parallel against this file's contract and found three gaps in
+it. The master plan is now the single authority; where a snippet below contradicts it,
+**the master plan wins**.
+
+- **Both targets must implement `setFields(obj)`** — apply every key, then save and
+  re-render **once**. Without it, picking a font (which writes `font` plus a snapped
+  `weight`) produces two saves and **two undo entries for a single click**. It follows the
+  same `FormatRun` rules as `setField`, per key. Add it to both target files and to
+  `tests/js`, alongside the existing `setField` cases.
+- **`rerenderPanel()` must `return` its delegate's result.** `renderTextPanel()` and
+  `renderCaptionPanel()` are both `async`; without the `return` no section can await a
+  panel refresh. The snippets in this file have been corrected.
+- **`font` is not selection-aware.** The contract's `setField` field list no longer
+  includes `font` — see the master plan. This changes no code in Batch 1, but the target
+  tests should not assert a `FormatRun` write for `font`.
+- **Minor:** the caption target's default `renderPreviewWith` calls `Preview.renderCaptions`
+  unguarded, while `caption-panel-font-family.js:23` and `panel-captions.js:51` both guard
+  with `if (window.Preview && Preview.renderCaptions)`. Only reachable once `Preview` has
+  loaded, so not a live bug — but keep the guard rather than dropping it silently.
+
+---
+
 ## Task 1: Font size scale
 
 **Files:**
@@ -573,7 +598,7 @@ window.StyleTarget.forTextBlock = function forTextBlock(deps) {
     clearFormatRuns() { d.getBlock().formatting_runs = []; },
 
     rerenderPreview() { d.rerenderPreview(); },
-    rerenderPanel() { d.rerenderPanel(); },
+    rerenderPanel() { return d.rerenderPanel(); },
     getBoxSize() { return d.getBoxSize(d.getBlock().id); },
   };
 };
@@ -739,7 +764,7 @@ window.StyleTarget.forCaptionTrack = function forCaptionTrack(deps) {
     clearFormatRuns() { /* captions have no per-range overrides */ },
 
     rerenderPreview() { d.rerenderPreview(); },
-    rerenderPanel() { d.rerenderPanel(); },
+    rerenderPanel() { return d.rerenderPanel(); },
     getBoxSize() { return d.getBoxSize(); },
   };
 };
