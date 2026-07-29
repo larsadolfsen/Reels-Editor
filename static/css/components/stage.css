@@ -20,7 +20,7 @@
   max-width: 100%;
   aspect-ratio: 9 / 16;
   background: repeating-linear-gradient(135deg, #1E2023 0px, #1E2023 14px, #232529 14px, #232529 28px);
-  border-radius: 6px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
@@ -83,10 +83,10 @@
   gap: var(--space-2);
   font-family: var(--font-ui);
   color: var(--text-dim);
-  font-size: 11px;
+  font-size: var(--fs-sm);
 }
 
-#export-result { font-family: var(--font-ui); font-size: 11px; color: var(--text-muted); }
+#export-result { font-family: var(--font-ui); font-size: var(--fs-sm); color: var(--text-muted); }
 
 /* Hidden: still holds the current time as textContent (read by editor.js/timeline.js),
    but the timeline toolbar's readout already shows the time, so it's not shown twice. */

@@ -1,3 +1,2 @@
 /* VIDEO BOX context panel: add-picker list + trim/time/position/size detail view. */
-/* Exposes #panel-video-box's internal layout only. Depends on tokens.css, style-panel.css. */
-#video-box-picker-list { max-height: 320px; overflow-y: auto; }
+/* Exposes #panel-video-box's internal layout only. Depends on tokens.css, style-panel.css, scroll-list.css. */

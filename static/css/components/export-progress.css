@@ -1,7 +1,7 @@
 /* .export-progress: track + fill-div showing a background export job's percent in #panel-export. */
 .export-progress {
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background: var(--border);
   overflow: hidden;
   margin: 8px 0;
