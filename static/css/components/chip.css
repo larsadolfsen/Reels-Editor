@@ -1,0 +1,55 @@
+/* Shared small-labeled-chip component: usage counts, status badges, safe-zone labels. */
+/* Exposes .chip + .chip--pill/.chip--outlined/.chip--safe-zone/.chip--tinted/.chip--silence/
+   .chip--filler modifiers. Depends on tokens.css. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-1);
+  border: 1px solid var(--border-soft);
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: var(--fs-2xs);
+  line-height: 1;
+}
+
+/* Usage-count pill (FILES panel). */
+.chip--pill {
+  min-width: 16px;
+  border-radius: var(--radius-pill);
+}
+
+/* Outlined label chip (safe-zone guide labels). */
+.chip--outlined {
+  height: auto;
+  padding: 3px 7px;
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow-chip);
+  color: var(--text-secondary);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+
+.chip--safe-zone {
+  border-left: 3px solid var(--safe-zone);
+}
+
+/* Tinted status badge (AUTO SLICE detected-range kind). */
+.chip--tinted {
+  flex-shrink: 0;
+  height: auto;
+  padding: 2px 5px;
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+  letter-spacing: var(--ls-tight);
+}
+
+.chip--silence { color: var(--accent); border-color: var(--accent); }
+.chip--filler { color: var(--accent-gold); border-color: var(--accent-gold); }

@@ -1,7 +1,9 @@
 /* Auto-silence group inside the AUDIO panel: detect/results-checklist/confirm views. Exposes .auto-slice-hint,
-   .auto-slice-summary, .auto-slice-list/.auto-slice-row/.auto-slice-badge(--silence|--filler)/
-   .auto-slice-row-time/.auto-slice-row-label. Rows use UI.listRow for card/hover styling
-   (list-row.css); this file only adds row-internal flex layout + badge coloring. Depends on tokens.css. */
+   .auto-slice-summary, .auto-slice-list/.auto-slice-row/.auto-slice-row-time/.auto-slice-row-label.
+   The status badge itself is the shared .chip .chip--tinted .chip--{silence,filler} recipe
+   (chip.css, added 2026-07-29 chip component) — no longer defined here. Rows use UI.listRow for
+   card/hover styling (list-row.css); this file only adds row-internal flex layout. Depends on
+   tokens.css, chip.css. */
 .auto-slice-hint {
   grid-column: 1 / -1;   /* .style-group is an 8-col grid; span it like .style-group > .style-row does */
   font-size: var(--fs-md);
@@ -29,19 +31,6 @@
   align-items: center;
   gap: var(--space-2);
 }
-
-.auto-slice-badge {
-  flex-shrink: 0;
-  font-family: var(--font-ui);
-  font-size: var(--fs-2xs);
-  letter-spacing: 0.03em;
-  padding: 2px 5px;
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-.auto-slice-badge--silence { color: var(--accent); border-color: var(--accent); }
-.auto-slice-badge--filler { color: var(--accent-gold); border-color: var(--accent-gold); }
 
 .auto-slice-row-time {
   flex-shrink: 0;
