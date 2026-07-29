@@ -5,6 +5,7 @@ Local web editor that assembles 4–6 mp4 clips into one vertical reel with trim
 ## Run commands
 
 - Tests: `.venv/Scripts/python -m pytest -q`
+- Frontend tests: `node --test "tests/js/**/*.test.js"` (pure JS modules only — no DOM, no dependencies)
 - Server: `.venv/Scripts/python -m uvicorn app.main:app --reload` (then open http://127.0.0.1:8000)
 - Setup: `python -m venv .venv && .venv/Scripts/pip install -e .[dev]`
 - Requires `ffmpeg`/`ffprobe` on PATH for clip probing/export (not required for `pytest`, which mocks subprocess calls).
