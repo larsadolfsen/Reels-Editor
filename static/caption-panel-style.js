@@ -18,13 +18,13 @@ window.CaptionPanel = window.CaptionPanel || {};
       box_width_mode, box_height_mode, box_width, box_height, box_background, box_background_color,
       box_border_width, box_border_color, box_border_radius, align, entrance,
       shadow, shadow_color, shadow_offset_x, shadow_offset_y, shadow_blur,
-      x, y, highlight_color, highlight_mode } = preset;
+      x, y, highlight_color, highlight_mode, highlight_border_radius } = preset;
     return { font, size_px, color, outline_color, outline_px, weight, italic, underline,
       text_case,
       box_width_mode, box_height_mode, box_width, box_height, box_background, box_background_color,
       box_border_width, box_border_color, box_border_radius, align, entrance,
       shadow, shadow_color, shadow_offset_x, shadow_offset_y, shadow_blur,
-      x, y, highlight_color, highlight_mode };
+      x, y, highlight_color, highlight_mode, highlight_border_radius };
   }
 
   async function loadSavedPresets() {
