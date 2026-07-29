@@ -3,7 +3,9 @@
 // and owns click-to-edit/drag-to-move/drag-to-select wiring plus the active format-range selection
 // consumed by the FONT accordion. Also tracks the per-block UI.textInteraction() handle (keyed by
 // block id, cleared/rebuilt each renderText() call) so a newly-created block can be dropped
-// straight into on-stage edit mode via enterEditMode(blockId). getBoxSizeCanvasPx(blockId) reads
+// straight into on-stage edit mode via enterEditMode(blockId), and closes an edit left open on
+// another block whenever one is activated (takeEditOnOtherBlock) — exactly one block edits at a
+// time, since a stage click alone never blurs the editing div. getBoxSizeCanvasPx(blockId) reads
 // a block's live on-stage rendered size (in 1080x1920 canvas px) for the POSITION anchor-grid
 // shortcut. Case styling (preset.text_case): displayed via CSS text-transform, measured via
 // TextCase.apply so BOX FILL sizing matches. Exposes window.PreviewText.
@@ -15,6 +17,7 @@ window.PreviewText = (() => {
   let boxResizeCallbacks = null;
   let editingBlockId = null;
   let editingDiv = null;
+  let editingHandle = null; // the editing block's UI.textInteraction handle, for closing its edit
   let onStageTextActivate = null;
   let activeFormatSelection = null;
   const fitCache = new Map(); // blockId -> { key: string, size: number }
@@ -44,6 +47,22 @@ window.PreviewText = (() => {
     const { size } = FontFit.fitFontSize(TextCase.apply(block.heading || "", preset.text_case), measurerFactory, preset.box_width, preset.box_height);
     preset.size_px = size;
     fitCache.set(block.id, { key, size });
+  }
+
+  // An on-stage edit belongs to exactly one block, so activating a different block has to close
+  // it. A stage click never blurs the editing div on its own — ui-text-interaction.js's box-move
+  // branch preventDefaults the mousedown, and renderText below re-focuses the div it preserved —
+  // so without this the old block stayed contentEditable and kept swallowing keystrokes while the
+  // right panel had already moved on to the newly-activated block.
+  // Clears the tracked edit state and hands the handle back rather than closing it here: closing
+  // re-renders, so the caller closes only once its own edit state is in place.
+  function takeEditOnOtherBlock(blockId) {
+    if (!editingBlockId || editingBlockId === blockId) return null;
+    const handle = editingHandle;
+    editingBlockId = null;
+    editingDiv = null;
+    editingHandle = null;
+    return handle;
   }
 
   function renderText(project, presets, timelineTime) {
@@ -97,8 +116,6 @@ window.PreviewText = (() => {
 
       const sizePx = preset.size_px / 1920 * stageH;
       div.style.fontSize = sizePx + "px";
-
-      div.style.padding = "0.15em 0.35em";
 
       div.style.backgroundColor = preset.box_background ? hexToRgba(preset.box_background_color, preset.box_background_opacity) : "transparent";
       div.style.borderWidth = (preset.box_border_width / 1080 * stageW) + "px";
@@ -161,8 +178,14 @@ window.PreviewText = (() => {
       interactionHandles.set(block.id, UI.textInteraction(div, {
         isPlaceholder: !heading,
         onEditStart: () => {
+          // Take over the "block being edited" role before closing any edit left open on
+          // another block: closing it re-renders (its onEditEnd saves), and this block's div
+          // only survives that render while it's the tracked editingDiv.
+          const other = takeEditOnOtherBlock(block.id);
           editingBlockId = block.id;
           editingDiv = div;
+          editingHandle = interactionHandles.get(block.id) || null;
+          if (other) other.exitEditMode();
           if (!block.heading) {
             div.textContent = "";
             div.classList.remove("text-block--placeholder");
@@ -182,8 +205,13 @@ window.PreviewText = (() => {
         },
         onEditEnd: (text) => {
           block.heading = text;
-          editingBlockId = null;
-          editingDiv = null;
+          // Only clear the tracked edit if this block still owns it — closing a stale edit on
+          // another block runs after that role has already moved on (see onEditStart above).
+          if (editingBlockId === block.id) {
+            editingBlockId = null;
+            editingDiv = null;
+            editingHandle = null;
+          }
           if (boxResizeCallbacks && boxResizeCallbacks.onEditEnd) boxResizeCallbacks.onEditEnd(text);
         },
         onMove: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMove) boxResizeCallbacks.onMove(delta); },
@@ -197,6 +225,8 @@ window.PreviewText = (() => {
         // uses for the Text tool so both tools route through the one place that switches the right
         // panel to TEXT (editor.js's Preview.setOnStageTextActivate wiring).
         onSelectClick: () => {
+          const other = takeEditOnOtherBlock(block.id);
+          if (other) other.exitEditMode();
           if (block.id !== selectedTextBlockId && onStageTextActivate) onStageTextActivate(block.id);
         },
       }));
@@ -231,7 +261,7 @@ window.PreviewText = (() => {
   }
 
   // Returns the currently-rendered box's size in canvas (1080x1920) px, for the POSITION
-  // anchor-grid shortcut to compute edge-flush x/y from — null if the block isn't on stage
+  // single-row icon anchor shortcut to compute edge-flush x/y from — null if the block isn't on stage
   // (e.g. hidden by its own time range) to render against.
   function getBoxSizeCanvasPx(blockId) {
     const div = overlay.querySelector(`.text-block[data-block-id="${blockId}"]`);

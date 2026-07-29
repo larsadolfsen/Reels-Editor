@@ -23,6 +23,10 @@ window.AudioPanel = window.AudioPanel || {};
     if (!mediaId) return;
     project.music = { id: crypto.randomUUID().replaceAll("-", ""), media_id: mediaId, volume: 0.3, muted: false };
     await saveProject();
+    // PreviewAudio's module-level `music` state (static/preview-audio.js) is only ever set inside
+    // PreviewAudio.load(project) — without this, PreviewAudio.play() silently no-ops even though
+    // Project.music is now correctly set (bug found in final review).
+    Preview.load(project);
     renderTimeline();
     render();
   }
@@ -32,6 +36,7 @@ window.AudioPanel = window.AudioPanel || {};
     if (!mediaId) return;
     project.music.media_id = mediaId;
     await saveProject();
+    Preview.load(project); // same PreviewAudio-state gap as addMusic() above
     renderTimeline();
     render();
   }
@@ -39,6 +44,7 @@ window.AudioPanel = window.AudioPanel || {};
   async function removeMusic() {
     project.music = null;
     await saveProject();
+    Preview.load(project); // same PreviewAudio-state gap as addMusic() above — otherwise the removed track keeps playing until reload
     renderTimeline();
     render();
   }

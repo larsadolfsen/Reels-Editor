@@ -18,24 +18,32 @@ window.CaptionPanel = window.CaptionPanel || {};
 
   UI.subPanelHeader(document.getElementById("caption-outline-subpanel-header"), { title: "Outline", onBack: closeOutlinePanel });
 
-  window.CaptionPanel.renderOutline = function renderOutline() {
-    const preset = ensureCaptionPreset(ensureCaptionTrack().preset_id);
+  function refreshOutlineRow(preset) {
+    const outlineOn = preset.outline_px > 0;
+    const outlineValue = SettingsRowValue.orNone(outlineOn, `${preset.outline_px}px`);
+    const outlineSwatch = outlineOn ? preset.outline_color : null;
 
     if (outlineRowSetValue) {
-      outlineRowSetValue(`${preset.outline_px}px`, null, preset.outline_color);
+      outlineRowSetValue(outlineValue, null, outlineSwatch);
     } else {
       outlineRowSetValue = UI.settingsRow(document.getElementById("caption-outline-row"), {
-        label: "Outline", value: `${preset.outline_px}px`, swatchColor: preset.outline_color,
+        label: "Outline", value: outlineValue, swatchColor: outlineSwatch,
         onClick: openOutlinePanel,
       });
     }
+  }
+
+  window.CaptionPanel.renderOutline = function renderOutline() {
+    const preset = ensureCaptionPreset(ensureCaptionTrack().preset_id);
+
+    refreshOutlineRow(preset);
 
     UI.colorSwatch(document.getElementById("caption-outline-color-field"),
       { label: "Outline", value: preset.outline_color, span: 8,
-        onChange: (v) => { preset.outline_color = v; saveProject(); renderCaptionPreview(); renderOutline(); } });
+        onChange: (v) => { preset.outline_color = v; saveProject(); renderCaptionPreview(); refreshOutlineRow(preset); } });
 
     UI.numberField(document.getElementById("caption-outline-px-field"),
       { label: "WIDTH", unit: "PX", value: preset.outline_px, min: 0, max: 20, span: 8,
-        onChange: (v) => { preset.outline_px = v; saveProject(); renderCaptionPreview(); renderOutline(); } });
+        onChange: (v) => { preset.outline_px = v; saveProject(); renderCaptionPreview(); refreshOutlineRow(preset); } });
   };
 })();

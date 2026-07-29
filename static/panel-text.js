@@ -11,8 +11,8 @@
 // Position grid anchors: edge-flush against the 1080x1920 canvas, using the box's own actual
 // rendered width/height (from Preview.getTextBoxSize/getCaptionBoxSize) so TOP/BTM/LEFT/RIGHT
 // place the box's edge (not its top-left corner) flush with the canvas edge, and MID centers it.
-// Used only as a stateless one-shot shortcut in the POSITION accordion's 3x3 grid — clicking a
-// cell writes the computed value straight into TextPreset.x/y with no persisted anchor selection.
+// Used only as a stateless one-shot shortcut in the POSITION single row of icon buttons — clicking
+// one writes the computed value straight into TextPreset.x/y with no persisted anchor selection.
 function anchorPositionX(value, boxWidth, align) {
   // The box's rendered left edge is offset from `x` by a CSS transform keyed on text align
   // (stage.css's .text-block--align-*: 0 for left, -50% for center, -100% for right), so the
@@ -184,8 +184,13 @@ async function renderTextPanel() {
     onDragEnd: (size) => handleBoxResizeEnd(preset, size),
     onMove: (delta) => handleBoxMove(preset, delta),
     onMoveEnd: (delta) => handleBoxMoveEnd(preset, delta),
-    onEdit: (heading) => { block.heading = heading; },
-    onEditEnd: async (heading) => { block.heading = heading; renderTextPreview(); await saveProject(); },
+    // No heading write here: preview-text.js already assigns the typed text onto the block whose
+    // div is actually being edited, and that block isn't necessarily this panel's selected one —
+    // clicking another block on the stage doesn't blur an open edit (the box-move branch in
+    // ui-text-interaction.js preventDefaults the mousedown), so the still-editing block's later
+    // blur used to write its text into whichever block had meanwhile become selected. These
+    // callbacks only do the selected-block-agnostic side effects.
+    onEditEnd: async () => { renderTextPreview(); await saveProject(); },
     // preview.js already tracks the active selection itself (Preview.getActiveFormatSelection());
     // this is just a pass-through hook in case a future panel needs to react live to selection
     // changes. FONT accordion controls read the selection on demand instead, so no-op for now.
@@ -219,25 +224,9 @@ function renderBoxPanel() {
     { label: "HEIGHT", unit: "PX", value: preset.box_height, min: 1, max: 1920, span: 4,
       onChange: (v) => { preset.box_height = v; renderTextPreview(); saveProject(); } });
 
-  UI.colorSwatch(document.getElementById("text-box-background-color-field"),
-    { label: "Background", showLabel: false, value: preset.box_background_color, span: 1,
-      onChange: (v) => { preset.box_background_color = v; preset.box_background = true; saveProject(); renderTextPreview(); } });
+  TextPanel.renderBackground();
 
-  UI.numberField(document.getElementById("text-box-background-opacity-field"),
-    { label: "OPACITY", unit: "%", value: preset.box_background_opacity, min: 0, max: 100, span: 7,
-      onChange: (v) => { preset.box_background_opacity = v; saveProject(); renderTextPreview(); } });
-
-  UI.numberField(document.getElementById("text-box-border-width-field"),
-    { label: "BORDER", unit: "PX", value: preset.box_border_width, min: 0, max: 40, span: 4,
-      onChange: (v) => { preset.box_border_width = v; saveProject(); renderTextPreview(); } });
-
-  UI.numberField(document.getElementById("text-box-border-radius-field"),
-    { label: "RADIUS", unit: "PX", value: preset.box_border_radius, min: 0, max: 200, span: 3,
-      onChange: (v) => { preset.box_border_radius = v; saveProject(); renderTextPreview(); } });
-
-  UI.colorSwatch(document.getElementById("text-box-border-color-field"),
-    { label: "Border Color", showLabel: false, value: preset.box_border_color, span: 1,
-      onChange: (v) => { preset.box_border_color = v; saveProject(); renderTextPreview(); } });
+  TextPanel.renderBorder();
 }
 
 function stageScale() {
@@ -314,7 +303,6 @@ UI.tabBar(document.getElementById("text-tab-bar"), TEXT_TABS, activeTextTab, sho
 showTextTab(activeTextTab);
 
 UI.divider(document.getElementById("text-box-width-height-divider"));
-UI.divider(document.getElementById("text-box-background-border-divider"));
 UI.divider(document.getElementById("text-box-border-position-divider"));
 
 document.getElementById("text-add-block-btn").addEventListener("click", () => addTextBlockAndEdit());

@@ -7,7 +7,7 @@
 // (preset.text_case): displayed via CSS text-transform, paginated using a measurer wrapped through
 // TextCase.apply so line-wrapping matches what CSS actually draws.
 // getBoxSizeCanvasPx() reads the caption block's live on-stage rendered size (in 1080x1920 canvas
-// px) for the POSITION anchor-grid shortcut. Exposes window.PreviewCaptions.
+// px) for the POSITION single-row icon anchor shortcut. Exposes window.PreviewCaptions.
 // {renderCaptions(project, presets, timelineTime), getBoxSizeCanvasPx}.
 window.PreviewCaptions = (() => {
   const overlay = document.getElementById("overlay");

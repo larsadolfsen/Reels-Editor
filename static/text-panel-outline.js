@@ -34,17 +34,25 @@ window.TextPanel = window.TextPanel || {};
 
   UI.subPanelHeader(document.getElementById("text-outline-subpanel-header"), { title: "Outline", onBack: closeOutlinePanel });
 
-  window.TextPanel.renderOutline = function renderOutline() {
-    const preset = ensureTextPreset(currentTextBlock().preset_id);
+  function refreshOutlineRow(preset) {
+    const outlineOn = preset.outline_px > 0;
+    const outlineValue = SettingsRowValue.orNone(outlineOn, `${preset.outline_px}px`);
+    const outlineSwatch = outlineOn ? preset.outline_color : null;
 
     if (outlineRowSetValue) {
-      outlineRowSetValue(`${preset.outline_px}px`, null, preset.outline_color);
+      outlineRowSetValue(outlineValue, null, outlineSwatch);
     } else {
       outlineRowSetValue = UI.settingsRow(document.getElementById("text-outline-row"), {
-        label: "Outline", value: `${preset.outline_px}px`, swatchColor: preset.outline_color,
+        label: "Outline", value: outlineValue, swatchColor: outlineSwatch,
         onClick: openOutlinePanel,
       });
     }
+  }
+
+  window.TextPanel.renderOutline = function renderOutline() {
+    const preset = ensureTextPreset(currentTextBlock().preset_id);
+
+    refreshOutlineRow(preset);
 
     UI.colorSwatch(document.getElementById("text-outline-color-field"),
       { label: "Outline", value: preset.outline_color, span: 8,
@@ -58,7 +66,7 @@ window.TextPanel = window.TextPanel || {};
           }
           saveProject();
           renderTextPreview();
-          renderOutline();
+          refreshOutlineRow(preset);
         } });
 
     UI.numberField(document.getElementById("text-outline-px-field"),
@@ -73,7 +81,7 @@ window.TextPanel = window.TextPanel || {};
           }
           saveProject();
           renderTextPreview();
-          renderOutline();
+          refreshOutlineRow(preset);
         } });
   };
 })();
