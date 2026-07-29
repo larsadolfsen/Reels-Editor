@@ -20,6 +20,7 @@ window.VideoBoxPreview = (() => {
   let onActivate = null; // (boxId) => void, fired by a plain click on an unselected box in Select mode
   let onMaskChange = null;   // ({angle, offset}, done) => void, fired by the mask-line drag guide
   let maskGuide = null;      // the UI.maskLineDrag handle for the selected box, if it is masked
+  let maskGuideBoxId = null; // which box the mounted guide belongs to
 
   function boxEnd(v) {
     return v.start + (v.out_point - v.in_point);
@@ -46,12 +47,18 @@ window.VideoBoxPreview = (() => {
 
   function unmountMaskGuide() {
     if (maskGuide) { maskGuide.destroy(); maskGuide = null; }
+    maskGuideBoxId = null;
   }
 
   // The guide only exists for the selected box while its mask is on; every other case tears it
   // down, so switching selection or turning the mask off leaves no stray SVG in #overlay.
+  // Only tears down the guide when THIS box owns it — render() calls this once per visible box,
+  // so an unrelated box must not destroy the selected box's guide (it would never paint).
   function syncMaskGuide(box, el) {
-    if (!box.mask_enabled || box.id !== selectedBoxId) { unmountMaskGuide(); return; }
+    if (!box.mask_enabled || box.id !== selectedBoxId) {
+      if (maskGuideBoxId === box.id) unmountMaskGuide();
+      return;
+    }
     if (!maskGuide) {
       maskGuide = UI.maskLineDrag(overlay, {
         getRect: () => ({ left: el.offsetLeft, top: el.offsetTop,
@@ -60,6 +67,7 @@ window.VideoBoxPreview = (() => {
         onChange: (mask) => { if (onMaskChange) onMaskChange(mask, false); },
         onChangeEnd: (mask) => { if (onMaskChange) onMaskChange(mask, true); },
       });
+      maskGuideBoxId = box.id;
     }
     maskGuide.render();
   }
