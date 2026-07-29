@@ -6,8 +6,8 @@ from app.font_metrics import wrap_text, wrap_text_runs, pil_font_measurer, WEIGH
 from app.caption_layout import paginate_words
 from app.text_case import apply_text_case
 
-BOX_PAD_X_EM = 0.35
-BOX_PAD_Y_EM = 0.15
+CAPTION_PAD_X_EM = 0.35   # captions only — text blocks are padding-free, their box hugs the glyphs
+CAPTION_PAD_Y_EM = 0.15
 LINE_HEIGHT = 1.15
 
 CAPTION_DEFAULT_BOX_WIDTH = 900    # px on the 1080x1920 canvas — used when the preset predates fixed-size captions
@@ -102,18 +102,16 @@ def _measure_range_for(b, p: TextPreset, weight: int) -> Callable[[int, int], fl
 def _wrapped_lines_and_size(b, p: TextPreset, weight: int | None = None) -> tuple[str, float, float, list[tuple[int, int]]]:
     weight = weight if weight is not None else _resolved_weight(p)
     measure_range = _measure_range_for(b, p, weight)
-    pad_x = BOX_PAD_X_EM * p.size_px * 2
-    pad_y = BOX_PAD_Y_EM * p.size_px * 2
     width_fixed = p.box_width_mode in ("fixed", "fill")
     height_fixed = p.box_height_mode in ("fixed", "fill")
     if width_fixed:
-        text, spans = wrap_text_runs(b.heading, measure_range, max(1, p.box_width - pad_x))
+        text, spans = wrap_text_runs(b.heading, measure_range, max(1, p.box_width))
     else:
         text = b.heading
         spans = [(0, len(b.heading))] if "\n" not in b.heading else _spans_for_hard_breaks(b.heading)
     lines = text.split("\n")
-    width = p.box_width if width_fixed else max(measure_range(s, e) for s, e in spans) + pad_x
-    height = p.box_height if height_fixed else len(lines) * p.size_px * LINE_HEIGHT + pad_y
+    width = p.box_width if width_fixed else max(measure_range(s, e) for s, e in spans)
+    height = p.box_height if height_fixed else len(lines) * p.size_px * LINE_HEIGHT
     return text, width, height, spans
 
 def _spans_for_hard_breaks(text: str) -> list[tuple[int, int]]:
@@ -386,8 +384,8 @@ def render_caption_ass(project: Project, preset: TextPreset) -> str:
     styles = _caption_style(preset, weight)
     box_width = preset.box_width if preset.box_width_mode == "fixed" and preset.box_width > 0 else CAPTION_DEFAULT_BOX_WIDTH
     box_height = preset.box_height if preset.box_height_mode == "fixed" and preset.box_height > 0 else CAPTION_DEFAULT_BOX_HEIGHT
-    pad_x = BOX_PAD_X_EM * preset.size_px * 2
-    pad_y = BOX_PAD_Y_EM * preset.size_px * 2
+    pad_x = CAPTION_PAD_X_EM * preset.size_px * 2
+    pad_y = CAPTION_PAD_Y_EM * preset.size_px * 2
     measure = pil_font_measurer(preset.font, preset.size_px, weight)
     pages = paginate_words(words, measure, max(1, box_width - pad_x), max(1, box_height - pad_y), preset.size_px, LINE_HEIGHT)
     event_lines = []
