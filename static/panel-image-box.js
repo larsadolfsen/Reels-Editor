@@ -1,7 +1,7 @@
 // #panel-image-box context-panel section: add-from-media-library picker (images only),
 // size/position/time fields, drag-to-move/resize on stage (via ImageBoxPreview), delete. The
-// detail view is split into Box (SIZE & POSITION) and Time (START + DURATION) tab panes via
-// UI.tabBar (Box default), with Delete as an always-visible footer. Exposes
+// detail view is split into Box (SIZE & POSITION), Time (START + DURATION) and Mask (EDGE MASK)
+// tab panes via UI.tabBar (Box default), with Delete as an always-visible footer. Exposes
 // window.ImageBoxPanel.render(selectedId). One image box selected at a time; multiple boxes
 // live in project.image_boxes (see app/models.py's ImageBoxLayer). Mirrors panel-video-box.js;
 // no in/out trim (images have no source timeline) — DURATION is the only length control.
@@ -10,14 +10,17 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
 (() => {
   const IMAGE_BOX_TAB_ICON_BOX = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 7a24 24 0 0 1 0 10"/><path d="M4.5 7a24 24 0 0 0 0 10"/><path d="M7 19.5a24 24 0 0 0 10 0"/><path d="M7 4.5a24 24 0 0 1 10 0"/><rect x="17" y="17" width="5" height="5" rx="1"/><rect x="17" y="2" width="5" height="5" rx="1"/><rect x="2" y="17" width="5" height="5" rx="1"/><rect x="2" y="2" width="5" height="5" rx="1"/></svg>';
   const IMAGE_BOX_TAB_ICON_TIME = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>';
+  const IMAGE_BOX_TAB_ICON_MASK = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19H5c-1 0-2-1-2-2V7c0-1 1-2 2-2h3"/><path d="M16 5h3c1 0 2 1 2 2v10c0 1-1 2-2 2h-3"/><line x1="12" x2="12" y1="4" y2="20"/></svg>';
 
   const IMAGE_BOX_TABS = [
     { value: "box", icon: IMAGE_BOX_TAB_ICON_BOX, label: "Box" },
     { value: "time", icon: IMAGE_BOX_TAB_ICON_TIME, label: "Time" },
+    { value: "mask", icon: IMAGE_BOX_TAB_ICON_MASK, label: "Mask" },
   ];
   const imageBoxTabPanes = {
     box: document.getElementById("image-box-box-body"),
     time: document.getElementById("image-box-time-body"),
+    mask: document.getElementById("image-box-mask-body"),
   };
   let activeImageBoxTab = "box";
   function showImageBoxTab(value) {
@@ -82,6 +85,40 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     return { width: Math.round(size.height * ratio), height: size.height };
   }
 
+  // Re-renders the stage so a mask change is visible immediately, same as the X/Y/W/H fields do.
+  function repaintStage() {
+    ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+  }
+
+  function renderMask(box) {
+    UI.buttonGroup(document.getElementById("image-box-mask-toggle"),
+      [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
+      box.mask_enabled ? "on" : "off",
+      async (v) => {
+        box.mask_enabled = v === "on";
+        await saveProject();
+        renderMask(box);
+        repaintStage();
+      });
+
+    UI.numberField(document.getElementById("image-box-mask-angle-field"),
+      { label: "ANGLE", unit: "DEG", value: box.mask_angle ?? 0, step: 1, decimals: 1, span: 4,
+        disabled: !box.mask_enabled,
+        onChange: async (v) => { box.mask_angle = v; await saveProject(); repaintStage(); } });
+    UI.numberField(document.getElementById("image-box-mask-offset-field"),
+      { label: "OFFSET", unit: "PX", value: box.mask_offset ?? 0, step: 10, span: 4,
+        disabled: !box.mask_enabled,
+        onChange: async (v) => { box.mask_offset = v; await saveProject(); repaintStage(); } });
+
+    const flip = document.getElementById("image-box-mask-flip");
+    flip.disabled = !box.mask_enabled;
+    flip.onclick = async () => {
+      box.mask_flip = !box.mask_flip;
+      await saveProject();
+      repaintStage();
+    };
+  }
+
   function renderDetail(box) {
     document.getElementById("image-box-name").textContent = box.file_path.split(/[\\/]/).pop();
 
@@ -122,6 +159,8 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
       renderTimeline();
       render(null);
     };
+
+    renderMask(box);
 
     ImageBoxPreview.setSelectedImageBox(box.id, {
       onResize: (size) => {
