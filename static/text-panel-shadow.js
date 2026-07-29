@@ -21,7 +21,7 @@ window.TextPanel = window.TextPanel || {};
 
   function refreshShadowRow(preset) {
     const value = SettingsRowValue.orNone(preset.shadow,
-      `X: ${preset.shadow_offset_x}px  Y: ${preset.shadow_offset_y}px  Blur: ${preset.shadow_blur}px`);
+      `${preset.shadow_offset_x}px ${preset.shadow_offset_y}px ${preset.shadow_blur}px`);
     const swatch = preset.shadow ? preset.shadow_color : null;
     if (shadowRowSetValue) {
       shadowRowSetValue(value, null, swatch);

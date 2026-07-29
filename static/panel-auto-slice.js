@@ -1,5 +1,6 @@
-// AUTO SLICE context-panel section: detect silence + filler-word ranges (Api.detectAutoSlice)
-// and cut approved ones out of the clip sequence (Api.applyAutoSlice). Three views toggled by
+// Auto silence/filler-word detection: lives inside the AUDIO panel's Auto tab — detect silence +
+// filler-word ranges (Api.detectAutoSlice) and cut approved ones out of the clip sequence
+// (Api.applyAutoSlice). Three views toggled by
 // module-local viewState: idle (run detection) -> results (approve which ranges to cut, step 1)
 // -> confirm (final approval, step 2) -> back to idle. Exposes window.AutoSlicePanel.render().
 window.AutoSlicePanel = window.AutoSlicePanel || {};
