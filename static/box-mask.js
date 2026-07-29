@@ -1,6 +1,5 @@
-// Pure straight-line mask geometry for video/image boxes: maskPolygon() returns the KEPT region
-// of a box as a clockwise polygon in box-local px (exact mirror of app/box_mask.py's
-// mask_polygon — keep both in sync), and clipPath() formats it as a CSS clip-path value.
+// window.BoxMask.{maskPolygon, clipPath}: the KEPT region of a straight-line-cut box as a clockwise
+// box-local polygon (exact mirror of app/box_mask.py's mask_polygon — keep in sync) + its CSS clip-path.
 window.BoxMask = (() => {
   function clamped(x, y, width, height) {
     const cx = Math.min(Math.max(x, 0), width);

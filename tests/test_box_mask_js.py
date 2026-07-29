@@ -36,6 +36,25 @@ const cases = JSON.parse(process.argv[3]);
 console.log(JSON.stringify(cases.map(c => window.BoxMask.maskPolygon(c[0], c[1], c[2], c[3], c[4]))));
 """
 
+CLIP_PATH_DRIVER = """
+const fs = require("fs");
+const src = fs.readFileSync(process.argv[2], "utf8");
+const window = {};
+eval(src);
+const cases = JSON.parse(process.argv[3]);
+console.log(JSON.stringify(cases.map(c => window.BoxMask.clipPath(c))));
+"""
+
+# Test cases for clipPath: each is a box object, paired with expected CSS output.
+CLIP_PATH_CASES = [
+    ({"width": 100, "height": 200, "mask_enabled": False, "mask_angle": 0, "mask_offset": 0, "mask_flip": False}, ""),
+    ({"width": 100, "height": 200, "mask_enabled": True, "mask_angle": 0, "mask_offset": 0, "mask_flip": False}, "polygon(0.0000% 0.0000%, 50.0000% 0.0000%, 50.0000% 100.0000%, 0.0000% 100.0000%)"),
+    ({"width": 100, "height": 200, "mask_enabled": True, "mask_angle": 0, "mask_offset": 1000, "mask_flip": False}, "polygon(0.0000% 0.0000%, 100.0000% 0.0000%, 100.0000% 100.0000%, 0.0000% 100.0000%)"),
+    ({"width": 100, "height": 200, "mask_enabled": True, "mask_angle": 0, "mask_offset": -1000, "mask_flip": False}, "polygon(0% 0%, 0% 0%, 0% 0%)"),
+    ({"width": 100, "height": 200, "mask_enabled": True, "mask_angle": 45, "mask_offset": 0, "mask_flip": False}, "polygon(0.0000% 0.0000%, 100.0000% 0.0000%, 100.0000% 25.0000%, 0.0000% 75.0000%)"),
+    ({"width": 100, "height": 200, "mask_enabled": True}, "polygon(0.0000% 0.0000%, 50.0000% 0.0000%, 50.0000% 100.0000%, 0.0000% 100.0000%)"),
+]
+
 def test_js_mask_polygon_matches_python_on_every_case(tmp_path):
     node = shutil.which("node")
     if node is None:
@@ -56,3 +75,21 @@ def test_js_mask_polygon_matches_python_on_every_case(tmp_path):
             # difference between the two libms' cos/sin right at a rounding boundary.
             assert jx == pytest.approx(px, abs=1e-6), f"x differs for {case}"
             assert jy == pytest.approx(py, abs=1e-6), f"y differs for {case}"
+
+
+def test_js_clip_path_returns_exact_css_strings(tmp_path):
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node not installed; JS clipPath coverage not checked")
+    driver = tmp_path / "driver.js"
+    driver.write_text(CLIP_PATH_DRIVER, encoding="utf-8")
+
+    boxes = [case[0] for case in CLIP_PATH_CASES]
+    proc = subprocess.run(
+        [node, str(driver), str(BOX_MASK_JS), json.dumps(boxes)],
+        capture_output=True, text=True, check=True)
+    js_results = json.loads(proc.stdout)
+
+    assert len(js_results) == len(CLIP_PATH_CASES)
+    for (box, expected_css), actual_css in zip(CLIP_PATH_CASES, js_results):
+        assert actual_css == expected_css, f"clipPath output differs for {box}: got {actual_css!r}"
