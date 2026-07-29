@@ -184,8 +184,13 @@ async function renderTextPanel() {
     onDragEnd: (size) => handleBoxResizeEnd(preset, size),
     onMove: (delta) => handleBoxMove(preset, delta),
     onMoveEnd: (delta) => handleBoxMoveEnd(preset, delta),
-    onEdit: (heading) => { block.heading = heading; },
-    onEditEnd: async (heading) => { block.heading = heading; renderTextPreview(); await saveProject(); },
+    // No heading write here: preview-text.js already assigns the typed text onto the block whose
+    // div is actually being edited, and that block isn't necessarily this panel's selected one —
+    // clicking another block on the stage doesn't blur an open edit (the box-move branch in
+    // ui-text-interaction.js preventDefaults the mousedown), so the still-editing block's later
+    // blur used to write its text into whichever block had meanwhile become selected. These
+    // callbacks only do the selected-block-agnostic side effects.
+    onEditEnd: async () => { renderTextPreview(); await saveProject(); },
     // preview.js already tracks the active selection itself (Preview.getActiveFormatSelection());
     // this is just a pass-through hook in case a future panel needs to react live to selection
     // changes. FONT accordion controls read the selection on demand instead, so no-op for now.
