@@ -2,8 +2,9 @@
 // perform a native text selection (reported via onSelectionChange, for rich-text range formatting),
 // or click-drag over empty box padding to move the element. Mirrors ui-resize-handles.js's shape (a
 // standalone interaction handler preview.js mounts/unmounts per-element via a callback object).
-// Returns { enterEditMode } so a caller can programmatically enter edit mode (e.g. immediately
-// after creating a new text block), not just on user click.
+// Returns { enterEditMode, exitEditMode } so a caller can programmatically enter edit mode (e.g.
+// immediately after creating a new text block), not just on user click, and close an edit that
+// no blur will ever end on its own (see exitEditMode below).
 // isPlaceholder skips the glyph hit-test entirely: placeholder text isn't real content to select
 // or format, and classifying it as a glyph made any click on it fragile (native text-selection
 // treats the smallest mouse jitter as a drag, so the click silently fails to enter edit mode
@@ -18,6 +19,8 @@
 window.UI = window.UI || {};
 
 window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput, onEditEnd, onMove, onMoveEnd, onSelectionChange, onSelectClick, isPlaceholder } = {}) {
+  let endEditMode = null; // the current edit session's teardown, non-null only while editing
+
   function enterEditMode() {
     if (div.contentEditable === "true") return;
     div.contentEditable = "true";
@@ -27,11 +30,21 @@ window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput
     const onBlur = () => {
       div.removeEventListener("input", onInputEvt);
       div.removeEventListener("blur", onBlur);
+      endEditMode = null;
       div.contentEditable = "false";
       if (onEditEnd) onEditEnd(div.textContent);
     };
+    endEditMode = onBlur;
     div.addEventListener("input", onInputEvt);
     div.addEventListener("blur", onBlur);
+  }
+
+  // Ends edit mode without waiting for a blur event, running exactly the teardown a real blur
+  // would. A stage click on a *different* text block never moves focus off this one — the
+  // box-move branch below preventDefaults its mousedown — so a caller that owns "only one block
+  // is being edited" (preview-text.js) needs to be able to close this edit explicitly.
+  function exitEditMode() {
+    if (endEditMode) endEditMode();
   }
 
   function isTextToolActive() {
@@ -89,5 +102,5 @@ window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput
     document.addEventListener("mouseup", onMouseUp);
   });
 
-  return { enterEditMode };
+  return { enterEditMode, exitEditMode };
 };
