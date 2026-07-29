@@ -33,10 +33,14 @@ window.StyleSection.color = function color(container, target, options) {
   });
 
   // Built ONCE — UI.settingsRow wipes its container, and render() uses the returned setter.
+  // The initial value/swatchColor are placeholders, not target.getFieldValue("color"): this
+  // factory runs once at panel load, before any text block/caption track necessarily exists
+  // yet, and getFieldValue throws in that state. render() supplies the real color immediately
+  // after, and only ever runs once a block/track exists (each panel's own empty-state guard).
   const setRowValue = UI.settingsRow(rowEl, {
     label: "Color",
-    value: target.getFieldValue("color"),
-    swatchColor: target.getFieldValue("color"),
+    value: "",
+    swatchColor: "",
     onClick: () => page.open(),
   });
 

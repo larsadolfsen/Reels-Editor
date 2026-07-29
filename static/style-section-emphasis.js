@@ -67,8 +67,11 @@ window.StyleSection = window.StyleSection || {};
     wireToggle(italicBtn, "italic");
     wireToggle(underlineBtn, "underline");
 
-    const setActiveCase = UI.buttonGroup(caseGroupEl, CASE_OPTIONS,
-      target.getFieldValue("text_case") || "none",
+    // "none" is a placeholder, not target.getFieldValue("text_case"): this factory runs once
+    // at panel load, before any text block/caption track necessarily exists yet, and
+    // getFieldValue throws in that state. render() supplies the real active case immediately
+    // after, and only ever runs once a block/track exists (each panel's own empty-state guard).
+    const setActiveCase = UI.buttonGroup(caseGroupEl, CASE_OPTIONS, "none",
       // text_case has no FormatRun equivalent — always a whole-preset write.
       (value) => target.setPresetField("text_case", value));
 

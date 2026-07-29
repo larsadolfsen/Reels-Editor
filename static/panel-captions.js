@@ -62,10 +62,8 @@ async function renderCaptionPanel() {
 
   CaptionPanel.renderStyle();
   await captionDesignTab.render();
-  CaptionPanel.renderFontStyle();
   CaptionPanel.renderOutline();
   CaptionPanel.renderShadow();
-  CaptionPanel.renderCase();
   CaptionPanel.renderBox();
   CaptionPanel.renderBackground();
   CaptionPanel.renderBorder();

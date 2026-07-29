@@ -37,8 +37,13 @@ window.StyleSection = window.StyleSection || {};
 
     // Built ONCE. UI.numberField wipes and rebuilds its container, so calling it again from
     // render() would drop the listener below — render() only pushes value + disabled state.
+    // The initial `value` is a placeholder, not `target.getFieldValue(...)`: this factory runs
+    // once at panel load, before any text block/caption track necessarily exists yet, and
+    // getFieldValue throws in that state (no block to read a preset from). render() — which
+    // only ever runs once a block/track exists, per each panel's own empty-state guard —
+    // supplies the real value immediately after.
     const setFieldValue = UI.numberField(fieldEl, {
-      label: "SIZE", unit: "PX", value: target.getFieldValue("size_px"),
+      label: "SIZE", unit: "PX", value: 0,
       min: 24, max: 200, span: 6,
       onChange: (v) => target.setField("size_px", v),
     });

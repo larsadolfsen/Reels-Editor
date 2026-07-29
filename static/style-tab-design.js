@@ -4,8 +4,8 @@
 window.StyleTab = window.StyleTab || {};
 
 // The final order (master plan) is: fontFamily, fontWeight, size, emphasis, color, outline,
-// shadow, highlight. Only the first two are shared components so far — the rest are still each
-// panel's own markup sitting below this mount point, and move up into this list in Batches 3-4.
+// shadow, highlight. Outline/shadow/highlight arrive in Batch 4 — the rest is each panel's own
+// markup sitting below this mount point until then.
 window.StyleTab.design = function design(container, target, options) {
   const opts = options || {};
 
@@ -23,6 +23,9 @@ window.StyleTab.design = function design(container, target, options) {
   const sections = [
     StyleSection.fontFamily(sectionWrapper(), target, { host: opts.host }),
     StyleSection.fontWeight(sectionWrapper(), target, { host: opts.host, sampleText: opts.sampleText }),
+    StyleSection.size(sectionWrapper(), target, { compactRow: opts.compactSizeRow }),
+    StyleSection.emphasis(sectionWrapper(), target, {}),
+    StyleSection.color(sectionWrapper(), target, { host: opts.host }),
   ];
 
   return {
