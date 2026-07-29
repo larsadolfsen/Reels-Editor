@@ -1,8 +1,9 @@
 // CAPTIONS context-panel section: caption track/preset creation (defaultCaptionPreset,
 // ensureCaptionPreset, ensureCaptionTrack), the main renderCaptionPanel orchestrator, and its
-// tab-bar/divider wiring (UI.tabBar; Highlight is a row+subpage inside the Design tab's body)
-// + the #caption-auto-btn transcribe listener. Plain globals shared with caption-panel-*.js;
-// reaches into editor.js's `project`/`saveProject`/`renderTimeline` globals.
+// tab-bar/divider wiring (UI.tabBar; Design tab is one body (`#caption-font-body`)).
+// Plain globals shared with caption-panel-*.js; reaches into editor.js's
+// `project`/`saveProject`/`renderTimeline` globals. Transcription itself (the Auto-caption button
+// and the Language row) lives in the AUDIO panel — see static/audio-panel-auto-caption.js.
 
 function defaultCaptionPreset(id) {
   return {
@@ -56,13 +57,10 @@ function renderCaptionPreview() {
 async function renderCaptionPanel() {
   document.getElementById("panel-captions-font").hidden = true;
   document.getElementById("panel-captions-weight").hidden = true;
-  document.getElementById("panel-captions-language").hidden = true;
   document.getElementById("panel-captions-main").hidden = false;
 
   ensureCaptionTrack();
-  document.getElementById("caption-transcribe-error").hidden = true;
 
-  CaptionPanel.renderLanguage();
   CaptionPanel.renderStyle();
   CaptionPanel.renderFontFamily();
   await CaptionPanel.renderFontWeight();
@@ -111,40 +109,3 @@ showCaptionTab(activeCaptionTab);
 
 UI.divider(document.getElementById("caption-box-width-height-divider"));
 UI.divider(document.getElementById("caption-box-border-position-divider"));
-
-// Runs transcription and merges the result into `project`. Shared by the CAPTIONS panel's
-// Auto-caption button and editor.js's drop handler (auto-caption-on-video-add) — the button's
-// disabled/label state only has a visible effect when the CAPTIONS panel happens to be open;
-// otherwise this just quietly updates captions/timeline once done, same "background enhancement,
-// no loading UI" pattern as thumbnail/waveform/filmstrip fetches elsewhere in this app. Failures
-// (e.g. 503 when the `ml` extra isn't installed) are swallowed — this is a nice-to-have, not a
-// blocking step in whatever flow triggered it.
-async function runAutoCaption() {
-  ensureCaptionTrack();
-  const btn = document.getElementById("caption-auto-btn");
-  const label = btn.querySelector(".label");
-  const errorEl = document.getElementById("caption-transcribe-error");
-  errorEl.hidden = true;
-  btn.disabled = true;
-  label.textContent = "Transcribing…";
-  try {
-    const res = await fetch(`/api/projects/${project.id}/transcribe`, { method: "POST" });
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      errorEl.textContent = (body && body.detail) || `Transcription failed (${res.status}).`;
-      errorEl.hidden = false;
-      return;
-    }
-    project = await res.json();
-    await renderCaptionPanel();
-    renderTimeline();
-  } catch {
-    errorEl.textContent = "Transcription failed: could not reach the server.";
-    errorEl.hidden = false;
-  } finally {
-    btn.disabled = false;
-    label.textContent = "Auto-caption";
-  }
-}
-
-document.getElementById("caption-auto-btn").addEventListener("click", runAutoCaption);

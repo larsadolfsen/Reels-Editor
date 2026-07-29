@@ -100,7 +100,7 @@
             <div class="row-label" id="ruler-label"></div>
             <div id="label-overlays"></div>
             <div class="row-label" id="label-captions">CAPTIONS</div>
-            <div class="row-label" id="label-video">VIDEO</div>
+            <div class="row-label" id="label-video">MAIN</div>
             <div class="row-label" id="label-audio">AUDIO</div>
           </div>
           <div id="timeline-scroll">
@@ -315,15 +315,7 @@
           </div>
 
           <div id="caption-words-body">
-            <div class="style-group">
-              <div id="caption-language-row" class="col-8"></div>
-            </div>
-
-            <div class="style-group">
-              <button id="caption-auto-btn" class="panel-button col-8" type="button"><span class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H8"/><path d="m15.007 5.008 3.987 3.986"/><path d="M20 15v4"/><path d="M21.174 6.813a2.82 2.82 0 0 0-3.986-3.987L3.842 16.175a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="M22 17h-4"/><path d="M4 5v4"/><path d="M6 7H2"/><path d="M9 2v2"/></svg></span><span class="label">Auto-caption</span></button>
-              <p id="caption-transcribe-error" class="context-panel-name col-8 caption-transcribe-error" hidden></p>
-            </div>
-
+            <p id="caption-words-empty-hint" class="auto-slice-hint">No transcript yet — run Auto-caption in the AUDIO panel.</p>
             <div id="caption-transcript-section">
               <div class="style-group-label">TRANSCRIPT</div>
               <ul id="caption-words-list" class="font-list"></ul>
@@ -391,11 +383,6 @@
           <div class="style-group">
             <label id="caption-shadow-blur-field"></label>
           </div>
-        </div>
-
-        <div id="panel-captions-language" hidden>
-          <div id="caption-language-subpanel-header"></div>
-          <ul id="caption-language-list" class="font-list"></ul>
         </div>
 
         <div id="panel-captions-background" hidden>
@@ -643,34 +630,58 @@
         </div>
       </div>
 
-      <div id="panel-auto-slice" class="context-panel" hidden>
-        <div class="style-panel-header">AUTO SLICE</div>
+      <div id="panel-audio-track" class="context-panel" hidden>
+        <div id="panel-audio-track-main">
+          <div class="style-panel-header">AUDIO</div>
 
-        <div id="auto-slice-idle" class="style-group">
-          <p class="auto-slice-hint">Detect silence and filler words (um, uh…) and remove them from the timeline.</p>
-          <p id="auto-slice-no-transcript-hint" class="auto-slice-hint" hidden>No transcript yet — only silence will be detected. Transcribe captions first (CAPTIONS panel) to also catch filler words.</p>
-          <button id="auto-slice-detect-btn" type="button" class="panel-button col-8"><span class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H8"/><path d="m15.007 5.008 3.987 3.986"/><path d="M20 15v4"/><path d="M21.174 6.813a2.82 2.82 0 0 0-3.986-3.987L3.842 16.175a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="M22 17h-4"/><path d="M4 5v4"/><path d="M6 7H2"/><path d="M9 2v2"/></svg></span><span class="label">Detect Silence &amp; Filler Words</span></button>
+          <div id="audio-track-tab-bar"></div>
+
+          <div id="audio-track-auto-body">
+            <div class="style-group-label">AUTO CAPTION</div>
+
+            <div class="style-group">
+              <div id="audio-language-row" class="col-8"></div>
+            </div>
+
+            <div class="style-group">
+              <button id="audio-auto-caption-btn" class="panel-button col-8" type="button"><span class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H8"/><path d="m15.007 5.008 3.987 3.986"/><path d="M20 15v4"/><path d="M21.174 6.813a2.82 2.82 0 0 0-3.986-3.987L3.842 16.175a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="M22 17h-4"/><path d="M4 5v4"/><path d="M6 7H2"/><path d="M9 2v2"/></svg></span><span class="label">Auto-caption</span></button>
+              <p id="audio-transcribe-error" class="context-panel-name col-8 caption-transcribe-error" hidden></p>
+            </div>
+
+            <div class="style-group-label">AUTO SILENCE</div>
+
+            <div id="auto-slice-idle" class="style-group">
+              <p class="auto-slice-hint">Detect silence and filler words (um, uh…) and remove them from the timeline.</p>
+              <p id="auto-slice-no-transcript-hint" class="auto-slice-hint" hidden>No transcript yet — only silence will be detected. Run Auto-caption above to also catch filler words.</p>
+              <button id="auto-slice-detect-btn" type="button" class="panel-button col-8"><span class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H8"/><path d="m15.007 5.008 3.987 3.986"/><path d="M20 15v4"/><path d="M21.174 6.813a2.82 2.82 0 0 0-3.986-3.987L3.842 16.175a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="M22 17h-4"/><path d="M4 5v4"/><path d="M6 7H2"/><path d="M9 2v2"/></svg></span><span class="label">Detect Silence &amp; Filler Words</span></button>
+            </div>
+
+            <div id="auto-slice-results" hidden>
+              <div id="auto-slice-summary" class="auto-slice-summary"></div>
+              <ul id="auto-slice-list" class="auto-slice-list"></ul>
+              <div class="style-group">
+                <button id="auto-slice-continue" type="button" class="panel-button col-8">Continue</button>
+              </div>
+              <div class="style-group">
+                <button id="auto-slice-redetect" type="button" class="panel-button col-8">Re-detect</button>
+              </div>
+            </div>
+
+            <div id="auto-slice-confirm" hidden>
+              <p id="auto-slice-confirm-summary" class="auto-slice-hint"></p>
+              <div class="style-group">
+                <button id="auto-slice-confirm-apply" type="button" class="panel-button panel-button-danger col-8">Confirm &amp; Apply</button>
+              </div>
+              <div class="style-group">
+                <button id="auto-slice-back" type="button" class="panel-button col-8">Back</button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div id="auto-slice-results" hidden>
-          <div id="auto-slice-summary" class="auto-slice-summary"></div>
-          <ul id="auto-slice-list" class="auto-slice-list"></ul>
-          <div class="style-group">
-            <button id="auto-slice-continue" type="button" class="panel-button col-8">Continue</button>
-          </div>
-          <div class="style-group">
-            <button id="auto-slice-redetect" type="button" class="panel-button col-8">Re-detect</button>
-          </div>
-        </div>
-
-        <div id="auto-slice-confirm" hidden>
-          <p id="auto-slice-confirm-summary" class="auto-slice-hint"></p>
-          <div class="style-group">
-            <button id="auto-slice-confirm-apply" type="button" class="panel-button panel-button-danger col-8">Confirm &amp; Apply</button>
-          </div>
-          <div class="style-group">
-            <button id="auto-slice-back" type="button" class="panel-button col-8">Back</button>
-          </div>
+        <div id="panel-audio-track-language" hidden>
+          <div id="audio-language-subpanel-header"></div>
+          <ul id="audio-language-list" class="font-list"></ul>
         </div>
       </div>
 
@@ -963,7 +974,6 @@
 <script src="/static/caption-panel-highlight.js"></script>
 <script src="/static/caption-panel-case.js"></script>
 <script src="/static/caption-panel-words.js"></script>
-<script src="/static/caption-panel-language.js"></script>
 <script src="/static/filler-word-ranges.js"></script>
 <script src="/static/caption-panel-filler-words.js"></script>
 <script src="/static/api-list-projects.js"></script>
@@ -1004,6 +1014,9 @@
 <script src="/static/panel-captions.js"></script>
 <script src="/static/clip-sequence.js"></script>
 <script src="/static/panel-auto-slice.js"></script>
+<script src="/static/panel-audio-track.js"></script>
+<script src="/static/audio-panel-language.js"></script>
+<script src="/static/audio-panel-auto-caption.js"></script>
 <script src="/static/panel-export.js"></script>
 <script src="/static/export-progress.js"></script>
 <script src="/static/preview-text.js"></script>
