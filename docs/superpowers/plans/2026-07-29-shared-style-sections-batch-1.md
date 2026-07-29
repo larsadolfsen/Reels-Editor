@@ -404,9 +404,8 @@ Create `tests/js/style-target-text.test.js`:
 const test = require("node:test");
 const assert = require("node:assert");
 
-require("../../static/format-run-write.js");
-require("../../static/style-target-text.js");
-const { forTextBlock } = global.StyleTarget;
+const { upsertFormatRun } = require("../../static/format-run-write.js");
+const { forTextBlock } = require("../../static/style-target-text.js");
 
 // Builds a target over an in-memory block/preset with every collaborator injected, so
 // no browser globals are involved. `selection` is what Preview.getActiveFormatSelection()
@@ -425,7 +424,7 @@ function makeTarget({ selection = null, block, preset } = {}) {
     getBoxSize: () => ({ width: 500, height: 200 }),
     renderPreviewWith: (presets) => { calls.lastPreviewPresets = presets; },
     allPresets: () => ({ p1: p }),
-    upsert: global.FormatRunWrite.upsertFormatRun,
+    upsert: upsertFormatRun,
   });
   return { target, block: b, preset: p, calls };
 }
@@ -549,9 +548,11 @@ Create `static/style-target-text.js`:
 // Style target for a text block: the adapter every shared style section writes through.
 // Absorbs the TEXT panel's selection-aware behaviour — setField writes a per-range
 // FormatRun when a stage selection is active — so the sections above stay branch-free.
-window.StyleTarget = window.StyleTarget || {};
-
-window.StyleTarget.forTextBlock = function forTextBlock(deps) {
+// Guarded dual export like the pure modules: the factory itself has no browser
+// dependency (only its *default* deps fallback does, and that path is only evaluated
+// when called with no argument, which tests never do), so it must be Node-requireable.
+(() => {
+function forTextBlock(deps) {
   // Collaborators are injected so this is testable outside a browser; in the app it is
   // called with no argument and falls back to editor.js's globals.
   const d = deps || {
@@ -638,7 +639,12 @@ window.StyleTarget.forTextBlock = function forTextBlock(deps) {
     rerenderPanel() { return d.rerenderPanel(); },
     getBoxSize() { return d.getBoxSize(d.getBlock().id); },
   };
-};
+}
+
+const api = { forTextBlock };
+if (typeof window !== "undefined") window.StyleTarget = Object.assign(window.StyleTarget || {}, api);
+if (typeof module !== "undefined") module.exports = api;
+})();
 ```
 
 - [ ] **Step 4: Run the test to verify it passes**
@@ -676,8 +682,7 @@ Create `tests/js/style-target-caption.test.js`:
 const test = require("node:test");
 const assert = require("node:assert");
 
-require("../../static/style-target-caption.js");
-const { forCaptionTrack } = global.StyleTarget;
+const { forCaptionTrack } = require("../../static/style-target-caption.js");
 
 function makeTarget() {
   const p = { id: "p1", color: "#FFFFFF", size_px: 72, shadow: false };
@@ -766,9 +771,9 @@ Create `static/style-target-caption.js`:
 // Style target for the caption track: the adapter every shared style section writes
 // through when the CAPTIONS panel is open. Same shape as style-target-text.js, but a
 // caption track has no per-range FormatRun overrides, so every write is whole-preset.
-window.StyleTarget = window.StyleTarget || {};
-
-window.StyleTarget.forCaptionTrack = function forCaptionTrack(deps) {
+// Guarded dual export like style-target-text.js — see that file's header for why.
+(() => {
+function forCaptionTrack(deps) {
   // Collaborators are injected so this is testable outside a browser; in the app it is
   // called with no argument and falls back to panel-captions.js's globals.
   const d = deps || {
@@ -824,7 +829,12 @@ window.StyleTarget.forCaptionTrack = function forCaptionTrack(deps) {
     rerenderPanel() { return d.rerenderPanel(); },
     getBoxSize() { return d.getBoxSize(); },
   };
-};
+}
+
+const api = { forCaptionTrack };
+if (typeof window !== "undefined") window.StyleTarget = Object.assign(window.StyleTarget || {}, api);
+if (typeof module !== "undefined") module.exports = api;
+})();
 ```
 
 - [ ] **Step 4: Run the test to verify it passes**
