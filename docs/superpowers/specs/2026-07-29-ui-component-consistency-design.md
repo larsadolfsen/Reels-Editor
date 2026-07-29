@@ -42,16 +42,61 @@ are four hand-rolled `createElement` copies of each other.
 
 **Typography — no tokens.** 51 hardcoded `font-size` literals across 21 stylesheets, 13
 distinct values (8, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 16, 20px). This directly
-violates the project's own rule that every recurring CSS value becomes a token. Four
-near-identical label recipes exist: `.style-group-label`, `.style-panel-header` and
-`.clip-section-label` are all 10.5px / 0.06em / muted-or-dim, and `.safe-zone span` is a
-fourth copy of the chip pattern (its own comment says "same recipe as `.slice-btn`").
+violates the project's own rule that every recurring CSS value becomes a token.
+
+**The "eyebrow label" recipe is independently reinvented six times.** `font-family:
+var(--font-ui); font-size: 10.5px; letter-spacing: 0.06em;` (color alternating
+`--text-dim`/`--text-muted`) appears, each as its own hand-rolled class, in:
+`.style-group-label` (style-panel.css), `.style-panel-header` (style-panel.css),
+`.clip-section-label` (style-panel.css), `.sub-panel-title` (sub-panel.css),
+`.settings-row-label` (settings-row.css), and `.accordion-header` (accordion.css, same
+font/size/spacing, different height/margin). `.safe-zone span` (safe-zones.css) is a
+seventh, structurally different, copy of the same size/spacing values applied to a chip.
+
+**No radius scale — 7 different hardcoded values with no logic.** `--radius` exists but is
+`0px` and is consumed by almost nothing. Actual corners in use: `2px` (resize-handle,
+clip-name-input), `3px` (timeline-block, clip-thumb, list-row, export-progress, safe-zone
+chip, auto-slice-badge), `4px` (btn-group button, icon-btn, settings-row-swatch — hardcoded,
+ignoring `--radius`), `6px` (color-swatch, number-field-stepper, style-field input,
+caption-preview-box), and an 8px/pill shape (`.clip-usage-chip`).
+
+**Chip/badge styling implemented three separate times.** `.clip-usage-chip` (pill shape,
+`--bg-1` + `--border-soft`), `.auto-slice-badge` (rectangular, color-coded modifiers), and
+the safe-zone label chip (rectangular, `--surface` + `--border` + drop shadow) are three
+independent "small labeled chip" components with no shared base class.
+
+**A hardcoded accent-tint color drifts across three files.** `rgba(108, 135, 163, 0.12)`
+(≈`--accent` at 12%) is repeated verbatim for the "pressed/active" background in
+`button-group.css`'s `.btn-group button[aria-pressed]` and `.icon-btn[aria-pressed]`, and
+again in `icon-rail.css`'s `.icon-rail-btn[aria-pressed]`; `timeline.css`'s
+`.timeline-block.selected` uses the same RGB at a drifted `0.16`.
+
+**A "floating chip" shadow is copy-pasted three times.** `box-shadow: 0 4px 10px
+rgba(0,0,0,0.4)` appears verbatim in `timeline.css`'s `.slice-btn` and
+`.timeline-block.dragging`; `safe-zones.css`'s `.safe-zone span` uses the same purpose
+(opaque chip floating over arbitrary video content) at a drifted `0 2px 8px rgba(0,0,0,0.45)`.
+
+**A 320px scrollable-list recipe is copy-pasted three times**, once per panel that happens
+to need a scrolling list: `video-box-panel.css`'s `#video-box-picker-list`,
+`image-box-panel.css`'s `#image-box-picker-list`, and `auto-slice-panel.css`'s
+`.auto-slice-list` all set `max-height: 320px; overflow-y: auto;` identically — the same
+VIDEO BOX / IMAGE BOX mirrored-panel duplication the codebase map already calls out
+elsewhere, here leaking into CSS.
 
 **Safe zones — two hand-synced sources of truth.** The zone percentages live in
 `static/css/components/safe-zones.css` (6% / 15% / 73% / 7%) and again as pixels in
 `static/safe-zone-geometry.js` (115.2 / 162 / 1401.6 / 1785.6), whose header comment
 admits they are "kept in sync by hand — no build step generates one from the other". The
 four bands are also four near-identical hand-written `<div>` blocks in `index.html`.
+
+**Checked and found legitimately distinct (not flagged for consolidation):** `list-row.css`
+(already the correct centralized pattern — PROJECTS/FILES/auto-slice/style-preset-card
+already share it properly); `tab-bar.css` / `icon-rail.css` / `button-group.css` (underline-tab
+vs. vertical-nav vs. toggle-pill are different enough interaction idioms to justify separate
+files); `resize-handles.css`, `mask-line-guide.css`, `login.css`, `save-indicator.css`,
+`stage.css`'s `#stage` depth shadow (`0 20px 60px rgba(0,0,0,0.5)`, a different purpose from
+the chip shadows above). Transition durations (only two instances, 0.15s/0.2s) are too few
+to warrant a token yet — noted, not acted on.
 
 **Two bugs found during the audit:**
 
@@ -64,7 +109,7 @@ four bands are also four near-identical hand-written `<div>` blocks in `index.ht
 
 ## Goals
 
-- One icon service. One button component. One type scale.
+- One icon service. One button component. One text component. One type scale.
 - Actively **reduce** the number of button recipes — today's three heights and six style
   variants are accidental, not designed. Merging them will visibly change some buttons;
   that is intended.
@@ -82,7 +127,7 @@ four bands are also four near-identical hand-written `<div>` blocks in `index.ht
 
 ## Architecture
 
-Four batches, in a forced order — everything consumes tokens, and the button component
+Five batches, in a forced order — everything consumes tokens, and the button component
 takes an icon name, so icons must precede buttons.
 
 ### Batch 1 — Tokens & typography
@@ -99,15 +144,51 @@ takes an icon name, so icons must precede buttons.
 | `--fs-xl` | 16px | 16 |
 | `--fs-2xl` | 20px | 20 |
 
-Plus `--ls-tight: 0.03em`, `--ls-wide: 0.05em`, `--ls-wider: 0.06em`, and `--accent-soft`
-for the shared pressed-state background.
+Plus `--ls-tight: 0.03em`, `--ls-wide: 0.05em`, `--ls-wider: 0.06em`.
 
-All 51 literals rewrite to these tokens. The four duplicate label recipes collapse into
-plain CSS classes — `.section-label`, `.field-label`, `.hint` — with no JS wrapper, matching
-how `.panel-button` works today. Both bugs above are fixed here: `--danger` moves into base
-`:root`, and the hardcoded `4px` radii reconcile with `--radius`.
+A radius scale replaces the unused `--radius: 0`: `--radius-sm: 3px` (small surfaces:
+timeline block, clip thumb, list row, export progress, chips), `--radius-md: 4px`
+(buttons), `--radius-lg: 6px` (form controls: color swatch, number-field stepper, style
+field input), `--radius-pill: 999px` (usage-chip pill shape). Every hardcoded corner value
+found in the audit reconciles to one of these four.
 
-Merging 13 sizes into 7 shifts some text by up to 1px. Accepted.
+Two more shared tokens close out the drift found in the audit: `--accent-tint: rgba(108,
+135, 163, 0.12)` (replacing the three-file hardcoded copy — `timeline-block.selected`'s
+drifted `0.16` reconciles to the same token, a deliberate visual fix) and `--shadow-chip:
+0 4px 10px rgba(0,0,0,0.4)` (replacing `.slice-btn`, `.timeline-block.dragging`, and the
+safe-zone chip's drifted `0.45`).
+
+All 51 `font-size` literals and every hardcoded radius/tint/chip-shadow rewrite to these
+tokens. The three chip/badge recipes (`.clip-usage-chip`, `.auto-slice-badge`, the
+safe-zone label chip) collapse into one `.chip` base class with shape/color modifiers. The
+triplicated 320px scroll-list rule becomes one `.scroll-list` utility class consumed by
+`video-box-panel.css`, `image-box-panel.css`, and `auto-slice-panel.css`. Both bugs above
+are fixed here: `--danger` moves into base `:root`, and every hardcoded radius reconciles
+to the new scale.
+
+### Batch 1b — `UI.text`
+
+`static/ui-text.js` exposes `UI.text(container, { variant, content })`, which **builds**
+the text element — consistent with `UI.icon`/`UI.button`, not the "stamp classes onto
+existing markup" pattern `.panel-button` uses today. Four variants collapse the recipe
+duplication found in the audit:
+
+- `eyebrow` — the mono-caps section-label recipe, replacing six independent definitions:
+  `.style-group-label`, `.style-panel-header`, `.clip-section-label`, `.sub-panel-title`,
+  `.settings-row-label`, and `.accordion-header`'s label styling.
+- `label` — form-field labels, replacing `.style-field`'s label styling.
+- `hint` — secondary/help text, replacing `.auto-slice-hint` and sibling one-offs.
+- `body` — default content text (caption preview, project names), for the sites that
+  currently have no shared class at all.
+
+Each variant is one CSS class (`.text-eyebrow`, `.text-label`, `.text-hint`, `.text-body`)
+consuming batch 1's type-scale tokens; `UI.text` just picks the class and sets `textContent`.
+Static markup in `index.html` that isn't rebuilt at runtime keeps the class applied directly
+(same static/JS split as icons in batch 2).
+
+Merging 13 font sizes into 7 shifts some text by up to 1px. Accepted. `.timeline-block.selected`
+visibly changes tint slightly (0.16 → 0.12 alpha) and the safe-zone chip's shadow softens
+slightly (0.45 → 0.4 alpha) — both are the drift being corrected, not incidental damage.
 
 ### Batch 2 — `UI.icon`
 
@@ -161,33 +242,43 @@ review before the next task starts. Per-component detail — exact values, exact
 signature — is settled at the start of its own task, not pre-committed here.
 
 **Batch 1**
-1. Type scale + letter-spacing tokens; `--danger` into base `:root`; `--accent-soft`; radius reconciliation
-2. Migrate all 51 `font-size` literals to tokens (no intended visual change beyond the ≤1px scale merge)
-3. `.section-label` — replaces `.style-group-label`, `.style-panel-header`, `.clip-section-label`
-4. `.field-label` — replaces `.style-field` label styling
-5. `.hint` — replaces `.auto-slice-hint` and sibling one-off hint text
+1. Type scale + letter-spacing tokens; radius scale (`--radius-sm/-md/-lg/-pill`);
+   `--accent-tint`; `--shadow-chip`; `--danger` into base `:root`
+2. Migrate all 51 `font-size` literals, and every hardcoded radius/tint/chip-shadow, to tokens
+   (no intended visual change beyond the ≤1px scale merge and the two named drift corrections)
+3. `.chip` — replaces `.clip-usage-chip`, `.auto-slice-badge`, and the safe-zone label chip
+4. `.scroll-list` — replaces the triplicated 320px max-height rule in `video-box-panel.css`,
+   `image-box-panel.css`, `auto-slice-panel.css`
+
+**Batch 1b**
+5. `UI.text` component (`eyebrow`/`label`/`hint`/`body`) + tests
+6. Migrate the six eyebrow-label sites (`.style-group-label`, `.style-panel-header`,
+   `.clip-section-label`, `.sub-panel-title`, `.settings-row-label`, `.accordion-header`)
+7. Migrate `.style-field` labels and `.auto-slice-hint` / sibling hints
+8. Migrate remaining unstyled body text sites; add a guard test for the retired classes
 
 **Batch 2**
-6. `UI.icon` service + tests (no migration yet — verified via a scratch render)
-7. Migrate `index.html`'s 27 static SVGs
-8. Migrate the `ui-*.js` shared components' SVGs
-9. Migrate the `panel-*.js` SVGs
-10. Migrate the `text-panel-*.js` / `caption-panel-*.js` SVGs; add the no-raw-`<svg>` guard test
+9. `UI.icon` service + tests (no migration yet — verified via a scratch render)
+10. Migrate `index.html`'s 27 static SVGs
+11. Migrate the `ui-*.js` shared components' SVGs
+12. Migrate the `panel-*.js` SVGs
+13. Migrate the `text-panel-*.js` / `caption-panel-*.js` SVGs; add the no-raw-`<svg>` guard test
 
 **Batch 3**
-11. `UI.button` component + `buttonClasses()` pure function + new `button.css` + tests
-12. Migrate the ~20 `.panel-button*` sites
-13. Migrate the ~20 `.icon-btn` sites
-14. Migrate the one-offs; retire `panel-button.css` and the old `.button` rules; add the guard test
+14. `UI.button` component + `buttonClasses()` pure function + new `button.css` + tests
+15. Migrate the ~20 `.panel-button*` sites
+16. Migrate the ~20 `.icon-btn` sites
+17. Migrate the one-offs; retire `panel-button.css` and the old `.button` rules; add the guard test
 
 **Batch 4**
-15. `UI.safeZones` + geometry derivation + tests
+18. `UI.safeZones` + geometry derivation + tests
 
 ## Testing
 
 `node --test "tests/js/**/*.test.js"` covers the pure parts:
 
 - `UI.icon(name)` output shape, wrapper attributes, and that an unknown name throws
+- `UI.text(container, { variant, content })` → correct class per variant, correct `textContent`
 - `buttonClasses({ size, intent, pressed, disabled })` → class list
 - The safe-zone pixel derivation, asserting the same values `safe-zone-geometry.js` hardcodes
   today (115.2 / 162 / 1401.6 / 1785.6) so the refactor is provably behavior-preserving
