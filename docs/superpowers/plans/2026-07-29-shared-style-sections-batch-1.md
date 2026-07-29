@@ -510,6 +510,27 @@ test("getBoxSize returns the block's rendered size", () => {
   const { target } = makeTarget();
   assert.deepStrictEqual(target.getBoxSize(), { width: 500, height: 200 });
 });
+
+// setFields exists because picking a font writes `font` plus a snapped `weight` in one
+// user action. Two separate setField calls would mean two saves and two undo entries
+// for a single click.
+test("setFields writes several base-preset fields with exactly one save", () => {
+  const { target, preset, block, calls } = makeTarget({ selection: null });
+  target.setFields({ font: "JetBrains Mono", weight: 700 });
+  assert.strictEqual(preset.font, "JetBrains Mono");
+  assert.strictEqual(preset.weight, 700);
+  assert.strictEqual(block.formatting_runs.length, 0);
+  assert.strictEqual(calls.saves, 1);
+  assert.strictEqual(calls.previews, 1);
+});
+
+test("setFields writes several FormatRun fields into the same run with one save", () => {
+  const { target, preset, block, calls } = makeTarget({ selection: { blockId: "b1", start: 0, end: 2 } });
+  target.setFields({ color: "#FF0000", weight: 700 });
+  assert.strictEqual(preset.color, "#FFFFFF", "base preset must be untouched");
+  assert.deepStrictEqual(block.formatting_runs, [{ start: 0, end: 2, color: "#FF0000", weight: 700 }]);
+  assert.strictEqual(calls.saves, 1);
+});
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -582,6 +603,22 @@ window.StyleTarget.forTextBlock = function forTextBlock(deps) {
       d.rerenderPreview();
     },
 
+    // Same routing as setField, per key, but ONE save/re-render for the whole batch —
+    // picking a font writes `font` plus a snapped `weight` in a single user action, and
+    // two setField calls would mean two undo entries for one click.
+    setFields(fields) {
+      const sel = activeSelection();
+      Object.keys(fields).forEach((field) => {
+        if (sel) {
+          d.upsert(d.getBlock(), sel.start, sel.end, field, fields[field]);
+        } else {
+          preset()[field] = fields[field];
+        }
+      });
+      d.save();
+      d.rerenderPreview();
+    },
+
     setPresetField(field, value) {
       preset()[field] = value;
       d.save();
@@ -610,7 +647,7 @@ window.StyleTarget.forTextBlock = function forTextBlock(deps) {
 node --test tests/js/style-target-text.test.js
 ```
 
-Expected: PASS, 12 tests.
+Expected: PASS, 14 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -702,6 +739,15 @@ test("getBoxSize returns the caption box's rendered size", () => {
   const { target } = makeTarget();
   assert.deepStrictEqual(target.getBoxSize(), { width: 900, height: 350 });
 });
+
+test("setFields writes several preset fields with exactly one save", () => {
+  const { target, preset, calls } = makeTarget();
+  target.setFields({ font: "JetBrains Mono", weight: 700 });
+  assert.strictEqual(preset.font, "JetBrains Mono");
+  assert.strictEqual(preset.weight, 700);
+  assert.strictEqual(calls.saves, 1);
+  assert.strictEqual(calls.previews, 1);
+});
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -754,6 +800,15 @@ window.StyleTarget.forCaptionTrack = function forCaptionTrack(deps) {
     setField: writePreset,
     setPresetField: writePreset,
 
+    // No selection routing needed — every key just lands on the preset, one save/re-render
+    // for the whole batch, same as the TEXT target's setFields.
+    setFields(fields) {
+      const p = d.getPreset();
+      Object.keys(fields).forEach((field) => { p[field] = fields[field]; });
+      d.save();
+      d.rerenderPreview();
+    },
+
     previewField(field, value) {
       const p = d.getPreset();
       d.renderPreviewWith({ ...d.allPresets(), [p.id]: { ...p, [field]: value } });
@@ -776,7 +831,7 @@ window.StyleTarget.forCaptionTrack = function forCaptionTrack(deps) {
 node --test tests/js/style-target-caption.test.js
 ```
 
-Expected: PASS, 7 tests.
+Expected: PASS, 8 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -903,7 +958,7 @@ Expected: no errors. The panels look and behave exactly as before — nothing is
 node --test tests/js
 ```
 
-Expected: PASS, 39 tests across 5 files.
+Expected: PASS, 42 tests across 5 files.
 
 - [ ] **Step 6: Commit**
 
@@ -937,7 +992,7 @@ In `CLAUDE.md`, under `## Run commands`, immediately after the `- Tests: ...pyte
 node --test tests/js
 ```
 
-Expected: PASS, 39 tests.
+Expected: PASS, 42 tests.
 
 ```bash
 .venv/Scripts/python -m pytest -q
@@ -956,7 +1011,7 @@ git commit -m "docs: record the node --test frontend test command"
 
 ## Batch 1 done when
 
-- `node --test tests/js` passes with 39 tests across 5 files.
+- `node --test tests/js` passes with 42 tests across 5 files.
 - `.venv/Scripts/python -m pytest -q` passes.
 - The app loads with no console errors and both panels behave exactly as before.
 - `StyleTarget.forTextBlock`, `StyleTarget.forCaptionTrack` and `StylePanelHost` are available in the browser console.
