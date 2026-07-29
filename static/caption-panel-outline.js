@@ -21,11 +21,15 @@ window.CaptionPanel = window.CaptionPanel || {};
   window.CaptionPanel.renderOutline = function renderOutline() {
     const preset = ensureCaptionPreset(ensureCaptionTrack().preset_id);
 
+    const outlineOn = preset.outline_px > 0;
+    const outlineValue = SettingsRowValue.orNone(outlineOn, `${preset.outline_px}px`);
+    const outlineSwatch = outlineOn ? preset.outline_color : null;
+
     if (outlineRowSetValue) {
-      outlineRowSetValue(`${preset.outline_px}px`, null, preset.outline_color);
+      outlineRowSetValue(outlineValue, null, outlineSwatch);
     } else {
       outlineRowSetValue = UI.settingsRow(document.getElementById("caption-outline-row"), {
-        label: "Outline", value: `${preset.outline_px}px`, swatchColor: preset.outline_color,
+        label: "Outline", value: outlineValue, swatchColor: outlineSwatch,
         onClick: openOutlinePanel,
       });
     }

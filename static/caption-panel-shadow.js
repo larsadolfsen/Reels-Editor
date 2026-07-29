@@ -21,11 +21,14 @@ window.CaptionPanel = window.CaptionPanel || {};
   window.CaptionPanel.renderShadow = function renderShadow() {
     const preset = ensureCaptionPreset(ensureCaptionTrack().preset_id);
 
+    const shadowValue = SettingsRowValue.orNone(preset.shadow, `${preset.shadow_blur}px`);
+    const shadowSwatch = preset.shadow ? preset.shadow_color : null;
+
     if (shadowRowSetValue) {
-      shadowRowSetValue(preset.shadow ? "ON" : "OFF", null, preset.shadow ? preset.shadow_color : null);
+      shadowRowSetValue(shadowValue, null, shadowSwatch);
     } else {
       shadowRowSetValue = UI.settingsRow(document.getElementById("caption-shadow-row"), {
-        label: "Shadow", value: preset.shadow ? "ON" : "OFF", swatchColor: preset.shadow ? preset.shadow_color : null,
+        label: "Shadow", value: shadowValue, swatchColor: shadowSwatch,
         onClick: openShadowPanel,
       });
     }
