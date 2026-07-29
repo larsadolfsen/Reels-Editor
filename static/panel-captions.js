@@ -1,6 +1,6 @@
 // CAPTIONS context-panel section: caption track/preset creation (defaultCaptionPreset,
 // ensureCaptionPreset, ensureCaptionTrack), the main renderCaptionPanel orchestrator, and its
-// tab-bar/divider wiring (UI.tabBar; Design tab groups the FONT + HIGHLIGHT bodies together)
+// tab-bar/divider wiring (UI.tabBar; Highlight is a row+subpage inside the Design tab's body)
 // + the #caption-auto-btn transcribe listener. Plain globals shared with caption-panel-*.js;
 // reaches into editor.js's `project`/`saveProject`/`renderTimeline` globals.
 
@@ -14,7 +14,7 @@ function defaultCaptionPreset(id) {
     box_background: false, box_background_color: "#000000", box_background_opacity: 100,
     box_border_width: 0, box_border_color: "#FFFFFF", box_border_radius: 0,
     align: "center", x: 540, y: Math.round(SafeZoneGeometry.CAPTION_ZONE_TOP), entrance: "none",
-    highlight_color: "#FFD400", highlight_mode: "current_word", highlight_border_radius: 4,
+    highlight: false, highlight_color: "#FFD400", highlight_mode: "current_word", highlight_border_radius: 4,
   };
 }
 
@@ -71,6 +71,8 @@ async function renderCaptionPanel() {
   CaptionPanel.renderShadow();
   CaptionPanel.renderCase();
   CaptionPanel.renderBox();
+  CaptionPanel.renderBackground();
+  CaptionPanel.renderBorder();
   CaptionPanel.renderHighlight();
   CaptionPanel.renderFillerWords();
   CaptionPanel.renderWords();
@@ -91,10 +93,10 @@ const CAPTION_TABS = [
   { value: "design", icon: CAPTION_TAB_ICON_DESIGN, label: "Design" },
   { value: "box", icon: CAPTION_TAB_ICON_BOX, label: "Box" },
 ];
-// Design groups two existing bodies (FONT + HIGHLIGHT) — both show/hide together.
+// Each tab maps to one body; the array shape is kept because showCaptionTab iterates it.
 const captionTabPanes = {
   style: [document.getElementById("caption-style-body")],
-  design: [document.getElementById("caption-font-body"), document.getElementById("caption-highlight-body")],
+  design: [document.getElementById("caption-font-body")],
   box: [document.getElementById("caption-box-body")],
   "closed-caption": [document.getElementById("caption-words-body")],
   filler: [document.getElementById("caption-filler-body")],
@@ -108,7 +110,6 @@ UI.tabBar(document.getElementById("caption-tab-bar"), CAPTION_TABS, activeCaptio
 showCaptionTab(activeCaptionTab);
 
 UI.divider(document.getElementById("caption-box-width-height-divider"));
-UI.divider(document.getElementById("caption-box-background-border-divider"));
 UI.divider(document.getElementById("caption-box-border-position-divider"));
 
 // Runs transcription and merges the result into `project`. Shared by the CAPTIONS panel's

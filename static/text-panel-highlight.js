@@ -19,17 +19,24 @@ window.TextPanel = window.TextPanel || {};
 
   UI.subPanelHeader(document.getElementById("text-highlight-subpanel-header"), { title: "Highlight", onBack: closeHighlightPanel });
 
-  window.TextPanel.renderHighlight = function renderHighlight() {
-    const preset = ensureTextPreset(currentTextBlock().preset_id);
+  function refreshHighlightRow(preset) {
+    const highlightValue = SettingsRowValue.orNone(preset.highlight, preset.highlight_color);
+    const highlightSwatch = preset.highlight ? preset.highlight_color : null;
 
     if (highlightRowSetValue) {
-      highlightRowSetValue(preset.highlight ? "ON" : "OFF", null, preset.highlight ? preset.highlight_color : null);
+      highlightRowSetValue(highlightValue, null, highlightSwatch);
     } else {
       highlightRowSetValue = UI.settingsRow(document.getElementById("text-highlight-row"), {
-        label: "Highlight", value: preset.highlight ? "ON" : "OFF", swatchColor: preset.highlight ? preset.highlight_color : null,
+        label: "Highlight", value: highlightValue, swatchColor: highlightSwatch,
         onClick: openHighlightPanel,
       });
     }
+  }
+
+  window.TextPanel.renderHighlight = function renderHighlight() {
+    const preset = ensureTextPreset(currentTextBlock().preset_id);
+
+    refreshHighlightRow(preset);
 
     const highlightFieldsHidden = !preset.highlight;
     document.getElementById("text-highlight-color-field").hidden = highlightFieldsHidden;
@@ -47,7 +54,7 @@ window.TextPanel = window.TextPanel || {};
 
     UI.colorSwatch(document.getElementById("text-highlight-color-field"),
       { label: "Highlight", value: preset.highlight_color, span: 8,
-        onChange: (v) => { preset.highlight_color = v; saveProject(); renderTextPreview(); renderHighlight(); } });
+        onChange: (v) => { preset.highlight_color = v; saveProject(); renderTextPreview(); refreshHighlightRow(preset); } });
 
     UI.numberField(document.getElementById("text-highlight-radius-field"),
       { label: "RADIUS", unit: "PX", value: preset.highlight_border_radius, min: 0, max: 40, span: 8,

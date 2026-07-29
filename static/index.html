@@ -267,6 +267,10 @@
             <div class="style-group">
               <div id="caption-shadow-row" class="col-8"></div>
             </div>
+
+            <div class="style-group">
+              <div id="caption-highlight-row" class="col-8"></div>
+            </div>
           </div>
 
           <div id="caption-box-body">
@@ -281,21 +285,11 @@
             <div id="caption-box-width-height-divider"></div>
 
             <div class="style-group">
-              <div class="style-row">
-                <div id="caption-box-background-color-field"></div>
-                <label id="caption-box-background-opacity-field"></label>
-              </div>
+              <div id="caption-box-background-row" class="col-8"></div>
             </div>
 
-            <div id="caption-box-background-border-divider"></div>
-
-            <div class="style-group-label">BORDER</div>
             <div class="style-group">
-              <div class="style-row">
-                <label id="caption-box-border-width-field"></label>
-                <label id="caption-box-border-radius-field"></label>
-                <div id="caption-box-border-color-field"></div>
-              </div>
+              <div id="caption-box-border-row" class="col-8"></div>
             </div>
 
             <div id="caption-box-border-position-divider"></div>
@@ -317,23 +311,6 @@
               </div>
             </div>
 
-          </div>
-
-          <div id="caption-highlight-body">
-            <div class="style-group-label">MARKER</div>
-            <div class="style-group">
-              <div id="caption-highlight-marker-group"></div>
-            </div>
-            <div class="style-group-label">MODE</div>
-            <div class="style-group">
-              <div id="caption-highlight-mode-group"></div>
-            </div>
-            <div class="style-group">
-              <div id="caption-highlight-color-field"></div>
-            </div>
-            <div class="style-group">
-              <label id="caption-highlight-border-radius-field"></label>
-            </div>
           </div>
 
           <div id="caption-words-body">
@@ -418,6 +395,53 @@
         <div id="panel-captions-language" hidden>
           <div id="caption-language-subpanel-header"></div>
           <ul id="caption-language-list" class="font-list"></ul>
+        </div>
+
+        <div id="panel-captions-background" hidden>
+          <div id="caption-background-subpanel-header"></div>
+          <div class="style-group">
+            <div id="caption-box-background-toggle-group"></div>
+          </div>
+          <div class="style-group">
+            <label id="caption-box-background-color-field"></label>
+          </div>
+          <div class="style-group">
+            <label id="caption-box-background-opacity-field"></label>
+          </div>
+        </div>
+
+        <div id="panel-captions-border" hidden>
+          <div id="caption-border-subpanel-header"></div>
+          <div class="style-group">
+            <div id="caption-box-border-toggle-group"></div>
+          </div>
+          <div class="style-group">
+            <div class="style-row">
+              <label id="caption-box-border-width-field"></label>
+              <label id="caption-box-border-radius-field"></label>
+            </div>
+          </div>
+          <div class="style-group">
+            <label id="caption-box-border-color-field"></label>
+          </div>
+        </div>
+
+        <div id="panel-captions-highlight" hidden>
+          <div id="caption-highlight-subpanel-header"></div>
+          <div class="style-group-label">MARKER</div>
+          <div class="style-group">
+            <div id="caption-highlight-marker-group"></div>
+          </div>
+          <div class="style-group-label">MODE</div>
+          <div class="style-group">
+            <div id="caption-highlight-mode-group"></div>
+          </div>
+          <div class="style-group">
+            <label id="caption-highlight-color-field"></label>
+          </div>
+          <div class="style-group">
+            <label id="caption-highlight-border-radius-field"></label>
+          </div>
         </div>
 
       </div>
@@ -704,21 +728,11 @@
           <div id="text-box-width-height-divider"></div>
 
           <div class="style-group">
-            <div class="style-row">
-              <div id="text-box-background-color-field"></div>
-              <label id="text-box-background-opacity-field"></label>
-            </div>
+            <div id="text-box-background-row" class="col-8"></div>
           </div>
 
-          <div id="text-box-background-border-divider"></div>
-
-          <div class="style-group-label">BORDER</div>
           <div class="style-group">
-            <div class="style-row">
-              <label id="text-box-border-width-field"></label>
-              <label id="text-box-border-radius-field"></label>
-              <div id="text-box-border-color-field"></div>
-            </div>
+            <div id="text-box-border-row" class="col-8"></div>
           </div>
 
           <div id="text-box-border-position-divider"></div>
@@ -824,6 +838,35 @@
           </div>
         </div>
 
+        <div id="panel-text-background" hidden>
+          <div id="text-background-subpanel-header"></div>
+          <div class="style-group">
+            <div id="text-box-background-toggle-group"></div>
+          </div>
+          <div class="style-group">
+            <label id="text-box-background-color-field"></label>
+          </div>
+          <div class="style-group">
+            <label id="text-box-background-opacity-field"></label>
+          </div>
+        </div>
+
+        <div id="panel-text-border" hidden>
+          <div id="text-border-subpanel-header"></div>
+          <div class="style-group">
+            <div id="text-box-border-toggle-group"></div>
+          </div>
+          <div class="style-group">
+            <div class="style-row">
+              <label id="text-box-border-width-field"></label>
+              <label id="text-box-border-radius-field"></label>
+            </div>
+          </div>
+          <div class="style-group">
+            <label id="text-box-border-color-field"></label>
+          </div>
+        </div>
+
       </div>
     </aside>
   </main>
@@ -834,6 +877,7 @@
 <script src="/static/ui-color-swatch.js"></script>
 <script src="/static/ui-accordion.js"></script>
 <script src="/static/ui-settings-row.js"></script>
+<script src="/static/settings-row-value.js"></script>
 <script src="/static/ui-accordion-section.js"></script>
 <script src="/static/ui-sub-panel-header.js"></script>
 <script src="/static/ui-divider.js"></script>
@@ -874,6 +918,8 @@
 <script src="/static/caption-panel-outline.js"></script>
 <script src="/static/caption-panel-shadow.js"></script>
 <script src="/static/caption-panel-box.js"></script>
+<script src="/static/caption-panel-background.js"></script>
+<script src="/static/caption-panel-border.js"></script>
 <script src="/static/caption-panel-highlight.js"></script>
 <script src="/static/caption-panel-case.js"></script>
 <script src="/static/caption-panel-words.js"></script>
@@ -892,6 +938,8 @@
 <script src="/static/text-panel-outline.js"></script>
 <script src="/static/text-panel-shadow.js"></script>
 <script src="/static/text-panel-highlight.js"></script>
+<script src="/static/text-panel-background.js"></script>
+<script src="/static/text-panel-border.js"></script>
 <script src="/static/text-panel-style.js"></script>
 <script src="/static/text-panel-align.js"></script>
 <script src="/static/text-panel-case.js"></script>

@@ -18,17 +18,24 @@ window.CaptionPanel = window.CaptionPanel || {};
 
   UI.subPanelHeader(document.getElementById("caption-shadow-subpanel-header"), { title: "Shadow", onBack: closeShadowPanel });
 
-  window.CaptionPanel.renderShadow = function renderShadow() {
-    const preset = ensureCaptionPreset(ensureCaptionTrack().preset_id);
-
+  function refreshShadowRow(preset) {
+    const value = SettingsRowValue.orNone(preset.shadow,
+      `X: ${preset.shadow_offset_x}px  Y: ${preset.shadow_offset_y}px  Blur: ${preset.shadow_blur}px`);
+    const swatch = preset.shadow ? preset.shadow_color : null;
     if (shadowRowSetValue) {
-      shadowRowSetValue(preset.shadow ? "ON" : "OFF", null, preset.shadow ? preset.shadow_color : null);
+      shadowRowSetValue(value, null, swatch);
     } else {
       shadowRowSetValue = UI.settingsRow(document.getElementById("caption-shadow-row"), {
-        label: "Shadow", value: preset.shadow ? "ON" : "OFF", swatchColor: preset.shadow ? preset.shadow_color : null,
+        label: "Shadow", value, swatchColor: swatch,
         onClick: openShadowPanel,
       });
     }
+  }
+
+  window.CaptionPanel.renderShadow = function renderShadow() {
+    const preset = ensureCaptionPreset(ensureCaptionTrack().preset_id);
+
+    refreshShadowRow(preset);
 
     const shadowFieldsHidden = !preset.shadow;
     document.getElementById("caption-shadow-color-field").hidden = shadowFieldsHidden;
@@ -48,18 +55,18 @@ window.CaptionPanel = window.CaptionPanel || {};
 
     UI.colorSwatch(document.getElementById("caption-shadow-color-field"),
       { label: "Shadow", value: preset.shadow_color, span: 8,
-        onChange: (v) => { preset.shadow_color = v; saveProject(); renderCaptionPreview(); renderShadow(); } });
+        onChange: (v) => { preset.shadow_color = v; saveProject(); renderCaptionPreview(); refreshShadowRow(preset); } });
 
     UI.numberField(document.getElementById("caption-shadow-offset-x-field"),
       { label: "OFFSET X", unit: "PX", value: preset.shadow_offset_x, min: -40, max: 40, span: 4,
-        onChange: (v) => { preset.shadow_offset_x = v; saveProject(); renderCaptionPreview(); } });
+        onChange: (v) => { preset.shadow_offset_x = v; saveProject(); renderCaptionPreview(); refreshShadowRow(preset); } });
 
     UI.numberField(document.getElementById("caption-shadow-offset-y-field"),
       { label: "OFFSET Y", unit: "PX", value: preset.shadow_offset_y, min: -40, max: 40, span: 4,
-        onChange: (v) => { preset.shadow_offset_y = v; saveProject(); renderCaptionPreview(); } });
+        onChange: (v) => { preset.shadow_offset_y = v; saveProject(); renderCaptionPreview(); refreshShadowRow(preset); } });
 
     UI.numberField(document.getElementById("caption-shadow-blur-field"),
       { label: "BLUR", unit: "PX", value: preset.shadow_blur, min: 0, max: 40, span: 8,
-        onChange: (v) => { preset.shadow_blur = v; saveProject(); renderCaptionPreview(); } });
+        onChange: (v) => { preset.shadow_blur = v; saveProject(); renderCaptionPreview(); refreshShadowRow(preset); } });
   };
 })();
