@@ -1,9 +1,10 @@
 // Sequence-mutation helpers for the main VIDEO clip track: inserting a new clip at a drop point
-// (splitting an existing clip if needed) and converting a video box into a sequence clip.
-// Also imports one or more media files via the native multi-select file picker straight into
-// the media library (no timeline insert — the user drags library items onto the timeline
-// themselves). Plain globals shared with editor.js's drag/drop wiring; reaches into editor.js's
-// `project`/`saveProject` globals.
+// (splitting an existing clip if needed), converting a video box into a sequence clip, and
+// appending a media-library item straight to the end of the sequence (used by the MEDIA panel's
+// plus-icon button, static/panel-media.js). Also imports one or more media files via the native
+// multi-select file picker straight into the media library (no timeline insert — the user drags
+// library items onto the timeline themselves). Plain globals shared with editor.js's drag/drop
+// wiring; reaches into editor.js's `project`/`saveProject` globals.
 
 // Inserts a new main-sequence ClipLayer at `dropTime` from any source carrying
 // media_id/file_path/in_point/out_point (a video box or a media-library drag): if the
@@ -71,6 +72,24 @@ function insertClipIntoSequence(source, dropTime) {
 function stitchVideoBoxIntoSequence(box, dropTime) {
   insertClipIntoSequence(box, dropTime);
   project.video_boxes = project.video_boxes.filter((v) => v.id !== box.id);
+}
+
+// Appends a media-library item as a new clip at the end of the main VIDEO sequence — the drop
+// point is always past every existing clip, so insertClipIntoSequence never needs to split.
+// Shared by the MEDIA panel's plus-icon "add to timeline" button (static/panel-media.js, video
+// rows only; image rows create an IMAGE BOX instead, see panel-image-box.js's createImageBox).
+async function appendMediaClipToSequence(m) {
+  const dropTime = Preview.sequenceDuration(project.clips);
+  const clip = insertClipIntoSequence(
+    { media_id: m.id, file_path: m.file_path, in_point: 0, out_point: m.duration },
+    dropTime,
+  );
+  clipDurations[clip.id] = m.duration;
+  await saveProject();
+  Preview.load(project);
+  renderTimeline();
+  if (m.kind !== "image") await runAutoCaption();
+  return clip;
 }
 
 async function importMedia() {
