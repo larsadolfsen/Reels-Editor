@@ -19,6 +19,20 @@
   background: rgba(108, 135, 163, 0.12);
 }
 
+/* Modifier for a .btn-group that should share its parent .style-row's grid instead of
+   opening its own: the buttons become direct grid items of the row, so a button group can
+   sit on the same row as standalone .icon-btn toggles (e.g. Italic/Underline + case group). */
+.btn-group-inline { display: contents; }
+
+/* Match the standalone .icon-btn box so both kinds of button line up on the shared row. */
+.btn-group-inline button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
