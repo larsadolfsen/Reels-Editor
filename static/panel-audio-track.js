@@ -1,7 +1,8 @@
-// AUDIO context-panel section: the timeline's audio track. A single "Auto" tab holds the two
-// audio-derived automations — AUTO CAPTION (language + transcribe) and AUTO SILENCE (detect
-// silence/filler words and cut them out). Owns the tab bar and delegates rendering to
-// panel-auto-slice.js. Exposes window.AudioTrackPanel.render().
+// AUDIO context-panel section: the timeline's audio track. Owns the panel's tab bar and
+// render() orchestration, sequencing ensureCaptionTrack(), AudioTrackPanel.renderLanguage()
+// (language settings row, audio-panel-language.js) and AutoSlicePanel.render() (the auto-slice
+// flow, panel-auto-slice.js); audio-panel-auto-caption.js wires its own button directly and
+// calls back into AudioTrackPanel.render() on success. Exposes window.AudioTrackPanel.render().
 window.AudioTrackPanel = window.AudioTrackPanel || {};
 
 (() => {
@@ -24,6 +25,7 @@ window.AudioTrackPanel = window.AudioTrackPanel || {};
   function render() {
     document.getElementById("panel-audio-track-language").hidden = true;
     document.getElementById("panel-audio-track-main").hidden = false;
+    document.getElementById("audio-transcribe-error").hidden = true;
     ensureCaptionTrack();
     AudioTrackPanel.renderLanguage();
     AutoSlicePanel.render();

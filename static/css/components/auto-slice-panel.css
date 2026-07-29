@@ -1,4 +1,4 @@
-/* AUTO SLICE panel: detect/results-checklist/confirm views. Exposes .auto-slice-hint,
+/* Auto-silence group inside the AUDIO panel: detect/results-checklist/confirm views. Exposes .auto-slice-hint,
    .auto-slice-summary, .auto-slice-list/.auto-slice-row/.auto-slice-badge(--silence|--filler)/
    .auto-slice-row-time/.auto-slice-row-label. Rows use UI.listRow for card/hover styling
    (list-row.css); this file only adds row-internal flex layout + badge coloring. Depends on tokens.css. */

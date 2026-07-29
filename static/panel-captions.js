@@ -1,6 +1,6 @@
 // CAPTIONS context-panel section: caption track/preset creation (defaultCaptionPreset,
 // ensureCaptionPreset, ensureCaptionTrack), the main renderCaptionPanel orchestrator, and its
-// tab-bar/divider wiring (UI.tabBar; Design tab groups the FONT + HIGHLIGHT bodies together).
+// tab-bar/divider wiring (UI.tabBar; Design tab is one body (`#caption-font-body`)).
 // Plain globals shared with caption-panel-*.js; reaches into editor.js's
 // `project`/`saveProject`/`renderTimeline` globals. Transcription itself (the Auto-caption button
 // and the Language row) lives in the AUDIO panel — see static/audio-panel-auto-caption.js.

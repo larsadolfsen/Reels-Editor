@@ -40,6 +40,7 @@ window.CaptionPanel = window.CaptionPanel || {};
     listEl.innerHTML = "";
     const track = ensureCaptionTrack();
     document.getElementById("caption-transcript-section").hidden = track.words.length === 0;
+    document.getElementById("caption-words-empty-hint").hidden = track.words.length > 0;
     [...track.words].sort((a, b) => a.t_start - b.t_start).forEach((word) => {
       const li = document.createElement("li");
       li.className = "font-list-row";
