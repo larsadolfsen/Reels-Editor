@@ -1,15 +1,8 @@
 const test = require("node:test");
 const assert = require("node:assert");
 
-// static/style-target-text.js writes unconditionally to `window` (no `typeof window`
-// guard, unlike format-run-write.js/font-size-scale.js/style-fields.js) and this test
-// reads its result off `global` rather than a module.exports return value, so `window`
-// must be bridged to `global` before either require — otherwise requiring the file
-// throws `ReferenceError: window is not defined` in plain Node.
-global.window = global;
-require("../../static/format-run-write.js");
-require("../../static/style-target-text.js");
-const { forTextBlock } = global.StyleTarget;
+const { upsertFormatRun } = require("../../static/format-run-write.js");
+const { forTextBlock } = require("../../static/style-target-text.js");
 
 // Builds a target over an in-memory block/preset with every collaborator injected, so
 // no browser globals are involved. `selection` is what Preview.getActiveFormatSelection()
@@ -28,7 +21,7 @@ function makeTarget({ selection = null, block, preset } = {}) {
     getBoxSize: () => ({ width: 500, height: 200 }),
     renderPreviewWith: (presets) => { calls.lastPreviewPresets = presets; },
     allPresets: () => ({ p1: p }),
-    upsert: global.FormatRunWrite.upsertFormatRun,
+    upsert: upsertFormatRun,
   });
   return { target, block: b, preset: p, calls };
 }
