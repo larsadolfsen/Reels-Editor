@@ -31,7 +31,7 @@ window.FontFit = (() => {
   }
 
   function fitFontSize(text, measurerFactory, boxWidthPx, boxHeightPx,
-      { minSize = 24, maxSize = 200, padXEm = 0.35, padYEm = 0.15, lineHeight = 1.15 } = {}) {
+      { minSize = 24, maxSize = 200, padXEm = 0, padYEm = 0, lineHeight = 1.15 } = {}) {
     function evalSize(size) {
       const measure = measurerFactory(size);
       const padX = padXEm * size * 2;
