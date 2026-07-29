@@ -20,6 +20,9 @@
 // don't inflate this default fit (though they still extend the ruler/scroll range via
 // totalDuration, so they remain reachable by scrolling or manual zoom-out).
 // #timeline-scroll provides horizontal scroll once zoomed content exceeds the viewport.
+// The ruler's timestamp density follows that zoom (tickStep): the step is picked from a
+// 1/2/5/10/15/30/60/120/300/600s ladder so labels stay >= MIN_TICK_LABEL_PX apart instead
+// of smearing together into an unreadable band when zoomed out.
 // render()'s 5th `actions = {}` param ({ onAddClip }) renders a small dashed "+" button
 // after the VIDEO row's clip sequence (at x=0 when empty), giving a visible way to add a
 // clip beyond the console. TEXT blocks are added via the left icon rail's TEXT entry instead
@@ -34,6 +37,7 @@ window.Timeline = (() => {
   const LABEL_WIDTH = 88;
   const LANE_HEIGHT = 44; // px per overlay-stack lane, matches CAPTIONS row height
   const MIN_PX_PER_SEC_FLOOR = 60; // fallback if the scroll container can't be measured yet
+  const MIN_TICK_LABEL_PX = 48; // min gap between ruler timestamps ("00:00" is ~27px at 9px)
   const DEFAULT_VISIBLE_SECONDS = 30;
   const ZOOM_STEP_SECONDS = 10;
   const MIN_VISIBLE_SECONDS = 10;
@@ -222,10 +226,19 @@ window.Timeline = (() => {
     track.appendChild(div);
   }
 
+  // Smallest "nice" step (seconds) whose labels are still at least MIN_TICK_LABEL_PX apart
+  // at the current zoom. Zooming out used to keep a fixed 2s step, so labels overlapped into
+  // an unreadable smear; now the ruler thins them out instead. Pure.
+  function tickStep(px, minLabelPx = MIN_TICK_LABEL_PX) {
+    const ladder = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600];
+    return ladder.find((s) => s * px >= minLabelPx) || ladder[ladder.length - 1];
+  }
+
   function renderRuler(duration, px) {
     const ruler = document.getElementById("timeline-ruler");
     ruler.querySelectorAll(".tick").forEach((t) => t.remove());
-    for (let s = 0; s <= Math.ceil(duration); s += 2) {
+    const step = tickStep(px);
+    for (let s = 0; s <= Math.ceil(duration); s += step) {
       const tick = document.createElement("div");
       tick.className = "tick";
       tick.style.left = `${s * px}px`;
