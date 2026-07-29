@@ -778,7 +778,9 @@ window.StyleTarget.forCaptionTrack = function forCaptionTrack(deps) {
     rerenderPreview: () => renderCaptionPreview(),
     rerenderPanel: () => renderCaptionPanel(),
     getBoxSize: () => Preview.getCaptionBoxSize(),
-    renderPreviewWith: (presets) => Preview.renderCaptions(project, presets, Preview.currentTimelineTime()),
+    renderPreviewWith: (presets) => {
+      if (window.Preview && Preview.renderCaptions) Preview.renderCaptions(project, presets, Preview.currentTimelineTime());
+    },
     allPresets: () => project.text_presets,
   };
 
