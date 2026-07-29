@@ -122,7 +122,13 @@
   align-items: center;
 }
 
+/* `flex: 1` is load-bearing, not cosmetic: static/timeline.js derives pixels-per-second
+   from this element's clientWidth and then sets #timeline-content's width from it. Without
+   an explicit flex basis this element sizes to that content instead, so measure -> compute
+   -> measure becomes a feedback loop and the timeline visibly shrinks a little on every
+   render (e.g. while dragging the playhead, which re-renders per seek). */
 #timeline-scroll {
+  flex: 1;
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
