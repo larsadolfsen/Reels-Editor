@@ -22,8 +22,10 @@ window.AudioTrackPanel = window.AudioTrackPanel || {};
   showAudioTrackTab(activeAudioTrackTab);
 
   function render() {
+    document.getElementById("panel-audio-track-language").hidden = true;
     document.getElementById("panel-audio-track-main").hidden = false;
     ensureCaptionTrack();
+    AudioTrackPanel.renderLanguage();
     AutoSlicePanel.render();
   }
 

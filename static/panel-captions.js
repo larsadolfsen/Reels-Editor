@@ -56,13 +56,11 @@ function renderCaptionPreview() {
 async function renderCaptionPanel() {
   document.getElementById("panel-captions-font").hidden = true;
   document.getElementById("panel-captions-weight").hidden = true;
-  document.getElementById("panel-captions-language").hidden = true;
   document.getElementById("panel-captions-main").hidden = false;
 
   ensureCaptionTrack();
   document.getElementById("caption-transcribe-error").hidden = true;
 
-  CaptionPanel.renderLanguage();
   CaptionPanel.renderStyle();
   CaptionPanel.renderFontFamily();
   await CaptionPanel.renderFontWeight();
