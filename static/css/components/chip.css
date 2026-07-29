@@ -48,6 +48,7 @@
   background: transparent;
   border-color: var(--border);
   color: var(--text);
+  line-height: 1.4;
   letter-spacing: var(--ls-tight);
 }
 
