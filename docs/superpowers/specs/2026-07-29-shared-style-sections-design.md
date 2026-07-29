@@ -264,7 +264,7 @@ installed).
 Command, to be added to `CLAUDE.md`'s run commands:
 
 ```
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Pure modules export for both environments — a `window` assignment for the browser and

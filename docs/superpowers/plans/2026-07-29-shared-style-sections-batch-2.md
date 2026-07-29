@@ -14,13 +14,19 @@
 Batches 2-6 were drafted in parallel and disagreed on three points. The master plan is
 now the single authority; where a snippet below contradicts it, **the master plan wins**.
 
-- **`font` is written with `setPresetField`, not `setField`.** Routing it through
-  `setField` would add per-range fonts inside one heading — a new capability that was
-  raised and declined. `text-panel-font-family.js:29` writes `preset.font`
-  unconditionally today, and that behaviour is preserved.
+- **`font` never becomes selection-aware, enforced by the target itself.** Per-range
+  fonts inside one heading were raised and declined. `style-target-text.js` keeps an
+  explicit `FORMAT_RUN_FIELDS` allowlist that excludes `font`, and both `setField` and
+  `setFields` consult it before ever touching a `FormatRun` — so it is safe (not merely
+  conventional) to write `font` through either method; the target always routes it to
+  the base preset. `text-panel-font-family.js:29` wrote `preset.font` unconditionally
+  today, and that observable behaviour is preserved, but the *mechanism* is centralized
+  in the target rather than left to caller discipline. See the master plan's
+  `setField`/`setPresetField` section for the full rule.
 - **Picking a font uses `target.setFields({ font, weight })`, not two `setField` calls.**
   Two calls mean two saves and two undo entries for one click. `setFields` is new in the
-  contract; Batch 1 must implement it.
+  contract; Batch 1 implements it, including the `FORMAT_RUN_FIELDS` routing above — so
+  `font` stays preset-only and `weight` stays selection-aware within the same call.
 - **This batch introduces the `.style-section` wrapper convention and its two CSS rules**
   (master plan, "Section wrapper convention"). `StyleTab.design` wraps each section in a
   `<div class="style-section">`. Without it the gap between sections collapses, because
@@ -79,14 +85,14 @@ Sharing one component forces a single answer where the two old files differ. Nei
 - Modify: `static/index.html` (one script tag)
 
 **Interfaces:**
-- Consumes: `StylePanelHost` (Batch 1) via `options.host`; the style target's `getFieldValue`, `setField`, `previewField`, `cancelPreview`, `rerenderPanel`; `UI.settingsRow`, `UI.divider`, `UI.listRow`; the existing globals `AVAILABLE_FONTS` (`static/editor.js:7`) and `Api.listFontWeights` (`static/api-list-font-weights.js`).
+- Consumes: `StylePanelHost` (Batch 1) via `options.host`; the style target's `getFieldValue`, `setFields`, `previewField`, `cancelPreview`, `rerenderPanel`; `UI.settingsRow`, `UI.divider`, `UI.listRow`; the existing globals `AVAILABLE_FONTS` (`static/editor.js:7`) and `Api.listFontWeights` (`static/api-list-font-weights.js`).
 - Produces: `window.StyleSection.fontFamily(container, target, { host }) -> { render() }`. Task 3's `style-tab-design.js` calls it.
 
 **Behaviour notes for this task:**
 
-- `selectFont`'s weight-snap logic is carried over **verbatim** from `text-panel-font-family.js:32-36` — the same `reduce` picking the numerically nearest available weight. Only its read/write path changes: `preset.weight` becomes `target.getFieldValue("weight")` / `target.setField("weight", …)`.
-- Font family writes through `setField`, not `setPresetField`, per the master plan's Interface contract (`font` is in the FormatRun-capable list, and `FormatRun.font` is a real field in `app/models.py` that `preview-text.js` already resolves). This makes font family selection-aware on TEXT, which the two old files were not. That is the contract's stated intent for every FormatRun-capable field, and it is why Task 4's verification includes the partial-selection check.
-- The snap fires a second `setField`, so a font change that also snaps the weight performs two saves where the old code performed one. Both persist the same final state; the only user-visible consequence is one extra Ctrl+Z step in the snap case. The contract has no batched write, and `setField` is the only permitted write path.
+- `selectFont`'s weight-snap logic is carried over **verbatim** from `text-panel-font-family.js:32-36` — the same `reduce` picking the numerically nearest available weight. Only its read/write path changes: `preset.weight` becomes `target.getFieldValue("weight")`, and the write for both `font` and (when it snaps) `weight` goes through one `target.setFields({...})` call, not `preset.weight = …` or two separate `setField` calls.
+- `font` is deliberately **not** on `style-target-text.js`'s `FORMAT_RUN_FIELDS` allowlist, so `setFields` always routes it to the base preset regardless of any active stage selection. This is unchanged from the two old files' behaviour: neither was selection-aware for font, and this refactor does not add that capability (it was raised and declined — see the master plan). `weight` IS on the allowlist and does become selection-aware when the same `setFields` call carries it, which is new relative to the old `text-panel-font-weight.js` (verified in Task 4's partial-selection check below).
+- Because both fields go through one `setFields` call, a font change that also snaps the weight performs exactly **one** save and **one** undo entry — same as a font change that doesn't snap. This is the reason `setFields` exists rather than two `setField` calls; do not split them back apart.
 
 - [ ] **Step 1: Create the file**
 
@@ -155,17 +161,20 @@ window.StyleSection.fontFamily = function fontFamily(container, target, options)
 
   // Verbatim from text-panel-font-family.js: a weight the newly chosen family does not ship
   // snaps to the numerically nearest weight it does ship, so nothing renders at a weight that
-  // does not exist. Only the read/write path changed — the target decides whether the write
-  // lands on the base preset or on a per-range FormatRun.
+  // does not exist. Only the read/write path changed — target.setFields decides per key
+  // whether a write lands on the base preset or a per-range FormatRun (font never does,
+  // weight does when a selection is active), and does exactly ONE save/undo-entry for the
+  // whole call, whether or not a snap fires.
   async function selectFont(fontName) {
-    target.setField("font", fontName);
     const weights = await Api.listFontWeights(fontName);
     const currentWeight = target.getFieldValue("weight");
+    const fields = { font: fontName };
     if (!weights.some((w) => w.value === currentWeight)) {
-      target.setField("weight", weights.reduce((closest, w) =>
+      fields.weight = weights.reduce((closest, w) =>
         Math.abs(w.value - currentWeight) < Math.abs(closest.value - currentWeight) ? w : closest
-      ).value);
+      ).value;
     }
+    target.setFields(fields);
     page.close();
     // Repaints the Font Family and Weight rows together; renderTextPanel/renderCaptionPanel
     // re-render every section, which is what the old file's two by-name calls did by hand.
@@ -474,8 +483,8 @@ git commit -m "feat: Design tab composer for the shared style sections"
 **Mount-point pattern established here — every later batch copies it:**
 
 - The Design-tab body (`#text-font-body`) starts with a single empty `<div id="text-design-mount"></div>`. Shared sections append their own `.style-group` markup into it, in composer order. Legacy markup for controls not yet migrated stays *below* the mount, so the visual order is always [migrated rows][not-yet-migrated rows] — which for TEXT is already the final resolved order.
-- One `<div id="text-drilldowns"></div>` sits as a sibling of `#panel-text-main`, exactly where the deleted per-control subpanels were. `StylePanelHost` appends every `.style-sub-panel` into it. Later batches delete more subpanels and add nothing here.
-- No new CSS. `.style-group`, `.col-8`, `.font-list`, `.font-list-row`, `.font-list-divider`, `.font-list-checkmark`, `.font-weight-row-content` and `.font-weight-row-preview` all already exist (`static/css/components/sub-panel.css`, `style-panel.css`), and Batch 1 added `.style-sub-panel`. `#text-drilldowns` is an unstyled wrapper.
+- **No new drill-down container.** `StylePanelHost(mainEl, drillEl)`'s `page()` factory creates each `.style-sub-panel` div with `document.createElement` and appends it into `drillEl` itself — no static placeholder markup is ever required. `drillEl` is `#panel-text` (the whole context-panel section), matching the pattern the pre-existing per-control subpanels already established: `#panel-text-color`/`#panel-text-outline`/`#panel-text-shadow`/`#panel-text-highlight` (`index.html:778,785,…`) are already direct children of `#panel-text`, siblings of `#panel-text-main`, not nested inside any dedicated wrapper. The two deleted subpanels (`#panel-text-font`, `#panel-text-weight`) are simply removed, with nothing put in their place.
+- No new CSS. `.style-group`, `.col-8`, `.font-list`, `.font-list-row`, `.font-list-divider`, `.font-list-checkmark`, `.font-weight-row-content` and `.font-weight-row-preview` all already exist (`static/css/components/sub-panel.css`, `style-panel.css`), and Batch 1 added `.style-sub-panel`.
 
 - [ ] **Step 1: Replace the Font Family and Weight markup with the mount point**
 
@@ -507,7 +516,7 @@ Replace it with:
 
 Everything from `<div class="style-group">` / `<div class="style-row" id="text-size-row">` down to the end of `#text-font-body` is untouched.
 
-- [ ] **Step 2: Replace the font and weight subpanels with the drill-down container**
+- [ ] **Step 2: Delete the font and weight subpanels — nothing replaces them**
 
 In `static/index.html`, find this block (immediately after `#panel-text-main`'s closing `</div>`, around line 770):
 
@@ -525,13 +534,7 @@ In `static/index.html`, find this block (immediately after `#panel-text-main`'s 
         <div id="panel-text-color" hidden>
 ```
 
-Replace it with:
-
-```html
-        <div id="text-drilldowns"></div>
-
-        <div id="panel-text-color" hidden>
-```
+Delete the two `<div id="panel-text-font" hidden>…</div>` and `<div id="panel-text-weight" hidden>…</div>` blocks entirely. Leave `<div id="panel-text-color" hidden>` (and everything from it onward) untouched — the result is that `#panel-text-color` now directly follows `#panel-text-main`'s closing tag. `StylePanelHost` will append the new Font Family and Weight drill-down subpages straight into `#panel-text` at wiring time (Step 4) — no placeholder div is needed for them, any more than one was needed for `#panel-text-color` itself.
 
 `#panel-text-color`, `#panel-text-outline`, `#panel-text-shadow` and `#panel-text-highlight` stay exactly as they are — Batches 3 and 4 delete them.
 
@@ -552,11 +555,12 @@ In `static/panel-text.js`, immediately after the line `showTextTab(activeTextTab
 
 ```js
 // The shared style sections are built ONCE, here, and only re-rendered afterwards — never
-// rebuilt. The host owns the drill-down subpages they register into #text-drilldowns.
+// rebuilt. The host appends every drill-down subpage as a new child of #panel-text itself,
+// the same place the pre-existing per-control subpanels (#panel-text-color, etc.) already live.
 const textStyleTarget = StyleTarget.forTextBlock();
 const textStyleHost = StylePanelHost(
   document.getElementById("panel-text-main"),
-  document.getElementById("text-drilldowns"),
+  document.getElementById("panel-text"),
 );
 const textDesignTab = StyleTab.design(
   document.getElementById("text-design-mount"),
@@ -627,7 +631,7 @@ Open `http://127.0.0.1:8000`, open the **throwaway** project, import a clip if i
 5. Click the back arrow → the main view returns, stage still Public Sans.
 6. Re-open, click `JetBrains Mono` → the subpage closes, the stage text is JetBrains Mono, the Font Family row reads `JetBrains Mono` in that face, and the **Weight row's value has snapped** to a weight JetBrains Mono ships.
 7. Click **Weight** → each row shows the weight's name plus `Hello world` rendered at that weight in the current font, with a checkmark on the current one. Pick a different weight → the subpage closes, the stage updates, the Weight row's label updates.
-8. **FormatRun check (TEXT only — the CAPTIONS panel cannot exercise this path).** On the stage, select just the word `Hello` with the mouse. With that selection live, open **Weight** and pick a different weight. Expected: **only `Hello` changes weight**; `world` keeps the block's weight. Then open **Font Family** and pick the other font. Expected: **only `Hello` changes font**. This is the `setField` path; if the whole block changes, the section is calling `setPresetField` or writing the preset directly.
+8. **FormatRun check (TEXT only — the CAPTIONS panel cannot exercise this path).** On the stage, select just the word `Hello` with the mouse. With that selection live, open **Weight** and pick a different weight. Expected: **only `Hello` changes weight**; `world` keeps the block's weight — `weight` is on `FORMAT_RUN_FIELDS`, so this is the selection-aware path. Then, with the same selection still live, open **Font Family** and pick the other font. Expected: **the whole block changes font, both `Hello` and `world`** — `font` is deliberately excluded from `FORMAT_RUN_FIELDS`, so it always writes the base preset no matter what is selected. If only `Hello` changes font, the allowlist is missing `font`'s exclusion and per-range fonts have leaked in — that is the bug this check exists to catch, not the expected result.
 9. Click elsewhere to drop the selection, then reload the page. Every change above persisted.
 10. Console: no errors.
 
@@ -697,7 +701,7 @@ Replace it with:
                 <button class="icon-btn col-1" id="caption-italic" type="button" aria-pressed="false" title="Italic">
 ```
 
-- [ ] **Step 2: Replace the font and weight subpanels with the drill-down container**
+- [ ] **Step 2: Delete the font and weight subpanels — nothing replaces them**
 
 In `static/index.html`, find this block (immediately after `#panel-captions-main`'s closing `</div>`, around line 373):
 
@@ -715,13 +719,7 @@ In `static/index.html`, find this block (immediately after `#panel-captions-main
         <div id="panel-captions-color" hidden>
 ```
 
-Replace it with:
-
-```html
-        <div id="caption-drilldowns"></div>
-
-        <div id="panel-captions-color" hidden>
-```
+Delete the two `<div id="panel-captions-font" hidden>…</div>` and `<div id="panel-captions-weight" hidden>…</div>` blocks entirely. Leave `<div id="panel-captions-color" hidden>` (and everything from it onward) untouched. `StylePanelHost` will append the new Font Family and Weight drill-down subpages straight into `#panel-captions` at wiring time (Step 4) — same reasoning as the TEXT side's Step 2.
 
 `#panel-captions-color`, `#panel-captions-outline`, `#panel-captions-shadow` and `#panel-captions-language` stay — Batches 3 and 4 delete the first three, and the language subpanel is single-panel and stays for good.
 
@@ -743,7 +741,7 @@ In `static/panel-captions.js`, immediately after the line `showCaptionTab(active
 const captionStyleTarget = StyleTarget.forCaptionTrack();
 const captionStyleHost = StylePanelHost(
   document.getElementById("panel-captions-main"),
-  document.getElementById("caption-drilldowns"),
+  document.getElementById("panel-captions"),
 );
 const captionDesignTab = StyleTab.design(
   document.getElementById("caption-design-mount"),
@@ -865,19 +863,19 @@ In `CLAUDE.md`, under `static/`, immediately after the `style-panel-host.js` lin
 In `CLAUDE.md`'s `static/` tree, append to the `panel-text.js` entry:
 
 ```
-As of 2026-07-29 (shared-style-sections batch 2) it builds a StyleTarget.forTextBlock(), a StylePanelHost(#panel-text-main, #text-drilldowns) and a StyleTab.design(#text-design-mount, …) once at load, and calls `await textDesignTab.render()` from renderTextPanel() in place of the deleted TextPanel.renderFontFamily/renderFontWeight calls; renderTextPanel()'s per-subpanel `hidden` resets became `textStyleHost.closeAll()`.
+As of 2026-07-29 (shared-style-sections batch 2) it builds a StyleTarget.forTextBlock(), a StylePanelHost(#panel-text-main, #panel-text) and a StyleTab.design(#text-design-mount, …) once at load, and calls `await textDesignTab.render()` from renderTextPanel() in place of the deleted TextPanel.renderFontFamily/renderFontWeight calls; renderTextPanel()'s per-subpanel `hidden` resets became `textStyleHost.closeAll()`.
 ```
 
 and to the `panel-captions.js` entry:
 
 ```
-As of 2026-07-29 (shared-style-sections batch 2) it does the same as panel-text.js with StyleTarget.forCaptionTrack(), StylePanelHost(#panel-captions-main, #caption-drilldowns) and StyleTab.design(#caption-design-mount, …) — which also moved the Weight row above SIZE, matching TEXT's order.
+As of 2026-07-29 (shared-style-sections batch 2) it does the same as panel-text.js with StyleTarget.forCaptionTrack(), StylePanelHost(#panel-captions-main, #panel-captions) and StyleTab.design(#caption-design-mount, …) — which also moved the Weight row above SIZE, matching TEXT's order.
 ```
 
 - [ ] **Step 4: Run the JS test suite**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Expected: PASS, 39 tests across 5 files — unchanged. This batch adds no pure modules; the sections build DOM and are verified in the browser instead (the stated gap in the spec).
@@ -918,6 +916,6 @@ git commit -m "docs: map the shared font family/weight sections and Design tab c
 - Both panels build their target, host and Design tab **once** at load and call `render()` on every panel render — `UI.settingsRow` is never called from inside a `render()`.
 - TEXT's Design tab is visually unchanged. CAPTIONS' Design tab shows Font Family → Weight → SIZE, and its Weight row reads e.g. `Regular 400`.
 - On TEXT with a partial heading selection active, changing Weight or Font Family changes only the selection.
-- `node --test tests/js` passes with 39 tests; `.venv/Scripts/python -m pytest -q` passes.
+- `node --test "tests/js/**/*.test.js"` passes with 39 tests; `.venv/Scripts/python -m pytest -q` passes.
 - No console errors on load or while exercising either panel; every change survives a reload.
 - Six commits, one per task.

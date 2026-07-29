@@ -2,7 +2,7 @@
 
 > Part of `docs/superpowers/plans/2026-07-29-shared-style-sections.md`. Read the master plan's **Global Constraints** and **Interface contract** first — they apply to every task here.
 
-**Deliverable:** the three pure modules, the two style targets, the panel host, and the `node --test tests/js` suite. Nothing is wired into the panels yet, so the app is visually unchanged. Verified by the test run alone.
+**Deliverable:** the three pure modules, the two style targets, the panel host, and the `node --test "tests/js/**/*.test.js"` suite. Nothing is wired into the panels yet, so the app is visually unchanged. Verified by the test run alone.
 
 **Why this batch is first:** every later batch calls `target.setField` and `host.page`. Pinning those with tests before any UI moves means a later batch that misuses them fails loudly rather than silently.
 
@@ -404,9 +404,8 @@ Create `tests/js/style-target-text.test.js`:
 const test = require("node:test");
 const assert = require("node:assert");
 
-require("../../static/format-run-write.js");
-require("../../static/style-target-text.js");
-const { forTextBlock } = global.StyleTarget;
+const { upsertFormatRun } = require("../../static/format-run-write.js");
+const { forTextBlock } = require("../../static/style-target-text.js");
 
 // Builds a target over an in-memory block/preset with every collaborator injected, so
 // no browser globals are involved. `selection` is what Preview.getActiveFormatSelection()
@@ -425,7 +424,7 @@ function makeTarget({ selection = null, block, preset } = {}) {
     getBoxSize: () => ({ width: 500, height: 200 }),
     renderPreviewWith: (presets) => { calls.lastPreviewPresets = presets; },
     allPresets: () => ({ p1: p }),
-    upsert: global.FormatRunWrite.upsertFormatRun,
+    upsert: upsertFormatRun,
   });
   return { target, block: b, preset: p, calls };
 }
@@ -510,6 +509,51 @@ test("getBoxSize returns the block's rendered size", () => {
   const { target } = makeTarget();
   assert.deepStrictEqual(target.getBoxSize(), { width: 500, height: 200 });
 });
+
+// setFields exists because picking a font writes `font` plus a snapped `weight` in one
+// user action. Two separate setField calls would mean two saves and two undo entries
+// for a single click.
+test("setFields writes several base-preset fields with exactly one save", () => {
+  const { target, preset, block, calls } = makeTarget({ selection: null });
+  target.setFields({ font: "JetBrains Mono", weight: 700 });
+  assert.strictEqual(preset.font, "JetBrains Mono");
+  assert.strictEqual(preset.weight, 700);
+  assert.strictEqual(block.formatting_runs.length, 0);
+  assert.strictEqual(calls.saves, 1);
+  assert.strictEqual(calls.previews, 1);
+});
+
+test("setFields writes several FormatRun fields into the same run with one save", () => {
+  const { target, preset, block, calls } = makeTarget({ selection: { blockId: "b1", start: 0, end: 2 } });
+  target.setFields({ color: "#FF0000", weight: 700 });
+  assert.strictEqual(preset.color, "#FFFFFF", "base preset must be untouched");
+  assert.deepStrictEqual(block.formatting_runs, [{ start: 0, end: 2, color: "#FF0000", weight: 700 }]);
+  assert.strictEqual(calls.saves, 1);
+});
+
+// Regression: `font` must never become selection-aware (raised and declined), no matter
+// which method writes it or whether it's batched with a field that IS FormatRun-capable.
+test("setField never writes font into a FormatRun even with a selection active", () => {
+  const { target, preset, block } = makeTarget({ selection: { blockId: "b1", start: 0, end: 2 } });
+  target.setField("font", "JetBrains Mono");
+  assert.strictEqual(preset.font, "JetBrains Mono");
+  assert.strictEqual(block.formatting_runs.length, 0);
+});
+
+test("setFields splits a mixed batch: font stays on the preset, weight goes into the run", () => {
+  const { target, preset, block, calls } = makeTarget({ selection: { blockId: "b1", start: 0, end: 2 } });
+  target.setFields({ font: "JetBrains Mono", weight: 700 });
+  assert.strictEqual(preset.font, "JetBrains Mono");
+  assert.strictEqual(preset.weight, undefined, "weight must not also land on the preset");
+  assert.deepStrictEqual(block.formatting_runs, [{ start: 0, end: 2, weight: 700 }]);
+  assert.strictEqual(calls.saves, 1);
+});
+
+test("getFieldValue never reads font from a FormatRun even if one somehow has it", () => {
+  const block = { id: "b1", heading: "Hello", preset_id: "p1", formatting_runs: [{ start: 0, end: 2, font: "Stale Legacy Font" }] };
+  const { target } = makeTarget({ selection: { blockId: "b1", start: 0, end: 2 }, block, preset: { id: "p1", font: "Public Sans" } });
+  assert.strictEqual(target.getFieldValue("font"), "Public Sans");
+});
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -528,9 +572,22 @@ Create `static/style-target-text.js`:
 // Style target for a text block: the adapter every shared style section writes through.
 // Absorbs the TEXT panel's selection-aware behaviour — setField writes a per-range
 // FormatRun when a stage selection is active — so the sections above stay branch-free.
-window.StyleTarget = window.StyleTarget || {};
+// Guarded dual export like the pure modules: the factory itself has no browser
+// dependency (only its *default* deps fallback does, and that path is only evaluated
+// when called with no argument, which tests never do), so it must be Node-requireable.
+(() => {
+// The only fields a FormatRun can override. `font` is deliberately excluded — per-range
+// fonts inside one heading were raised and declined (master plan, "Raised and declined")
+// — so setField/setFields/getFieldValue all treat `font` as preset-only no matter what
+// is selected, regardless of which method a caller reaches for. This is enforced here,
+// once, rather than relying on every call site to remember not to pass `font` to a
+// selection-aware method.
+const FORMAT_RUN_FIELDS = new Set([
+  "size_px", "color", "outline_color", "outline_px", "weight",
+  "italic", "underline", "highlight", "highlight_color",
+]);
 
-window.StyleTarget.forTextBlock = function forTextBlock(deps) {
+function forTextBlock(deps) {
   // Collaborators are injected so this is testable outside a browser; in the app it is
   // called with no argument and falls back to editor.js's globals.
   const d = deps || {
@@ -541,7 +598,9 @@ window.StyleTarget.forTextBlock = function forTextBlock(deps) {
     rerenderPreview: () => renderTextPreview(),
     rerenderPanel: () => renderTextPanel(),
     getBoxSize: (id) => Preview.getTextBoxSize(id),
-    renderPreviewWith: (presets) => Preview.renderText(project, presets, Preview.currentTimelineTime()),
+    renderPreviewWith: (presets) => {
+      if (window.Preview && Preview.renderText) Preview.renderText(project, presets, Preview.currentTimelineTime());
+    },
     allPresets: () => project.text_presets,
     upsert: FormatRunWrite.upsertFormatRun,
   };
@@ -563,7 +622,7 @@ window.StyleTarget.forTextBlock = function forTextBlock(deps) {
 
     getFieldValue(field) {
       const sel = activeSelection();
-      if (sel) {
+      if (sel && FORMAT_RUN_FIELDS.has(field)) {
         const runs = d.getBlock().formatting_runs || [];
         const run = runs.find((r) => r.start === sel.start && r.end === sel.end);
         if (run && run[field] != null) return run[field];
@@ -573,11 +632,28 @@ window.StyleTarget.forTextBlock = function forTextBlock(deps) {
 
     setField(field, value) {
       const sel = activeSelection();
-      if (sel) {
+      if (sel && FORMAT_RUN_FIELDS.has(field)) {
         d.upsert(d.getBlock(), sel.start, sel.end, field, value);
       } else {
         preset()[field] = value;
       }
+      d.save();
+      d.rerenderPreview();
+    },
+
+    // Same per-field routing as setField, but ONE save/re-render for the whole batch —
+    // picking a font writes `font` (never selection-aware) plus a snapped `weight`
+    // (selection-aware) in a single user action, and two setField calls would mean two
+    // undo entries for one click.
+    setFields(fields) {
+      const sel = activeSelection();
+      Object.keys(fields).forEach((field) => {
+        if (sel && FORMAT_RUN_FIELDS.has(field)) {
+          d.upsert(d.getBlock(), sel.start, sel.end, field, fields[field]);
+        } else {
+          preset()[field] = fields[field];
+        }
+      });
       d.save();
       d.rerenderPreview();
     },
@@ -601,7 +677,12 @@ window.StyleTarget.forTextBlock = function forTextBlock(deps) {
     rerenderPanel() { return d.rerenderPanel(); },
     getBoxSize() { return d.getBoxSize(d.getBlock().id); },
   };
-};
+}
+
+const api = { forTextBlock };
+if (typeof window !== "undefined") window.StyleTarget = Object.assign(window.StyleTarget || {}, api);
+if (typeof module !== "undefined") module.exports = api;
+})();
 ```
 
 - [ ] **Step 4: Run the test to verify it passes**
@@ -610,7 +691,7 @@ window.StyleTarget.forTextBlock = function forTextBlock(deps) {
 node --test tests/js/style-target-text.test.js
 ```
 
-Expected: PASS, 12 tests.
+Expected: PASS, 17 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -639,8 +720,7 @@ Create `tests/js/style-target-caption.test.js`:
 const test = require("node:test");
 const assert = require("node:assert");
 
-require("../../static/style-target-caption.js");
-const { forCaptionTrack } = global.StyleTarget;
+const { forCaptionTrack } = require("../../static/style-target-caption.js");
 
 function makeTarget() {
   const p = { id: "p1", color: "#FFFFFF", size_px: 72, shadow: false };
@@ -702,6 +782,15 @@ test("getBoxSize returns the caption box's rendered size", () => {
   const { target } = makeTarget();
   assert.deepStrictEqual(target.getBoxSize(), { width: 900, height: 350 });
 });
+
+test("setFields writes several preset fields with exactly one save", () => {
+  const { target, preset, calls } = makeTarget();
+  target.setFields({ font: "JetBrains Mono", weight: 700 });
+  assert.strictEqual(preset.font, "JetBrains Mono");
+  assert.strictEqual(preset.weight, 700);
+  assert.strictEqual(calls.saves, 1);
+  assert.strictEqual(calls.previews, 1);
+});
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -720,19 +809,20 @@ Create `static/style-target-caption.js`:
 // Style target for the caption track: the adapter every shared style section writes
 // through when the CAPTIONS panel is open. Same shape as style-target-text.js, but a
 // caption track has no per-range FormatRun overrides, so every write is whole-preset.
-window.StyleTarget = window.StyleTarget || {};
-
-window.StyleTarget.forCaptionTrack = function forCaptionTrack(deps) {
+// Guarded dual export like style-target-text.js — see that file's header for why.
+(() => {
+function forCaptionTrack(deps) {
   // Collaborators are injected so this is testable outside a browser; in the app it is
   // called with no argument and falls back to panel-captions.js's globals.
   const d = deps || {
     getPreset: () => ensureCaptionPreset(ensureCaptionTrack().preset_id),
-    getSelection: () => null,
     save: () => saveProject(),
     rerenderPreview: () => renderCaptionPreview(),
     rerenderPanel: () => renderCaptionPanel(),
     getBoxSize: () => Preview.getCaptionBoxSize(),
-    renderPreviewWith: (presets) => Preview.renderCaptions(project, presets, Preview.currentTimelineTime()),
+    renderPreviewWith: (presets) => {
+      if (window.Preview && Preview.renderCaptions) Preview.renderCaptions(project, presets, Preview.currentTimelineTime());
+    },
     allPresets: () => project.text_presets,
   };
 
@@ -754,6 +844,15 @@ window.StyleTarget.forCaptionTrack = function forCaptionTrack(deps) {
     setField: writePreset,
     setPresetField: writePreset,
 
+    // No selection routing needed — every key just lands on the preset, one save/re-render
+    // for the whole batch, same as the TEXT target's setFields.
+    setFields(fields) {
+      const p = d.getPreset();
+      Object.keys(fields).forEach((field) => { p[field] = fields[field]; });
+      d.save();
+      d.rerenderPreview();
+    },
+
     previewField(field, value) {
       const p = d.getPreset();
       d.renderPreviewWith({ ...d.allPresets(), [p.id]: { ...p, [field]: value } });
@@ -767,7 +866,12 @@ window.StyleTarget.forCaptionTrack = function forCaptionTrack(deps) {
     rerenderPanel() { return d.rerenderPanel(); },
     getBoxSize() { return d.getBoxSize(); },
   };
-};
+}
+
+const api = { forCaptionTrack };
+if (typeof window !== "undefined") window.StyleTarget = Object.assign(window.StyleTarget || {}, api);
+if (typeof module !== "undefined") module.exports = api;
+})();
 ```
 
 - [ ] **Step 4: Run the test to verify it passes**
@@ -776,7 +880,7 @@ window.StyleTarget.forCaptionTrack = function forCaptionTrack(deps) {
 node --test tests/js/style-target-caption.test.js
 ```
 
-Expected: PASS, 7 tests.
+Expected: PASS, 8 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -810,8 +914,13 @@ Create `static/style-panel-host.js`:
 window.StylePanelHost = function StylePanelHost(mainEl, drillEl) {
   const pages = [];
 
+  // Closes through each open page's own close() — not a bare `hidden = true` sweep — so
+  // an onClose callback (Batch 2's hover-preview cancel, Batch 4's row refresh) still
+  // fires when closeAll() runs at the top of a panel render. A page that was never open
+  // is left alone; mainEl is always shown regardless, since nothing else does that if no
+  // page happened to be open.
   function closeAll() {
-    pages.forEach((p) => { p.el.hidden = true; });
+    pages.forEach((p) => { if (!p.el.hidden) p.close(); });
     mainEl.hidden = false;
   }
 
@@ -900,10 +1009,10 @@ Expected: no errors. The panels look and behave exactly as before — nothing is
 - [ ] **Step 5: Run the whole JS suite**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
-Expected: PASS, 39 tests across 5 files.
+Expected: PASS, 45 tests across 5 files.
 
 - [ ] **Step 6: Commit**
 
@@ -928,16 +1037,16 @@ git commit -m "feat: generic drill-down subpage host for the style panels"
 In `CLAUDE.md`, under `## Run commands`, immediately after the `- Tests: ...pytest -q` line, add:
 
 ```markdown
-- Frontend tests: `node --test tests/js` (pure JS modules only — no DOM, no dependencies)
+- Frontend tests: `node --test "tests/js/**/*.test.js"` (pure JS modules only — no DOM, no dependencies)
 ```
 
 - [ ] **Step 2: Verify both suites pass**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
-Expected: PASS, 39 tests.
+Expected: PASS, 45 tests.
 
 ```bash
 .venv/Scripts/python -m pytest -q
@@ -956,8 +1065,8 @@ git commit -m "docs: record the node --test frontend test command"
 
 ## Batch 1 done when
 
-- `node --test tests/js` passes with 39 tests across 5 files.
+- `node --test "tests/js/**/*.test.js"` passes with 45 tests across 5 files.
 - `.venv/Scripts/python -m pytest -q` passes.
 - The app loads with no console errors and both panels behave exactly as before.
 - `StyleTarget.forTextBlock`, `StyleTarget.forCaptionTrack` and `StylePanelHost` are available in the browser console.
-- Seven commits, one per task plus the host's.
+- One commit per task at minimum (seven). Additional commits are expected and fine when a task-reviewer or the final whole-branch review finds something to fix before merge — the substance (all seven tasks complete and reviewed clean) is what this checklist is really pinning, not an exact commit count.

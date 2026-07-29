@@ -98,3 +98,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Wrapper the StylePanelHost creates around each drill-down subpage's header + body.
+   Layout only — the header and any list inside keep their existing styling. */
+.style-sub-panel {
+  display: flex;
+  flex-direction: column;
+}

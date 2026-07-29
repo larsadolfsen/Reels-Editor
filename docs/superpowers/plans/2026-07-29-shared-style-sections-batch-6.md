@@ -874,12 +874,12 @@ Insert this whole subsection **immediately before** the `### Saved style presets
 
 Added 2026-07-29. The TEXT and CAPTIONS panels style the same entity — a `TextPreset` — so they share one set of markup-owning components instead of two hand-copied sets. Four layers, each with one job. Spec: `docs/superpowers/specs/2026-07-29-shared-style-sections-design.md`.
 
-- **Pure modules.** `static/font-size-scale.js` (`FontSizeScale.{FONT_SIZE_PRESETS, stepFontSizePreset}` — one scale `[12,14,16,18,21,24,36,45,56,72,96]` for both panels), `static/format-run-write.js` (`FormatRunWrite.upsertFormatRun(block, start, end, field, value)`), `static/style-fields.js` (`StyleFields.{STYLE_FIELD_NAMES, styleFieldsOf}` — the saved-style field list). Each exposes `window.X` for the browser and a guarded `module.exports` for `node --test tests/js`.
-- **Style targets.** `static/style-target-text.js` (`StyleTarget.forTextBlock(deps?)`) and `static/style-target-caption.js` (`StyleTarget.forCaptionTrack(deps?)`) return the same object: `{ kind, supportsFormatRuns, getPreset, getFieldValue, setField, setPresetField, previewField, cancelPreview, clearFormatRuns, rerenderPreview, rerenderPanel, getBoxSize }`. The target absorbs every real difference between the panels — which preset is read, which preview re-renders, and TEXT's selection-aware `FormatRun` writes — so everything above it is branch-free. `setField` is for anything a `FormatRun` can override (font, size, color, outline, weight, italic, underline, highlight, highlight color); `setPresetField` is for everything else. Sections never assign `preset.x = v`, never call `saveProject()`, and never name a `render*Preview()` function. Collaborators are injected via the optional `deps` argument, which is what makes the targets unit-testable outside a browser (`tests/js/style-target-*.test.js`).
+- **Pure modules.** `static/font-size-scale.js` (`FontSizeScale.{FONT_SIZE_PRESETS, stepFontSizePreset}` — one scale `[12,14,16,18,21,24,36,45,56,72,96]` for both panels), `static/format-run-write.js` (`FormatRunWrite.upsertFormatRun(block, start, end, field, value)`), `static/style-fields.js` (`StyleFields.{STYLE_FIELD_NAMES, styleFieldsOf}` — the saved-style field list). Each exposes `window.X` for the browser and a guarded `module.exports` for `node --test "tests/js/**/*.test.js"`.
+- **Style targets.** `static/style-target-text.js` (`StyleTarget.forTextBlock(deps?)`) and `static/style-target-caption.js` (`StyleTarget.forCaptionTrack(deps?)`) return the same object: `{ kind, supportsFormatRuns, getPreset, getFieldValue, setField, setFields, setPresetField, previewField, cancelPreview, clearFormatRuns, rerenderPreview, rerenderPanel, getBoxSize }`. The target absorbs every real difference between the panels — which preset is read, which preview re-renders, and TEXT's selection-aware `FormatRun` writes — so everything above it is branch-free. `setField`/`setFields` are selection-aware for the fields on `style-target-text.js`'s `FORMAT_RUN_FIELDS` allowlist (size, color, outline, weight, italic, underline, highlight, highlight color) and fall back to a whole-preset write for any other field name, `font` included — per-range fonts were raised and declined, so `font` is deliberately excluded from the allowlist even though `FormatRun.font` exists in the data model. `setPresetField` always writes the whole preset. `setFields` batches several field writes into one save/undo entry (needed because picking a font also snaps its weight in one user action). Sections never assign `preset.x = v`, never call `saveProject()`, and never name a `render*Preview()` function. Collaborators are injected via the optional `deps` argument, which is what makes the targets unit-testable outside a browser (`tests/js/style-target-*.test.js`).
 - **Panel host.** `static/style-panel-host.js` — `StylePanelHost(mainEl, drillEl)` returns `{ page(title, buildBody, options?), closeAll() }`; `page(...)` returns `{ open(), close(), bodyEl }` and the host builds each subpage's `UI.subPanelHeader` itself. Replaces the seven hand-copied `openXPanel`/`closeXPanel` pairs and the old `panel-text-main`/`panel-captions-main` id juggling.
 - **Sections.** `static/style-section-*.js`, one control group per file, namespaced `window.StyleSection.*`, signature `(container, target, options) -> { render() }`. Each **builds its own markup** into `container` — that is the property that prevents the panels drifting apart again, since the reported divergences (a missing `btn-group-inline` class, a font-size scale that stopped at 56 on one side) were markup bugs, not JS bugs. **Built once, rendered many times:** the factory builds DOM and attaches listeners; `render()` only refreshes displayed values. Never call a `UI.*` builder from `render()`. `render()` may be async (`fontWeight` awaits `Api.listFontWeights`, `presetLibrary` awaits `Api.listPresets`) and callers ignore the returned promise.
 - **Tab composers.** `static/style-tab-design.js`, `style-tab-box.js`, `style-tab-style.js` — `StyleTab.{design, box, styleLibrary}(container, target, options) -> { render() }`. `StyleTab.design` renders `fontFamily → fontWeight → size → emphasis → color → outline → shadow → highlight` in that fixed order, defined once here rather than re-enumerated by each panel, which is what makes the shared layout structural instead of conventional. Options: `StyleTab.design` `{ host, highlightModes }`, `StyleTab.box` `{ sizeModes }`, `StyleTab.styleLibrary` `{}`.
-- **Tests.** `tests/js/*.test.js` via `node --test tests/js` (Node's built-in runner, no dependency). Covers the pure modules and both targets. **Stated gap:** the section components build DOM and are not unit-tested — they are kept thin, with all decision logic pushed into the pure modules and targets, and each migration batch was verified in the browser on a throwaway project.
+- **Tests.** `tests/js/*.test.js` via `node --test "tests/js/**/*.test.js"` (Node's built-in runner, no dependency). Covers the pure modules and both targets. **Stated gap:** the section components build DOM and are not unit-tested — they are kept thin, with all decision logic pushed into the pure modules and targets, and each migration batch was verified in the browser on a throwaway project.
 ```
 
 - [ ] **Step 7: Verify the map matches reality**
@@ -919,7 +919,7 @@ git commit -m "docs: map the shared style sections, drop the 19 per-panel style 
 - [ ] **Step 1: Run the JS suite**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Expected: **PASS**, no failures. Batch 1 landed 39 tests across 5 files (`font-size-scale`, `format-run-write`, `style-fields`, `style-target-text`, `style-target-caption`); Batches 2–6 add no tests of their own, so the count should still be 39 unless a later batch added some. A failure here means a section is calling a target or pure module in a way the contract does not allow.
@@ -992,7 +992,7 @@ This checklist covers the whole refactor, not just this batch.
 
 **Tests**
 
-- [ ] `node --test tests/js` passes.
+- [ ] `node --test "tests/js/**/*.test.js"` passes.
 - [ ] `.venv/Scripts/python -m pytest -q` passes, unchanged from before the refactor.
 
 **Behaviour**
@@ -1008,5 +1008,5 @@ This checklist covers the whole refactor, not just this batch.
 
 - [ ] `CLAUDE.md`'s `static/` tree lists all 21 new files with one-line purposes and none of the 19 deleted ones.
 - [ ] `CLAUDE.md`'s inventory has the new **Shared style sections** subsection, and the *Text blocks*, *Saved style presets* and *Captions & transcription* subsections describe the shared architecture rather than per-panel duplication.
-- [ ] `CLAUDE.md`'s Run commands lists `node --test tests/js` (added in Batch 1).
+- [ ] `CLAUDE.md`'s Run commands lists `node --test "tests/js/**/*.test.js"` (added in Batch 1).
 - [ ] Every batch is marked complete in the master plan.

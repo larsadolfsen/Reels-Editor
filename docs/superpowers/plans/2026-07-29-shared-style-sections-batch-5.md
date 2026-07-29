@@ -1058,7 +1058,7 @@ Expected: no output — every one of those ids is gone from both the markup and 
 - [ ] **Step 2: Run both test suites**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Expected: PASS, 39 tests across 5 files — unchanged by this batch, which adds no pure module.
@@ -1164,5 +1164,5 @@ git commit -m "docs: record the shared Box-tab sections in the codebase map"
 - The CAPTIONS Box tab still has no SIZE group and always shows WIDTH/HEIGHT.
 - The anchor grid leaves no cell highlighted after a click, on either panel.
 - All three after-screenshots are pixel-identical to the Task 1 Step 1 before-screenshots.
-- `node --test tests/js` passes with 39 tests; `.venv/Scripts/python -m pytest -q` passes.
+- `node --test "tests/js/**/*.test.js"` passes with 39 tests; `.venv/Scripts/python -m pytest -q` passes.
 - Seven commits, one per task.

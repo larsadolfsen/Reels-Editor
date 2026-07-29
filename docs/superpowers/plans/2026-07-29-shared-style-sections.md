@@ -30,8 +30,8 @@ Every task's requirements implicitly include this section.
 - **Every new `static/*.js` file opens with a one- or two-line comment** stating that file's purpose and role.
 - **Recurring CSS values are tokens** in `static/css/tokens.css`, referenced with `var(...)`. No literal repeated twice.
 - **Icon SVGs are hand-inlined Lucide paths** with the wrapper attributes already used in this codebase: `viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`. Copy existing icon markup verbatim rather than inventing new paths.
-- **Pure modules export twice:** `window.X = api` for the browser and a guarded `if (typeof module !== "undefined") module.exports = api;` for the test runner. Only the pure modules do this — DOM-building sections do not.
-- **Tests:** `node --test tests/js` must pass before every commit from Batch 1 onward. The Python suite (`.venv/Scripts/python -m pytest -q`) is unaffected by this work but must still pass at the end of Batch 6.
+- **Pure modules and the two style targets export twice:** a guarded `if (typeof window !== "undefined") window.X = api;` for the browser and a guarded `if (typeof module !== "undefined") module.exports = api;` for the test runner. `style-target-text.js` / `style-target-caption.js` need this even though their *default* `deps` fallback reaches into browser globals (`currentTextBlock`, `Preview`, …) — that fallback is only evaluated when the factory is called with no argument, which never happens in a test (tests always inject `deps`), so the guard is enough to make the factory itself Node-requireable with no shim. DOM-building sections (`StyleSection.*`, `StylePanelHost`, `StyleTab.*`) are not required to and do not.
+- **Tests:** `node --test "tests/js/**/*.test.js"` must pass before every commit from Batch 1 onward. The Python suite (`.venv/Scripts/python -m pytest -q`) is unaffected by this work but must still pass at the end of Batch 6.
 - **Behaviour is preserved** except for the **nine** changes listed in "Resolved divergences" in the spec. If a batch changes anything else that a user can see, that is a bug in the batch. Two candidate changes were raised during planning and **declined** — the shared component must actively preserve both: CAPTIONS' size-row alignment (via `size`'s `compactRow` option) and non-selection-aware font family (via `setPresetField("font", …)`).
 - **Live verification never runs against real project data.** Create a throwaway project in the picker first — the app's unload keepalive-save flushes in-memory state to disk.
 - **Commit after every task.** Never leave a batch half-applied at rest: at the end of each task both panels must open and work in the browser.
@@ -137,11 +137,11 @@ Both factories return an object with **exactly** this shape:
 }
 ```
 
-`setField` vs `setPresetField`: use `setField` for `size_px`, `color`, `outline_color`, `outline_px`, `weight`, `italic`, `underline`, `highlight`, `highlight_color`. Use `setPresetField` for everything else — **`font`**, shadow, box, align, position, text case, highlight mode, highlight radius. Getting this wrong is silent: on the caption panel both behave identically, so **verify on the TEXT panel with a partial text selection active**.
+`setField` vs `setPresetField`: `setField(field, value)` is selection-aware for `size_px`, `color`, `outline_color`, `outline_px`, `weight`, `italic`, `underline`, `highlight`, `highlight_color` — the `FORMAT_RUN_FIELDS` allowlist below — and falls back to a whole-preset write for every other field name it's called with. `setPresetField(field, value)` always writes the whole preset, no matter the field. Prefer `setPresetField` at call sites for fields with no `FormatRun` representation at all (shadow, box, align, position, text case, highlight mode, highlight radius) — it documents that intent — but calling `setField` for one of them is not a bug: the allowlist makes it behave identically. Getting the allowlist itself wrong is silent (on the caption panel `setField` and `setPresetField` are literally the same function, so nothing there can catch it), so **verify on the TEXT panel with a partial text selection active**.
 
-`font` is the one deliberate exception. A `FormatRun` *can* carry a `font` override and `preview-text.js` resolves it, but no current file writes one — `text-panel-font-family.js:29` sets `preset.font` unconditionally even with a live selection. Routing it through `setField` would add per-range fonts, a new capability outside this refactor's approved scope. It uses `setPresetField` to preserve today's behaviour. Per-range fonts are a separate feature if ever wanted.
+`font` is the one deliberate exception, and it is enforced *by the target*, not by caller discipline. A `FormatRun` *can* carry a `font` override and `preview-text.js` resolves it, but no current file writes one — `text-panel-font-family.js:29` sets `preset.font` unconditionally even with a live selection — and routing it through the selection-aware path would add per-range fonts, a new capability that was raised and explicitly declined. `style-target-text.js` keeps `FORMAT_RUN_FIELDS` as an explicit constant that does **not** include `font`, and both `setField` and `setFields` consult it before ever touching a `FormatRun` — so `target.setField("font", …)` and `target.setFields({ font, weight })` are both safe to call with a selection active: `font` always lands on the base preset, `weight` still goes through the selection-aware path. Earlier drafting had this as a caller-remembered rule ("use `setPresetField` for `font`"); centralizing it in the target is what makes `setFields({ font, weight })` (needed below) possible without a caller-side branch per field.
 
-`setFields(obj)` exists because picking a font writes two fields in one user action (`font` plus a snapped `weight`). Two separate calls would mean two `saveProject()` calls and **two undo entries for one click**. `setFields` applies every key, then saves and re-renders once. It follows the same `FormatRun` rules as `setField`, per key.
+`setFields(obj)` exists because picking a font writes two fields in one user action (`font` plus a snapped `weight`). Two separate `setField` calls would mean two `saveProject()` calls and **two undo entries for one click**. `setFields` applies every key through the same per-field `FORMAT_RUN_FIELDS` routing `setField` uses, then saves and re-renders exactly once for the whole batch — not once per key.
 
 `rerenderPanel()` must `return` its delegate's result. `renderTextPanel()` and `renderCaptionPanel()` are both `async`; a section that cannot await a panel refresh cannot sequence anything after it.
 
@@ -189,7 +189,7 @@ page.close();                                // shows mainEl, hides every subpag
 host.closeAll();                             // used when the panel is re-entered
 ```
 
-The host builds each subpage's `UI.subPanelHeader` (back arrow + title) itself. `page.close()` fires the optional `onClose` passed as `host.page(title, buildBody, { onClose })`.
+The host builds each subpage's `UI.subPanelHeader` (back arrow + title) itself. `page.close()` fires the optional `onClose` passed as `host.page(title, buildBody, { onClose })` — and so does `host.closeAll()`, for every page that was actually open when it's called: `closeAll()` is `pages.forEach(p => { if (!p.el.hidden) p.close(); })` plus an unconditional `mainEl.hidden = false`, not a bare `hidden = true` sweep. This matters because `closeAll()` runs at the top of every panel render (`renderTextPanel()`/`renderCaptionPanel()`), and `onClose` is already load-bearing by Batch 2 (`{ onClose: () => target.cancelPreview() }` on the Font Family hover-preview subpage) and Batch 4 (`{ onClose: refreshRow }`) — a `closeAll()` that skipped `onClose` would leave a hovered-but-uncommitted preview on the stage across a re-render.
 
 ### `window.StyleSection.*` — every section file
 
@@ -330,7 +330,7 @@ Each batch adds only its own tags. The sections register into `window.StyleSecti
 
 Run at the end of every batch, before its final commit.
 
-1. `node --test tests/js` — passes.
+1. `node --test "tests/js/**/*.test.js"` — passes.
 2. Start the server: `.venv/Scripts/python -m uvicorn app.main:app --reload`
 3. Open `http://127.0.0.1:8000`, create a **throwaway** project, import any clip.
 4. Add a text block. Open the TEXT panel, Design tab. Exercise every control the batch touched; confirm the stage updates.

@@ -193,7 +193,7 @@ Expected: no errors. Both panels look and behave exactly as before — nothing c
 - [ ] **Step 5: Run the JS suite**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Expected: PASS, unchanged from Batch 2 (this task adds no tests).
@@ -670,7 +670,7 @@ grep -n "style-sections" static/css/components/style-panel.css
 - [ ] **Step 14: Run the JS suite**
 
 ```bash
-node --test tests/js
+node --test "tests/js/**/*.test.js"
 ```
 
 Expected: PASS, unchanged from Batch 2. This batch adds no tests — its logic lives in Batch 1's tested `FontSizeScale` and style targets.
@@ -772,6 +772,6 @@ TEXT's step-up button shrinking a default 96px block to 56px."
 - [ ] Divergence (c): both panels step through `[12,14,16,18,21,24,36,45,56,72,96]`, and step-up on a fresh 96px text block leaves it at 96 instead of dropping it to 56.
 - [ ] With a partial stage-text selection active on TEXT: SIZE, Italic, Underline and Color change only the selection; the case group changes the whole block.
 - [ ] Every change survives a page reload.
-- [ ] `node --test tests/js` passes, unchanged from Batch 2.
+- [ ] `node --test "tests/js/**/*.test.js"` passes, unchanged from Batch 2.
 - [ ] The app loads with no console errors and both panels open.
 - [ ] Four commits, one per task.
