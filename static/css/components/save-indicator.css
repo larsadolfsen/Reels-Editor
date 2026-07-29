@@ -11,7 +11,7 @@
 
 .save-indicator-label {
   font-family: var(--font-ui);
-  font-size: 8px;
+  font-size: var(--fs-2xs);
   letter-spacing: 0.04em;
   color: var(--text-dim);
   text-align: center;

@@ -4,14 +4,14 @@
    (list-row.css); this file only adds row-internal flex layout + badge coloring. Depends on tokens.css. */
 .auto-slice-hint {
   grid-column: 1 / -1;   /* .style-group is an 8-col grid; span it like .style-group > .style-row does */
-  font-size: 12px;
+  font-size: var(--fs-md);
   color: var(--text-muted);
   margin: 0 0 var(--space-2);
 }
 
 .auto-slice-summary {
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   padding: 0 var(--space-1) var(--space-2);
 }
@@ -33,10 +33,10 @@
 .auto-slice-badge {
   flex-shrink: 0;
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: var(--fs-2xs);
   letter-spacing: 0.03em;
   padding: 2px 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   color: var(--text);
   border: 1px solid var(--border);
 }
@@ -46,7 +46,7 @@
 .auto-slice-row-time {
   flex-shrink: 0;
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -56,6 +56,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12.5px;
+  font-size: var(--fs-md);
   color: var(--text);
 }

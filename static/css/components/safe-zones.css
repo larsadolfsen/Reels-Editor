@@ -34,12 +34,12 @@
   border-left: 3px solid var(--safe-zone);
   color: var(--text-secondary);
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: var(--fs-2xs);
   font-weight: 600;
   line-height: 1.4;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   padding: 3px 7px;
-  border-radius: 3px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-chip);
 }
