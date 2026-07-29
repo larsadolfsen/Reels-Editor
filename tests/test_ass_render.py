@@ -531,3 +531,33 @@ def test_highlighted_run_uses_preset_border_radius_not_hardcoded_constant():
     line_default = next(l for l in out_default.splitlines() if "hl0" in l)
     line_custom = next(l for l in out_custom.splitlines() if "hl0" in l)
     assert line_default != line_custom  # different radius produces a different rect path
+
+def test_caption_highlight_dialogue_emits_rect_spanning_full_word_range():
+    from app.ass_render import _caption_highlight_dialogue
+    pr = TextPreset(name="Cap", x=540, y=700, highlight=True, highlight_color="#00FF00", highlight_border_radius=10)
+    words = [w("Hello", 1.0, 1.5), w("world", 1.5, 2.2)]
+    line = _caption_highlight_dialogue(pr, words, 900, 350)
+    assert line is not None
+    assert line.startswith("Dialogue: 0,0:00:01.00,0:00:02.20")
+    assert "\\p1" in line
+
+def test_caption_highlight_dialogue_none_when_highlight_off():
+    from app.ass_render import _caption_highlight_dialogue
+    pr = TextPreset(name="Cap", highlight=False)
+    words = [w("Hello", 1.0, 1.5)]
+    assert _caption_highlight_dialogue(pr, words, 900, 350) is None
+
+def test_caption_highlight_dialogue_none_when_no_words():
+    from app.ass_render import _caption_highlight_dialogue
+    pr = TextPreset(name="Cap", highlight=True)
+    assert _caption_highlight_dialogue(pr, [], 900, 350) is None
+
+def test_render_caption_ass_includes_highlight_rect_before_karaoke_dialogue():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Cap", highlight=True, highlight_color="#00FF00", highlight_mode="progressive_fill")
+    p = Project(name="r", captions=CaptionTrack(words=[w("hi", 1.0, 1.5)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    dialogues = [l for l in out.splitlines() if l.startswith("Dialogue:")]
+    assert len(dialogues) == 2
+    assert "\\p1" in dialogues[0]  # the rect
+    assert "hi" in dialogues[1]     # the karaoke text, after the rect
