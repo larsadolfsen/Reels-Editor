@@ -142,25 +142,30 @@ window.MediaPanel = window.MediaPanel || {};
       if (m.kind === "image") {
         const box = await ImageBoxPanel.createImageBox(m);
         await saveProject();
-        renderTimeline();
-        showPanel("image-box");
-        ImageBoxPanel.render(box.id);
-        // ImageBoxPanel.render()'s ImageBoxPreview.setSelectedImageBox() call alone only updates
-        // which box is selected, it doesn't itself trigger a render pass (same gap documented on
-        // ImageBoxPreview.setOnActivate in editor.js) — without this, the new box never mounts
-        // into #overlay, so it renders invisibly with no resize handles until the next unrelated
-        // stage render.
+        // Routed through onTimelineSelect (panel-nav.js) rather than calling showPanel/render
+        // directly, so it also sets `selected` (editor.js) to this box — otherwise the timeline
+        // highlight, a following Delete keypress, and undo/redo's reRenderAfterRestore would all
+        // keep targeting whatever was selected before this click (or nothing).
+        await onTimelineSelect({ type: "image-box", item: box });
+        // onTimelineSelect's image-box branch only calls ImageBoxPanel.render(), whose
+        // ImageBoxPreview.setSelectedImageBox() call alone only updates which box is selected, it
+        // doesn't itself trigger a render pass (same gap documented on ImageBoxPreview.setOnActivate
+        // in editor.js) — without this, the new box never mounts into #overlay, so it renders
+        // invisibly with no resize handles until the next unrelated stage render.
         ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
       } else if (m.kind === "audio") {
         // Mirrors static/panel-audio.js's addMusic()/replaceMusic() — one music track only (v1),
         // so this always replaces any existing Project.music rather than erroring or disabling.
         project.music = { id: crypto.randomUUID().replaceAll("-", ""), media_id: m.id, volume: 0.3, muted: false };
         await saveProject();
-        renderTimeline();
-        showPanel("audio");
-        AudioPanel.render();
+        // PreviewAudio's module-level `music` state (static/preview-audio.js) is only ever set
+        // inside PreviewAudio.load(project) — without this, PreviewAudio.play() silently no-ops
+        // even though Project.music is now correctly set (bug found in final review).
+        Preview.load(project);
+        openAudioPanel(); // panel-nav.js: sets `selected = { type: "audio" }`, opens the panel, re-renders the timeline
       } else {
         await appendMediaClipToSequence(m);
+        MediaPanel.render(); // refresh this row's trash button — it's now disabled, the media is in use
       }
     });
     actions.appendChild(addBtn);
