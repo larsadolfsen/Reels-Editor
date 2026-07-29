@@ -10,6 +10,10 @@ window.TextPanel = window.TextPanel || {};
   let borderRowSetValue = null;
 
   function openBorderPanel() {
+    // Typing in WIDTH only refreshes the row (a full render would destroy the input being
+    // typed in — see ui-number-field.js), so the subpanel's toggle/field visibility can be
+    // stale by the time it is reopened. Re-render on open, when nothing has focus.
+    window.TextPanel.renderBorder();
     document.getElementById("panel-text-main").hidden = true;
     document.getElementById("panel-text-border").hidden = false;
   }
