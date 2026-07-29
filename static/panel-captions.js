@@ -1,6 +1,6 @@
 // CAPTIONS context-panel section: caption track/preset creation (defaultCaptionPreset,
 // ensureCaptionPreset, ensureCaptionTrack), the main renderCaptionPanel orchestrator, and its
-// tab-bar/divider wiring (UI.tabBar; Design tab groups the FONT + HIGHLIGHT bodies together)
+// tab-bar/divider wiring (UI.tabBar; Highlight is a row+subpage inside the Design tab's body)
 // + the #caption-auto-btn transcribe listener. Plain globals shared with caption-panel-*.js;
 // reaches into editor.js's `project`/`saveProject`/`renderTimeline` globals.
 
@@ -93,10 +93,10 @@ const CAPTION_TABS = [
   { value: "design", icon: CAPTION_TAB_ICON_DESIGN, label: "Design" },
   { value: "box", icon: CAPTION_TAB_ICON_BOX, label: "Box" },
 ];
-// Design groups two existing bodies (FONT + HIGHLIGHT) — both show/hide together.
+// Each tab maps to one body; the array shape is kept because showCaptionTab iterates it.
 const captionTabPanes = {
   style: [document.getElementById("caption-style-body")],
-  design: [document.getElementById("caption-font-body"), document.getElementById("caption-highlight-body")],
+  design: [document.getElementById("caption-font-body")],
   box: [document.getElementById("caption-box-body")],
   "closed-caption": [document.getElementById("caption-words-body")],
   filler: [document.getElementById("caption-filler-body")],
