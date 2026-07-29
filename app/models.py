@@ -47,6 +47,10 @@ class VideoBoxLayer(BaseModel):
     width: int = 1080
     height: int                # px; set from source aspect ratio at creation, kept locked on resize
     z_index: int = -1          # new boxes default just below the default text z_index (0)
+    mask_enabled: bool = False # straight-line cut of this box; False reproduces pre-feature behavior exactly
+    mask_angle: float = 0.0    # degrees; 0 = vertical cut line, increasing rotates clockwise on screen
+    mask_offset: float = 0.0   # signed canvas px from the box's center to the line, perpendicular to it
+    mask_flip: bool = False    # which side of the line is kept
 
 class ImageBoxLayer(BaseModel):
     id: str = Field(default_factory=new_id)
@@ -59,6 +63,10 @@ class ImageBoxLayer(BaseModel):
     width: int = 1080
     height: int                # px; set from the image's aspect ratio at creation, kept locked on resize
     z_index: int = -1          # same convention as VideoBoxLayer: new boxes default just below text (0)
+    mask_enabled: bool = False # straight-line cut of this box; False reproduces pre-feature behavior exactly
+    mask_angle: float = 0.0    # degrees; 0 = vertical cut line, increasing rotates clockwise on screen
+    mask_offset: float = 0.0   # signed canvas px from the box's center to the line, perpendicular to it
+    mask_flip: bool = False    # which side of the line is kept
 
 class TextPreset(BaseModel):
     id: str = Field(default_factory=new_id)

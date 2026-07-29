@@ -346,3 +346,28 @@ def test_image_box_layer_defaults_and_round_trip():
 def test_project_image_boxes_defaults_to_empty_list():
     p = Project(name="r")
     assert p.image_boxes == []
+
+def test_video_box_mask_fields_default_off():
+    v = VideoBoxLayer(media_id="m1", file_path="a.mp4", out_point=5.0, height=1920)
+    assert (v.mask_enabled, v.mask_angle, v.mask_offset, v.mask_flip) == (False, 0.0, 0.0, False)
+
+def test_image_box_mask_fields_default_off():
+    b = ImageBoxLayer(media_id="m1", file_path="pic.jpg", height=1920)
+    assert (b.mask_enabled, b.mask_angle, b.mask_offset, b.mask_flip) == (False, 0.0, 0.0, False)
+
+def test_video_box_mask_fields_round_trip():
+    v = VideoBoxLayer(media_id="m1", file_path="a.mp4", out_point=5.0, height=1920,
+                      mask_enabled=True, mask_angle=33.5, mask_offset=-120.0, mask_flip=True)
+    assert VideoBoxLayer.model_validate_json(v.model_dump_json()) == v
+
+def test_image_box_mask_fields_round_trip():
+    b = ImageBoxLayer(media_id="m1", file_path="pic.jpg", height=1920,
+                      mask_enabled=True, mask_angle=33.5, mask_offset=-120.0, mask_flip=True)
+    assert ImageBoxLayer.model_validate_json(b.model_dump_json()) == b
+
+def test_boxes_saved_before_the_mask_feature_load_with_the_mask_off():
+    # Projects saved before this feature carry no mask_* keys at all; they must load unchanged.
+    v = VideoBoxLayer.model_validate({"media_id": "m1", "file_path": "a.mp4",
+                                      "out_point": 5.0, "height": 1920})
+    b = ImageBoxLayer.model_validate({"media_id": "m1", "file_path": "pic.jpg", "height": 1920})
+    assert v.mask_enabled is False and b.mask_enabled is False
