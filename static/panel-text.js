@@ -221,17 +221,7 @@ function renderBoxPanel() {
 
   TextPanel.renderBackground();
 
-  UI.numberField(document.getElementById("text-box-border-width-field"),
-    { label: "BORDER", unit: "PX", value: preset.box_border_width, min: 0, max: 40, span: 4,
-      onChange: (v) => { preset.box_border_width = v; saveProject(); renderTextPreview(); } });
-
-  UI.numberField(document.getElementById("text-box-border-radius-field"),
-    { label: "RADIUS", unit: "PX", value: preset.box_border_radius, min: 0, max: 200, span: 3,
-      onChange: (v) => { preset.box_border_radius = v; saveProject(); renderTextPreview(); } });
-
-  UI.colorSwatch(document.getElementById("text-box-border-color-field"),
-    { label: "Border Color", showLabel: false, value: preset.box_border_color, span: 1,
-      onChange: (v) => { preset.box_border_color = v; saveProject(); renderTextPreview(); } });
+  TextPanel.renderBorder();
 }
 
 function stageScale() {
@@ -308,7 +298,6 @@ UI.tabBar(document.getElementById("text-tab-bar"), TEXT_TABS, activeTextTab, sho
 showTextTab(activeTextTab);
 
 UI.divider(document.getElementById("text-box-width-height-divider"));
-UI.divider(document.getElementById("text-box-background-border-divider"));
 UI.divider(document.getElementById("text-box-border-position-divider"));
 
 document.getElementById("text-add-block-btn").addEventListener("click", () => addTextBlockAndEdit());
