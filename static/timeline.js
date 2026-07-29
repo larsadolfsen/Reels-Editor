@@ -13,9 +13,12 @@
 // toolbar −/+ buttons zoom in/out by 10s steps, clamped to at least [10s, 120s] (see
 // below). Not persisted, reset to the 30s default on every project open (editor.js
 // calls Timeline.resetZoom()). Auto-fit: every render() widens `visibleSeconds` to
-// fit the project's whole content (fitVisibleSeconds) unless the user has manually
-// zoomed (manualZoom flag, set by zoomIn/zoomOut, cleared by resetZoom) — so adding
-// clips grows the visible window automatically until the user takes manual control.
+// fit the video clips' own timeline length (videoDuration, fitVisibleSeconds) unless
+// the user has manually zoomed (manualZoom flag, set by zoomIn/zoomOut, cleared by
+// resetZoom) — so adding clips grows the visible window automatically until the user
+// takes manual control. Text/caption/video-box layers that run longer than the video
+// don't inflate this default fit (though they still extend the ruler/scroll range via
+// totalDuration, so they remain reachable by scrolling or manual zoom-out).
 // #timeline-scroll provides horizontal scroll once zoomed content exceeds the viewport.
 // render()'s 5th `actions = {}` param ({ onAddClip }) renders a small dashed "+" button
 // after the VIDEO row's clip sequence (at x=0 when empty), giving a visible way to add a
@@ -51,11 +54,19 @@ window.Timeline = (() => {
     return w / visibleSeconds;
   }
 
-  // Widens the visible window to fit the whole project (plus a little trailing
+  // Widens the visible window to fit the given duration (plus a little trailing
   // padding so the last block's add-button/resize-handle isn't flush against the
   // container's right edge), used for auto-fit and as the manual zoom-out ceiling.
   function fitVisibleSeconds(duration) {
     return Math.max(DEFAULT_VISIBLE_SECONDS, Math.ceil(duration) + 2);
+  }
+
+  // Default auto-fit target: the video clips' own timeline length, not the
+  // possibly-longer max across text/caption/video-box layers (totalDuration) —
+  // so opening a project shows the video filling the width instead of leaving
+  // blank timeline space after it just because some other layer runs longer.
+  function videoDuration(project) {
+    return Math.max(sequenceDuration(ordered(project.clips || [])), 1);
   }
 
   function zoomIn() {
@@ -285,7 +296,7 @@ window.Timeline = (() => {
     lastDuration = duration;
     lastProject = project;
     lastTimelineTime = timelineTime;
-    if (!manualZoom) visibleSeconds = fitVisibleSeconds(duration);
+    if (!manualZoom) visibleSeconds = fitVisibleSeconds(videoDuration(project));
     const px = currentPxPerSecond();
     const contentWidth = duration * px;
     document.getElementById("timeline-content").style.width = `${contentWidth}px`;
