@@ -9,9 +9,20 @@ window.StyleTab = window.StyleTab || {};
 window.StyleTab.design = function design(container, target, options) {
   const opts = options || {};
 
+  // Each section renders inside its own .style-section wrapper (layout-transparent via
+  // `display: contents`) rather than directly into the shared mount — see style-panel.css's
+  // .style-section rules, which restore the inter-section margin the flat .style-group:last-child
+  // rule would otherwise strip from every section but the true last one.
+  function sectionWrapper() {
+    const div = document.createElement("div");
+    div.className = "style-section";
+    container.appendChild(div);
+    return div;
+  }
+
   const sections = [
-    StyleSection.fontFamily(container, target, { host: opts.host }),
-    StyleSection.fontWeight(container, target, { host: opts.host, sampleText: opts.sampleText }),
+    StyleSection.fontFamily(sectionWrapper(), target, { host: opts.host }),
+    StyleSection.fontWeight(sectionWrapper(), target, { host: opts.host, sampleText: opts.sampleText }),
   ];
 
   return {
