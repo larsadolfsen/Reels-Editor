@@ -46,7 +46,7 @@ Row values become:
 | Row | Off | On |
 | --- | --- | --- |
 | Outline (TEXT + CAPTIONS) | `None` when `outline_px === 0` | swatch(`outline_color`) + `${outline_px}px` |
-| Shadow (TEXT + CAPTIONS) | `None` when `!shadow` | swatch(`shadow_color`) + `${shadow_blur}px` |
+| Shadow (TEXT + CAPTIONS) | `None` when `!shadow` | swatch(`shadow_color`) + `X: ${shadow_offset_x}px  Y: ${shadow_offset_y}px  Blur: ${shadow_blur}px` |
 | Highlight (TEXT) | `None` when `!highlight` | swatch(`highlight_color`) + `highlight_color` hex |
 | Background (TEXT + CAPTIONS, new) | `None` when `!box_background` | swatch(`box_background_color`) + `${box_background_opacity}%` |
 | Border (TEXT + CAPTIONS, new) | `None` when `box_border_width === 0` | swatch(`box_border_color`) + `${box_border_width}px` |
@@ -54,6 +54,10 @@ Row values become:
 
 The swatch is omitted (passed as `null`) in every off state, matching what
 `text-panel-shadow.js` already does today.
+
+The Shadow row's on-value was widened mid-implementation at the project owner's request —
+it originally showed the blur alone. At extreme values the full string exceeds the row's
+value slot and ellipsis-clips; the owner was shown this and chose to keep the format.
 
 ### 2. New subpages
 
