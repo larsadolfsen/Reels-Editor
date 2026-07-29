@@ -97,12 +97,16 @@
 .col-7 { grid-column: span 7; }
 .col-8 { grid-column: span 8; }
 
-/* end-aligned so the flanking quick-size buttons (28px) sit flush with the field's bottom
-   edge instead of centering against the row's full height (label + input). */
-#text-size-row { gap: 6px; align-items: end; }
+/* .style-size-row is the base class StyleSection.size always emits. TEXT's tighter layout
+   (end-aligned so the flanking quick-size buttons sit flush with the field's bottom edge,
+   instead of centering against the row's full height) is an explicit, declined-to-converge
+   difference from CAPTIONS (master plan, "CSS divergence surface") — gated on the
+   --compact modifier, which only StyleSection.size's compactRow option (TEXT: true,
+   CAPTIONS: omitted) adds to the row's class list. */
+.style-size-row--compact { gap: 6px; align-items: end; }
 /* Pulls the SIZE (PX) label flush with the decrease-button's left edge (col-1 width + row gap),
-   instead of starting under the field itself (col-2). */
-#text-size-row .number-field-label { margin-left: -34px; }
+   instead of starting under the field itself (col-2). CAPTIONS keeps the default indented label. */
+.style-size-row--compact .number-field-label { margin-left: -34px; }
 
 .style-field {
   display: flex;
