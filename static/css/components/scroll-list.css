@@ -1,0 +1,6 @@
+/* Shared scrollable-list-inside-a-panel utility, used by any picker/results list capped to a fixed height. */
+/* Exposes .scroll-list. No dependencies. */
+.scroll-list {
+  max-height: 320px;
+  overflow-y: auto;
+}

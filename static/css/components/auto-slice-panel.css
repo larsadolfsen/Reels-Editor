@@ -3,7 +3,7 @@
    The status badge itself is the shared .chip .chip--tinted .chip--{silence,filler} recipe
    (chip.css, added 2026-07-29 chip component) — no longer defined here. Rows use UI.listRow for
    card/hover styling (list-row.css); this file only adds row-internal flex layout. Depends on
-   tokens.css, chip.css. */
+   tokens.css, chip.css, scroll-list.css. */
 .auto-slice-hint {
   grid-column: 1 / -1;   /* .style-group is an 8-col grid; span it like .style-group > .style-row does */
   font-size: var(--fs-md);
@@ -22,8 +22,6 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 320px;
-  overflow-y: auto;
 }
 
 .auto-slice-row {

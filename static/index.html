@@ -28,6 +28,7 @@
 <link rel="stylesheet" href="/static/css/components/save-indicator.css">
 <link rel="stylesheet" href="/static/css/components/project-list-row.css">
 <link rel="stylesheet" href="/static/css/components/project-picker.css">
+<link rel="stylesheet" href="/static/css/components/scroll-list.css">
 <link rel="stylesheet" href="/static/css/components/video-box-panel.css">
 <link rel="stylesheet" href="/static/css/components/image-box-panel.css">
 <link rel="stylesheet" href="/static/css/components/mask-line-guide.css">
@@ -489,7 +490,7 @@
           <button id="video-box-add" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD VIDEO BOX</span></button>
         </div>
         <div id="video-box-picker" hidden>
-          <ul id="video-box-picker-list" class="font-list"></ul>
+          <ul id="video-box-picker-list" class="font-list scroll-list"></ul>
         </div>
         <div id="video-box-detail" hidden>
           <div id="video-box-name" class="context-panel-name"></div>
@@ -553,7 +554,7 @@
           <button id="image-box-add" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD IMAGE BOX</span></button>
         </div>
         <div id="image-box-picker" hidden>
-          <ul id="image-box-picker-list" class="font-list"></ul>
+          <ul id="image-box-picker-list" class="font-list scroll-list"></ul>
         </div>
         <div id="image-box-detail" hidden>
           <div id="image-box-name" class="context-panel-name"></div>
@@ -662,7 +663,7 @@
 
             <div id="auto-slice-results" hidden>
               <div id="auto-slice-summary" class="auto-slice-summary"></div>
-              <ul id="auto-slice-list" class="auto-slice-list"></ul>
+              <ul id="auto-slice-list" class="auto-slice-list scroll-list"></ul>
               <div class="style-group">
                 <button id="auto-slice-continue" type="button" class="panel-button col-8">Continue</button>
               </div>
