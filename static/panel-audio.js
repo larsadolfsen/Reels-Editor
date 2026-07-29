@@ -44,6 +44,7 @@ window.AudioPanel = window.AudioPanel || {};
   async function removeMusic() {
     project.music = null;
     await saveProject();
+    Preview.load(project); // same PreviewAudio-state gap as addMusic() above — otherwise the removed track keeps playing until reload
     renderTimeline();
     render();
   }
