@@ -1,5 +1,6 @@
 // Reusable presentational UI helper, framework-free. Attaches to window.UI.
-// Depends on the .save-indicator CSS component. No app state beyond in-flight-save
+// Label-only ("Saving…/Saved/Save failed — retry") — the status dot was removed 2026-07-29,
+// so nothing shows in the rail once the "Saved" label fades. Depends on the .save-indicator CSS component. No app state beyond in-flight-save
 // counting (so overlapping saveProject() calls don't flicker Saved/Saving) and the
 // "Saved" fade-to-icon timeout. Caller drives setSaving()/setSaved()/setFailed().
 window.UI = window.UI || {};
@@ -8,11 +9,9 @@ window.UI.saveIndicator = function saveIndicator(container) {
   container.classList.add("save-indicator");
   container.innerHTML = "";
 
-  const dot = document.createElement("span");
-  dot.className = "save-indicator-dot";
   const label = document.createElement("span");
   label.className = "save-indicator-label";
-  container.append(dot, label);
+  container.append(label);
 
   let pending = 0;
   let fadeTimer = null;
