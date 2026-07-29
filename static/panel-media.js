@@ -186,8 +186,10 @@ window.MediaPanel = window.MediaPanel || {};
     list.innerHTML = "";
     const videos = project.media_library.filter((m) => m.kind !== "image" && m.kind !== "audio");
     const images = project.media_library.filter((m) => m.kind === "image");
+    const audios = project.media_library.filter((m) => m.kind === "audio");
     appendGroup(list, "VIDEOS", videos);
     appendGroup(list, "IMAGES", images);
+    appendGroup(list, "AUDIO", audios);
   }
 
   window.MediaPanel.render = render;
