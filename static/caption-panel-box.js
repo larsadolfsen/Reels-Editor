@@ -1,6 +1,7 @@
-// CAPTIONS panel Box tab: fixed WIDTH/HEIGHT, background/border, TEXT ALIGN, and absolute
-// POSITION fields — same shape as editor.js's renderBoxPanel() + text-panel-align.js
-// + text-panel-position.js combined, pointed at the caption track's preset. The box is always a
+// CAPTIONS panel Box tab: fixed WIDTH/HEIGHT, TEXT ALIGN and absolute POSITION fields — same
+// shape as panel-text.js's renderBoxPanel() + text-panel-align.js + text-panel-position.js
+// combined, pointed at the caption track's preset. Background and Border are their own
+// row+subpage files (caption-panel-background.js / caption-panel-border.js). The box is always a
 // fixed size for captions (word-wrap/pagination adapts to it — see preview-captions.js /
 // app/ass_render.py), unlike TEXT blocks which keep FIT/FREE/FILL. POSITION anchor grid shares
 // panel-text.js's anchorPositionX/Y helpers + Preview.getCaptionBoxSize().
@@ -16,26 +17,6 @@ window.CaptionPanel.renderBox = function renderBox() {
   UI.numberField(document.getElementById("caption-box-height-field"),
     { label: "HEIGHT", unit: "PX", value: preset.box_height, min: 1, max: 1920, span: 4,
       onChange: (v) => { preset.box_height = v; renderCaptionPreview(); saveProject(); } });
-
-  UI.colorSwatch(document.getElementById("caption-box-background-color-field"),
-    { label: "Background", showLabel: false, value: preset.box_background_color, span: 1,
-      onChange: (v) => { preset.box_background_color = v; preset.box_background = true; saveProject(); renderCaptionPreview(); } });
-
-  UI.numberField(document.getElementById("caption-box-background-opacity-field"),
-    { label: "OPACITY", unit: "%", value: preset.box_background_opacity, min: 0, max: 100, span: 7,
-      onChange: (v) => { preset.box_background_opacity = v; saveProject(); renderCaptionPreview(); } });
-
-  UI.numberField(document.getElementById("caption-box-border-width-field"),
-    { label: "BORDER", unit: "PX", value: preset.box_border_width, min: 0, max: 40, span: 4,
-      onChange: (v) => { preset.box_border_width = v; saveProject(); renderCaptionPreview(); } });
-
-  UI.numberField(document.getElementById("caption-box-border-radius-field"),
-    { label: "RADIUS", unit: "PX", value: preset.box_border_radius, min: 0, max: 200, span: 3,
-      onChange: (v) => { preset.box_border_radius = v; saveProject(); renderCaptionPreview(); } });
-
-  UI.colorSwatch(document.getElementById("caption-box-border-color-field"),
-    { label: "Border Color", showLabel: false, value: preset.box_border_color, span: 1,
-      onChange: (v) => { preset.box_border_color = v; saveProject(); renderCaptionPreview(); } });
 
   UI.buttonGroup(document.getElementById("caption-align-group"),
     [

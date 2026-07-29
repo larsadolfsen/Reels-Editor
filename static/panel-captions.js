@@ -71,6 +71,8 @@ async function renderCaptionPanel() {
   CaptionPanel.renderShadow();
   CaptionPanel.renderCase();
   CaptionPanel.renderBox();
+  CaptionPanel.renderBackground();
+  CaptionPanel.renderBorder();
   CaptionPanel.renderHighlight();
   CaptionPanel.renderFillerWords();
   CaptionPanel.renderWords();
@@ -108,7 +110,6 @@ UI.tabBar(document.getElementById("caption-tab-bar"), CAPTION_TABS, activeCaptio
 showCaptionTab(activeCaptionTab);
 
 UI.divider(document.getElementById("caption-box-width-height-divider"));
-UI.divider(document.getElementById("caption-box-background-border-divider"));
 UI.divider(document.getElementById("caption-box-border-position-divider"));
 
 // Runs transcription and merges the result into `project`. Shared by the CAPTIONS panel's
