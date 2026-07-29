@@ -120,8 +120,14 @@ load the new files.
   instead calls `TextPanel.renderBackground()` and `TextPanel.renderBorder()`. Its
   `UI.divider` call for `text-box-background-border-divider` is removed.
 - `panel-captions.js`'s `renderCaptionPanel()` calls `CaptionPanel.renderBackground()` and
-  `CaptionPanel.renderBorder()`, and its main-view/subpanel visibility logic gains the five
-  new subpanels alongside the ones it already tracks.
+  `CaptionPanel.renderBorder()`, and its `captionTabPanes.design` entry drops the removed
+  `#caption-highlight-body`.
+
+Neither orchestrator's "reset to main view" list is extended. `renderTextPanel()` resets
+only `#panel-text-font` / `#panel-text-weight`, and `renderCaptionPanel()` only the font,
+weight and language subpanels — the Outline, Shadow and Highlight subpanels added earlier
+were deliberately left out, and the new ones follow that same precedent. Changing which
+subpanels reset is a separate concern from this change.
 - `caption-panel-box.js` drops its background and border field wiring for the same reason.
 
 ## Data model
