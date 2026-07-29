@@ -52,7 +52,7 @@ window.AutoSlicePanel = window.AutoSlicePanel || {};
       li.appendChild(checkbox);
 
       const badge = document.createElement("span");
-      badge.className = `auto-slice-badge auto-slice-badge--${range.kind}`;
+      badge.className = `chip chip--tinted chip--${range.kind}`;
       badge.textContent = range.kind === "filler" ? "FILLER" : "SILENCE";
       li.appendChild(badge);
 

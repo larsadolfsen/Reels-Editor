@@ -22,4 +22,4 @@
   padding-top: var(--space-3);
 }
 #panel-brand #brand-dot { width: 6px; height: 6px; border-radius: var(--radius); background: var(--accent); }
-#panel-brand #brand-name { font-family: var(--font-ui); font-weight: 600; font-size: 10px; letter-spacing: 0.02em; }
+#panel-brand #brand-name { font-family: var(--font-ui); font-weight: 600; font-size: var(--fs-xs); letter-spacing: 0.02em; }

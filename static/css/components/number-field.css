@@ -16,8 +16,8 @@
   width: 20px;
   flex-shrink: 0;
   border: 1px solid var(--border);
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
+  border-top-right-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
   overflow: hidden;
 }
 

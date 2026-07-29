@@ -20,7 +20,7 @@
 }
 
 .style-preset-card-name {
-  font-size: 12px;
+  font-size: var(--fs-md);
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;

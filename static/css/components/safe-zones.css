@@ -1,5 +1,5 @@
 /* Safe-zone reference overlay: shaded bands + solid accent edge (matching TikTok's UI chrome) with high-contrast label chips, toggled from the timeline toolbar. */
-/* Exposes #safe-zones (+ .safe-zone-*). #safe-zones-toggle lives in #timeline-toolbar and uses .icon-btn styling (button-group.css) for its pressed state. Depends on tokens.css, #stage (position: relative, in stage.css). Labels use an opaque chip (same visual language as .slice-btn in timeline.css) rather than bare text so they stay legible over any video content underneath. */
+/* Exposes #safe-zones (+ .safe-zone-*). #safe-zones-toggle lives in #timeline-toolbar and uses .icon-btn styling (button-group.css) for its pressed state. Depends on tokens.css, chip.css (label styling, added 2026-07-29 chip component), #stage (position: relative, in stage.css). Labels use the shared .chip .chip--outlined .chip--safe-zone recipe (chip.css) rather than bare text so they stay legible over any video content underneath. */
 #safe-zones {
   position: absolute;
   inset: 0;
@@ -25,21 +25,6 @@
 .safe-zone-caption { left: 0; right: 15%; bottom: 7%; height: 20%; align-items: flex-start; padding-top: var(--space-2); border-top: 2px solid var(--safe-zone); }
 .safe-zone-nav { left: 0; right: 0; bottom: 0; height: 7%; border-top: 2px solid var(--safe-zone); }
 
-/* Label chip: opaque surface + border + drop shadow (same recipe as .slice-btn
-   in timeline.css) so text contrast never depends on the video color beneath it. */
-.safe-zone span {
-  display: inline-block;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--safe-zone);
-  color: var(--text-secondary);
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 3px 7px;
-  border-radius: 3px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
-}
+/* Label chip: .chip .chip--outlined .chip--safe-zone (chip.css) — opaque surface + border +
+   drop shadow + the safe-zone accent border-left, so text contrast never depends on the video
+   color beneath it. Nothing safe-zone-span-specific remains here; see chip.css. */

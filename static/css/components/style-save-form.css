@@ -11,7 +11,7 @@
 .style-save-form-input {
   width: 100%;
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: var(--fs-md);
 }
 
 .style-save-form-buttons {
@@ -23,6 +23,6 @@
 
 .style-save-form-hint {
   font-family: var(--font-ui);
-  font-size: 10.5px;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
