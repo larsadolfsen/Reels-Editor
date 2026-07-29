@@ -153,10 +153,11 @@ window.PreviewText = (() => {
       overlay.appendChild(div);
 
       // Always clickable/editable, regardless of which right-panel section is open (not just
-      // when this block is the "selected" one) — a stage text block should always show a text
-      // cursor and always be one click away from edit mode.
+      // when this block is the "selected" one) — a stage text block should always be one click
+      // away from edit mode. The cursor itself is tool-mode-driven CSS (stage.css's
+      // #stage[data-tool=...] rules), not an inline style, so it follows a tool switch without
+      // needing a re-render.
       div.style.pointerEvents = "auto";
-      div.style.cursor = "text";
       interactionHandles.set(block.id, UI.textInteraction(div, {
         isPlaceholder: !heading,
         onEditStart: () => {

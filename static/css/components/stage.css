@@ -56,6 +56,13 @@
 
 .text-block--placeholder { color: var(--text-muted); }
 
+/* Tool-mode cursors — #stage's data-tool attribute is kept in sync by stage-tool-cursor.js.
+   Select (arrow) tool: plain arrow over text blocks, since a click there selects rather than
+   edits. Text tool: caret. A block that's actually in edit mode always shows the caret. */
+#stage[data-tool="select"] .text-block { cursor: default; }
+#stage[data-tool="text"] .text-block { cursor: text; }
+#stage[data-tool] .text-block[contenteditable="true"] { cursor: text; }
+
 .text-block--align-left { transform: translate(0, 0); }
 .text-block--align-center { transform: translate(-50%, 0); }
 .text-block--align-right { transform: translate(-100%, 0); }
