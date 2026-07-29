@@ -4,8 +4,13 @@
 window.StylePanelHost = function StylePanelHost(mainEl, drillEl) {
   const pages = [];
 
+  // Closes through each open page's own close() — not a bare `hidden = true` sweep — so
+  // an onClose callback (Batch 2's hover-preview cancel, Batch 4's row refresh) still
+  // fires when closeAll() runs at the top of a panel render. A page that was never open
+  // is left alone; mainEl is always shown regardless, since nothing else does that if no
+  // page happened to be open.
   function closeAll() {
-    pages.forEach((p) => { p.el.hidden = true; });
+    pages.forEach((p) => { if (!p.el.hidden) p.close(); });
     mainEl.hidden = false;
   }
 

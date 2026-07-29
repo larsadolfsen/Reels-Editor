@@ -127,3 +127,27 @@ test("setFields writes several FormatRun fields into the same run with one save"
   assert.deepStrictEqual(block.formatting_runs, [{ start: 0, end: 2, color: "#FF0000", weight: 700 }]);
   assert.strictEqual(calls.saves, 1);
 });
+
+// Regression: `font` must never become selection-aware (raised and declined), no matter
+// which method writes it or whether it's batched with a field that IS FormatRun-capable.
+test("setField never writes font into a FormatRun even with a selection active", () => {
+  const { target, preset, block } = makeTarget({ selection: { blockId: "b1", start: 0, end: 2 } });
+  target.setField("font", "JetBrains Mono");
+  assert.strictEqual(preset.font, "JetBrains Mono");
+  assert.strictEqual(block.formatting_runs.length, 0);
+});
+
+test("setFields splits a mixed batch: font stays on the preset, weight goes into the run", () => {
+  const { target, preset, block, calls } = makeTarget({ selection: { blockId: "b1", start: 0, end: 2 } });
+  target.setFields({ font: "JetBrains Mono", weight: 700 });
+  assert.strictEqual(preset.font, "JetBrains Mono");
+  assert.strictEqual(preset.weight, undefined, "weight must not also land on the preset");
+  assert.deepStrictEqual(block.formatting_runs, [{ start: 0, end: 2, weight: 700 }]);
+  assert.strictEqual(calls.saves, 1);
+});
+
+test("getFieldValue never reads font from a FormatRun even if one somehow has it", () => {
+  const block = { id: "b1", heading: "Hello", preset_id: "p1", formatting_runs: [{ start: 0, end: 2, font: "Stale Legacy Font" }] };
+  const { target } = makeTarget({ selection: { blockId: "b1", start: 0, end: 2 }, block, preset: { id: "p1", font: "Public Sans" } });
+  assert.strictEqual(target.getFieldValue("font"), "Public Sans");
+});

@@ -8,7 +8,6 @@ function forCaptionTrack(deps) {
   // called with no argument and falls back to panel-captions.js's globals.
   const d = deps || {
     getPreset: () => ensureCaptionPreset(ensureCaptionTrack().preset_id),
-    getSelection: () => null,
     save: () => saveProject(),
     rerenderPreview: () => renderCaptionPreview(),
     rerenderPanel: () => renderCaptionPanel(),
