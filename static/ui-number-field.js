@@ -56,5 +56,14 @@ window.UI.numberField = function numberField(container, { label, unit, value, st
 
   wrap.append(input, stepper);
   container.appendChild(wrap);
-  return (v) => { input.value = format(v); };
+  const setValue = (v) => { input.value = format(v); };
+  // Lets a caller toggle disabled state on every render() without rebuilding the field
+  // (rebuilding would drop the onChange listener). Attached as a property rather than
+  // changing the return type, so existing callers that only call setValue(v) are unaffected.
+  setValue.setDisabled = (isDisabled) => {
+    input.disabled = isDisabled;
+    up.disabled = isDisabled;
+    down.disabled = isDisabled;
+  };
+  return setValue;
 };
