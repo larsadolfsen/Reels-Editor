@@ -192,3 +192,6 @@ UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (val
   if (value === "text") { addTextBlockAndEdit(); return; }
   PANEL_NAV_HANDLERS[value]();
 });
+
+// Select-tool button, relocated from the top toolbar (selector-tool-rail feature).
+UI.railToolButton(document.getElementById("rail-tool"));
