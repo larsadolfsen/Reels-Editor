@@ -186,8 +186,22 @@
   display: block;
 }
 
-.clip-info { min-width: 0; flex: 1; }
-.clip-info .clip-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clip-info { min-width: 0; flex: 1; position: relative; }
+.clip-info .clip-name { display: block; overflow: hidden; text-overflow: clip; white-space: nowrap; }
+.clip-info .clip-name:hover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: max-content;
+  max-width: 260px;
+  overflow: visible;
+  background: var(--bg-2);
+  margin: -2px -4px;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  z-index: 5;
+}
 .clip-duration-row { display: flex; align-items: center; gap: var(--space-1); margin-top: 2px; }
 .clip-info .clip-duration { font-family: var(--font-ui); font-size: var(--fs-2xs); color: var(--text-dim); margin-top: 0; }
 .clip-audio-muted-icon { display: inline-flex; color: var(--text-dim); }

@@ -1,7 +1,7 @@
 // FILES/MEDIA context-panel section: media-library list (thumbnail, name, duration),
 // grouped by type (videos, then images, each with a small section label — omitted when that
 // group is empty), click-to-select, hover-reveal inline rename (pencil icon), remove (trash
-// icon, disabled with a usage-count chip when the media item is referenced by any ClipLayer),
+// icon, swapped for a disabled lock icon when the media item is referenced by any ClipLayer),
 // and a plus icon (added 2026-07-24) that adds the item directly: a video row appends a new
 // clip to the end of the VIDEO timeline sequence (appendMediaClipToSequence, clip-sequence.js);
 // an image row creates a new IMAGE BOX overlay (ImageBoxPanel.createImageBox, panel-image-box.js)
@@ -184,7 +184,7 @@ window.MediaPanel = window.MediaPanel || {};
     const count = project.clips.filter((c) => c.media_id === m.id).length;
 
     const trashBtn = UI.button(actions, {
-      icon: "trash",
+      icon: count > 0 ? "lock" : "trash",
       size: "sm",
       disabled: count > 0,
       onClick: async (e) => {
@@ -196,7 +196,7 @@ window.MediaPanel = window.MediaPanel || {};
       },
     });
     if (count > 0) {
-      trashBtn.title = `used by ${count} clip${count === 1 ? "" : "s"}`;
+      trashBtn.title = `Locked — used by ${count} clip${count === 1 ? "" : "s"}`;
     } else {
       trashBtn.title = "Remove";
     }
