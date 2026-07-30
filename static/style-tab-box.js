@@ -21,7 +21,7 @@ window.StyleTab.box = function box(container, target, options) {
   }
 
   const boxEl = mount();
-  // The border -> TEXT ALIGN separator is a boundary between two sections, not part of either,
+  // The box -> TEXT ALIGN separator is a boundary between two sections, not part of either,
   // so the composer owns it (it was #text-box-border-position-divider /
   // #caption-box-border-position-divider in the markup this replaces).
   const dividerEl = document.createElement("div");
