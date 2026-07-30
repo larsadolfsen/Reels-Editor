@@ -1,7 +1,8 @@
-/* Container for the left rail's Select-tool button (selector-tool-rail feature), sitting above */
-/* #panel-nav's FILES/TEXT/... rail — the Text tool is armed via that rail's existing TEXT entry */
-/* instead of a second button here (remove-text-tool-top-bar, see panel-nav.js). Reuses */
-/* icon-rail.css's .icon-rail-btn styling for the button itself; this file only sets the */
+/* Container for the left rail's Select-tool button (selector-tool-rail feature), sitting between */
+/* #panel-nav-top (PROJECTS/FILES) and #panel-nav-bottom (TEXT/CAPTIONS/...) — */
+/* selector-tool-rail-placement feature. The Text tool is armed via the existing TEXT entry in */
+/* #panel-nav-bottom instead of a second button here (remove-text-tool-top-bar, see panel-nav.js). */
+/* Reuses icon-rail.css's .icon-rail-btn styling for the button itself; this file only sets the */
 /* container's spacing. Depends on icon-rail.css/tokens.css. */
 #rail-tool {
   display: flex;

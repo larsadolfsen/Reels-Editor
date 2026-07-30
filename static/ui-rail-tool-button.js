@@ -1,10 +1,12 @@
 // Left rail's Select-tool button (selector-tool-rail feature, added 2026-07-30, moved out of the
-// top toolbar): renders a single icon-rail-style toggle button into the given container that sets
-// window.ToolMode to "select" and stays highlighted while ToolMode is "select". The Text tool is
-// armed via the existing TEXT entry in #panel-nav instead of a second button here (see
-// panel-nav.js — remove-text-tool-top-bar feature, added 2026-07-30) now that the top toolbar
-// (static/ui-toolbar.js) is gone. Reuses icon-rail.css's .icon-rail-btn/.icon-rail-icon classes so
-// it matches the FILES/TEXT/... rail buttons below it. Exposes window.UI.railToolButton(container).
+// top toolbar; sits in #rail-tool between #panel-nav-top and #panel-nav-bottom as of the
+// selector-tool-rail-placement feature): renders a single icon-rail-style toggle button into the
+// given container that sets window.ToolMode to "select" and stays highlighted while ToolMode is
+// "select". The Text tool is armed via the existing TEXT entry in #panel-nav-bottom instead of a
+// second button here (see panel-nav.js — remove-text-tool-top-bar feature, added 2026-07-30) now
+// that the top toolbar (static/ui-toolbar.js) is gone. Reuses icon-rail.css's
+// .icon-rail-btn/.icon-rail-icon classes so it matches the FILES/TEXT/... rail buttons around it.
+// Exposes window.UI.railToolButton(container).
 window.UI = window.UI || {};
 
 window.UI.railToolButton = function railToolButton(container) {
