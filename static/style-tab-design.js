@@ -26,6 +26,7 @@ window.StyleTab.design = function design(container, target, options) {
     StyleSection.size(sectionWrapper(), target, { compactRow: opts.compactSizeRow }),
     StyleSection.emphasis(sectionWrapper(), target, {}),
     StyleSection.color(sectionWrapper(), target, { host: opts.host }),
+    StyleSection.outline(sectionWrapper(), target, { host: opts.host }),
   ];
 
   return {
