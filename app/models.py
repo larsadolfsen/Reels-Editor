@@ -101,9 +101,9 @@ class TextPreset(BaseModel):
     entrance: str = "fade_pop"     # fade_pop|none
     usage_count: int = 0    # how many times this saved preset has been applied to a block; drives the STYLE accordion's "most used" list
     highlight_color: str = "#FFD400"   # shared: caption karaoke highlight color AND rich-text highlight color
-    highlight_mode: str = "current_word"   # current_word | progressive_fill | background; unused by TextBlockLayer consumers except "background" mode's own rect radius
+    highlight_mode: str = "current_word"   # off | current_word | progressive_fill (captions only); "background" is a legacy value self-healed on load by static/panel-captions.js's ensureCaptionPreset, never written going forward
     highlight: bool = False            # block-level highlight default (off); highlight_color above is shared with captions
-    highlight_border_radius: int = 4   # px on the 1080x1920 canvas; shared by TEXT's marker-highlight rect and CAPTIONS' "background" mode word rect
+    highlight_border_radius: int = 4   # px on the 1080x1920 canvas; shared by TEXT's marker-highlight rect and CAPTIONS' box-level highlight rect
 
     spotlight_color: str = "#FFD400"   # per-word karaoke (CAPTIONS only): active word text color swap
     spotlight_outline: bool = False    # per-word outline on/off
