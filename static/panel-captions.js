@@ -54,6 +54,21 @@ function renderCaptionPreview() {
   }
 }
 
+// Box tab: existing Background/Border settings-row + subpage UI (unchanged), then the shared
+// StyleTab.box sections mounted into #caption-box-shared-body. sizeModes is false — a caption
+// box is always a fixed size (word-wrap/pagination adapts to it, see preview-captions.js /
+// app/ass_render.py), so WIDTH/HEIGHT are unconditionally visible, no FIT/FREE/FILL group.
+let captionBoxTab = null;
+
+function renderCaptionBoxTab() {
+  CaptionPanel.renderBackground();
+  CaptionPanel.renderBorder();
+  if (!captionBoxTab) {
+    captionBoxTab = StyleTab.box(document.getElementById("caption-box-shared-body"), captionStyleTarget, { sizeModes: false });
+  }
+  captionBoxTab.render();
+}
+
 async function renderCaptionPanel() {
   // closeAll() hides every host subpage and un-hides #panel-captions-main.
   captionStyleHost.closeAll();
@@ -62,9 +77,7 @@ async function renderCaptionPanel() {
 
   CaptionPanel.renderStyle();
   await captionDesignTab.render();
-  CaptionPanel.renderBox();
-  CaptionPanel.renderBackground();
-  CaptionPanel.renderBorder();
+  renderCaptionBoxTab();
   CaptionPanel.renderFillerWords();
   CaptionPanel.renderWords();
 
@@ -114,10 +127,8 @@ const captionDesignTab = StyleTab.design(
     // A caption track has no single heading to preview — its text is a per-word transcript spread
     // across pages — so the Weight list shows the fixed sample caption-panel-font-weight.js used.
     sampleText: () => "kind of insane",
-    // CAPTIONS gets the karaoke MODE group inside the Highlight subpage; TEXT does not.
-    highlightModes: true,
+    // CAPTIONS gets an extra Spotlight section (per-word karaoke mode) after Highlight; TEXT
+    // has no per-word karaoke, so it doesn't render one at all.
+    spotlight: true,
   },
 );
-
-UI.divider(document.getElementById("caption-box-width-height-divider"));
-UI.divider(document.getElementById("caption-box-border-position-divider"));

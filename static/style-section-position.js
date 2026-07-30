@@ -1,19 +1,27 @@
 // Shared Box-tab section: the absolute HORIZONTAL/VERTICAL pixel fields (TextPreset.x/y) plus
-// the stateless 3x3 anchor-grid shortcut, one file serving both the TEXT and CAPTIONS panels.
-// Uses target.getBoxSize() for the box's live rendered size and panel-text.js's
+// the stateless single-row six-icon anchor shortcut, one file serving both the TEXT and CAPTIONS
+// panels. Uses target.getBoxSize() for the box's live rendered size and panel-text.js's
 // anchorPositionX/anchorPositionY for the edge-flush maths. Every write is setPresetField.
+//
+// NOTE: this replaces an earlier two-row (TOP/MID/BTM + LEFT/MID/RIGHT) version built against a
+// stale snapshot of the Box tab. Commit f69f15f ("POSITION anchors as a single row of icon
+// buttons") landed on main after that version was written and changed both panels' live markup
+// to one six-icon row (id `position-group`/`caption-position-group`) before this section was
+// ever wired in — so the row/col version never actually shipped. Rewritten here to match.
 window.StyleSection = window.StyleSection || {};
 
 (() => {
-  const ROW_OPTIONS = [
-    { value: "top", label: "TOP", span: 3 },
-    { value: "mid", label: "MID", span: 2 },
-    { value: "btm", label: "BTM", span: 3 },
-  ];
-  const COL_OPTIONS = [
-    { value: "left", label: "LEFT", span: 3 },
-    { value: "mid", label: "MID", span: 2 },
-    { value: "right", label: "RIGHT", span: 3 },
+  // Vertical (top/mid-v/btm) and horizontal (left/mid-h/right) anchors share one row, so the two
+  // centering buttons need distinct values; each maps back to the plain "mid" the anchor helpers
+  // expect. mid-h/mid-v use the dashed-centerline icons (commit 86d1634) — canonical set taken
+  // from text-panel-position.js; caption-panel-box.js never got that fix applied.
+  const OPTIONS = [
+    { value: "top", label: "TOP", span: 1, icon: UI.icon("arrow-up-to-line", { size: 16 }) },
+    { value: "mid-h", label: "MID HORIZONTAL", span: 1, icon: UI.icon("align-horizontal-justify-center", { size: 16 }) },
+    { value: "btm", label: "BTM", span: 1, icon: UI.icon("arrow-down-to-line", { size: 16 }) },
+    { value: "left", label: "LEFT", span: 1, icon: UI.icon("arrow-left-to-line", { size: 16 }) },
+    { value: "mid-v", label: "MID VERTICAL", span: 1, icon: UI.icon("align-vertical-justify-center", { size: 16 }) },
+    { value: "right", label: "RIGHT", span: 1, icon: UI.icon("arrow-right-to-line", { size: 16 }) },
   ];
 
   window.StyleSection.position = function position(container, target, options) {
@@ -26,9 +34,8 @@ window.StyleSection = window.StyleSection || {};
 
     const gridGroup = document.createElement("div");
     gridGroup.className = "style-group";
-    const rowGroupEl = document.createElement("div");
-    const colGroupEl = document.createElement("div");
-    gridGroup.append(rowGroupEl, colGroupEl);
+    const gridEl = document.createElement("div");
+    gridGroup.appendChild(gridEl);
     container.appendChild(gridGroup);
 
     const fieldsGroup = document.createElement("div");
@@ -55,18 +62,17 @@ window.StyleSection = window.StyleSection || {};
     // computes an absolute pixel value edge-flush against the 1080x1920 canvas from the box's own
     // rendered size — which is exactly what target.getBoxSize() exists for — writes it to x/y,
     // and re-renders the whole panel so the fields above pick the new value up.
-    const setRowActive = UI.buttonGroup(rowGroupEl, ROW_OPTIONS, null, (value) => {
+    const setActive = UI.buttonGroup(gridEl, OPTIONS, null, (value) => {
       const size = target.getBoxSize();
-      target.setPresetField("y", Math.round(anchorPositionY(value, size && size.height)));
-      target.rerenderPanel();
-    });
-
-    const setColActive = UI.buttonGroup(colGroupEl, COL_OPTIONS, null, (value) => {
-      const size = target.getBoxSize();
-      // anchorPositionX's third argument is the align mode: stage.css shifts the box by a
-      // fraction of its own width depending on align, and the edge-flush x has to compensate.
-      const x = anchorPositionX(value, size && size.width, target.getPreset().align);
-      target.setPresetField("x", Math.round(x));
+      if (value === "top" || value === "mid-v" || value === "btm") {
+        const y = anchorPositionY(value === "mid-v" ? "mid" : value, size && size.height);
+        target.setPresetField("y", Math.round(y));
+      } else {
+        // anchorPositionX's third argument is the align mode: stage.css shifts the box by a
+        // fraction of its own width depending on align, and the edge-flush x has to compensate.
+        const x = anchorPositionX(value === "mid-h" ? "mid" : value, size && size.width, target.getPreset().align);
+        target.setPresetField("x", Math.round(x));
+      }
       target.rerenderPanel();
     });
 
@@ -77,8 +83,7 @@ window.StyleSection = window.StyleSection || {};
       // UI.buttonGroup marks the clicked button pressed even when the group has no active value.
       // The old code cleared that by rebuilding the group on every panel render; a build-once
       // section has to clear it here, or a clicked anchor cell stays lit.
-      setRowActive(null);
-      setColActive(null);
+      setActive(null);
     }
 
     render();

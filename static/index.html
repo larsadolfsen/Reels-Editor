@@ -226,15 +226,6 @@
           <div id="caption-box-body">
 
             <div class="style-group">
-              <div class="style-row">
-                <label id="caption-box-width-field"></label>
-                <label id="caption-box-height-field"></label>
-              </div>
-            </div>
-
-            <div id="caption-box-width-height-divider"></div>
-
-            <div class="style-group">
               <div id="caption-box-background-row" class="col-8"></div>
             </div>
 
@@ -242,24 +233,7 @@
               <div id="caption-box-border-row" class="col-8"></div>
             </div>
 
-            <div id="caption-box-border-position-divider"></div>
-
-            <div class="section-label-spacer text-eyebrow">TEXT ALIGN</div>
-            <div class="style-group">
-              <div id="caption-align-group"></div>
-            </div>
-
-            <div class="section-label-spacer text-eyebrow">POSITION</div>
-            <div class="style-group">
-              <div id="caption-position-group"></div>
-            </div>
-
-            <div class="style-group">
-              <div class="style-row">
-                <label id="caption-offset-x-field"></label>
-                <label id="caption-offset-y-field"></label>
-              </div>
-            </div>
+            <div id="caption-box-shared-body"></div>
 
           </div>
 
@@ -603,19 +577,6 @@
 
         <div id="text-box-body">
 
-          <div class="section-label-spacer text-eyebrow">SIZE</div>
-          <div class="style-group">
-            <div id="text-box-size-mode-group"></div>
-          </div>
-          <div class="style-group">
-            <div class="style-row">
-              <label id="text-box-width-field"></label>
-              <label id="text-box-height-field"></label>
-            </div>
-          </div>
-
-          <div id="text-box-width-height-divider"></div>
-
           <div class="style-group">
             <div id="text-box-background-row" class="col-8"></div>
           </div>
@@ -624,24 +585,7 @@
             <div id="text-box-border-row" class="col-8"></div>
           </div>
 
-          <div id="text-box-border-position-divider"></div>
-
-          <div class="section-label-spacer text-eyebrow">TEXT ALIGN</div>
-          <div class="style-group">
-            <div id="text-align-group"></div>
-          </div>
-
-          <div class="section-label-spacer text-eyebrow">POSITION</div>
-          <div class="style-group">
-            <div id="position-group"></div>
-          </div>
-
-          <div class="style-group">
-            <div class="style-row">
-              <label id="text-offset-x-field"></label>
-              <label id="text-offset-y-field"></label>
-            </div>
-          </div>
+          <div id="text-box-shared-body"></div>
 
         </div>
 
@@ -786,6 +730,7 @@
 <script src="/static/style-section-outline.js"></script>
 <script src="/static/style-section-shadow.js"></script>
 <script src="/static/style-section-highlight.js"></script>
+<script src="/static/style-section-spotlight.js"></script>
 <script src="/static/style-section-box.js"></script>
 <script src="/static/style-section-align.js"></script>
 <script src="/static/style-section-position.js"></script>
@@ -809,7 +754,6 @@
 <script src="/static/api-delete-preset.js"></script>
 <script src="/static/text-case.js"></script>
 <script src="/static/caption-panel-style.js"></script>
-<script src="/static/caption-panel-box.js"></script>
 <script src="/static/caption-panel-background.js"></script>
 <script src="/static/caption-panel-border.js"></script>
 <script src="/static/caption-panel-words.js"></script>
@@ -824,8 +768,6 @@
 <script src="/static/text-panel-background.js"></script>
 <script src="/static/text-panel-border.js"></script>
 <script src="/static/text-panel-style.js"></script>
-<script src="/static/text-panel-align.js"></script>
-<script src="/static/text-panel-position.js"></script>
 <script src="/static/text-panel-time.js"></script>
 <script src="/static/panel-projects.js"></script>
 <script src="/static/ui-text-interaction.js"></script>
