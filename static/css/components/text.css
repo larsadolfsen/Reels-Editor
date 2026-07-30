@@ -1,0 +1,27 @@
+/* Shared typography component: eyebrow section labels, form-field labels, hints, body text. */
+/* Exposes .text-eyebrow/.text-label/.text-hint/.text-body. Built by static/ui-text.js. Depends on tokens.css. */
+.text-eyebrow {
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-wider);
+  color: var(--text-muted);
+}
+
+.text-label {
+  font-family: var(--font-ui);
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--ls-wide);
+  color: var(--text-dim);
+}
+
+.text-hint {
+  font-family: var(--font-content);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.text-body {
+  font-family: var(--font-content);
+  font-size: var(--fs-md);
+  color: var(--text);
+}
