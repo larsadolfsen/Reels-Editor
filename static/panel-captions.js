@@ -114,8 +114,9 @@ const captionDesignTab = StyleTab.design(
     // A caption track has no single heading to preview — its text is a per-word transcript spread
     // across pages — so the Weight list shows the fixed sample caption-panel-font-weight.js used.
     sampleText: () => "kind of insane",
-    // CAPTIONS gets the karaoke MODE group inside the Highlight subpage; TEXT does not.
-    highlightModes: true,
+    // CAPTIONS gets an extra Spotlight section (per-word karaoke mode) after Highlight; TEXT
+    // has no per-word karaoke, so it doesn't render one at all.
+    spotlight: true,
   },
 );
 

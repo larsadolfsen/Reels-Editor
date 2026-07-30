@@ -4,7 +4,9 @@
 window.StyleTab = window.StyleTab || {};
 
 // The final order (master plan) is: fontFamily, fontWeight, size, emphasis, color, outline,
-// shadow, highlight — all eight sections now live here.
+// shadow, highlight, [spotlight]. spotlight (opts.spotlight, CAPTIONS-only) is the per-word
+// karaoke mode — a distinct feature from highlight's static box background that happens to share
+// its color/radius fields; see style-section-spotlight.js's header for why they're split.
 window.StyleTab.design = function design(container, target, options) {
   const opts = options || {};
 
@@ -27,8 +29,11 @@ window.StyleTab.design = function design(container, target, options) {
     StyleSection.color(sectionWrapper(), target, { host: opts.host }),
     StyleSection.outline(sectionWrapper(), target, { host: opts.host }),
     StyleSection.shadow(sectionWrapper(), target, { host: opts.host }),
-    StyleSection.highlight(sectionWrapper(), target, { host: opts.host, modes: !!opts.highlightModes }),
+    StyleSection.highlight(sectionWrapper(), target, { host: opts.host }),
   ];
+  if (opts.spotlight) {
+    sections.push(StyleSection.spotlight(sectionWrapper(), target, { host: opts.host }));
+  }
 
   return {
     // Returns a promise because fontWeight.render() awaits Api.listFontWeights; the panels await

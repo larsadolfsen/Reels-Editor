@@ -1,14 +1,21 @@
 // Shared Highlight style section for the TEXT and CAPTIONS Design tabs: a settings row
-// (swatch + "ON"/"OFF") plus a drill-down subpage holding the MARKER on/off toggle, the
-// colour and the corner radius — and, when options.modes is set (CAPTIONS), the karaoke MODE
-// group. highlight/highlight_color are FormatRun-capable (setField/getFieldValue);
-// highlight_mode/highlight_border_radius are not (setPresetField/getPreset).
+// (swatch + "ON"/"OFF") plus a drill-down subpage holding the on/off toggle, the colour and the
+// corner radius. Identical for both panels — an always-on background rect drawn behind the whole
+// block/caption box (_highlight_dialogues for TEXT, _caption_highlight_dialogue for CAPTIONS),
+// independent of CAPTIONS' separate per-word karaoke feature (see style-section-spotlight.js).
+// Before 2026-07-30 this file also carried CAPTIONS' karaoke MODE group under this same
+// "Highlight" row/label — split out because "highlight" on TEXT (a static box background) and
+// the old bundled behavior on CAPTIONS (that background PLUS a per-word karaoke mode) were not
+// actually the same feature, despite sharing one row. Spotlight now owns the MODE group; this
+// section owns only the on/off marker. The two features still share highlight_color/
+// highlight_border_radius by design (one rounded-rect recipe, two independent triggers for
+// drawing it) — not a data-model change, just two settings rows over the same fields.
+// highlight/highlight_color are FormatRun-capable (setField/getFieldValue);
+// highlight_border_radius is not (setPresetField/getPreset).
 window.StyleSection = window.StyleSection || {};
 
 window.StyleSection.highlight = function highlightSection(container, target, options) {
   const host = options.host;
-  // CAPTIONS only: the three karaoke modes. TEXT has no per-word karaoke, so no MODE group.
-  const modes = !!options.modes;
 
   // Built once, in the factory. render() only ever calls the setValue updater captured below.
   const group = document.createElement("div");
@@ -44,37 +51,13 @@ window.StyleSection.highlight = function highlightSection(container, target, opt
   }
 
   const page = host.page("Highlight", (bodyEl) => {
-    // MODE and RADIUS are whole-preset only, so they read the preset directly.
     const preset = target.getPreset();
-
-    // The MARKER/MODE labels only earn their keep when there are two groups to tell apart;
-    // with just the toggle, the subpage's own "Highlight" header already names it.
-    if (modes) {
-      const markerLabel = document.createElement("div");
-      markerLabel.className = "section-label-spacer";
-      UI.text(markerLabel, { variant: "eyebrow", content: "MARKER" });
-      bodyEl.appendChild(markerLabel);
-    }
 
     const toggleGroup = document.createElement("div");
     toggleGroup.className = "style-group";
     const toggleEl = document.createElement("div");
     toggleGroup.appendChild(toggleEl);
     bodyEl.appendChild(toggleGroup);
-
-    let modeEl = null;
-    if (modes) {
-      const modeLabel = document.createElement("div");
-      modeLabel.className = "section-label-spacer";
-      UI.text(modeLabel, { variant: "eyebrow", content: "MODE" });
-      bodyEl.appendChild(modeLabel);
-
-      const modeGroup = document.createElement("div");
-      modeGroup.className = "style-group";
-      modeEl = document.createElement("div");
-      modeGroup.appendChild(modeEl);
-      bodyEl.appendChild(modeGroup);
-    }
 
     const colorGroup = document.createElement("div");
     colorGroup.className = "style-group";
@@ -88,15 +71,9 @@ window.StyleSection.highlight = function highlightSection(container, target, opt
 
     bodyEl.append(colorGroup, radiusGroup);
 
-    // One shared visibility rule for both panels: a detail field shows exactly when the value
-    // it edits can affect what renders. The colour paints the marker rect whenever the marker
-    // is on, and additionally paints the karaoke word in every mode — so it is always live
-    // where modes exist. The radius only matters where a rounded rect is drawn: the marker
-    // rect, or "background" mode's per-word rect. On TEXT, highlight_mode is never
-    // "background", so both reduce to the old !preset.highlight rule.
     function syncFields() {
-      colorField.hidden = !(isOn() || modes);
-      radiusField.hidden = !(isOn() || target.getPreset().highlight_mode === "background");
+      colorField.hidden = !isOn();
+      radiusField.hidden = !isOn();
     }
 
     UI.buttonGroup(toggleEl,
@@ -107,18 +84,6 @@ window.StyleSection.highlight = function highlightSection(container, target, opt
         syncFields();
         refreshRow();
       });
-
-    if (modeEl) {
-      UI.buttonGroup(modeEl,
-        [{ value: "current_word", label: "Current word", span: 4 },
-         { value: "progressive_fill", label: "Progressive fill", span: 4 },
-         { value: "background", label: "Background", span: 8 }],
-        preset.highlight_mode,
-        (value) => {
-          target.setPresetField("highlight_mode", value);
-          syncFields();
-        });
-    }
 
     UI.colorSwatch(colorField, {
       label: "Highlight", value: colorValue(), span: 8,
