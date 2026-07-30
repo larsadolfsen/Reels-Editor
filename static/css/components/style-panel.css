@@ -226,7 +226,6 @@
    size mode, etc.) keep the default text-label sizing.
    .style-align-group is StyleSection.align's own group element; the two id selectors are the
    hand-written TEXT/CAPTIONS markup it replaces and are dropped as each panel is migrated. */
-#text-align-group button,
 #caption-align-group button,
 .style-align-group button {
   width: 28px;

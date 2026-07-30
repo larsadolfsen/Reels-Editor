@@ -166,9 +166,7 @@ async function renderTextPanel() {
 
   await textDesignTab.render();
   TextPanel.renderStyle();
-  renderBoxPanel();
-  TextPanel.renderAlign();
-  TextPanel.renderPosition();
+  renderBoxTab();
   TextPanel.renderTime();
 
   renderTextPreview();
@@ -192,35 +190,20 @@ async function renderTextPanel() {
   });
 }
 
-function renderBoxPanel() {
-  const preset = ensureTextPreset(currentTextBlock().preset_id);
+// The Box tab now renders as: existing Background/Border settings-row + subpage UI (unchanged,
+// predates this refactor), then the shared StyleTab.box sections (SIZE/WIDTH/HEIGHT, TEXT
+// ALIGN, POSITION) mounted into #text-box-shared-body. Built lazily — #text-box-shared-body
+// only has anything to show once a text block exists, and Preview/project are not defined yet
+// when this file loads.
+let textBoxTab = null;
 
-  UI.buttonGroup(document.getElementById("text-box-size-mode-group"),
-    [{ value: "fit", label: "FIT", span: 3 }, { value: "fixed", label: "FREE", span: 2 }, { value: "fill", label: "FILL", span: 3 }],
-    preset.box_width_mode,
-    (value) => {
-      preset.box_width_mode = value;
-      preset.box_height_mode = value;
-      renderTextPreview(); saveProject(); renderBoxPanel();
-    });
-
-  // WIDTH/HEIGHT fields are needed by both FREE (manual fixed size) and FILL (fixed size that
-  // auto-fits text) — only FIT (box sizes to content) has no use for them.
-  const boxSizeFieldsHidden = preset.box_width_mode === "fit";
-  document.getElementById("text-box-width-field").hidden = boxSizeFieldsHidden;
-  document.getElementById("text-box-height-field").hidden = boxSizeFieldsHidden;
-
-  UI.numberField(document.getElementById("text-box-width-field"),
-    { label: "WIDTH", unit: "PX", value: preset.box_width, min: 1, max: 1080, span: 4,
-      onChange: (v) => { preset.box_width = v; renderTextPreview(); saveProject(); } });
-
-  UI.numberField(document.getElementById("text-box-height-field"),
-    { label: "HEIGHT", unit: "PX", value: preset.box_height, min: 1, max: 1920, span: 4,
-      onChange: (v) => { preset.box_height = v; renderTextPreview(); saveProject(); } });
-
+function renderBoxTab() {
   TextPanel.renderBackground();
-
   TextPanel.renderBorder();
+  if (!textBoxTab) {
+    textBoxTab = StyleTab.box(document.getElementById("text-box-shared-body"), textStyleTarget, { sizeModes: true });
+  }
+  textBoxTab.render();
 }
 
 function stageScale() {
@@ -248,7 +231,7 @@ async function handleBoxResizeEnd(preset, { width, height }) {
   preset.box_height = Math.round(height * scale);
   renderTextPreview(); // re-triggers FILL's refit against the new box dimensions, must run before save so the fitted size_px persists
   await saveProject();
-  renderBoxPanel();
+  renderBoxTab();
 }
 
 function handleBoxMove(preset, { dx, dy }) {
@@ -316,9 +299,6 @@ const textDesignTab = StyleTab.design(
     compactSizeRow: true,
   },
 );
-
-UI.divider(document.getElementById("text-box-width-height-divider"));
-UI.divider(document.getElementById("text-box-border-position-divider"));
 
 document.getElementById("text-add-block-btn").addEventListener("click", () => addTextBlockAndEdit());
 document.getElementById("text-delete").addEventListener("click", () => deleteSelectedTextBlock());
