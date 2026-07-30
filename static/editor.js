@@ -148,7 +148,6 @@ ImageBoxPreview.setOnActivate((boxId) => {
   ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
 });
 
-UI.toolbar(document.getElementById("toolbar"));
 UI.safeZones(document.getElementById("safe-zones"));
 
 function setSafeZonesVisible(visible) {
