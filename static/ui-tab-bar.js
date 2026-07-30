@@ -16,6 +16,7 @@ window.UI.tabBar = function tabBar(container, tabs, activeValue, onSelect) {
     btn.className = "tab-bar-btn";
     btn.setAttribute("role", "tab");
     btn.setAttribute("aria-label", label);
+    btn.title = label;
     btn.setAttribute("aria-selected", String(value === activeValue));
     btn.dataset.value = value;
     btn.innerHTML = icon;
