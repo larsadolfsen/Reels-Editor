@@ -29,5 +29,5 @@
 
 .accordion-body {
   padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: var(--border-width) solid var(--border-soft);
 }

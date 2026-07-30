@@ -9,7 +9,7 @@
   padding: 0 4px;
   border-radius: var(--radius-sm);
   background: var(--bg-1);
-  border: 1px solid var(--border-soft);
+  border: var(--border-width) solid var(--border-soft);
   color: var(--text-dim);
   font-family: var(--font-ui);
   font-size: var(--fs-2xs);
@@ -27,7 +27,7 @@
   height: auto;
   padding: 3px 7px;
   background: var(--surface);
-  border-color: var(--border);
+  border-color: var(--border-color);
   box-shadow: var(--shadow-chip);
   color: var(--text-secondary);
   font-weight: 600;
@@ -46,7 +46,7 @@
   height: auto;
   padding: 2px 5px;
   background: transparent;
-  border-color: var(--border);
+  border-color: var(--border-color);
   color: var(--text);
   line-height: 1.4;
   letter-spacing: var(--ls-tight);

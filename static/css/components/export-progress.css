@@ -2,7 +2,7 @@
 .export-progress {
   height: 6px;
   border-radius: var(--radius-sm);
-  background: var(--border);
+  background: var(--border-color);
   overflow: hidden;
   margin: 8px 0;
 }
