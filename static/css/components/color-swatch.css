@@ -7,6 +7,8 @@
   align-items: center;
 }
 
+.color-swatch-row[hidden] { display: none; }
+
 .color-swatch {
   width: 28px;
   height: 28px;
