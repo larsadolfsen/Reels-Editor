@@ -32,7 +32,13 @@ window.StyleSection.outline = function outlineSection(container, target, options
     onClick: () => page.open(),
   });
 
-  function refreshRow() { setRowValue(widthText(), null, colorValue()); }
+  // target.exists() guards the closeAll()-triggered call: closeAll() fires this subpage's
+  // onClose even when the panel is about to show its own empty state (e.g. the block was
+  // just deleted while this subpage was open) — nothing to refresh in that case.
+  function refreshRow() {
+    if (!target.exists()) return;
+    setRowValue(widthText(), null, colorValue());
+  }
 
   // StylePanelHost rebuilds the body on every open(), so building the fields here — rather
   // than in render() — is what keeps the subpage in step with the current preset.

@@ -35,7 +35,11 @@ window.StyleSection.highlight = function highlightSection(container, target, opt
     onClick: () => page.open(),
   });
 
+  // target.exists() guards the closeAll()-triggered call: closeAll() fires this subpage's
+  // onClose even when the panel is about to show its own empty state (e.g. the block was
+  // just deleted while this subpage was open) — nothing to refresh in that case.
   function refreshRow() {
+    if (!target.exists()) return;
     setRowValue(isOn() ? "ON" : "OFF", null, isOn() ? colorValue() : null);
   }
 
