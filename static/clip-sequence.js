@@ -10,7 +10,9 @@
 // media_id/file_path/in_point/out_point (a video box or a media-library drag): if the
 // drop point lands inside an existing clip, that clip splits into two (same media, trimmed
 // halves) with the new clip inserted between them; otherwise it inserts at the nearest clip
-// boundary. Mutates project.clips in place; returns the new clip.
+// boundary. Shifts any project.captions.words at/after dropTime later by the inserted clip's
+// duration, so existing captions stay aligned with the clips they were on (see
+// caption-clip-sync.js). Mutates project.clips in place; returns the new clip.
 function insertClipIntoSequence(source, dropTime) {
   const ordered = [...project.clips].sort((a, b) => a.order - b.order);
   let acc = 0;
@@ -64,6 +66,12 @@ function insertClipIntoSequence(source, dropTime) {
     speed: source.speed || 1,
   };
   project.clips.push(newClip);
+
+  const insertedDuration = (newClip.out_point - newClip.in_point) / (newClip.speed || 1);
+  if (project.captions) {
+    project.captions.words = CaptionClipSync.shiftCaptionsAfterEdit(project.captions.words, dropTime, 0, insertedDuration);
+  }
+
   return newClip;
 }
 
