@@ -26,8 +26,9 @@
 // render()'s 5th `actions = {}` param ({ onAddClip }) renders a small dashed "+" button
 // after the VIDEO row's clip sequence (at x=0 when empty), giving a visible way to add a
 // clip beyond the console. TEXT blocks are added via the left icon rail's TEXT entry instead
-// (see panel-nav.js); TEXT-row blocks instead render a right-edge resize handle (`resizable`
-// option on addBlock, dataset.blockId set on each block) driven by timeline-text-resize.js.
+// (see panel-nav.js); TEXT-row and IMAGE BOX lanes instead render a right-edge resize handle
+// (`resizable` option on addBlock, dataset.blockId set on each block) driven by
+// timeline-text-resize.js / timeline-image-resize.js respectively.
 // Exposes window.Timeline.{render, groupWords, timeAtX, tick, resetZoom, PX_PER_SEC}.
 // PX_PER_SEC is a live getter reflecting the current zoom level (see the header comment
 // above for the zoom scale itself). tick() is a cheap playhead-only update driven every
@@ -248,12 +249,12 @@ window.Timeline = (() => {
     }
   }
 
-  // Merges TEXT blocks + VIDEO BOX layers into one z_index-ordered stack of 44px lanes
-  // inside #row-overlays (top = highest z_index = frontmost), replacing the old separate
+  // Merges TEXT blocks + VIDEO BOX + IMAGE BOX layers into one z_index-ordered stack of 44px
+  // lanes inside #row-overlays (top = highest z_index = frontmost), replacing the old separate
   // TEXT/VIDEO BOX rows. Each lane still renders its item exactly as before (time-positioned
-  // block, resize handle for text, drag-to-timeline for video boxes) — only the vertical
-  // grouping/order changed. #label-overlays gets one "TEXT"/"VIDEO BOX" label per lane,
-  // height-matched to its lane. Reordering (drag handle) is wired in
+  // block, resize handle for text/image boxes, drag-to-timeline for video boxes) — only the
+  // vertical grouping/order changed. #label-overlays gets one "TEXT"/"VIDEO BOX"/"IMAGE BOX"
+  // label per lane, height-matched to its lane. Reordering (drag handle) is wired in
   // static/timeline-overlay-layer-drag.js via OverlayLayers.mergedEntries/renumber.
   function renderOverlaysRow(project, px, selected, onSelect) {
     const entries = OverlayLayers.mergedEntries(project);
@@ -299,7 +300,8 @@ window.Timeline = (() => {
         const isSel = !!selected && selected.type === "image-box" && !!selected.item && selected.item.id === b.id;
         const name = b.file_path.split(/[\\/]/).pop();
         addBlock(laneTrack, b.start * px, b.duration * px, name, isSel,
-          () => onSelect({ type: "image-box", item: b }));
+          () => onSelect({ type: "image-box", item: b }), { resizable: true });
+        laneTrack.lastElementChild.dataset.blockId = b.id;
       }
     }
   }
