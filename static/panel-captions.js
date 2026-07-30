@@ -75,7 +75,7 @@ async function renderCaptionPanel() {
 
   ensureCaptionTrack();
 
-  CaptionPanel.renderStyle();
+  captionStyleTab.render();
   await captionDesignTab.render();
   renderCaptionBoxTab();
   CaptionPanel.renderFillerWords();
@@ -132,3 +132,7 @@ const captionDesignTab = StyleTab.design(
     spotlight: true,
   },
 );
+
+// Style tab: built once against the same caption style target the Design/Box tabs use, then
+// re-rendered on every renderCaptionPanel() call. Same file as the TEXT panel's Style tab.
+const captionStyleTab = StyleTab.styleLibrary(document.getElementById("caption-style-body"), captionStyleTarget, {});

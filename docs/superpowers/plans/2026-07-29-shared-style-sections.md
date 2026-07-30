@@ -12,12 +12,12 @@
 
 **Batch files:**
 
-- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-1.md` — Foundation
-- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-2.md` — Font family & weight
-- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-3.md` — Size, emphasis, color
-- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-4.md` — Outline, shadow, highlight
-- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-5.md` — Box tab
-- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-6.md` — Style tab & cleanup
+- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-1.md` — Foundation ✅
+- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-2.md` — Font family & weight ✅
+- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-3.md` — Size, emphasis, color ✅
+- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-4.md` — Outline, shadow, highlight ✅
+- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-5.md` — Box tab ✅
+- `docs/superpowers/plans/2026-07-29-shared-style-sections-batch-6.md` — Style tab & cleanup ✅
 
 ---
 
