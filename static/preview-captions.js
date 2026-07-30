@@ -1,11 +1,12 @@
 // Stage caption overlay rendering: paginates project.captions.words via CaptionLayout.paginateWords
 // (word-wrap by the caption box's fixed width, line-pagination by its fixed height), finds the
 // page active at a given timelineTime, and renders it as one .caption-block div containing one
-// .caption-line div per line, each with per-word highlight color per preset.highlight_mode.
-// preset.highlight (an always-on background behind visible text) and highlight_mode "background"
-// (per-word active background) both paint a per-line/per-word tight background — equal HIGHLIGHT_PAD_EM
-// padding on all 4 sides around a line-height:1 wrapper, hugging the actual rendered text rather than
-// the caption's fixed box, mirroring app/ass_render.py's _caption_highlight_dialogues/_background_word_dialogues.
+// .caption-line div per line. preset.highlight (an always-on background behind visible text) and
+// the active word's own spotlight_color/spotlight_outline*/spotlight_shadow*/spotlight_highlight*
+// (per-word karaoke styling, off in highlight_mode "off", outline/shadow only in "current_word")
+// both paint per-line/per-word tight backgrounds — equal HIGHLIGHT_PAD_EM padding on all 4 sides
+// around a line-height:1 wrapper, hugging the actual rendered text rather than the caption's fixed
+// box, mirroring app/ass_render.py's _caption_highlight_dialogues/_active_word_highlight_dialogues.
 // Memoizes the paginated pages per (words, box size, font) so a full re-measure only happens when
 // something relevant actually changed — mirrors preview-text.js's fitCache pattern. Case styling
 // (preset.text_case): displayed via CSS text-transform, paginated using a measurer wrapped through
@@ -105,22 +106,26 @@ window.PreviewCaptions = (() => {
       lineContentWrap.style.lineHeight = "1";
       line.forEach((word, i) => {
         const span = document.createElement("span");
-        let isHighlighted;
-        if (preset.highlight_mode === "progressive_fill") {
-          isHighlighted = timelineTime >= word.t_start;
-        } else {
-          isHighlighted = timelineTime >= word.t_start && timelineTime < word.t_end;
-        }
-        if (preset.highlight_mode === "background") {
-          span.style.color = preset.color;
-          span.style.backgroundColor = isHighlighted ? preset.highlight_color : "transparent";
-          span.style.borderRadius = isHighlighted ? highlightRadiusPx : "0";
-          span.style.padding = isHighlighted ? `${highlightPadPx}px` : "0";
+        const isActive = preset.highlight_mode === "progressive_fill"
+          ? timelineTime >= word.t_start
+          : timelineTime >= word.t_start && timelineTime < word.t_end;
+        const spotlightOn = isActive && preset.highlight_mode !== "off";
+        span.style.color = spotlightOn ? preset.spotlight_color : preset.color;
+        span.style.webkitTextStroke = (spotlightOn && preset.highlight_mode === "current_word" && preset.spotlight_outline_px > 0)
+          ? `${preset.spotlight_outline_px / 1920 * stageH}px ${preset.spotlight_outline_color}`
+          : "";
+        span.style.textShadow = (spotlightOn && preset.highlight_mode === "current_word" && preset.spotlight_shadow)
+          ? `${preset.spotlight_shadow_offset_x / 1920 * stageH}px ${preset.spotlight_shadow_offset_y / 1920 * stageH}px ${preset.spotlight_shadow_blur / 1920 * stageH}px ${preset.spotlight_shadow_color}`
+          : "none";
+        if (spotlightOn && preset.spotlight_highlight) {
+          span.style.backgroundColor = preset.spotlight_highlight_color;
+          span.style.borderRadius = (preset.spotlight_highlight_border_radius / 1920 * stageH) + "px";
+          span.style.padding = `${highlightPadPx}px`;
           span.style.lineHeight = "1";
         } else {
-          span.style.color = isHighlighted ? preset.highlight_color : preset.color;
           span.style.backgroundColor = "transparent";
           span.style.borderRadius = "0";
+          span.style.padding = "0";
         }
         span.textContent = word.text + (i < line.length - 1 ? " " : "");
         lineContentWrap.appendChild(span);
