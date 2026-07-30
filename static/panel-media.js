@@ -24,6 +24,8 @@ window.MediaPanel = window.MediaPanel || {};
 
   const MUTED_ICON_SVG = UI.icon("volume-x", { size: 11 });
 
+  UI.contextPanelHeader(document.getElementById("panel-files-header"), { icon: UI.icon("file", { size: 18 }), label: "Files" });
+
   let activeMediaFilter = "all"; // "all" | "video" | "image" | "audio" — files-icons-tab feature
   let typeTabsBuilt = false;
 
