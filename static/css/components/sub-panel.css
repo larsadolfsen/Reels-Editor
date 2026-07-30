@@ -1,5 +1,5 @@
 /* Drill-down sub-panel: back-arrow + title header, plus the font-selection list it hosts. */
-/* Exposes .sub-panel-header/.sub-panel-back/.font-list/.font-list-row/.font-list-row-name/.font-list-row-time/.font-list-checkmark/.font-list-divider/.font-weight-row-content/.font-weight-row-preview. Depends on tokens.css, button.css, divider.css. */
+/* Exposes .sub-panel-header/.sub-panel-back/.font-list/.font-list-row/.font-list-row-name/.font-list-row-name-group/.filler-word-warning-icon/.font-list-row-time/.font-list-checkmark/.font-list-divider/.font-weight-row-content/.font-weight-row-preview. Depends on tokens.css, button.css, divider.css. */
 .sub-panel-header {
   display: flex;
   align-items: center;
@@ -52,6 +52,14 @@
   align-items: center;
   gap: var(--space-1);
   overflow: hidden;
+}
+
+/* Decorative status icon inside a .font-list-row-name-group (e.g. the filler-words tab's
+   "found in transcript" warning) — not a button, so it isn't UI.button; same non-interactive
+   icon-indicator convention as style-panel.css's .clip-audio-muted-icon. */
+.filler-word-warning-icon {
+  display: inline-flex;
+  color: var(--text-muted);
 }
 
 .font-list-row-time {

@@ -1,5 +1,5 @@
 /* Shared button component: 2 sizes x 4 intents, built by static/ui-button.js. */
-/* Exposes .button, .button-sm/-md, .button-neutral/-accent/-danger/-dashed, .button-pressed, .button-disabled. Depends on tokens.css. */
+/* Exposes .button, .button-sm/-md, .button-neutral/-accent/-danger/-dashed, .button-pressed, .button-disabled, .button[aria-pressed="true"]. Depends on tokens.css. */
 .button {
   display: inline-flex;
   align-items: center;
@@ -31,6 +31,21 @@
 .button-dashed:hover { color: var(--text); border-color: var(--border-hover-color); border-width: var(--border-hover-width); }
 
 .button-pressed { border-color: var(--accent); color: var(--text); background: var(--accent-tint); }
+
+/* Some callers (editor.js's setSafeZonesVisible/setStylePanelCollapsed, ui-toolbar.js's
+   ToolMode.onChange) toggle a button's pressed state at RUNTIME by calling
+   btn.setAttribute("aria-pressed", ...) directly against the built element, rather than
+   re-invoking UI.button (whose `pressed` option only sets the initial .button-pressed class at
+   creation time, per Task 14's design). This attribute selector — added by Task 16 when it
+   migrated .icon-btn sites (button-group.css's old .icon-btn[aria-pressed="true"] rule) onto
+   this component — mirrors .button-pressed exactly so those runtime toggles stay visually
+   reactive after migration; without it, e.g. the top toolbar's Select/Text tool indicator would
+   show no visual difference between the active and inactive tool. */
+.button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--accent-tint);
+}
 
 .button-disabled,
 .button:disabled {

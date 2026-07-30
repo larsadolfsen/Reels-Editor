@@ -55,8 +55,11 @@ window.CaptionPanel = window.CaptionPanel || {};
       nameGroup.appendChild(nameEl);
 
       if (wordFoundInTranscript(word)) {
+        // Decorative status icon, not a clickable control — no onClick, so it stays a plain
+        // <span> rather than a UI.button, same convention as panel-media.js's
+        // .clip-audio-muted-icon indicator.
         const warnIcon = document.createElement("span");
-        warnIcon.className = "icon-btn";
+        warnIcon.className = "filler-word-warning-icon";
         warnIcon.title = "Found in transcript";
         warnIcon.innerHTML = UI.icon("message-circle-warning", { size: 14 });
         nameGroup.appendChild(warnIcon);
@@ -64,13 +67,12 @@ window.CaptionPanel = window.CaptionPanel || {};
 
       li.appendChild(nameGroup);
 
-      const trashBtn = document.createElement("button");
-      trashBtn.type = "button";
-      trashBtn.className = "icon-btn";
+      const trashBtn = UI.button(li, {
+        icon: "trash",
+        size: "sm",
+        onClick: () => removeFillerWord(word),
+      });
       trashBtn.title = "Remove";
-      trashBtn.innerHTML = UI.icon("trash", { size: 14 });
-      trashBtn.addEventListener("click", () => removeFillerWord(word));
-      li.appendChild(trashBtn);
 
       listEl.appendChild(li);
     });

@@ -5,9 +5,6 @@
 window.StyleSection = window.StyleSection || {};
 
 (() => {
-  const ITALIC_ICON = UI.icon("italic", { size: 16 });
-  const UNDERLINE_ICON = UI.icon("underline", { size: 16 });
-
   // Copied verbatim — SVG paths included — from text-panel-case.js, which caption-panel-case.js
   // held a byte-identical second copy of. This is now the only copy.
   const CASE_OPTIONS = [
@@ -25,14 +22,12 @@ window.StyleSection = window.StyleSection || {};
     },
   ];
 
-  function toggleButton(icon, label) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "icon-btn col-1";
+  function toggleButton(container, icon, label) {
+    const btn = UI.button(container, { icon, size: "sm" });
     btn.title = label;
     btn.setAttribute("aria-label", label);
     btn.setAttribute("aria-pressed", "false");
-    btn.innerHTML = icon;
+    btn.classList.add("col-1");
     return btn;
   }
 
@@ -44,16 +39,17 @@ window.StyleSection = window.StyleSection || {};
     row.className = "style-row";
     group.appendChild(row);
 
-    const italicBtn = toggleButton(ITALIC_ICON, "Italic");
-    const underlineBtn = toggleButton(UNDERLINE_ICON, "Underline");
+    // UI.button appends to its container immediately, so build directly into `row` in visual
+    // order rather than creating all children then appending.
+    const italicBtn = toggleButton(row, "italic", "Italic");
+    const underlineBtn = toggleButton(row, "underline", "Underline");
 
     // .btn-group-inline is display:contents, so UI.buttonGroup's three buttons become direct
     // grid items of THIS .style-row and sit beside the two toggles instead of opening their
     // own grid one row below. This is the resolved layout; CAPTIONS gains it here.
     const caseGroupEl = document.createElement("div");
     caseGroupEl.className = "btn-group-inline";
-
-    row.append(italicBtn, underlineBtn, caseGroupEl);
+    row.appendChild(caseGroupEl);
     container.appendChild(group);
 
     // Built ONCE, same rule as the SIZE field: UI.buttonGroup wipes its container.

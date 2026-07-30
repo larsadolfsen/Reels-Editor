@@ -132,75 +132,75 @@ window.MediaPanel = window.MediaPanel || {};
     const actions = document.createElement("div");
     actions.className = "clip-actions";
 
-    const addBtn = document.createElement("button");
-    addBtn.type = "button";
-    addBtn.className = "icon-btn clip-action";
+    const addBtn = UI.button(actions, {
+      icon: "plus",
+      size: "sm",
+      onClick: async (e) => {
+        e.stopPropagation();
+        if (m.kind === "image") {
+          const box = await ImageBoxPanel.createImageBox(m);
+          await saveProject();
+          // Routed through onTimelineSelect (panel-nav.js) rather than calling showPanel/render
+          // directly, so it also sets `selected` (editor.js) to this box — otherwise the timeline
+          // highlight, a following Delete keypress, and undo/redo's reRenderAfterRestore would all
+          // keep targeting whatever was selected before this click (or nothing).
+          await onTimelineSelect({ type: "image-box", item: box });
+          // onTimelineSelect's image-box branch only calls ImageBoxPanel.render(), whose
+          // ImageBoxPreview.setSelectedImageBox() call alone only updates which box is selected, it
+          // doesn't itself trigger a render pass (same gap documented on ImageBoxPreview.setOnActivate
+          // in editor.js) — without this, the new box never mounts into #overlay, so it renders
+          // invisibly with no resize handles until the next unrelated stage render.
+          ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+        } else if (m.kind === "audio") {
+          // Mirrors static/panel-audio.js's addMusic()/replaceMusic() — one music track only (v1),
+          // so this always replaces any existing Project.music rather than erroring or disabling.
+          project.music = { id: crypto.randomUUID().replaceAll("-", ""), media_id: m.id, volume: 0.3, muted: false };
+          await saveProject();
+          // PreviewAudio's module-level `music` state (static/preview-audio.js) is only ever set
+          // inside PreviewAudio.load(project) — without this, PreviewAudio.play() silently no-ops
+          // even though Project.music is now correctly set (bug found in final review).
+          Preview.load(project);
+          openAudioPanel(); // panel-nav.js: sets `selected = { type: "audio" }`, opens the panel, re-renders the timeline
+        } else {
+          await appendMediaClipToSequence(m);
+          MediaPanel.render(); // refresh this row's trash button — it's now disabled, the media is in use
+        }
+      },
+    });
     addBtn.title = m.kind === "image" ? "Add as image box" : m.kind === "audio" ? "Add audio" : "Add to timeline";
-    addBtn.innerHTML = UI.icon("plus", { size: 14 });
-    addBtn.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      if (m.kind === "image") {
-        const box = await ImageBoxPanel.createImageBox(m);
-        await saveProject();
-        // Routed through onTimelineSelect (panel-nav.js) rather than calling showPanel/render
-        // directly, so it also sets `selected` (editor.js) to this box — otherwise the timeline
-        // highlight, a following Delete keypress, and undo/redo's reRenderAfterRestore would all
-        // keep targeting whatever was selected before this click (or nothing).
-        await onTimelineSelect({ type: "image-box", item: box });
-        // onTimelineSelect's image-box branch only calls ImageBoxPanel.render(), whose
-        // ImageBoxPreview.setSelectedImageBox() call alone only updates which box is selected, it
-        // doesn't itself trigger a render pass (same gap documented on ImageBoxPreview.setOnActivate
-        // in editor.js) — without this, the new box never mounts into #overlay, so it renders
-        // invisibly with no resize handles until the next unrelated stage render.
-        ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
-      } else if (m.kind === "audio") {
-        // Mirrors static/panel-audio.js's addMusic()/replaceMusic() — one music track only (v1),
-        // so this always replaces any existing Project.music rather than erroring or disabling.
-        project.music = { id: crypto.randomUUID().replaceAll("-", ""), media_id: m.id, volume: 0.3, muted: false };
-        await saveProject();
-        // PreviewAudio's module-level `music` state (static/preview-audio.js) is only ever set
-        // inside PreviewAudio.load(project) — without this, PreviewAudio.play() silently no-ops
-        // even though Project.music is now correctly set (bug found in final review).
-        Preview.load(project);
-        openAudioPanel(); // panel-nav.js: sets `selected = { type: "audio" }`, opens the panel, re-renders the timeline
-      } else {
-        await appendMediaClipToSequence(m);
-        MediaPanel.render(); // refresh this row's trash button — it's now disabled, the media is in use
-      }
-    });
-    actions.appendChild(addBtn);
+    addBtn.classList.add("clip-action");
 
-    const renameBtn = document.createElement("button");
-    renameBtn.type = "button";
-    renameBtn.className = "icon-btn clip-action";
-    renameBtn.title = "Rename";
-    renameBtn.innerHTML = UI.icon("pencil", { size: 14 });
-    renameBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      startRename(m, name);
+    const renameBtn = UI.button(actions, {
+      icon: "pencil",
+      size: "sm",
+      onClick: (e) => {
+        e.stopPropagation();
+        startRename(m, name);
+      },
     });
-    actions.appendChild(renameBtn);
+    renameBtn.title = "Rename";
+    renameBtn.classList.add("clip-action");
 
     const count = project.clips.filter((c) => c.media_id === m.id).length;
 
-    const trashBtn = document.createElement("button");
-    trashBtn.type = "button";
-    trashBtn.className = "icon-btn clip-action";
+    const trashBtn = UI.button(actions, {
+      icon: "trash",
+      size: "sm",
+      disabled: count > 0,
+      onClick: async (e) => {
+        e.stopPropagation();
+        if (count > 0) return;
+        project.media_library = project.media_library.filter((x) => x.id !== m.id);
+        await saveProject();
+        render();
+      },
+    });
     if (count > 0) {
-      trashBtn.disabled = true;
       trashBtn.title = `used by ${count} clip${count === 1 ? "" : "s"}`;
     } else {
       trashBtn.title = "Remove";
     }
-    trashBtn.innerHTML = UI.icon("trash", { size: 14 });
-    trashBtn.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      if (count > 0) return;
-      project.media_library = project.media_library.filter((x) => x.id !== m.id);
-      await saveProject();
-      render();
-    });
-    actions.appendChild(trashBtn);
+    trashBtn.classList.add("clip-action");
 
     li.appendChild(actions);
 
