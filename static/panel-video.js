@@ -163,16 +163,23 @@ UI.divider(document.getElementById("video-order-divider"));
 
   // Reindexes project.clips so `clipId` ends up at position `newIndex` (0-based, among clips
   // ordered by `.order`), renumbering every clip's `.order` to 0..n-1 gap-free. `newIndex` is
-  // clamped to the valid range. Shared by the VIDEO panel's move-up/down buttons and the
-  // timeline's drag-to-reorder gesture (static/timeline-clip-drag.js).
+  // clamped to the valid range. Re-times project.captions.words to follow their clips: each
+  // word shifts by its own owning clip's start delta (see caption-clip-sync.js), since a reorder
+  // is a non-monotonic permutation, not a single splice point. Shared by the VIDEO panel's
+  // move-up/down buttons and the timeline's drag-to-reorder gesture (static/timeline-clip-drag.js).
   async function moveClipTo(clipId, newIndex) {
     const list = [...project.clips].sort((a, b) => a.order - b.order);
     const from = list.findIndex((c) => c.id === clipId);
     if (from === -1) return;
     const clamped = Math.max(0, Math.min(newIndex, list.length - 1));
+    const oldRanges = CaptionClipSync.clipRanges(list);
     const [moved] = list.splice(from, 1);
     list.splice(clamped, 0, moved);
     list.forEach((c, i) => { c.order = i; });
+    if (project.captions) {
+      const newRanges = CaptionClipSync.clipRanges(list);
+      project.captions.words = CaptionClipSync.resyncCaptionsAfterReorder(project.captions.words, oldRanges, newRanges);
+    }
     await saveProject();
     Preview.load(project);
     renderTimeline();
