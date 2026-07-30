@@ -330,8 +330,7 @@ document.addEventListener("keydown", (e) => {
   if (inFormField || el.isContentEditable) return;
   if (mod && (e.key === "d" || e.key === "D")) {
     e.preventDefault();
-    if (selected && selected.type === "video") VideoPanel.duplicateClip(selected.item.id);
-    else if (selected && selected.type === "text") duplicateTextBlock(selected.item.id);
+    if (selected && selected.type === "text") duplicateTextBlock(selected.item.id);
     return;
   }
   if (e.key === "ArrowLeft") { e.preventDefault(); nudgeTime(-0.1); }
