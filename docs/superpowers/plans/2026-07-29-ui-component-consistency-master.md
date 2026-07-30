@@ -87,7 +87,7 @@ session convention — so anyone looking at the branch can see which batch is un
 | 1 — Tokens & CSS primitives | done |
 | 1b — UI.text | done |
 | 2 — UI.icon | done |
-| 3 — UI.button | in progress |
+| 3 — UI.button | done |
 | 4 — UI.safeZones | not started |
 
 ## Verification (run once, at the very end, after all batches)

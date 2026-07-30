@@ -67,7 +67,7 @@
   box-shadow: var(--shadow-chip);
 }
 
-.slice-icon-btn {
+.slice-icon-trigger {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,7 +76,7 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
-.slice-icon-btn:hover { background: var(--bg-2); }
+.slice-icon-trigger:hover { background: var(--bg-2); }
 
 #playhead-grip { cursor: grab; }
 #playhead-grip:active { cursor: grabbing; }
@@ -295,27 +295,13 @@
   z-index: 1;
 }
 
-/* + add button at the end of the VIDEO/TEXT row content */
-.row-add-btn {
+/* + add button at the end of the VIDEO/TEXT row content — layout only, visual styling
+   (border/color/hover) comes from UI.button's .button-sm.button-dashed classes. */
+.row-add-button {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   margin-left: 6px;
-  width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.row-add-btn:hover {
-  border-style: solid;
-  border-color: var(--accent);
-  color: var(--text);
 }
 
 /* Right-edge duration resize handle for TEXT-row blocks (static/timeline-text-resize.js).
@@ -374,8 +360,8 @@
 /* Visual-only disabled state at clip boundaries / empty timeline (static/timeline.js's
    updateSliceButton) — the click handler in timeline-slice.js already no-ops safely either
    way, this just communicates it. */
-.slice-icon-btn.disabled {
+.slice-icon-trigger.disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
-.slice-icon-btn.disabled:hover { background: none; }
+.slice-icon-trigger.disabled:hover { background: none; }

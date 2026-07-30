@@ -6,7 +6,6 @@
 <link rel="stylesheet" href="/static/css/components/list-row.css">
 <link rel="stylesheet" href="/static/css/components/button.css">
 <link rel="stylesheet" href="/static/css/components/text.css">
-<link rel="stylesheet" href="/static/css/components/panel-button.css">
 <link rel="stylesheet" href="/static/css/components/panel.css">
 <link rel="stylesheet" href="/static/css/components/stage.css">
 <link rel="stylesheet" href="/static/css/components/timeline.css">
@@ -86,10 +85,10 @@
           <div id="timeline-time"></div>
         </div>
         <div id="slice-btn" class="slice-btn">
-          <span id="playhead-grip" class="slice-icon-btn" title="Drag to move playhead">
+          <span id="playhead-grip" class="slice-icon-trigger" title="Drag to move playhead">
             <span data-icon="grip-vertical" data-icon-size="14"></span>
           </span>
-          <span id="slice-action" class="slice-icon-btn" title="Slice at playhead">
+          <span id="slice-action" class="slice-icon-trigger" title="Slice at playhead">
             <span data-icon="scissors" data-icon-size="14"></span>
           </span>
         </div>
@@ -391,7 +390,10 @@
         <div class="style-group">
           <div class="style-row">
             <span class="context-panel-name col-6">Theme</span>
-            <button id="theme-toggle" class="col-2" type="button" aria-pressed="false" title="Toggle light/dark theme">
+            <!-- Not a [data-button] hydration site: needs BOTH icons present at once (one hidden
+                 via .icon-hidden, toggled by editor.js's setTheme), same reason as #play-pause
+                 and #style-panel-collapse-toggle above. -->
+            <button id="theme-toggle" class="col-2 button button-sm button-neutral" type="button" aria-pressed="false" title="Toggle light/dark theme">
               <span class="icon-sun" data-icon="sun" data-icon-size="20"></span>
               <span class="icon-moon icon-hidden" data-icon="moon" data-icon-size="20"></span>
             </button>
@@ -413,7 +415,7 @@
         </div>
 
         <div class="style-group">
-          <button id="export" class="col-8">EXPORT &middot; 1080&times;1920</button>
+          <button id="export" class="col-8" data-button data-button-intent="accent">EXPORT &middot; 1080&times;1920</button>
         </div>
         <div id="export-progress" class="export-progress" hidden>
           <div id="export-progress-fill" class="export-progress-fill"></div>
@@ -875,9 +877,7 @@
       builtBtn.setAttribute("aria-pressed", buttonEl.getAttribute("aria-pressed"));
     }
     if (buttonEl.className) {
-      builtBtn.classList.add(
-        ...buttonEl.className.split(" ").filter((c) => c && c !== "panel-button" && !c.startsWith("panel-button-"))
-      );
+      builtBtn.classList.add(...buttonEl.className.split(" ").filter(Boolean));
     }
     buttonParent.replaceChild(builtBtn, buttonEl);
   });

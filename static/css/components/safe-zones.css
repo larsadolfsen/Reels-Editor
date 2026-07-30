@@ -1,5 +1,5 @@
 /* Safe-zone reference overlay: shaded bands + solid accent edge (matching TikTok's UI chrome) with high-contrast label chips, toggled from the timeline toolbar. */
-/* Exposes #safe-zones (+ .safe-zone-*). #safe-zones-toggle lives in #timeline-toolbar and uses .icon-btn styling (button-group.css) for its pressed state. Depends on tokens.css, chip.css (label styling, added 2026-07-29 chip component), #stage (position: relative, in stage.css). Labels use the shared .chip .chip--outlined .chip--safe-zone recipe (chip.css) rather than bare text so they stay legible over any video content underneath. */
+/* Exposes #safe-zones (+ .safe-zone-*). #safe-zones-toggle lives in #timeline-toolbar and is built via UI.button (button.css's .button[aria-pressed="true"]) for its pressed state. Depends on tokens.css, chip.css (label styling, added 2026-07-29 chip component), #stage (position: relative, in stage.css). Labels use the shared .chip .chip--outlined .chip--safe-zone recipe (chip.css) rather than bare text so they stay legible over any video content underneath. */
 #safe-zones {
   position: absolute;
   inset: 0;

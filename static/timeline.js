@@ -198,15 +198,16 @@ window.Timeline = (() => {
   // Small + button appended after a row's content (VIDEO: end of the clip sequence,
   // TEXT: after the last block). Only rendered when the caller passes the action.
   function addRowAddButton(track, left, label, onClick) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "row-add-btn";
+    const btn = UI.button(track, {
+      icon: "plus",
+      size: "sm",
+      intent: "dashed",
+      onClick: (e) => { e.stopPropagation(); onClick(); },
+    });
+    btn.classList.add("row-add-button");
     btn.title = label;
     btn.setAttribute("aria-label", label);
-    btn.innerHTML = UI.icon("plus", { size: 14 });
     btn.style.left = `${left}px`;
-    btn.addEventListener("click", (e) => { e.stopPropagation(); onClick(); });
-    track.appendChild(btn);
   }
 
   function addBlock(track, left, width, label, selected, onClick, { resizable } = {}) {

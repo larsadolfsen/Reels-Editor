@@ -37,8 +37,8 @@
    btn.setAttribute("aria-pressed", ...) directly against the built element, rather than
    re-invoking UI.button (whose `pressed` option only sets the initial .button-pressed class at
    creation time, per Task 14's design). This attribute selector — added by Task 16 when it
-   migrated .icon-btn sites (button-group.css's old .icon-btn[aria-pressed="true"] rule) onto
-   this component — mirrors .button-pressed exactly so those runtime toggles stay visually
+   migrated the old standalone icon-button sites (button-group.css's now-retired
+   aria-pressed rule) onto this component — mirrors .button-pressed exactly so those runtime toggles stay visually
    reactive after migration; without it, e.g. the top toolbar's Select/Text tool indicator would
    show no visual difference between the active and inactive tool. */
 .button[aria-pressed="true"] {
