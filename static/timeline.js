@@ -203,7 +203,7 @@ window.Timeline = (() => {
     btn.className = "row-add-btn";
     btn.title = label;
     btn.setAttribute("aria-label", label);
-    btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
+    btn.innerHTML = UI.icon("plus", { size: 14 });
     btn.style.left = `${left}px`;
     btn.addEventListener("click", (e) => { e.stopPropagation(); onClick(); });
     track.appendChild(btn);
@@ -268,7 +268,7 @@ window.Timeline = (() => {
       const laneLabel = document.createElement("div");
       laneLabel.className = "row-label overlay-lane-label";
       laneLabel.dataset.entryId = entry.id;
-      laneLabel.innerHTML = `<span class="overlay-lane-handle"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>`;
+      laneLabel.innerHTML = `<span class="overlay-lane-handle">${UI.icon("grip-vertical", { size: 14 })}</span>`;
       const text = document.createElement("span");
       text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO BOX" : "IMAGE BOX";
       laneLabel.appendChild(text);

@@ -58,7 +58,7 @@ window.CaptionPanel = window.CaptionPanel || {};
         const warnIcon = document.createElement("span");
         warnIcon.className = "icon-btn";
         warnIcon.title = "Found in transcript";
-        warnIcon.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>';
+        warnIcon.innerHTML = UI.icon("message-circle-warning", { size: 14 });
         nameGroup.appendChild(warnIcon);
       }
 
@@ -68,7 +68,7 @@ window.CaptionPanel = window.CaptionPanel || {};
       trashBtn.type = "button";
       trashBtn.className = "icon-btn";
       trashBtn.title = "Remove";
-      trashBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+      trashBtn.innerHTML = UI.icon("trash", { size: 14 });
       trashBtn.addEventListener("click", () => removeFillerWord(word));
       li.appendChild(trashBtn);
 

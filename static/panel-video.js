@@ -14,8 +14,8 @@ function clampTrim(inP, outP, dur) {
 UI.divider(document.getElementById("video-order-divider"));
 
 (() => {
-  const VIDEO_TAB_ICON_DESIGN = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>';
-  const VIDEO_TAB_ICON_TIME = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>';
+  const VIDEO_TAB_ICON_DESIGN = UI.icon("pencil", { size: 18 });
+  const VIDEO_TAB_ICON_TIME = UI.icon("timer", { size: 18 });
 
   const VIDEO_TABS = [
     { value: "design", icon: VIDEO_TAB_ICON_DESIGN, label: "Design" },

@@ -21,7 +21,7 @@ window.MediaPanel = window.MediaPanel || {};
   const silentCache = {}; // media id -> bool, avoids re-fetching peaks on every render
   const SILENCE_THRESHOLD = 0.02;
 
-  const MUTED_ICON_SVG = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg>';
+  const MUTED_ICON_SVG = UI.icon("volume-x", { size: 11 });
 
   function appendMutedIcon(durationRow) {
     if (durationRow.querySelector(".clip-audio-muted-icon")) return;
@@ -136,7 +136,7 @@ window.MediaPanel = window.MediaPanel || {};
     addBtn.type = "button";
     addBtn.className = "icon-btn clip-action";
     addBtn.title = m.kind === "image" ? "Add as image box" : m.kind === "audio" ? "Add audio" : "Add to timeline";
-    addBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>';
+    addBtn.innerHTML = UI.icon("plus", { size: 14 });
     addBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       if (m.kind === "image") {
@@ -174,7 +174,7 @@ window.MediaPanel = window.MediaPanel || {};
     renameBtn.type = "button";
     renameBtn.className = "icon-btn clip-action";
     renameBtn.title = "Rename";
-    renameBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>';
+    renameBtn.innerHTML = UI.icon("pencil", { size: 14 });
     renameBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       startRename(m, name);
@@ -192,7 +192,7 @@ window.MediaPanel = window.MediaPanel || {};
     } else {
       trashBtn.title = "Remove";
     }
-    trashBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    trashBtn.innerHTML = UI.icon("trash", { size: 14 });
     trashBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       if (count > 0) return;

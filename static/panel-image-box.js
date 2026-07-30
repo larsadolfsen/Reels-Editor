@@ -10,9 +10,9 @@
 window.ImageBoxPanel = window.ImageBoxPanel || {};
 
 (() => {
-  const IMAGE_BOX_TAB_ICON_BOX = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 7a24 24 0 0 1 0 10"/><path d="M4.5 7a24 24 0 0 0 0 10"/><path d="M7 19.5a24 24 0 0 0 10 0"/><path d="M7 4.5a24 24 0 0 1 10 0"/><rect x="17" y="17" width="5" height="5" rx="1"/><rect x="17" y="2" width="5" height="5" rx="1"/><rect x="2" y="17" width="5" height="5" rx="1"/><rect x="2" y="2" width="5" height="5" rx="1"/></svg>';
-  const IMAGE_BOX_TAB_ICON_TIME = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>';
-  const IMAGE_BOX_TAB_ICON_MASK = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19H5c-1 0-2-1-2-2V7c0-1 1-2 2-2h3"/><path d="M16 5h3c1 0 2 1 2 2v10c0 1-1 2-2 2h-3"/><line x1="12" x2="12" y1="4" y2="20"/></svg>';
+  const IMAGE_BOX_TAB_ICON_BOX = UI.icon("square-dashed", { size: 18 });
+  const IMAGE_BOX_TAB_ICON_TIME = UI.icon("timer", { size: 18 });
+  const IMAGE_BOX_TAB_ICON_MASK = UI.icon("columns-2", { size: 18 });
 
   const IMAGE_BOX_TABS = [
     { value: "box", icon: IMAGE_BOX_TAB_ICON_BOX, label: "Box" },
