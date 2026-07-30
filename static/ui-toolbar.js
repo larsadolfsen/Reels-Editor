@@ -1,17 +1,14 @@
-// Top toolbar: renders the tool-mode icon buttons (Select/Text) into the given container,
-// centered via toolbar.css's #toolbar flex layout. Highlights the active tool (window.ToolMode)
-// and subscribes to ToolMode.onChange to stay in sync; clicking a button calls ToolMode.set.
+// Top toolbar: renders the tool-mode icon button(s) into the given container, centered via
+// toolbar.css's #toolbar flex layout. Highlights the active tool (window.ToolMode) and
+// subscribes to ToolMode.onChange to stay in sync; clicking a button calls ToolMode.set.
 // Built via UI.button (button.css); its runtime aria-pressed toggle below relies on button.css's
 // .button[aria-pressed="true"] rule (added Task 16) to stay visually reactive after creation.
+// The Select tool button lives in the left icon rail instead (static/ui-rail-tool-button.js,
+// selector-tool-rail feature, added 2026-07-30) — this file now renders Text only.
 // Exposes window.UI.toolbar(container).
 window.UI = window.UI || {};
 
 const TOOLBAR_TOOLS = [
-  {
-    value: "select",
-    title: "Select",
-    icon: "mouse-pointer-2",
-  },
   {
     value: "text",
     title: "Text",
