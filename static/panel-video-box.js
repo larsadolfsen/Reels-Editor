@@ -224,6 +224,8 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
     });
   }
 
+  let lastSelectedId = null;
+
   function render(selectedId) {
     document.getElementById("video-box-add").onclick = renderPicker;
     const box = selectedId ? project.video_boxes.find((b) => b.id === selectedId) : null;
@@ -232,8 +234,22 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
     if (!box) {
       renderPicker();
       VideoBoxPreview.setSelectedVideoBox(null, null);
+      lastSelectedId = null;
       return;
     }
+    // Selecting a box that's outside its own start/trim window seeks the playhead to its start
+    // so it's visible and editable on stage — the box is no longer force-rendered while merely
+    // selected (see video-box-preview.js), so without this a newly-selected box outside the
+    // current playhead time would show its detail panel with nothing to look at on the stage.
+    if (box.id !== lastSelectedId) {
+      const t = Preview.currentTimelineTime();
+      const boxEnd = box.start + (box.out_point - box.in_point);
+      if (t < box.start || t >= boxEnd) {
+        Preview.seek(box.start);
+        renderTimeline();
+      }
+    }
+    lastSelectedId = box.id;
     renderDetail(box);
   }
 
