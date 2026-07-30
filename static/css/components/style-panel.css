@@ -228,13 +228,12 @@
 }
 
 .clip-actions {
-  display: flex;
+  display: none;
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
-  opacity: 0;
 }
-#clip-list li:hover .clip-actions { opacity: 1; }
+#clip-list li:hover .clip-actions { display: flex; }
 
 #panel-export #export { width: 100%; }
 
