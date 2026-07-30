@@ -1,14 +1,14 @@
 // Stage text-block overlay rendering + selection state: composites one .text-block div per
-// visible text block into #overlay (rich-text runs, box background/border, BOX FILL auto-sizing),
-// and owns click-to-edit/drag-to-move/drag-to-select wiring plus the active format-range selection
+// visible text block into #overlay (rich-text runs, box background/border), and owns
+// click-to-edit/drag-to-move/drag-to-select wiring plus the active format-range selection
 // consumed by the FONT accordion. Also tracks the per-block UI.textInteraction() handle (keyed by
 // block id, cleared/rebuilt each renderText() call) so a newly-created block can be dropped
 // straight into on-stage edit mode via enterEditMode(blockId), and closes an edit left open on
 // another block whenever one is activated (takeEditOnOtherBlock) — exactly one block edits at a
 // time, since a stage click alone never blurs the editing div. getBoxSizeCanvasPx(blockId) reads
 // a block's live on-stage rendered size (in 1080x1920 canvas px) for the POSITION anchor-grid
-// shortcut. Case styling (preset.text_case): displayed via CSS text-transform, measured via
-// TextCase.apply so BOX FILL sizing matches. Exposes window.PreviewText.
+// shortcut. Case styling (preset.text_case): displayed via CSS text-transform only — TextCase.apply
+// is not used here. Exposes window.PreviewText.
 // {renderText, setSelectedTextBlock, getActiveFormatSelection, setOnStageTextActivate, enterEditMode, getBoxSizeCanvasPx}.
 window.PreviewText = (() => {
   let textProject = null;
@@ -20,7 +20,6 @@ window.PreviewText = (() => {
   let editingHandle = null; // the editing block's UI.textInteraction handle, for closing its edit
   let onStageTextActivate = null;
   let activeFormatSelection = null;
-  const fitCache = new Map(); // blockId -> { key: string, size: number }
   const interactionHandles = new Map(); // blockId -> UI.textInteraction() return handle
   const overlay = document.getElementById("overlay");
   const stage = document.getElementById("stage");
@@ -28,25 +27,6 @@ window.PreviewText = (() => {
   function hexToRgba(hex, opacityPercent) {
     const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
     return `rgba(${r}, ${g}, ${b}, ${opacityPercent / 100})`;
-  }
-
-  function fitCacheKey(preset, heading) {
-    return JSON.stringify([heading, preset.box_width, preset.box_height, preset.font, preset.weight, preset.italic, preset.text_case]);
-  }
-
-  function maybeRefitFillText(block, preset) {
-    if (preset.box_width_mode !== "fill") return;
-    const key = fitCacheKey(preset, block.heading || "");
-    const cached = fitCache.get(block.id);
-    if (cached && cached.key === key) {
-      preset.size_px = cached.size;
-      return;
-    }
-    const measurerFactory = (size) =>
-      FontFit.canvasMeasurer(preset.font, size, { weight: preset.weight, italic: preset.italic });
-    const { size } = FontFit.fitFontSize(TextCase.apply(block.heading || "", preset.text_case), measurerFactory, preset.box_width, preset.box_height);
-    preset.size_px = size;
-    fitCache.set(block.id, { key, size });
   }
 
   // An on-stage edit belongs to exactly one block, so activating a different block has to close
@@ -103,8 +83,6 @@ window.PreviewText = (() => {
       if (!preset) continue;
       if (keepEditingDiv && block.id === editingBlockId) continue; // already re-attached above, leave untouched
 
-      maybeRefitFillText(block, preset);
-
       const div = document.createElement("div");
       div.className = `text-block text-block--align-${preset.align}`;
       div.dataset.blockId = block.id;
@@ -126,8 +104,12 @@ window.PreviewText = (() => {
         : "none";
       div.style.borderRadius = (preset.box_border_radius / 1080 * stageW) + "px";
 
-      const widthIsBoxed = preset.box_width_mode === "fixed" || preset.box_width_mode === "fill";
-      const heightIsBoxed = preset.box_height_mode === "fixed" || preset.box_height_mode === "fill";
+      // Anything that isn't actively auto-sizing to content ("fit") gets a fixed on-stage box —
+      // covers both "fixed" and the legacy "fill" value (pre-dating this branch's removal of an
+      // explicit FILL mode) without special-casing that string, matching the export path's own
+      // tolerance (app/ass_render.py's `width_fixed = p.box_width_mode in ("fixed", "fill")`).
+      const widthIsBoxed = preset.box_width_mode !== "fit";
+      const heightIsBoxed = preset.box_height_mode !== "fit";
       const boxW = widthIsBoxed ? (preset.box_width / 1080 * stageW) + "px" : "";
       const boxH = heightIsBoxed ? (preset.box_height / 1920 * stageH) + "px" : "";
       div.style.width = boxW;
@@ -212,7 +194,11 @@ window.PreviewText = (() => {
             editingDiv = null;
             editingHandle = null;
           }
-          if (boxResizeCallbacks && boxResizeCallbacks.onEditEnd) boxResizeCallbacks.onEditEnd(text);
+          // boxResizeCallbacks is reassigned whenever a DIFFERENT block becomes selected
+          // (setSelectedTextBlock), so by the time this blur fires it may already belong to
+          // another block entirely — pass this block's own id through so the caller resolves
+          // its target fresh instead of trusting whatever block the callbacks were last built for.
+          if (boxResizeCallbacks && boxResizeCallbacks.onEditEnd) boxResizeCallbacks.onEditEnd(text, block.id);
         },
         onMove: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMove) boxResizeCallbacks.onMove(delta); },
         onMoveEnd: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMoveEnd) boxResizeCallbacks.onMoveEnd(delta); },

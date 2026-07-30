@@ -42,6 +42,8 @@
   --border-hover-width: var(--border-width);
   --border-hover-color: var(--accent);
 
+  --transition-fade: 0.15s ease;
+
   --fs-2xs: 9px;
   --fs-xs: 10.5px;
   --fs-sm: 11px;

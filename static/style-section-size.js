@@ -55,13 +55,6 @@ window.StyleSection = window.StyleSection || {};
 
     return {
       render() {
-        // BOX SIZE mode FILL computes size_px automatically (preview.js's maybeRefitFillText):
-        // the field keeps showing the live value but must not be typeable or steppable.
-        // box_width_mode is never a FormatRun field, so it is read off the preset directly.
-        const disabled = target.getPreset().box_width_mode === "fill";
-        setFieldValue.setDisabled(disabled);
-        stepDown.disabled = disabled;
-        stepUp.disabled = disabled;
         setFieldValue(target.getFieldValue("size_px"));
       },
     };

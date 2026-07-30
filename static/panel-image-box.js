@@ -167,8 +167,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     document.getElementById("image-box-delete").onclick = async () => {
       project.image_boxes = project.image_boxes.filter((b) => b.id !== box.id);
       await saveProject();
-      renderTimeline();
-      render(null);
+      openFilesPanel();
     };
 
     renderMask(box);
@@ -215,6 +214,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
       icon: IMAGE_BOX_HEADER_ICON,
       label: box ? box.file_path.split(/[\\/]/).pop() : "IMAGE BOX",
     });
+    document.getElementById("image-box-add-group").hidden = !!box;
     document.getElementById("image-box-picker").hidden = !!box;
     document.getElementById("image-box-detail").hidden = !box;
     if (!box) {

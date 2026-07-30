@@ -1,16 +1,26 @@
 // FILES/MEDIA context-panel section: media-library list (thumbnail, name, duration),
 // filterable by type via an icon tab bar (All/Video/Images/Audio, UI.tabBar, mounted in
 // #files-type-tabs, added 2026-07-30 files-icons-tab feature — replaces the old always-grouped
-// VIDEOS/IMAGES/AUDIO section-label rows), click-to-select, hover-reveal inline rename (pencil icon), remove (trash
+// VIDEOS/IMAGES/AUDIO section-label rows), click-to-select, hover-reveal inline rename (file-pen icon), remove (trash
 // icon, swapped for a disabled lock icon when the media item is referenced by any ClipLayer),
-// and a plus icon (added 2026-07-24) that adds the item directly: a video row appends a new
-// clip to the end of the VIDEO timeline sequence (appendMediaClipToSequence, clip-sequence.js);
-// an image row creates a new IMAGE BOX overlay (ImageBoxPanel.createImageBox, panel-image-box.js)
-// and opens the IMAGE BOX panel with it selected; an audio row sets/replaces Project.music with
-// that file (mirrors panel-audio.js's addMusic()/replaceMusic(), one music track only) and opens
-// the AUDIO panel.
-// Clip rows use UI.listRow()/list-row.css (static/ui-list-row.js) for shared card styling
-// (background/border/hover/selected); section-label rows are untouched by it. A "no audio" icon
+// and hover-reveal action icon(s) (added 2026-07-24, extended 2026-07-30 video-hover-icons-files)
+// that add the item directly: a video row shows two — clapperboard appends a new clip to the end
+// of the VIDEO timeline sequence (appendMediaClipToSequence, clip-sequence.js), picture-in-picture
+// creates a new VIDEO BOX overlay (VideoBoxPanel.createVideoBox, panel-video-box.js) and opens the
+// VIDEO BOX panel with it selected; an image row shows one plus icon that creates a new IMAGE BOX
+// overlay (ImageBoxPanel.createImageBox, panel-image-box.js) and opens the IMAGE BOX panel with it
+// selected; an audio row shows one plus icon that sets/replaces Project.music with that file
+// (mirrors panel-audio.js's addMusic()/replaceMusic(), one music track only) and opens the AUDIO
+// panel.
+// Clip rows use UI.listRow() (static/ui-list-row.js) for shared border/selected styling, with
+// an `#clip-list li.list-row { background: transparent }` override (style-panel.css, added
+// 2026-07-30 files-row-hover-actions-fix) dropping list-row.css's always-on grey card fill —
+// the row's `--border-soft` border stays visible at rest and turns `--border-hover-color`
+// (blue accent) on hover via list-row.css's own `:hover` rule, with no hover background. The
+// `.clip-actions` action-icon group (style-panel.css) fades in/out on that same row's hover via
+// `opacity`/`visibility` transitioning over the shared `--transition-fade` token (tokens.css,
+// added 2026-07-30) — `visibility: hidden`/`pointer-events: none` at rest keep it out of the
+// accessibility tree and unclickable between hovers. A "no audio" icon
 // is shown for clips with no audio stream (m.has_audio === false) and, for video clips that do
 // have a stream, also when its cached waveform peaks are all silent (checkSilentAudio, added
 // 2026-07-23 — an audio stream can technically exist but carry no actual sound).
@@ -165,12 +175,12 @@ window.MediaPanel = window.MediaPanel || {};
     const actions = document.createElement("div");
     actions.className = "clip-actions";
 
-    const addBtn = UI.button(actions, {
-      icon: "plus",
-      size: "sm",
-      onClick: async (e) => {
-        e.stopPropagation();
-        if (m.kind === "image") {
+    if (m.kind === "image") {
+      const addBtn = UI.button(actions, {
+        icon: "plus",
+        size: "sm",
+        onClick: async (e) => {
+          e.stopPropagation();
           const box = await ImageBoxPanel.createImageBox(m);
           await saveProject();
           // Routed through onTimelineSelect (panel-nav.js) rather than calling showPanel/render
@@ -184,7 +194,16 @@ window.MediaPanel = window.MediaPanel || {};
           // in editor.js) — without this, the new box never mounts into #overlay, so it renders
           // invisibly with no resize handles until the next unrelated stage render.
           ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
-        } else if (m.kind === "audio") {
+        },
+      });
+      addBtn.title = "Add as image box";
+      addBtn.classList.add("clip-action");
+    } else if (m.kind === "audio") {
+      const addBtn = UI.button(actions, {
+        icon: "plus",
+        size: "sm",
+        onClick: async (e) => {
+          e.stopPropagation();
           // Mirrors static/panel-audio.js's addMusic()/replaceMusic() — one music track only (v1),
           // so this always replaces any existing Project.music rather than erroring or disabling.
           project.music = { id: crypto.randomUUID().replaceAll("-", ""), media_id: m.id, volume: 0.3, muted: false };
@@ -194,17 +213,46 @@ window.MediaPanel = window.MediaPanel || {};
           // even though Project.music is now correctly set (bug found in final review).
           Preview.load(project);
           openAudioPanel(); // panel-nav.js: sets `selected = { type: "audio" }`, opens the panel, re-renders the timeline
-        } else {
+        },
+      });
+      addBtn.title = "Add audio";
+      addBtn.classList.add("clip-action");
+    } else {
+      // Video rows get two hover actions: clapperboard appends to the MAIN timeline sequence,
+      // picture-in-picture creates a video box (PiP) instead (added 2026-07-30, video-hover-icons-files).
+      const addMainBtn = UI.button(actions, {
+        icon: "clapperboard",
+        size: "sm",
+        onClick: async (e) => {
+          e.stopPropagation();
           await appendMediaClipToSequence(m);
           MediaPanel.render(); // refresh this row's trash button — it's now disabled, the media is in use
-        }
-      },
-    });
-    addBtn.title = m.kind === "image" ? "Add as image box" : m.kind === "audio" ? "Add audio" : "Add to timeline";
-    addBtn.classList.add("clip-action");
+        },
+      });
+      addMainBtn.title = "Add to main";
+      addMainBtn.classList.add("clip-action");
+
+      const addPipBtn = UI.button(actions, {
+        icon: "picture-in-picture",
+        size: "sm",
+        onClick: async (e) => {
+          e.stopPropagation();
+          const box = await VideoBoxPanel.createVideoBox(m);
+          await saveProject();
+          // Same reasoning as the image-box branch above: onTimelineSelect's video-box branch only
+          // calls VideoBoxPanel.render(), whose VideoBoxPreview.setSelectedVideoBox() call alone
+          // doesn't mount the box into #overlay — an explicit render is needed so it's visible with
+          // resize handles immediately instead of on the next unrelated stage render.
+          await onTimelineSelect({ type: "video-box", item: box });
+          VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+        },
+      });
+      addPipBtn.title = "Add as video box (PIP)";
+      addPipBtn.classList.add("clip-action");
+    }
 
     const renameBtn = UI.button(actions, {
-      icon: "pencil",
+      icon: "file-pen",
       size: "sm",
       onClick: (e) => {
         e.stopPropagation();

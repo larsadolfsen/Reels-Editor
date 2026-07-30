@@ -1,7 +1,10 @@
 // #panel-video-box context-panel section: add-from-media-library picker, trim/time/position/size
 // fields, drag-to-move/resize on stage (via VideoBoxPreview), delete. The detail view is split
 // into Box (SIZE & POSITION + TRIM), Time (START) and Mask (EDGE MASK) tab panes via UI.tabBar
-// (Box default), with Delete as an always-visible footer. Exposes window.VideoBoxPanel.render(selectedId).
+// (Box default), with Delete as an always-visible footer. Exposes window.VideoBoxPanel.render(selectedId)
+// and window.VideoBoxPanel.createVideoBox(mediaItem) (added 2026-07-30, video-hover-icons-files:
+// pushes a new VideoBoxLayer into project.video_boxes and returns it, no save/render — caller's
+// responsibility; reused by panel-media.js's hover-reveal PIP icon).
 // One video box selected at a time; multiple boxes live in project.video_boxes (see app/models.py's VideoBoxLayer).
 window.VideoBoxPanel = window.VideoBoxPanel || {};
 
@@ -185,8 +188,7 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
     document.getElementById("video-box-delete").onclick = async () => {
       project.video_boxes = project.video_boxes.filter((b) => b.id !== box.id);
       await saveProject();
-      renderTimeline();
-      render(null);
+      openFilesPanel();
     };
 
     renderMask(box);
@@ -229,6 +231,7 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
   function render(selectedId) {
     document.getElementById("video-box-add").onclick = renderPicker;
     const box = selectedId ? project.video_boxes.find((b) => b.id === selectedId) : null;
+    document.getElementById("video-box-add-group").hidden = !!box;
     document.getElementById("video-box-picker").hidden = !!box;
     document.getElementById("video-box-detail").hidden = !box;
     if (!box) {
@@ -254,4 +257,5 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
   }
 
   window.VideoBoxPanel.render = render;
+  window.VideoBoxPanel.createVideoBox = createVideoBox;
 })();

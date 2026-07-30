@@ -6,8 +6,7 @@ window.UI = window.UI || {};
 // Renders a labeled number input (label always shows its unit, e.g. "START (SEC)") with a
 // custom up/down stepper (the native spin button can't be restyled) into `container`.
 // onChange(number) fires on typing and on stepper clicks. Returns a setValue(v) updater.
-// disabled (default false) disables the input and both stepper buttons — used e.g. by the
-// TEXT panel's SIZE (PX) field when BOX's SIZE mode is FILL (size is computed, not typed).
+// disabled (default false) disables the input and both stepper buttons.
 window.UI.numberField = function numberField(container, { label, unit, value, step = 1, min, max, decimals, disabled = false, span = 8, onChange }) {
   container.innerHTML = "";
   container.classList.add("style-field", `col-${span}`);
@@ -63,13 +62,5 @@ window.UI.numberField = function numberField(container, { label, unit, value, st
   wrap.append(input, arrows);
   container.appendChild(wrap);
   const setValue = (v) => { input.value = format(v); };
-  // Lets a caller toggle disabled state on every render() without rebuilding the field
-  // (rebuilding would drop the onChange listener). Attached as a property rather than
-  // changing the return type, so existing callers that only call setValue(v) are unaffected.
-  setValue.setDisabled = (isDisabled) => {
-    input.disabled = isDisabled;
-    up.disabled = isDisabled;
-    down.disabled = isDisabled;
-  };
   return setValue;
 };

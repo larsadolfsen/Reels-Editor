@@ -37,9 +37,20 @@ window.StyleSection.presetLibrary = function presetLibrary(container, target, op
   // save and the preview re-render exactly once instead of firing thirty of each.
   const COMMIT_FIELD = "font";
 
+  // Saved styles predate this branch's removal of the explicit FIT/FREE/FILL toggle, so an old
+  // saved style may still carry the legacy box_width_mode/box_height_mode value "fill" — normalize
+  // it to "fixed" here so applying a saved style never reintroduces a removed mode value.
+  function normalizeBoxModes(fields) {
+    const out = { ...fields };
+    if (out.box_width_mode === "fill") out.box_width_mode = "fixed";
+    if (out.box_height_mode === "fill") out.box_height_mode = "fixed";
+    return out;
+  }
+
   function applyStyleFields(fields) {
-    Object.assign(target.getPreset(), fields);
-    target.setPresetField(COMMIT_FIELD, fields[COMMIT_FIELD]);
+    const normalized = normalizeBoxModes(fields);
+    Object.assign(target.getPreset(), normalized);
+    target.setPresetField(COMMIT_FIELD, normalized[COMMIT_FIELD]);
   }
 
   async function saveNewPreset(name) {
@@ -48,6 +59,7 @@ window.StyleSection.presetLibrary = function presetLibrary(container, target, op
       id: crypto.randomUUID().replaceAll("-", ""),
       name,
       usage_count: 0,
+      preset_kind: target.kind,
     };
     await Api.savePreset(saved);
     saveMode = false;
@@ -96,7 +108,9 @@ window.StyleSection.presetLibrary = function presetLibrary(container, target, op
     formEl.innerHTML = "";
     if (saveMode) UI.styleSaveForm(formEl, { onSave: saveNewPreset, onCancel: exitSaveMode });
 
-    const sorted = [...savedPresets].sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
+    const sorted = savedPresets
+      .filter((saved) => (saved.preset_kind || "text") === target.kind)
+      .sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
     listEl.innerHTML = "";
     sorted.forEach((saved) => listEl.appendChild(UI.stylePresetCard(saved, {
       onClick: saveMode ? overwriteSavedPreset : applySavedPreset,

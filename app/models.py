@@ -100,6 +100,7 @@ class TextPreset(BaseModel):
     y: int = 700                   # vertical px: always the top edge of the box
     entrance: str = "fade_pop"     # fade_pop|none
     usage_count: int = 0    # how many times this saved preset has been applied to a block; drives the STYLE accordion's "most used" list
+    preset_kind: str = "text"  # "text" | "caption" — which panel's Style tab this saved preset appears under; only meaningful for saved-style-library entries, ignored for a block/track's own live preset
     highlight_color: str = "#FFD400"   # shared: caption karaoke highlight color AND rich-text highlight color
     highlight_mode: str = "current_word"   # off | current_word | progressive_fill (captions only); "background" is a legacy value self-healed on load by _migrate_legacy_box_fields below (server-authoritative; static/panel-captions.js's ensureCaptionPreset does the same for in-memory presets), never written going forward
     highlight: bool = False            # block-level highlight default (off); highlight_color above is shared with captions
