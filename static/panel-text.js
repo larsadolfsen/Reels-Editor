@@ -165,7 +165,6 @@ async function renderTextPanel() {
   const preset = ensureTextPreset(block.preset_id);
 
   await textDesignTab.render();
-  TextPanel.renderShadow();
   TextPanel.renderHighlight();
   TextPanel.renderStyle();
   renderBoxPanel();
@@ -300,7 +299,8 @@ showTextTab(activeTextTab);
 
 // The shared style sections are built ONCE, here, and only re-rendered afterwards — never
 // rebuilt. The host appends every drill-down subpage as a new child of #panel-text itself,
-// the same place the pre-existing per-control subpanels (#panel-text-shadow, etc.) already live.
+// the same place the pre-existing per-control subpanels (#panel-text-highlight, etc.) already
+// live.
 const textStyleTarget = StyleTarget.forTextBlock();
 const textStyleHost = StylePanelHost(
   document.getElementById("panel-text-main"),
