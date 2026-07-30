@@ -292,6 +292,37 @@ def test_background_word_dialogues_emit_rect_before_text_per_active_word():
     assert "\\p1" not in first_window[1]      # text second
     assert "Hello" in first_window[1] and "world" in first_window[1]  # full page text, not just the active word
 
+def test_background_word_dialogues_rect_height_is_tight_glyph_height_plus_padding():
+    from app.ass_render import _background_word_dialogues, HIGHLIGHT_PAD_EM, _n
+    pr = TextPreset(name="Cap", x=0, y=0, size_px=48, highlight_color="#FFD400", align="left", highlight_border_radius=0)
+    page = [[w("Hi", 0.0, 0.5)]]
+    rect = next(d for d in _background_word_dialogues(page, pr) if "\\p1" in d)
+    pad = HIGHLIGHT_PAD_EM * pr.size_px
+    expected_height = _n(pr.size_px + 2 * pad)  # tight glyph height (size_px), not size_px*1.15
+    assert f"l 0 {expected_height}" in rect
+
+def test_background_word_dialogues_rect_width_wider_than_bare_glyph_width():
+    from app.ass_render import _background_word_dialogues, HIGHLIGHT_PAD_EM, _n
+    from app.font_metrics import pil_font_measurer
+    pr = TextPreset(name="Cap", x=0, y=0, size_px=48, highlight_color="#FFD400", align="left", highlight_border_radius=0)
+    page = [[w("Hi", 0.0, 0.5)]]
+    rect = next(d for d in _background_word_dialogues(page, pr) if "\\p1" in d)
+    bare_width = pil_font_measurer(pr.font, pr.size_px, 400)("Hi")
+    pad = HIGHLIGHT_PAD_EM * pr.size_px
+    expected_width = _n(bare_width + 2 * pad)
+    # radius 0 -> _rounded_rect_path emits "m 0 0 l {width} 0 l {width} {height} l 0 {height}"
+    assert f"m 0 0 l {expected_width} 0" in rect
+
+def test_background_word_dialogues_left_padding_shifts_rect_left_of_word_start():
+    from app.ass_render import _background_word_dialogues, HIGHLIGHT_PAD_EM
+    import re
+    pr = TextPreset(name="Cap", x=100, y=0, size_px=48, highlight_color="#FFD400", align="left")
+    page = [[w("Hi", 0.0, 0.5)]]
+    rect = next(d for d in _background_word_dialogues(page, pr) if "\\p1" in d)
+    pos_x = int(re.search(r"\\pos\((-?\d+),", rect).group(1))
+    pad = HIGHLIGHT_PAD_EM * pr.size_px
+    assert pos_x == round(pr.x - pad)  # first word in a left-aligned line starts at p.x; rect is shifted left by pad
+
 def test_background_word_dialogues_use_preset_radius():
     from app.ass_render import _background_word_dialogues
     pr_default = TextPreset(name="Cap", x=540, y=700, size_px=48)  # highlight_border_radius default 4
@@ -532,25 +563,33 @@ def test_highlighted_run_uses_preset_border_radius_not_hardcoded_constant():
     line_custom = next(l for l in out_custom.splitlines() if "hl0" in l)
     assert line_default != line_custom  # different radius produces a different rect path
 
-def test_caption_highlight_dialogue_emits_rect_spanning_full_word_range():
-    from app.ass_render import _caption_highlight_dialogue
+def test_caption_highlight_dialogues_emit_one_rect_per_line_spanning_page_range():
+    from app.ass_render import _caption_highlight_dialogues
     pr = TextPreset(name="Cap", x=540, y=700, highlight=True, highlight_color="#00FF00", highlight_border_radius=10)
-    words = [w("Hello", 1.0, 1.5), w("world", 1.5, 2.2)]
-    line = _caption_highlight_dialogue(pr, words, 900, 350)
-    assert line is not None
-    assert line.startswith("Dialogue: 0,0:00:01.00,0:00:02.20")
-    assert "\\p1" in line
+    page = [[w("Hello", 1.0, 1.5)], [w("world", 1.5, 2.2)]]  # 2 lines
+    lines = _caption_highlight_dialogues(page, pr)
+    assert len(lines) == 2  # one rect per line, not one rect for the whole page/box
+    for line in lines:
+        assert line.startswith("Dialogue: 0,0:00:01.00,0:00:02.20")  # spans the whole page's active range
+        assert "\\p1" in line
 
-def test_caption_highlight_dialogue_none_when_highlight_off():
-    from app.ass_render import _caption_highlight_dialogue
+def test_caption_highlight_dialogues_empty_when_highlight_off():
+    from app.ass_render import _caption_highlight_dialogues
     pr = TextPreset(name="Cap", highlight=False)
-    words = [w("Hello", 1.0, 1.5)]
-    assert _caption_highlight_dialogue(pr, words, 900, 350) is None
+    page = [[w("Hello", 1.0, 1.5)]]
+    assert _caption_highlight_dialogues(page, pr) == []
 
-def test_caption_highlight_dialogue_none_when_no_words():
-    from app.ass_render import _caption_highlight_dialogue
-    pr = TextPreset(name="Cap", highlight=True)
-    assert _caption_highlight_dialogue(pr, [], 900, 350) is None
+def test_caption_highlight_dialogues_rect_width_hugs_line_not_fixed_box():
+    from app.ass_render import _caption_highlight_dialogues, HIGHLIGHT_PAD_EM, _n
+    from app.font_metrics import pil_font_measurer
+    pr = TextPreset(name="Cap", x=0, y=0, highlight=True, highlight_color="#00FF00", align="left",
+                     highlight_border_radius=0, box_width_mode="fixed", box_width=900)
+    page = [[w("Hi", 1.0, 1.5)]]
+    line = _caption_highlight_dialogues(page, pr)[0]
+    bare_width = pil_font_measurer(pr.font, pr.size_px, 400)("Hi")
+    pad = HIGHLIGHT_PAD_EM * pr.size_px
+    expected_width = _n(bare_width + 2 * pad)
+    assert f"m 0 0 l {expected_width} 0" in line  # tight to "Hi", nowhere near the 900px fixed box width
 
 def test_render_caption_ass_includes_highlight_rect_before_karaoke_dialogue():
     from app.ass_render import render_caption_ass

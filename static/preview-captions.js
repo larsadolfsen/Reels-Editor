@@ -2,6 +2,10 @@
 // (word-wrap by the caption box's fixed width, line-pagination by its fixed height), finds the
 // page active at a given timelineTime, and renders it as one .caption-block div containing one
 // .caption-line div per line, each with per-word highlight color per preset.highlight_mode.
+// preset.highlight (an always-on background behind visible text) and highlight_mode "background"
+// (per-word active background) both paint a per-line/per-word tight background — equal HIGHLIGHT_PAD_EM
+// padding on all 4 sides around a line-height:1 wrapper, hugging the actual rendered text rather than
+// the caption's fixed box, mirroring app/ass_render.py's _caption_highlight_dialogues/_background_word_dialogues.
 // Memoizes the paginated pages per (words, box size, font) so a full re-measure only happens when
 // something relevant actually changed — mirrors preview-text.js's fitCache pattern. Case styling
 // (preset.text_case): displayed via CSS text-transform, paginated using a measurer wrapped through
@@ -13,6 +17,7 @@ window.PreviewCaptions = (() => {
   const overlay = document.getElementById("overlay");
   const stage = document.getElementById("stage");
   let paginationCache = null; // { key, pages }
+  const HIGHLIGHT_PAD_EM = 0.2; // equal padding on all 4 sides of a Highlight/Spotlight background, mirrors app/ass_render.py's HIGHLIGHT_PAD_EM
 
   function hexToRgba(hex, opacityPercent) {
     const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
@@ -85,15 +90,19 @@ window.PreviewCaptions = (() => {
       ? `${preset.shadow_offset_x / 1920 * stageH}px ${preset.shadow_offset_y / 1920 * stageH}px ${preset.shadow_blur / 1920 * stageH}px ${preset.shadow_color}`
       : "none";
     div.style.borderRadius = (preset.box_border_radius / 1080 * stageW) + "px";
-    if (preset.highlight) {
-      div.style.backgroundColor = preset.highlight_color;
-      div.style.borderRadius = (preset.highlight_border_radius / 1080 * stageW) + "px";
-    }
     div.style.pointerEvents = "none";
+
+    const highlightPadPx = (HIGHLIGHT_PAD_EM * preset.size_px / 1920 * stageH);
+    const highlightRadiusPx = (preset.highlight_border_radius / 1920 * stageH) + "px";
 
     page.forEach((line) => {
       const lineDiv = document.createElement("div");
       lineDiv.className = "caption-line";
+      // .caption-line's font-size/line-height set the loose per-line pitch; a "tight" (line-height:1)
+      // wrapper inside it is what a highlight/spotlight background actually pads equally on all sides —
+      // padding the loose line box directly would look uneven since line-height leading isn't glyph ink.
+      const lineContentWrap = document.createElement("span");
+      lineContentWrap.style.lineHeight = "1";
       line.forEach((word, i) => {
         const span = document.createElement("span");
         let isHighlighted;
@@ -105,15 +114,24 @@ window.PreviewCaptions = (() => {
         if (preset.highlight_mode === "background") {
           span.style.color = preset.color;
           span.style.backgroundColor = isHighlighted ? preset.highlight_color : "transparent";
-          span.style.borderRadius = isHighlighted ? ((preset.highlight_border_radius / 1920 * stageH) + "px") : "0";
+          span.style.borderRadius = isHighlighted ? highlightRadiusPx : "0";
+          span.style.padding = isHighlighted ? `${highlightPadPx}px` : "0";
+          span.style.lineHeight = "1";
         } else {
           span.style.color = isHighlighted ? preset.highlight_color : preset.color;
           span.style.backgroundColor = "transparent";
           span.style.borderRadius = "0";
         }
         span.textContent = word.text + (i < line.length - 1 ? " " : "");
-        lineDiv.appendChild(span);
+        lineContentWrap.appendChild(span);
       });
+      if (preset.highlight) {
+        lineContentWrap.style.backgroundColor = preset.highlight_color;
+        lineContentWrap.style.borderRadius = highlightRadiusPx;
+        lineContentWrap.style.padding = `${highlightPadPx}px`;
+        lineContentWrap.style.display = "inline-block";
+      }
+      lineDiv.appendChild(lineContentWrap);
       div.appendChild(lineDiv);
     });
 
