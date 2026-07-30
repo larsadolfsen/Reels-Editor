@@ -1,21 +1,24 @@
-// CAPTIONS-only Design-tab section: "Spotlight", the per-word karaoke highlight (current word /
-// progressive fill / background-behind-word), split out of the old combined "Highlight" row
-// (see style-section-highlight.js's header) because it is a different feature from TEXT/CAPTIONS'
-// shared static-box Highlight — a mode is always set, so unlike Highlight this row is never
-// "None". Shares highlight_color/highlight_border_radius with the Highlight section by design
-// (app/ass_render.py's _current_word_dialogues / _background_word_dialogues already read those
-// same fields, independent of preset.highlight) — no new model fields. Everything here is
-// whole-preset: a caption track has no per-range FormatRun overrides, so setPresetField and
-// setField are the same write on this target (style-target-caption.js).
+// CAPTIONS-only Design-tab section: "Spotlight", the per-word karaoke highlight (off / current
+// word / progressive fill). A mode is either off or always one of the other two — this row is
+// never "None" the way Highlight/Outline/Shadow can be. Distinct from TEXT/CAPTIONS' shared
+// static-box Highlight (style-section-highlight.js) — see that file's header. The active word's
+// own Color/Outline/Shadow/Highlight are built by reusing the four shared style sections
+// (style-section-color.js/outline.js/shadow.js/highlight.js) pointed at the preset's spotlight_*
+// fields via each section's field-name options (added 2026-07-30) — a second, nested
+// StylePanelHost scoped to this subpage's own body gives them their own chevron drill-downs,
+// matching the reference mockup, without changing StylePanelHost itself. Outline and Shadow only
+// render in "current_word" mode (see app/ass_render.py's _current_word_dialogues header for why
+// ASS can't carry them through "progressive_fill"'s \k sweep) — their rows hide in that mode and
+// when the mode is "off"; Color and Highlight hide only when "off".
 window.StyleSection = window.StyleSection || {};
 
 window.StyleSection.spotlight = function spotlightSection(container, target, options) {
   const host = options.host;
 
   const MODE_LABELS = {
+    off: "Off",
     current_word: "Current word",
     progressive_fill: "Progressive fill",
-    background: "Background",
   };
 
   const group = document.createElement("div");
@@ -35,7 +38,8 @@ window.StyleSection.spotlight = function spotlightSection(container, target, opt
   function refreshRow() {
     if (!target.exists()) return;
     const preset = target.getPreset();
-    setRowValue(MODE_LABELS[preset.highlight_mode] || preset.highlight_mode, null, preset.highlight_color);
+    setRowValue(MODE_LABELS[preset.highlight_mode] || preset.highlight_mode, null,
+      preset.highlight_mode === "off" ? null : preset.spotlight_color);
   }
 
   const page = host.page("Spotlight", (bodyEl) => {
@@ -45,47 +49,67 @@ window.StyleSection.spotlight = function spotlightSection(container, target, opt
     modeGroup.appendChild(modeEl);
     bodyEl.appendChild(modeGroup);
 
-    const colorGroup = document.createElement("div");
-    colorGroup.className = "style-group";
-    const colorField = document.createElement("label");
-    colorGroup.appendChild(colorField);
+    // A nested StylePanelHost scoped to this subpage: mainEl is this subpage's own body (already
+    // holding the mode group above it), drillEl is a sibling appended to the subpage's outer
+    // element so the four reused sections' subpages don't get wiped when this body rebuilds.
+    const pageEl = bodyEl.parentElement;
+    const nestedDrillEl = document.createElement("div");
+    pageEl.appendChild(nestedDrillEl);
+    const nestedHost = StylePanelHost(bodyEl, nestedDrillEl);
 
-    const radiusGroup = document.createElement("div");
-    radiusGroup.className = "style-group";
-    const radiusField = document.createElement("label");
-    radiusGroup.appendChild(radiusField);
+    // Each wrapper uses the existing .style-section convention (style-panel.css) — the same one
+    // style-tab-design.js's sectionWrapper() uses — so the reused sections' own .style-group
+    // margin math (the :last-child rule that strips a trailing section's bottom margin) works
+    // correctly with four of them side by side, instead of every one of them (each being the only
+    // child of its own bare wrapper) incorrectly matching :last-child and losing its margin.
+    function sectionWrapper() {
+      const div = document.createElement("div");
+      div.className = "style-section";
+      bodyEl.appendChild(div);
+      return div;
+    }
+    const colorWrap = sectionWrapper();
+    const outlineWrap = sectionWrapper();
+    const shadowWrap = sectionWrapper();
+    const highlightWrap = sectionWrapper();
 
-    bodyEl.append(colorGroup, radiusGroup);
+    const colorSection = StyleSection.color(colorWrap, target, { host: nestedHost, field: "spotlight_color" });
+    const outlineSection = StyleSection.outline(outlineWrap, target,
+      { host: nestedHost, colorField: "spotlight_outline_color", widthField: "spotlight_outline_px" });
+    const shadowSection = StyleSection.shadow(shadowWrap, target,
+      { host: nestedHost, fields: { toggle: "spotlight_shadow", color: "spotlight_shadow_color", offsetX: "spotlight_shadow_offset_x", offsetY: "spotlight_shadow_offset_y", blur: "spotlight_shadow_blur" } });
+    const highlightSection = StyleSection.highlight(highlightWrap, target,
+      { host: nestedHost, fields: { toggle: "spotlight_highlight", color: "spotlight_highlight_color", radius: "spotlight_highlight_border_radius" } });
 
-    // RADIUS only matters for "background" mode's per-word rounded rect; current_word/
-    // progressive_fill never draw a rect (see app/ass_render.py's mode dispatch).
-    function syncFields() {
-      radiusField.hidden = target.getPreset().highlight_mode !== "background";
+    // .style-section is `display: contents` (style-panel.css) — toggling `hidden` on the wrapper
+    // itself is unreliable since an author rule and the UA [hidden] default have equal
+    // specificity. Instead toggle `hidden` on each wrapper's actual `.style-group` child (the one
+    // thing each reused section appends into its container) — `.style-group[hidden] { display:
+    // none; }` already exists in style-panel.css for exactly this.
+    function syncVisibility() {
+      const mode = target.getPreset().highlight_mode;
+      colorWrap.firstElementChild.hidden = mode === "off";
+      outlineWrap.firstElementChild.hidden = mode !== "current_word";
+      shadowWrap.firstElementChild.hidden = mode !== "current_word";
+      highlightWrap.firstElementChild.hidden = mode === "off";
     }
 
     UI.buttonGroup(modeEl,
-      [{ value: "current_word", label: "Current word", span: 4 },
-       { value: "progressive_fill", label: "Progressive fill", span: 4 },
-       { value: "background", label: "Background", span: 8 }],
+      [{ value: "off", label: "Off", span: 8 },
+       { value: "current_word", label: "Current word", span: 4 },
+       { value: "progressive_fill", label: "Progressive fill", span: 4 }],
       target.getPreset().highlight_mode,
       (value) => {
         target.setPresetField("highlight_mode", value);
-        syncFields();
+        syncVisibility();
         refreshRow();
       });
 
-    UI.colorSwatch(colorField, {
-      label: "Spotlight", value: target.getPreset().highlight_color, span: 8,
-      onChange: (v) => { target.setPresetField("highlight_color", v); refreshRow(); },
-    });
-
-    UI.numberField(radiusField, {
-      label: "RADIUS", unit: "PX", value: target.getPreset().highlight_border_radius,
-      min: 0, max: 40, span: 8,
-      onChange: (v) => target.setPresetField("highlight_border_radius", v),
-    });
-
-    syncFields();
+    colorSection.render();
+    outlineSection.render();
+    shadowSection.render();
+    highlightSection.render();
+    syncVisibility();
   }, { onClose: refreshRow });
 
   return { render: refreshRow };

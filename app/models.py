@@ -101,14 +101,13 @@ class TextPreset(BaseModel):
     entrance: str = "fade_pop"     # fade_pop|none
     usage_count: int = 0    # how many times this saved preset has been applied to a block; drives the STYLE accordion's "most used" list
     highlight_color: str = "#FFD400"   # shared: caption karaoke highlight color AND rich-text highlight color
-    highlight_mode: str = "current_word"   # current_word | progressive_fill | background; unused by TextBlockLayer consumers except "background" mode's own rect radius
+    highlight_mode: str = "current_word"   # off | current_word | progressive_fill (captions only); "background" is a legacy value self-healed on load by _migrate_legacy_box_fields below (server-authoritative; static/panel-captions.js's ensureCaptionPreset does the same for in-memory presets), never written going forward
     highlight: bool = False            # block-level highlight default (off); highlight_color above is shared with captions
-    highlight_border_radius: int = 4   # px on the 1080x1920 canvas; shared by TEXT's marker-highlight rect and CAPTIONS' "background" mode word rect
+    highlight_border_radius: int = 4   # px on the 1080x1920 canvas; shared by TEXT's marker-highlight rect and CAPTIONS' box-level highlight rect
 
     spotlight_color: str = "#FFD400"   # per-word karaoke (CAPTIONS only): active word text color swap
-    spotlight_outline: bool = False    # per-word outline on/off
     spotlight_outline_color: str = "#000000"
-    spotlight_outline_px: int = 4
+    spotlight_outline_px: int = 0       # 0 (default) = no per-word outline override, same "0 means off" convention as box_border_width; the base Outline control has no separate on/off boolean either
     spotlight_shadow: bool = False     # per-word drop-shadow on/off
     spotlight_shadow_color: str = "#000000"
     spotlight_shadow_offset_x: int = 4
@@ -129,6 +128,16 @@ class TextPreset(BaseModel):
         if isinstance(data, dict) and "bold" in data and "weight" not in data:
             data = dict(data)
             data["weight"] = 700 if data.pop("bold") else 400
+        if isinstance(data, dict) and data.get("highlight_mode") == "background":
+            # Legacy "background" highlight_mode was removed by the spotlight per-word style
+            # overrides feature — its old rect-behind-the-active-word behavior becomes the
+            # spotlight_highlight toggle instead (works with either remaining mode). Mirrors
+            # static/panel-captions.js's ensureCaptionPreset() JS self-heal, but runs here too so
+            # every load path (export, preview, panel) self-heals, not just the CAPTIONS panel.
+            data = dict(data)
+            data["highlight_mode"] = "current_word"
+            data["spotlight_highlight"] = True
+            data["spotlight_highlight_color"] = data.get("highlight_color", cls.model_fields["spotlight_highlight_color"].default)
         return data
 
 class FormatRun(BaseModel):

@@ -1,11 +1,15 @@
 // Shared Shadow style section for the TEXT and CAPTIONS Design tabs: a settings row
 // (swatch + "ON"/"OFF") plus a drill-down subpage holding the on/off toggle and the colour,
 // offset-x, offset-y and blur fields. FormatRun has no shadow fields, so every control here
-// writes the whole preset via target.setPresetField — never target.setField.
+// writes the whole preset via target.setPresetField — never target.setField. options.fields
+// (default {toggle:"shadow", color:"shadow_color", offsetX:"shadow_offset_x",
+// offsetY:"shadow_offset_y", blur:"shadow_blur"}) lets a caller point this at different preset
+// fields — e.g. the CAPTIONS Spotlight subpage reuses this file for the spotlight_shadow* fields.
 window.StyleSection = window.StyleSection || {};
 
 window.StyleSection.shadow = function shadowSection(container, target, options) {
   const host = options.host;
+  const f = options.fields || { toggle: "shadow", color: "shadow_color", offsetX: "shadow_offset_x", offsetY: "shadow_offset_y", blur: "shadow_blur" };
 
   // Built once, in the factory. render() only ever calls the setValue updater captured below.
   const group = document.createElement("div");
@@ -15,7 +19,7 @@ window.StyleSection.shadow = function shadowSection(container, target, options) 
   group.appendChild(rowEl);
   container.appendChild(group);
 
-  function isOn() { return !!target.getPreset().shadow; }
+  function isOn() { return !!target.getPreset()[f.toggle]; }
 
   // Construction-time value/swatchColor are placeholders, not isOn()/getPreset(): this factory
   // runs once at panel load, before any text block/caption track necessarily exists —
@@ -34,7 +38,7 @@ window.StyleSection.shadow = function shadowSection(container, target, options) 
   // just deleted while this subpage was open) — nothing to refresh in that case.
   function refreshRow() {
     if (!target.exists()) return;
-    setRowValue(isOn() ? "ON" : "OFF", null, isOn() ? target.getPreset().shadow_color : null);
+    setRowValue(isOn() ? "ON" : "OFF", null, isOn() ? target.getPreset()[f.color] : null);
   }
 
   const page = host.page("Shadow", (bodyEl) => {
@@ -80,29 +84,29 @@ window.StyleSection.shadow = function shadowSection(container, target, options) 
       [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
       isOn() ? "on" : "off",
       (value) => {
-        target.setPresetField("shadow", value === "on");
+        target.setPresetField(f.toggle, value === "on");
         syncFields();
         refreshRow();
       });
 
     UI.colorSwatch(colorField, {
-      label: "Shadow", value: preset.shadow_color, span: 8,
-      onChange: (v) => { target.setPresetField("shadow_color", v); refreshRow(); },
+      label: "Shadow", value: preset[f.color], span: 8,
+      onChange: (v) => { target.setPresetField(f.color, v); refreshRow(); },
     });
 
     UI.numberField(offsetXField, {
-      label: "OFFSET X", unit: "PX", value: preset.shadow_offset_x, min: -40, max: 40, span: 4,
-      onChange: (v) => target.setPresetField("shadow_offset_x", v),
+      label: "OFFSET X", unit: "PX", value: preset[f.offsetX], min: -40, max: 40, span: 4,
+      onChange: (v) => target.setPresetField(f.offsetX, v),
     });
 
     UI.numberField(offsetYField, {
-      label: "OFFSET Y", unit: "PX", value: preset.shadow_offset_y, min: -40, max: 40, span: 4,
-      onChange: (v) => target.setPresetField("shadow_offset_y", v),
+      label: "OFFSET Y", unit: "PX", value: preset[f.offsetY], min: -40, max: 40, span: 4,
+      onChange: (v) => target.setPresetField(f.offsetY, v),
     });
 
     UI.numberField(blurField, {
-      label: "BLUR", unit: "PX", value: preset.shadow_blur, min: 0, max: 40, span: 8,
-      onChange: (v) => target.setPresetField("shadow_blur", v),
+      label: "BLUR", unit: "PX", value: preset[f.blur], min: 0, max: 40, span: 8,
+      onChange: (v) => target.setPresetField(f.blur, v),
     });
 
     syncFields();

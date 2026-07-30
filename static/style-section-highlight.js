@@ -7,15 +7,21 @@
 // "Highlight" row/label — split out because "highlight" on TEXT (a static box background) and
 // the old bundled behavior on CAPTIONS (that background PLUS a per-word karaoke mode) were not
 // actually the same feature, despite sharing one row. Spotlight now owns the MODE group; this
-// section owns only the on/off marker. The two features still share highlight_color/
-// highlight_border_radius by design (one rounded-rect recipe, two independent triggers for
-// drawing it) — not a data-model change, just two settings rows over the same fields.
+// section owns only the on/off marker. As of the spotlight per-word style overrides feature
+// (2026-07-30), the two rows no longer share any fields — Spotlight's rect uses its own
+// spotlight_highlight/spotlight_highlight_color/spotlight_highlight_border_radius fields (see
+// below), independent of this section's highlight_color/highlight_border_radius.
 // highlight/highlight_color are FormatRun-capable (setField/getFieldValue);
-// highlight_border_radius is not (setPresetField/getPreset).
+// highlight_border_radius is not (setPresetField/getPreset). As of the spotlight per-word style
+// overrides feature, options.fields (default {toggle:"highlight", color:"highlight_color",
+// radius:"highlight_border_radius"}) lets a caller point this whole section at different preset
+// fields — the CAPTIONS Spotlight subpage reuses this file for the spotlight_highlight* fields
+// (its own on/off marker for the per-word rect) instead of a new file.
 window.StyleSection = window.StyleSection || {};
 
 window.StyleSection.highlight = function highlightSection(container, target, options) {
   const host = options.host;
+  const f = options.fields || { toggle: "highlight", color: "highlight_color", radius: "highlight_border_radius" };
 
   // Built once, in the factory. render() only ever calls the setValue updater captured below.
   const group = document.createElement("div");
@@ -25,10 +31,10 @@ window.StyleSection.highlight = function highlightSection(container, target, opt
   group.appendChild(rowEl);
   container.appendChild(group);
 
-  // getFieldValue, not getPreset().highlight: with a stage text selection active the row must
+  // getFieldValue, not getPreset()[f.toggle]: with a stage text selection active the row must
   // show that selection's FormatRun override.
-  function isOn() { return !!target.getFieldValue("highlight"); }
-  function colorValue() { return target.getFieldValue("highlight_color"); }
+  function isOn() { return !!target.getFieldValue(f.toggle); }
+  function colorValue() { return target.getFieldValue(f.color); }
 
   // Construction-time value/swatchColor are placeholders, not isOn()/colorValue(): this factory
   // runs once at panel load, before any text block/caption track necessarily exists —
@@ -80,20 +86,20 @@ window.StyleSection.highlight = function highlightSection(container, target, opt
       [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
       isOn() ? "on" : "off",
       (value) => {
-        target.setField("highlight", value === "on");
+        target.setField(f.toggle, value === "on");
         syncFields();
         refreshRow();
       });
 
     UI.colorSwatch(colorField, {
       label: "Highlight", value: colorValue(), span: 8,
-      onChange: (v) => { target.setField("highlight_color", v); refreshRow(); },
+      onChange: (v) => { target.setField(f.color, v); refreshRow(); },
     });
 
     UI.numberField(radiusField, {
-      label: "RADIUS", unit: "PX", value: preset.highlight_border_radius,
+      label: "RADIUS", unit: "PX", value: preset[f.radius],
       min: 0, max: 40, span: 8,
-      onChange: (v) => target.setPresetField("highlight_border_radius", v),
+      onChange: (v) => target.setPresetField(f.radius, v),
     });
 
     syncFields();
