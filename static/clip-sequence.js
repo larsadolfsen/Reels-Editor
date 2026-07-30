@@ -105,6 +105,7 @@ async function importMedia() {
   if (!paths.length) return;
 
   for (const path of paths) {
+    if (project.media_library.some((m) => m.file_path === path)) continue; // already imported
     const probeResult = await Api.probeMedia(path);
     if (!probeResult) continue;
     const { duration, has_audio, kind } = probeResult;
