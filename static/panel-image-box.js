@@ -211,6 +211,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
   function render(selectedId) {
     document.getElementById("image-box-add").onclick = renderPicker;
     const box = selectedId ? project.image_boxes.find((b) => b.id === selectedId) : null;
+    document.getElementById("image-box-add-group").hidden = !!box;
     document.getElementById("image-box-picker").hidden = !!box;
     document.getElementById("image-box-detail").hidden = !box;
     if (!box) {
