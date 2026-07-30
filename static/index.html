@@ -157,7 +157,10 @@
           <div class="style-group">
             <div class="style-row">
               <div id="video-volume-field" class="col-6"></div>
-              <button id="video-mute-btn" type="button" class="col-2 button button-icon" title="Mute clip audio">
+              <!-- Not a [data-button] hydration site: needs BOTH icons present at once (one
+                   hidden via .icon-hidden, toggled by panel-video.js), same reason as
+                   #play-pause above. -->
+              <button id="video-mute-btn" type="button" class="col-2 button button-sm button-neutral" title="Mute clip audio">
                 <span class="icon-volume" data-icon="volume-2" data-icon-size="18"></span>
                 <span class="icon-volume-muted icon-hidden" data-icon="volume-x" data-icon-size="18"></span>
               </button>
@@ -277,7 +280,7 @@
             <div class="style-group">
               <div class="style-row">
                 <input id="caption-filler-word-input" type="text" class="col-6" placeholder="e.g. øh">
-                <button id="caption-filler-word-add" type="button" class="col-2 button button-icon" title="Add filler word">+</button>
+                <button id="caption-filler-word-add" class="col-2" data-button data-button-size="sm" data-button-icon="plus" title="Add filler word"></button>
               </div>
             </div>
             <ul id="caption-filler-words-list" class="font-list"></ul>
@@ -499,7 +502,10 @@
           <div class="style-group">
             <div class="style-row">
               <div id="audio-volume-field" class="col-6"></div>
-              <button id="audio-mute-btn" type="button" class="col-2 button button-icon" title="Mute music">
+              <!-- Not a [data-button] hydration site: needs BOTH icons present at once (one
+                   hidden via .icon-hidden, toggled by panel-audio.js), same reason as
+                   #play-pause above. -->
+              <button id="audio-mute-btn" type="button" class="col-2 button button-sm button-neutral" title="Mute music">
                 <span class="icon-volume" data-icon="volume-2" data-icon-size="18"></span>
                 <span class="icon-volume-muted icon-hidden" data-icon="volume-x" data-icon-size="18"></span>
               </button>
