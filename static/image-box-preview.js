@@ -92,9 +92,9 @@ window.ImageBoxPreview = (() => {
     const stageH = overlay.clientHeight || 1;
 
     for (const b of imageBoxes) {
-      // The selected box always renders (even outside its time window) so it stays clickable
-      // to reposition/resize, matching video-box-preview.js's treatment of the selected box.
-      const visible = (b.start <= timelineTime && timelineTime < boxEnd(b)) || b.id === selectedBoxId;
+      // Visible only within its own start/duration window, selected or not — panel-image-box.js
+      // seeks the playhead into that window when a box is selected, so it's still editable.
+      const visible = b.start <= timelineTime && timelineTime < boxEnd(b);
       if (!visible) continue;
       activeIds.add(b.id);
 

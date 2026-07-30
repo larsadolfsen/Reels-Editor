@@ -92,9 +92,9 @@ window.VideoBoxPreview = (() => {
     const stageH = overlay.clientHeight || 1;
 
     for (const v of videoBoxes) {
-      // The selected box always renders (even outside its time window) so it stays clickable
-      // to reposition/resize, matching how preview.js treats the selected text block.
-      const visible = (v.start <= timelineTime && timelineTime < boxEnd(v)) || v.id === selectedBoxId;
+      // Visible only within its own start/trim window, selected or not — panel-video-box.js
+      // seeks the playhead into that window when a box is selected, so it's still editable.
+      const visible = v.start <= timelineTime && timelineTime < boxEnd(v);
       if (!visible) continue;
       activeIds.add(v.id);
 
