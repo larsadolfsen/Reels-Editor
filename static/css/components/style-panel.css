@@ -22,6 +22,7 @@
   flex-direction: column;
   min-height: 100%;
 }
+.context-panel[hidden] { display: none; }
 
 /* A context panel's main content wrapper — the part excluding drill-down subpages, which are
    later siblings shown/hidden independently — stretches to fill the remaining panel height so
