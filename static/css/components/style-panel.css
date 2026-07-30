@@ -224,9 +224,8 @@
    stretch/pad them like text-label buttons, so pin them to plain 28x28 squares (matching
    UI.button's .button-sm) with the SVG centered. Other button-group uses (POSITION row/col, BOX
    size mode, etc.) keep the default text-label sizing.
-   .style-align-group is StyleSection.align's own group element; the two id selectors are the
-   hand-written TEXT/CAPTIONS markup it replaces and are dropped as each panel is migrated. */
-#caption-align-group button,
+   .style-align-group is StyleSection.align's own group element; the hand-written TEXT/CAPTIONS
+   id selectors it replaces have both been dropped now that each panel is migrated. */
 .style-align-group button {
   width: 28px;
   height: 28px;
