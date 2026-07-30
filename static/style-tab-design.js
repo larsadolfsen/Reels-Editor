@@ -4,8 +4,7 @@
 window.StyleTab = window.StyleTab || {};
 
 // The final order (master plan) is: fontFamily, fontWeight, size, emphasis, color, outline,
-// shadow, highlight. Highlight arrives in Task 3 — the rest is each panel's own markup sitting
-// below this mount point until then.
+// shadow, highlight — all eight sections now live here.
 window.StyleTab.design = function design(container, target, options) {
   const opts = options || {};
 
@@ -28,6 +27,7 @@ window.StyleTab.design = function design(container, target, options) {
     StyleSection.color(sectionWrapper(), target, { host: opts.host }),
     StyleSection.outline(sectionWrapper(), target, { host: opts.host }),
     StyleSection.shadow(sectionWrapper(), target, { host: opts.host }),
+    StyleSection.highlight(sectionWrapper(), target, { host: opts.host, modes: !!opts.highlightModes }),
   ];
 
   return {
