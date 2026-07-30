@@ -104,8 +104,12 @@ window.PreviewText = (() => {
         : "none";
       div.style.borderRadius = (preset.box_border_radius / 1080 * stageW) + "px";
 
-      const widthIsBoxed = preset.box_width_mode === "fixed";
-      const heightIsBoxed = preset.box_height_mode === "fixed";
+      // Anything that isn't actively auto-sizing to content ("fit") gets a fixed on-stage box —
+      // covers both "fixed" and the legacy "fill" value (pre-dating this branch's removal of an
+      // explicit FILL mode) without special-casing that string, matching the export path's own
+      // tolerance (app/ass_render.py's `width_fixed = p.box_width_mode in ("fixed", "fill")`).
+      const widthIsBoxed = preset.box_width_mode !== "fit";
+      const heightIsBoxed = preset.box_height_mode !== "fit";
       const boxW = widthIsBoxed ? (preset.box_width / 1080 * stageW) + "px" : "";
       const boxH = heightIsBoxed ? (preset.box_height / 1920 * stageH) + "px" : "";
       div.style.width = boxW;
@@ -190,7 +194,11 @@ window.PreviewText = (() => {
             editingDiv = null;
             editingHandle = null;
           }
-          if (boxResizeCallbacks && boxResizeCallbacks.onEditEnd) boxResizeCallbacks.onEditEnd(text);
+          // boxResizeCallbacks is reassigned whenever a DIFFERENT block becomes selected
+          // (setSelectedTextBlock), so by the time this blur fires it may already belong to
+          // another block entirely — pass this block's own id through so the caller resolves
+          // its target fresh instead of trusting whatever block the callbacks were last built for.
+          if (boxResizeCallbacks && boxResizeCallbacks.onEditEnd) boxResizeCallbacks.onEditEnd(text, block.id);
         },
         onMove: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMove) boxResizeCallbacks.onMove(delta); },
         onMoveEnd: (delta) => { if (boxResizeCallbacks && boxResizeCallbacks.onMoveEnd) boxResizeCallbacks.onMoveEnd(delta); },
