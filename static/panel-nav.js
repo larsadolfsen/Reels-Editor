@@ -44,7 +44,10 @@ async function onTimelineSelect({ type, item, groupIndex }) {
   renderTimeline();
 }
 
-const PANEL_NAV_ITEMS = [
+// Split across #panel-nav-top/#panel-nav-bottom so the tool-mode buttons (#rail-tool: Select,
+// Text) can sit between FILES and TEXT in the rail's visual order (selector-tool-rail-placement
+// feature).
+const PANEL_NAV_TOP_ITEMS = [
   {
     value: "projects",
     label: "PROJECTS",
@@ -55,6 +58,9 @@ const PANEL_NAV_ITEMS = [
     label: "FILES",
     icon: UI.icon("file", { size: 20 }),
   },
+];
+
+const PANEL_NAV_BOTTOM_ITEMS = [
   {
     value: "text",
     label: "TEXT",
@@ -76,6 +82,8 @@ const PANEL_NAV_ITEMS = [
     icon: UI.icon("upload", { size: 20 }),
   },
 ];
+
+const PANEL_NAV_ITEMS = [...PANEL_NAV_TOP_ITEMS, ...PANEL_NAV_BOTTOM_ITEMS];
 
 function openFilesPanel() {
   selected = { type: "files" };
@@ -188,10 +196,20 @@ const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, caption
 // Rail = insert (creation). TEXT inserts a new block and drops into on-stage edit; the other
 // rail buttons open their panel (CAPTIONS's openCaptionsPanel already create-or-opens the track).
 // Opening an *existing* text block still happens via a timeline/stage click (onTimelineSelect).
-UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (value) => {
+// Split into two iconRail calls (top/bottom, see PANEL_NAV_TOP_ITEMS/PANEL_NAV_BOTTOM_ITEMS) so
+// #rail-tool's Select button can sit between them; both share one active value via navSetActive.
+function navOnSelect(value) {
+  navSetActive(value);
   if (value === "text") { addTextBlockAndEdit(); return; }
   PANEL_NAV_HANDLERS[value]();
-});
+}
+const setNavTopActive = UI.iconRail(document.getElementById("panel-nav-top"), PANEL_NAV_TOP_ITEMS, "files", navOnSelect);
+const setNavBottomActive = UI.iconRail(document.getElementById("panel-nav-bottom"), PANEL_NAV_BOTTOM_ITEMS, "files", navOnSelect);
+function navSetActive(value) {
+  setNavTopActive(value);
+  setNavBottomActive(value);
+}
 
-// Select-tool button, relocated from the top toolbar (selector-tool-rail feature).
+// Select/Text tool-mode buttons; now sit between FILES and TEXT (selector-tool-rail-placement
+// feature).
 UI.railToolButton(document.getElementById("rail-tool"));

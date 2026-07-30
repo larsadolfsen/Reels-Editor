@@ -1,7 +1,8 @@
 /* Container for the left rail's Select/Text tool buttons (selector-tool-rail feature; Text moved */
-/* in here 2026-07-30, remove-text-tool-top-bar), sitting above #panel-nav's FILES/TEXT/... rail. */
-/* Reuses icon-rail.css's .icon-rail-btn styling for the buttons themselves; this file only sets */
-/* the container's spacing. Depends on icon-rail.css/tokens.css. */
+/* in here 2026-07-30, remove-text-tool-top-bar), sitting between #panel-nav-top (PROJECTS/FILES) */
+/* and #panel-nav-bottom (TEXT/CAPTIONS/...) — selector-tool-rail-placement feature. Reuses */
+/* icon-rail.css's .icon-rail-btn styling for the buttons themselves; this file only sets the */
+/* container's spacing. Depends on icon-rail.css/tokens.css. */
 #rail-tool {
   display: flex;
   flex-direction: column;
