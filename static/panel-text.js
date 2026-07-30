@@ -86,8 +86,7 @@ function addTextBlock() {
   return block;
 }
 
-// Removes the selected block and its preset. The panel then auto-targets the first remaining
-// block (currentTextBlock's fallback), or shows the empty state when none are left.
+// Removes the selected block and its preset, then closes the side panel back to FILES.
 async function deleteSelectedTextBlock() {
   const block = currentTextBlock();
   if (!block) return;
@@ -95,10 +94,7 @@ async function deleteSelectedTextBlock() {
   delete project.text_presets[block.preset_id];
   selectedTextBlockId = null;
   await saveProject();
-  await renderTextPanel();
-  const next = currentTextBlock();
-  selected = next ? { type: "text", item: next } : { type: "files" };
-  renderTimeline();
+  openFilesPanel();
 }
 
 // `position` ({x, y} in 1080x1920 canvas px), when given, overrides the new block's default
