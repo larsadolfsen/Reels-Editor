@@ -1,10 +1,11 @@
 /* Custom up/down stepper for number inputs (the native OS spin control can't be restyled). */
 /* Exposes .number-field-wrap/.number-field-arrows/.number-field-arrow. The up/down buttons are
    built by static/ui-number-field.js via UI.button (chevron-up/chevron-down icons, size "sm") —
-   this file only lays them out in a stacked column and squares off the shared corners against
-   the input field; button.css owns their look (border/background/hover). Named "arrows" (not
-   the old "stepper" wording) so no selector here collides with the retired stepper-button class
-   pinned by tests/js/no-legacy-button-classes.test.js. */
+   this file lays them out in a stacked column, squares off the shared corners against the input
+   field, and restores the pre-migration filled-surface/hover-fill/no-visible-border look that
+   UI.button's default .button-neutral border/background doesn't match (final review finding 7).
+   Named "arrows" (not the old "stepper" wording) so no selector here collides with the retired
+   stepper-button class pinned by tests/js/no-legacy-button-classes.test.js. */
 .number-field-wrap { display: flex; align-items: stretch; }
 
 .style-field .number-field-wrap input[type="number"] {
@@ -19,16 +20,29 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  border: 1px solid var(--border);
   border-top-right-radius: var(--radius-lg);
   border-bottom-right-radius: var(--radius-lg);
   overflow: hidden;
 }
 
+/* Overrides UI.button's .button-neutral border-color/background: pre-migration the stepper's
+   filled surface + hover fill lived on the button itself and the border lived on the wrapper
+   above, not on each individual arrow (which would otherwise double up against
+   .number-field-arrow-up's own border-bottom divider below). */
 .number-field-arrow {
   flex: 1;
   width: 20px;
   height: auto;
   border-radius: 0;
+  background: var(--surface);
+  border-color: transparent;
 }
 
 .number-field-arrow-up { border-bottom: 1px solid var(--border-soft); }
+
+.number-field-arrow:hover,
+.number-field-arrow:focus-visible {
+  background: var(--border-soft);
+  outline: none;
+}

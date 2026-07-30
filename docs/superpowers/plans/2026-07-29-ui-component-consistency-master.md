@@ -88,7 +88,7 @@ session convention — so anyone looking at the branch can see which batch is un
 | 1b — UI.text | done |
 | 2 — UI.icon | done |
 | 3 — UI.button | done |
-| 4 — UI.safeZones | not started |
+| 4 — UI.safeZones | done |
 
 ## Verification (run once, at the very end, after all batches)
 

@@ -34,6 +34,7 @@ uiButtonGlobal.UI.button = function button(container, {
   }
   if (label) {
     const span = document.createElement("span");
+    span.className = "button-label";
     span.textContent = label;
     btn.appendChild(span);
   }

@@ -52,12 +52,7 @@
           <video id="player" class="stage-media"></video>
           <img id="image-player" class="stage-media stage-hidden">
           <div id="overlay"></div>
-          <div id="safe-zones" hidden>
-            <div class="safe-zone safe-zone-top"><span class="chip chip--outlined chip--safe-zone">FOLLOWING / FOR YOU</span></div>
-            <div class="safe-zone safe-zone-right"><span class="chip chip--outlined chip--safe-zone">LIKE &middot; COMMENT &middot; SAVE &middot; SHARE</span></div>
-            <div class="safe-zone safe-zone-caption"><span class="chip chip--outlined chip--safe-zone">USERNAME / CAPTION / SOUND</span></div>
-            <div class="safe-zone safe-zone-nav"><span class="chip chip--outlined chip--safe-zone">HOME / DISCOVER / INBOX / PROFILE</span></div>
-          </div>
+          <div id="safe-zones" hidden></div>
         </div>
         <div id="transport">
           <button id="restart" data-button data-button-size="sm" data-button-icon="restart" title="Restart from beginning" hidden></button>
@@ -76,8 +71,8 @@
       <div id="timeline-strip">
         <div id="timeline-toolbar">
           <div id="zoom-controls">
-            <button id="zoom-out" class="zoom-btn" title="Zoom out">&ndash;</button>
-            <button id="zoom-in" class="zoom-btn" title="Zoom in">+</button>
+            <button id="zoom-out" data-button data-button-size="sm" data-button-icon="minus" title="Zoom out"></button>
+            <button id="zoom-in" data-button data-button-size="sm" data-button-icon="plus" title="Zoom in"></button>
             <button id="safe-zones-toggle" data-button data-button-size="sm" data-button-icon="shield" aria-pressed="false" title="Toggle TikTok UI safe-zone guide" hidden></button>
           </div>
           <div class="toolbar-divider"></div>
@@ -162,7 +157,10 @@
           <div class="style-group">
             <div class="style-row">
               <div id="video-volume-field" class="col-6"></div>
-              <button id="video-mute-btn" type="button" class="col-2 button button-icon" title="Mute clip audio">
+              <!-- Not a [data-button] hydration site: needs BOTH icons present at once (one
+                   hidden via .icon-hidden, toggled by panel-video.js), same reason as
+                   #play-pause above. -->
+              <button id="video-mute-btn" type="button" class="col-2 button button-sm button-neutral" title="Mute clip audio">
                 <span class="icon-volume" data-icon="volume-2" data-icon-size="18"></span>
                 <span class="icon-volume-muted icon-hidden" data-icon="volume-x" data-icon-size="18"></span>
               </button>
@@ -282,7 +280,7 @@
             <div class="style-group">
               <div class="style-row">
                 <input id="caption-filler-word-input" type="text" class="col-6" placeholder="e.g. øh">
-                <button id="caption-filler-word-add" type="button" class="col-2 button button-icon" title="Add filler word">+</button>
+                <button id="caption-filler-word-add" class="col-2" data-button data-button-size="sm" data-button-icon="plus" title="Add filler word"></button>
               </div>
             </div>
             <ul id="caption-filler-words-list" class="font-list"></ul>
@@ -504,7 +502,10 @@
           <div class="style-group">
             <div class="style-row">
               <div id="audio-volume-field" class="col-6"></div>
-              <button id="audio-mute-btn" type="button" class="col-2 button button-icon" title="Mute music">
+              <!-- Not a [data-button] hydration site: needs BOTH icons present at once (one
+                   hidden via .icon-hidden, toggled by panel-audio.js), same reason as
+                   #play-pause above. -->
+              <button id="audio-mute-btn" type="button" class="col-2 button button-sm button-neutral" title="Mute music">
                 <span class="icon-volume" data-icon="volume-2" data-icon-size="18"></span>
                 <span class="icon-volume-muted icon-hidden" data-icon="volume-x" data-icon-size="18"></span>
               </button>
@@ -834,6 +835,7 @@
 <script src="/static/panel-audio.js"></script>
 <script src="/static/panel-media.js"></script>
 <script src="/static/panel-video.js"></script>
+<script src="/static/ui-safe-zones.js"></script>
 <script src="/static/safe-zone-geometry.js"></script>
 <script src="/static/panel-text.js"></script>
 <script src="/static/stage-click-router.js"></script>

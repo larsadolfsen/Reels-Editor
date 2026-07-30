@@ -27,7 +27,7 @@
 
 #style-panel.collapsed #panel-files:not([hidden]) #panel-files-header { display: none; }
 #style-panel.collapsed #panel-files-add { padding: 0 10px; }
-#style-panel.collapsed #panel-files-add .label { display: none; }
+#style-panel.collapsed #panel-files-add .button-label { display: none; }
 #style-panel.collapsed #clip-list { padding: var(--space-2) 0; }
 #style-panel.collapsed #clip-list li { justify-content: center; padding: var(--space-2) 0; }
 #style-panel.collapsed .clip-info { display: none; }
