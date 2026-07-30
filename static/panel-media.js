@@ -1,7 +1,7 @@
 // FILES/MEDIA context-panel section: media-library list (thumbnail, name, duration),
 // filterable by type via an icon tab bar (All/Video/Images/Audio, UI.tabBar, mounted in
 // #files-type-tabs, added 2026-07-30 files-icons-tab feature — replaces the old always-grouped
-// VIDEOS/IMAGES/AUDIO section-label rows), click-to-select, hover-reveal inline rename (pencil icon), remove (trash
+// VIDEOS/IMAGES/AUDIO section-label rows), click-to-select, hover-reveal inline rename (file-pen icon), remove (trash
 // icon, swapped for a disabled lock icon when the media item is referenced by any ClipLayer),
 // and hover-reveal action icon(s) (added 2026-07-24, extended 2026-07-30 video-hover-icons-files)
 // that add the item directly: a video row shows two — clapperboard appends a new clip to the end
@@ -250,7 +250,7 @@ window.MediaPanel = window.MediaPanel || {};
     }
 
     const renameBtn = UI.button(actions, {
-      icon: "pencil",
+      icon: "file-pen",
       size: "sm",
       onClick: (e) => {
         e.stopPropagation();
