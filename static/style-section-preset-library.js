@@ -48,6 +48,7 @@ window.StyleSection.presetLibrary = function presetLibrary(container, target, op
       id: crypto.randomUUID().replaceAll("-", ""),
       name,
       usage_count: 0,
+      preset_kind: target.kind,
     };
     await Api.savePreset(saved);
     saveMode = false;
@@ -96,7 +97,9 @@ window.StyleSection.presetLibrary = function presetLibrary(container, target, op
     formEl.innerHTML = "";
     if (saveMode) UI.styleSaveForm(formEl, { onSave: saveNewPreset, onCancel: exitSaveMode });
 
-    const sorted = [...savedPresets].sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
+    const sorted = savedPresets
+      .filter((saved) => (saved.preset_kind || "text") === target.kind)
+      .sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
     listEl.innerHTML = "";
     sorted.forEach((saved) => listEl.appendChild(UI.stylePresetCard(saved, {
       onClick: saveMode ? overwriteSavedPreset : applySavedPreset,
