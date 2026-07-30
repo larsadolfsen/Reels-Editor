@@ -22,9 +22,8 @@ New fields, all defaulted so existing saved projects load unchanged:
 ```
 spotlight_color: str = "#FFD400"
 
-spotlight_outline: bool = False
 spotlight_outline_color: str = "#000000"
-spotlight_outline_px: int = 4
+spotlight_outline_px: int = 0   # 0 = off, same "0 means no override" convention as box_border_width — the base Outline control has no separate on/off boolean either, only width
 
 spotlight_shadow: bool = False
 spotlight_shadow_color: str = "#000000"

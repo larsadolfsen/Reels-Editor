@@ -17,7 +17,7 @@ function defaultCaptionPreset(id) {
     align: "center", x: 540, y: Math.round(SafeZoneGeometry.CAPTION_ZONE_TOP), entrance: "none",
     highlight: false, highlight_color: "#FFD400", highlight_mode: "current_word", highlight_border_radius: 4,
     spotlight_color: "#FFD400",
-    spotlight_outline: false, spotlight_outline_color: "#000000", spotlight_outline_px: 4,
+    spotlight_outline_color: "#000000", spotlight_outline_px: 0,
     spotlight_shadow: false, spotlight_shadow_color: "#000000", spotlight_shadow_offset_x: 4, spotlight_shadow_offset_y: 4, spotlight_shadow_blur: 0,
     spotlight_highlight: false, spotlight_highlight_color: "#FFD400", spotlight_highlight_border_radius: 4,
   };

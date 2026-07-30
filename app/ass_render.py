@@ -286,8 +286,8 @@ def _current_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> lis
     fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
     highlight = _ass_override_color(p.spotlight_color)
     normal = _ass_override_color(p.color)
-    outline_on = f"\\3c{_ass_override_color(p.spotlight_outline_color)}\\bord{p.spotlight_outline_px}" if p.spotlight_outline else ""
-    outline_off = f"\\3c{_ass_override_color(p.outline_color)}\\bord{p.outline_px}" if p.spotlight_outline else ""
+    outline_on = f"\\3c{_ass_override_color(p.spotlight_outline_color)}\\bord{p.spotlight_outline_px}" if p.spotlight_outline_px > 0 else ""
+    outline_off = f"\\3c{_ass_override_color(p.outline_color)}\\bord{p.outline_px}" if p.spotlight_outline_px > 0 else ""
     shadow_on = (f"\\4c{_ass_override_color(p.spotlight_shadow_color)}\\4a00"
                  f"\\xshad{p.spotlight_shadow_offset_x}\\yshad{p.spotlight_shadow_offset_y}\\blur{p.spotlight_shadow_blur}"
                  if p.spotlight_shadow else "")

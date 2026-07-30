@@ -26,7 +26,7 @@
 - Test: `tests/test_models.py`
 
 **Interfaces:**
-- Produces: `TextPreset.spotlight_color: str`, `.spotlight_outline: bool`, `.spotlight_outline_color: str`, `.spotlight_outline_px: int`, `.spotlight_shadow: bool`, `.spotlight_shadow_color: str`, `.spotlight_shadow_offset_x: int`, `.spotlight_shadow_offset_y: int`, `.spotlight_shadow_blur: int`, `.spotlight_highlight: bool`, `.spotlight_highlight_color: str`, `.spotlight_highlight_border_radius: int` — all consumed by Task 2 (export) and Task 6 (preview).
+- Produces: `TextPreset.spotlight_color: str`, `.spotlight_outline_color: str`, `.spotlight_outline_px: int` (0 = off, no separate boolean — matches the base Outline control's own "always on, width controls visibility" convention, fixed post-review after Task 5), `.spotlight_shadow: bool`, `.spotlight_shadow_color: str`, `.spotlight_shadow_offset_x: int`, `.spotlight_shadow_offset_y: int`, `.spotlight_shadow_blur: int`, `.spotlight_highlight: bool`, `.spotlight_highlight_color: str`, `.spotlight_highlight_border_radius: int` — all consumed by Task 2 (export) and Task 6 (preview).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -898,7 +898,7 @@ In `static/preview-captions.js`, replace the `page.forEach((line) => { ... })` b
           : timelineTime >= word.t_start && timelineTime < word.t_end;
         const spotlightOn = isActive && preset.highlight_mode !== "off";
         span.style.color = spotlightOn ? preset.spotlight_color : preset.color;
-        span.style.webkitTextStroke = (spotlightOn && preset.highlight_mode === "current_word" && preset.spotlight_outline)
+        span.style.webkitTextStroke = (spotlightOn && preset.highlight_mode === "current_word" && preset.spotlight_outline_px > 0)
           ? `${preset.spotlight_outline_px / 1920 * stageH}px ${preset.spotlight_outline_color}`
           : "";
         span.style.textShadow = (spotlightOn && preset.highlight_mode === "current_word" && preset.spotlight_shadow)

@@ -291,14 +291,14 @@ def test_progressive_fill_style_uses_spotlight_color_as_primary():
     assert hex_to_ass("#00FF00") in style
 
 def test_current_word_dialogue_no_outline_or_shadow_override_when_off():
-    pr = TextPreset(name="Cap", highlight_mode="current_word", spotlight_outline=False, spotlight_shadow=False)
+    pr = TextPreset(name="Cap", highlight_mode="current_word", spotlight_outline_px=0, spotlight_shadow=False)
     words = [CaptionWord(text="hi", t_start=0.0, t_end=0.5), CaptionWord(text="there", t_start=0.5, t_end=1.0)]
     dialogues = _current_word_dialogues([words], pr)
     assert not any("\\bord" in d and pr.spotlight_outline_color in d for d in dialogues)
 
 def test_current_word_dialogue_outline_override_when_on():
     from app.ass_render import _ass_override_color
-    pr = TextPreset(name="Cap", highlight_mode="current_word", spotlight_outline=True,
+    pr = TextPreset(name="Cap", highlight_mode="current_word",
                      spotlight_outline_color="#00FF00", spotlight_outline_px=6)
     words = [CaptionWord(text="hi", t_start=0.0, t_end=0.5), CaptionWord(text="there", t_start=0.5, t_end=1.0)]
     dialogues = _current_word_dialogues([words], pr)

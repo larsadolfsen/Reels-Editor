@@ -375,9 +375,8 @@ def test_boxes_saved_before_the_mask_feature_load_with_the_mask_off():
 def test_text_preset_spotlight_fields_default():
     p = TextPreset(name="Caption")
     assert p.spotlight_color == "#FFD400"
-    assert p.spotlight_outline is False
     assert p.spotlight_outline_color == "#000000"
-    assert p.spotlight_outline_px == 4
+    assert p.spotlight_outline_px == 0
     assert p.spotlight_shadow is False
     assert p.spotlight_shadow_color == "#000000"
     assert p.spotlight_shadow_offset_x == 4
@@ -390,7 +389,6 @@ def test_text_preset_spotlight_fields_default():
 def test_text_preset_spotlight_fields_round_trip():
     p = TextPreset(name="Caption",
                    spotlight_color="#00FF00",
-                   spotlight_outline=True,
                    spotlight_outline_color="#FF0000",
                    spotlight_outline_px=2,
                    spotlight_shadow=True,
@@ -404,7 +402,6 @@ def test_text_preset_spotlight_fields_round_trip():
     loaded = TextPreset.model_validate_json(p.model_dump_json())
     assert loaded == p
     assert loaded.spotlight_color == "#00FF00"
-    assert loaded.spotlight_outline is True
     assert loaded.spotlight_outline_color == "#FF0000"
     assert loaded.spotlight_outline_px == 2
     assert loaded.spotlight_shadow is True
@@ -422,9 +419,8 @@ def test_text_preset_old_saved_json_without_spotlight_fields_loads_with_defaults
     old_json = json.dumps({"name": "Pop"})
     loaded = TextPreset.model_validate_json(old_json)
     assert loaded.spotlight_color == "#FFD400"
-    assert loaded.spotlight_outline is False
     assert loaded.spotlight_outline_color == "#000000"
-    assert loaded.spotlight_outline_px == 4
+    assert loaded.spotlight_outline_px == 0
     assert loaded.spotlight_shadow is False
     assert loaded.spotlight_shadow_color == "#000000"
     assert loaded.spotlight_shadow_offset_x == 4

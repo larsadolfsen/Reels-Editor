@@ -106,9 +106,8 @@ class TextPreset(BaseModel):
     highlight_border_radius: int = 4   # px on the 1080x1920 canvas; shared by TEXT's marker-highlight rect and CAPTIONS' box-level highlight rect
 
     spotlight_color: str = "#FFD400"   # per-word karaoke (CAPTIONS only): active word text color swap
-    spotlight_outline: bool = False    # per-word outline on/off
     spotlight_outline_color: str = "#000000"
-    spotlight_outline_px: int = 4
+    spotlight_outline_px: int = 0       # 0 (default) = no per-word outline override, same "0 means off" convention as box_border_width; the base Outline control has no separate on/off boolean either
     spotlight_shadow: bool = False     # per-word drop-shadow on/off
     spotlight_shadow_color: str = "#000000"
     spotlight_shadow_offset_x: int = 4
