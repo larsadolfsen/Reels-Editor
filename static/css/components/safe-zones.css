@@ -20,8 +20,9 @@
 /* Solid (non-dashed) accent line on the edge facing the safe interior, so the
    boundary reads clearly even against busy/bright footage where a thin dashed
    line disappears. Position/size (top/right/bottom/left/width/height) is no longer set
-   here — UI.safeZones (ui-safe-zones.js) computes those from SAFE_ZONES and applies them as
-   inline style.cssText per band, so this file only keeps each band's visual accent. */
+   here — UI.safeZones (ui-safe-zones.js) computes those from SAFE_ZONES and injects them as
+   a generated <style> element (one rule per band) rather than inline styles, so this file
+   only keeps each band's visual accent. */
 .safe-zone-top { border-bottom: 2px solid var(--safe-zone); }
 .safe-zone-right { writing-mode: vertical-rl; border-left: 2px solid var(--safe-zone); }
 .safe-zone-caption { align-items: flex-start; padding-top: var(--space-2); border-top: 2px solid var(--safe-zone); }

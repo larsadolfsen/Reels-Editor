@@ -13,7 +13,7 @@ uiSafeZonesGlobal.SAFE_ZONES = [
   { key: "nav", label: "HOME / DISCOVER / INBOX / PROFILE", inset: { left: 0, right: 0, bottom: 0, height: 7 } },
 ];
 
-function insetStyle(inset) {
+function insetDecls(inset) {
   const parts = [];
   if (inset.top !== undefined) parts.push(`top: ${inset.top}%`);
   if (inset.right !== undefined) parts.push(`right: ${inset.right}%`);
@@ -24,14 +24,33 @@ function insetStyle(inset) {
   return parts.join("; ");
 }
 
+// One CSS rule per band, e.g. ".safe-zone-top { top: 0%; left: 0%; right: 0%; height: 6%; }" —
+// keeps SAFE_ZONES as the single source of truth for geometry while avoiding a per-band inline
+// `style` attribute (this project's no-inline-style convention).
+function zoneRuleCss(zone) {
+  return `.safe-zone-${zone.key} { ${insetDecls(zone.inset)}; }`;
+}
+
+const STYLE_EL_ID = "safe-zone-geometry-style";
+
+// Injects the generated geometry <style> element once (idempotent — safe to call on every
+// render), rather than per-band inline styles on each div.
+function ensureStyleElement() {
+  if (document.getElementById(STYLE_EL_ID)) return;
+  const style = document.createElement("style");
+  style.id = STYLE_EL_ID;
+  style.textContent = uiSafeZonesGlobal.SAFE_ZONES.map(zoneRuleCss).join("\n");
+  document.head.appendChild(style);
+}
+
 // Renders all 4 bands into container (expects container to already be the #safe-zones element,
 // which owns position:absolute/inset:0/pointer-events:none from safe-zones.css).
 uiSafeZonesGlobal.UI.safeZones = function safeZones(container) {
   container.innerHTML = "";
+  ensureStyleElement();
   for (const zone of uiSafeZonesGlobal.SAFE_ZONES) {
     const div = document.createElement("div");
     div.className = `safe-zone safe-zone-${zone.key}`;
-    div.style.cssText = insetStyle(zone.inset);
     const span = document.createElement("span");
     span.className = "chip chip--outlined chip--safe-zone";
     span.innerHTML = zone.label;
