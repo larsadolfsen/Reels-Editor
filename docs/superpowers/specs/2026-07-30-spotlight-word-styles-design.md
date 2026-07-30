@@ -76,23 +76,36 @@ fields (`preset.highlight`, `_caption_highlight_dialogues`), a separate feature.
   chevron rows that drill one level deeper, matching the reference screenshot, without changing
   `StylePanelHost` itself.
 
-Four new files, each mirroring the shape of its shared-section counterpart exactly (settings row +
-drill-down subpage built from `UI.settingsRow`/`UI.colorSwatch`/`UI.numberField`/`UI.buttonGroup`),
-but writing `spotlight_*` fields via `target.setPresetField` only (whole-preset — captions have no
-per-range `FormatRun`, so there is no `setField`/`getFieldValue` split here unlike the base Color/
-Outline/Shadow sections):
+**Reuse, not copy:** instead of four new files, `style-section-spotlight.js` calls the **existing**
+`style-section-color.js`/`style-section-outline.js`/`style-section-shadow.js`/
+`style-section-highlight.js` — the same functions `style-tab-design.js` already uses for the base
+preset's own Color/Outline/Shadow/Highlight. Each is parameterized to take the field name(s) it
+reads/writes as an option, instead of the base preset's field names being hardcoded, so it can be
+pointed at the `spotlight_*` fields:
 
-- `static/spotlight-section-color.js` — mirrors `style-section-color.js`. Always visible when mode
-  != off.
-- `static/spotlight-section-outline.js` — mirrors `style-section-outline.js`. Visible only in
-  Current word mode.
-- `static/spotlight-section-shadow.js` — mirrors `style-section-shadow.js`. Visible only in
-  Current word mode.
-- `static/spotlight-section-highlight.js` — mirrors `style-section-highlight.js` (on/off + color +
-  radius). Visible in both Current word and Progressive fill.
+- `style-section-color.js`: new `options.field` (default `"color"`, so every existing call is
+  unaffected) — spotlight passes `field: "spotlight_color"`.
+- `style-section-outline.js`: new `options.colorField`/`options.widthField` (defaults
+  `"outline_color"`/`"outline_px"`) — spotlight passes `"spotlight_outline_color"`/
+  `"spotlight_outline_px"`.
+- `style-section-shadow.js`: new `options.fields` object (default `{toggle: "shadow",
+  color: "shadow_color", offsetX: "shadow_offset_x", offsetY: "shadow_offset_y",
+  blur: "shadow_blur"}`) — spotlight passes the `spotlight_shadow*` equivalents.
+- `style-section-highlight.js`: new `options.fields` object (default `{toggle: "highlight",
+  color: "highlight_color", radius: "highlight_border_radius"}`) — spotlight passes the
+  `spotlight_highlight*` equivalents.
 
-`style-section-spotlight.js` re-renders which of these four are shown whenever the mode changes
-(same `syncFields()`-style visibility toggle the file already uses for the old Radius field).
+Every existing call site in `style-tab-design.js` keeps working unchanged (the new options default
+to today's field names) — zero behavior change for TEXT or the top-level CAPTIONS Design tab.
+Labels ("Color"/"Outline"/"Shadow"/"Highlight") stay hardcoded as-is; reusing the same wording
+inside the Spotlight subpage's own nested host is intentional, not a naming collision (it's a
+separate `StylePanelHost` instance with its own subpages).
+
+`style-section-spotlight.js` wraps each of the four calls in its own plain `<div>` (passed in as
+that section's `container` argument), so it can toggle `wrapper.hidden` directly without touching
+the shared files further: Color and Highlight hide when Mode is **Off**; Outline and Shadow
+additionally hide whenever Mode is **Progressive fill**. Recomputed on every Mode change and once
+on initial render.
 
 ## Preview (`static/preview-captions.js`)
 
