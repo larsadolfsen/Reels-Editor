@@ -9,6 +9,7 @@ from app.text_case import apply_text_case
 CAPTION_PAD_X_EM = 0.35   # captions only — text blocks are padding-free, their box hugs the glyphs
 CAPTION_PAD_Y_EM = 0.15
 LINE_HEIGHT = 1.15
+HIGHLIGHT_PAD_EM = 0.2    # equal padding on all 4 sides of a per-line/per-word highlight rect
 
 CAPTION_DEFAULT_BOX_WIDTH = 900    # px on the 1080x1920 canvas — used when the preset predates fixed-size captions
 CAPTION_DEFAULT_BOX_HEIGHT = 350   # px
@@ -300,28 +301,45 @@ def _current_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> lis
                           f"{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{body}")
     return dialogues
 
+def _line_word_offsets(line: list[CaptionWord], measure: Callable[[str], float]) -> tuple[list[tuple[float, float]], float]:
+    """For one line of words: per-word (x_offset, bare glyph width) plus the line's total width
+    (word widths + inter-word spaces). Shared by _background_word_dialogues and
+    _caption_highlight_dialogues so both measure lines identically."""
+    offsets = []
+    x = 0.0
+    for j, word in enumerate(line):
+        seg = word.text + (" " if j < len(line) - 1 else "")
+        offsets.append((x, measure(word.text)))
+        x += measure(seg)
+    return offsets, x
+
+def _line_left_origin(p: TextPreset, line_width: float) -> float:
+    if p.align == "left":
+        return p.x
+    if p.align == "right":
+        return p.x - line_width
+    return p.x - line_width / 2
+
 def _background_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> list[str]:
     """CAPTIONS 'background' highlight mode: draws a rounded rect behind the currently-active
     word (no text-color swap, unlike _current_word_dialogues), following the same per-line
     x-offset/width math _highlight_dialogues uses for TEXT-block marker highlights, and the same
     align-relative left-origin convention _caption_style's Alignment field expects (p.x is the
-    line's left/right/center anchor depending on p.align). One rect+text dialogue pair is emitted
-    per active word, with the rect appended first so it renders underneath the text."""
+    line's left/right/center anchor depending on p.align). The rect is padded by HIGHLIGHT_PAD_EM
+    on all 4 sides around the word's tight glyph box (size_px tall, not the looser
+    size_px*LINE_HEIGHT line pitch), vertically centered within that line's pitch slot so the
+    padding reads as equal on all sides rather than being swallowed by line-height leading. One
+    rect+text dialogue pair is emitted per active word, with the rect appended first so it renders
+    underneath the text."""
     weight = _resolved_weight(p)
     measure = pil_font_measurer(p.font, p.size_px, weight)
     fill = _ass_override_color(p.highlight_color)
-    rect_height = p.size_px * LINE_HEIGHT
+    pad = HIGHLIGHT_PAD_EM * p.size_px
+    line_pitch = p.size_px * LINE_HEIGHT
+    rect_height = p.size_px + 2 * pad
     text_fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
 
-    line_layout = []  # per line: (list of (word_x_offset, word_width), line_total_width)
-    for line in page:
-        offsets = []
-        x = 0.0
-        for j, word in enumerate(line):
-            seg = word.text + (" " if j < len(line) - 1 else "")
-            offsets.append((x, measure(word.text)))
-            x += measure(seg)
-        line_layout.append((offsets, x))
+    line_layout = [_line_word_offsets(line, measure) for line in page]
 
     line_bodies = []
     for line in page:
@@ -331,17 +349,12 @@ def _background_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> 
     dialogues = []
     for line_i, line in enumerate(page):
         offsets, line_width = line_layout[line_i]
-        if p.align == "left":
-            left_origin = p.x
-        elif p.align == "right":
-            left_origin = p.x - line_width
-        else:
-            left_origin = p.x - line_width / 2
+        left_origin = _line_left_origin(p, line_width)
+        top = p.y + line_i * line_pitch + (line_pitch - rect_height) / 2
         for word_i, active in enumerate(line):
             word_x, word_w = offsets[word_i]
-            left = left_origin + word_x
-            top = p.y + line_i * rect_height
-            path = _rounded_rect_path(word_w, rect_height, p.highlight_border_radius)
+            left = left_origin + word_x - pad
+            path = _rounded_rect_path(word_w + 2 * pad, rect_height, p.highlight_border_radius)
             rect_fx = f"\\an7\\pos({left:.0f},{top:.0f})\\1a&H00&\\3a&HFF&\\1c{fill}\\p1"
             dialogues.append(f"Dialogue: 0,{ass_time(active.t_start)},{ass_time(active.t_end)},"
                               f"{CAPTION_STYLE_NAME},,0,0,0,,{{{rect_fx}}}{path}{{\\p0}}")
@@ -349,27 +362,34 @@ def _background_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> 
                               f"{CAPTION_STYLE_NAME},,0,0,0,,{{{text_fx}}}{text_body}")
     return dialogues
 
-def _caption_highlight_dialogue(p: TextPreset, words: list[CaptionWord], box_width: float, box_height: float) -> str | None:
-    """CAPTIONS always-on marker highlight (preset.highlight): a rounded rect drawn behind the
-    whole caption box for as long as any caption word is on screen, independent of highlight_mode's
-    per-word karaoke rendering (current_word/progressive_fill/background). Spans the caption
-    track's full active lifetime (first word's t_start to last word's t_end), not any single
-    word's window. Same _rounded_rect_path construction as _box_dialogue, sized to the caption
-    box instead of a text block."""
-    if not p.highlight or not words:
-        return None
-    if p.align == "left":
-        left = p.x
-    elif p.align == "right":
-        left = p.x - box_width
-    else:
-        left = p.x - box_width / 2
-    top = p.y
-    path = _rounded_rect_path(box_width, box_height, p.highlight_border_radius)
+def _caption_highlight_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> list[str]:
+    """CAPTIONS always-on marker highlight (preset.highlight): one rounded rect per visible line,
+    hugging that line's actual rendered text (not the fixed caption box), padded by
+    HIGHLIGHT_PAD_EM on all 4 sides the same way _background_word_dialogues pads a word — tight to
+    the glyph height (size_px), vertically centered in the line's pitch slot. Independent of
+    highlight_mode's per-word rendering (current_word/progressive_fill/background). Spans the
+    whole page's active window (first word's t_start to last word's t_end in this page), same as
+    the page's own text dialogue."""
+    if not p.highlight or not page:
+        return []
+    weight = _resolved_weight(p)
+    measure = pil_font_measurer(p.font, p.size_px, weight)
     fill = _ass_override_color(p.highlight_color)
-    fx = f"\\an7\\pos({left:.0f},{top:.0f})\\1a&H00&\\3a&HFF&\\1c{fill}\\p1"
-    start, end = words[0].t_start, words[-1].t_end
-    return f"Dialogue: 0,{ass_time(start)},{ass_time(end)},{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{path}{{\\p0}}"
+    pad = HIGHLIGHT_PAD_EM * p.size_px
+    line_pitch = p.size_px * LINE_HEIGHT
+    rect_height = p.size_px + 2 * pad
+    flat = [word for line in page for word in line]
+    start, end = flat[0].t_start, flat[-1].t_end
+    out = []
+    for line_i, line in enumerate(page):
+        _, line_width = _line_word_offsets(line, measure)
+        left_origin = _line_left_origin(p, line_width)
+        left = left_origin - pad
+        top = p.y + line_i * line_pitch + (line_pitch - rect_height) / 2
+        path = _rounded_rect_path(line_width + 2 * pad, rect_height, p.highlight_border_radius)
+        fx = f"\\an7\\pos({left:.0f},{top:.0f})\\1a&H00&\\3a&HFF&\\1c{fill}\\p1"
+        out.append(f"Dialogue: 0,{ass_time(start)},{ass_time(end)},{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{path}{{\\p0}}")
+    return out
 
 def render_caption_ass(project: Project, preset: TextPreset) -> str:
     words = project.captions.words if project.captions else []
@@ -389,10 +409,8 @@ def render_caption_ass(project: Project, preset: TextPreset) -> str:
     measure = pil_font_measurer(preset.font, preset.size_px, weight)
     pages = paginate_words(words, measure, max(1, box_width - pad_x), max(1, box_height - pad_y), preset.size_px, LINE_HEIGHT)
     event_lines = []
-    highlight_line = _caption_highlight_dialogue(preset, words, box_width, box_height)
-    if highlight_line:
-        event_lines.append(highlight_line)
     for page in pages:
+        event_lines.extend(_caption_highlight_dialogues(page, preset))
         if preset.highlight_mode == "current_word":
             event_lines.extend(_current_word_dialogues(page, preset))
         elif preset.highlight_mode == "background":
