@@ -1,6 +1,7 @@
 /* Reusable toggle-button row/grid microcomponent (.btn-group). Standalone icon-button styling
    retired 2026-07-30 (Task 17) in favor of UI.button's .button-sm — see button.css. */
-/* Exposes .btn-group, .btn-group button, .btn-group-inline, .icon-hidden. Depends on tokens.css. Built by static/ui-components.js. */
+/* Exposes .btn-group, .btn-group button, .btn-group-indicator, .btn-group-inline, .icon-hidden.
+   Depends on tokens.css. Built by static/ui-button-group.js. */
 .btn-group {
   display: grid;
   grid-template-columns: repeat(8, var(--control-size-sm));
@@ -18,6 +19,45 @@
   border-color: var(--accent);
   color: var(--text);
   background: var(--accent-tint);
+}
+
+/* Segmented "pill" control (added connected-button-groups): options sit flush inside one rounded
+   track with no gap between them, and a single sliding indicator — positioned in px by
+   ui-button-group.js from the active button's own rendered box, so it works for any mix of
+   spans — animates behind whichever button is active instead of toggling per-button
+   border/background. Scoped off .btn-group-inline, whose buttons share a row with unrelated
+   standalone UI.button toggles rather than forming one segmented control. */
+.btn-group:not(.btn-group-inline) {
+  position: relative;
+  gap: 0;
+  background: var(--bg-2);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+}
+
+.btn-group:not(.btn-group-inline) button {
+  position: relative;
+  z-index: 1;
+  border: none;
+  background: none;
+  border-radius: var(--radius-pill);
+}
+
+.btn-group:not(.btn-group-inline) button[aria-pressed="true"] {
+  border-color: transparent;
+  background: none;
+}
+
+.btn-group-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  background: var(--surface);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform 180ms ease, width 180ms ease, height 180ms ease;
+  pointer-events: none;
 }
 
 /* Modifier for a .btn-group that should share its parent .style-row's grid instead of
