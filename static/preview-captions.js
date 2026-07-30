@@ -106,10 +106,16 @@ window.PreviewCaptions = (() => {
       lineContentWrap.style.lineHeight = "1";
       line.forEach((word, i) => {
         const span = document.createElement("span");
+        // "active" for the color sweep is cumulative in progressive_fill (every word spoken so
+        // far stays swapped, matching ASS's \k semantics) but the highlight rect must only ever
+        // sit behind the word being spoken RIGHT NOW, in both modes — so it uses the narrow
+        // [t_start, t_end) window regardless of highlight_mode, not the cumulative isActive flag.
         const isActive = preset.highlight_mode === "progressive_fill"
           ? timelineTime >= word.t_start
           : timelineTime >= word.t_start && timelineTime < word.t_end;
+        const isCurrentWord = timelineTime >= word.t_start && timelineTime < word.t_end;
         const spotlightOn = isActive && preset.highlight_mode !== "off";
+        const spotlightHighlightOn = isCurrentWord && preset.highlight_mode !== "off";
         span.style.color = spotlightOn ? preset.spotlight_color : preset.color;
         span.style.webkitTextStroke = (spotlightOn && preset.highlight_mode === "current_word" && preset.spotlight_outline_px > 0)
           ? `${preset.spotlight_outline_px / 1920 * stageH}px ${preset.spotlight_outline_color}`
@@ -117,7 +123,7 @@ window.PreviewCaptions = (() => {
         span.style.textShadow = (spotlightOn && preset.highlight_mode === "current_word" && preset.spotlight_shadow)
           ? `${preset.spotlight_shadow_offset_x / 1920 * stageH}px ${preset.spotlight_shadow_offset_y / 1920 * stageH}px ${preset.spotlight_shadow_blur / 1920 * stageH}px ${preset.spotlight_shadow_color}`
           : "none";
-        if (spotlightOn && preset.spotlight_highlight) {
+        if (spotlightHighlightOn && preset.spotlight_highlight) {
           span.style.backgroundColor = preset.spotlight_highlight_color;
           span.style.borderRadius = (preset.spotlight_highlight_border_radius / 1920 * stageH) + "px";
           span.style.padding = `${highlightPadPx}px`;

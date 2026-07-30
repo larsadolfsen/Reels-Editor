@@ -53,7 +53,7 @@ fields (`preset.highlight`, `_caption_highlight_dialogues`), a separate feature.
 - **Off** — no per-word effect at all. Caption renders in the base preset style uniformly (today's
   plain-karaoke fallback path, `_karaoke_dialogue` with no color swap). The four style rows
   (Color/Outline/Shadow/Highlight) are hidden entirely.
-- **Current word** — the active word swaps to `spotlight_color`; if `spotlight_outline`/
+- **Current word** — the active word swaps to `spotlight_color`; if `spotlight_outline_px > 0`/
   `spotlight_shadow`/`spotlight_highlight` are on, those also apply to just that word. All four
   rows are shown.
 - **Progressive fill** — words already spoken render in `spotlight_color` via ASS's native `\k`
@@ -113,7 +113,7 @@ reworked:
 - Text color: `spotlight_color` (current_word swap; progressive_fill's already-spoken words).
 - Outline (current_word only): CSS `-webkit-text-stroke` (or the same technique the base per-word
   span already uses for the block/caption text outline, for visual consistency) using
-  `spotlight_outline_color`/`spotlight_outline_px` when `spotlight_outline` is on.
+  `spotlight_outline_color`/`spotlight_outline_px` when `spotlight_outline_px > 0`.
 - Shadow (current_word only): CSS `text-shadow` using `spotlight_shadow_color`/offsets/blur when
   `spotlight_shadow` is on.
 - Highlight (current_word + progressive_fill): background-color + border-radius + padding on the
@@ -128,7 +128,7 @@ reworked:
 - `_current_word_dialogues`: gains optional inline ASS override + revert around the active word's
   text segment, same technique already used for its `\1c` color swap —
   - Outline: `\3c{spotlight_outline_color}\bord{spotlight_outline_px}` ... revert to
-    `\3c{p.outline_color}\bord{p.outline_px}` after the word, when `spotlight_outline` is on.
+    `\3c{p.outline_color}\bord{p.outline_px}` after the word, when `spotlight_outline_px > 0`.
   - Shadow: `\4c{spotlight_shadow_color}\4a00\xshad{...}\yshad{...}\blur{...}` ... revert to the
     base `_shadow_tag(p)` equivalent after the word, when `spotlight_shadow` is on.
 - The per-word rounded-rect drawing currently in `_background_word_dialogues` (only reachable via

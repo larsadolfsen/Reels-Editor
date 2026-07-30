@@ -318,10 +318,11 @@ def test_current_word_dialogue_shadow_override_when_on():
                for d in dialogues)
 
 def test_active_word_highlight_rect_emitted_for_current_word_when_spotlight_highlight_on():
+    from app.ass_render import _ass_override_color
     pr = TextPreset(name="Cap", highlight_mode="current_word", spotlight_highlight=True, spotlight_highlight_color="#FF00FF")
     words = [CaptionWord(text="hi", t_start=0.0, t_end=0.5)]
     dialogues = _active_word_highlight_dialogues([words], pr)
-    assert any(hex_to_ass(pr.spotlight_highlight_color) or True for d in dialogues)  # rect drawn
+    assert any(_ass_override_color(pr.spotlight_highlight_color) in d for d in dialogues)  # rect drawn with the right fill
     assert len(dialogues) == 1
 
 def test_active_word_highlight_rect_empty_when_off():
@@ -337,6 +338,19 @@ def test_render_caption_ass_off_mode_has_no_current_word_or_karaoke_swap():
     ])
     ass = render_caption_ass(project, pr)
     assert ass.count("Dialogue:") == 1  # one plain karaoke_dialogue-shaped line, not one-per-word
+
+def test_render_caption_ass_off_mode_no_rect_even_with_spotlight_highlight_on():
+    # Pins the `if preset.highlight_mode != "off":` guard around
+    # _active_word_highlight_dialogues in render_caption_ass's dispatch: the existing off-mode
+    # test above uses the default spotlight_highlight=False, which wouldn't catch that guard
+    # being wrong (a bug there could still coincidentally produce 1 Dialogue line).
+    project = Project(name="P", width=1080, height=1920)
+    pr = TextPreset(name="Cap", highlight_mode="off", spotlight_highlight=True)
+    project.captions = CaptionTrack(preset_id=pr.id, words=[
+        CaptionWord(text="hi", t_start=0.0, t_end=0.5), CaptionWord(text="there", t_start=0.5, t_end=1.0),
+    ])
+    ass = render_caption_ass(project, pr)
+    assert ass.count("Dialogue:") == 1  # plain karaoke line only, no rect
 
 def test_render_caption_ass_progressive_fill_draws_rect_when_spotlight_highlight_on():
     project = Project(name="P", width=1080, height=1920)

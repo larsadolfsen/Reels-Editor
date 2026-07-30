@@ -84,6 +84,23 @@ def test_text_preset_migrates_legacy_box_fields():
     assert p.box_background is True
     assert p.box_background_color == "#FF00FF"
 
+def test_text_preset_migrates_legacy_background_highlight_mode():
+    # "background" was removed as a selectable highlight_mode by the spotlight per-word style
+    # overrides feature; its old rect-behind-the-active-word behavior becomes the
+    # spotlight_highlight toggle instead. Mirrors static/panel-captions.js's ensureCaptionPreset
+    # JS self-heal, but must also run server-side (app/models.py) so the export path self-heals
+    # even for a project whose CAPTIONS panel was never reopened in the browser.
+    p = TextPreset.model_validate({"name": "X", "highlight_mode": "background", "highlight_color": "#00FF00"})
+    assert p.highlight_mode == "current_word"
+    assert p.spotlight_highlight is True
+    assert p.spotlight_highlight_color == "#00FF00"
+
+def test_text_preset_migrates_legacy_background_highlight_mode_without_highlight_color():
+    p = TextPreset.model_validate({"name": "X", "highlight_mode": "background"})
+    assert p.highlight_mode == "current_word"
+    assert p.spotlight_highlight is True
+    assert p.spotlight_highlight_color == "#FFD400"  # falls back to the field's own default
+
 def test_text_preset_box_round_trip():
     p = TextPreset(name="Pop", box_width_mode="fixed", box_width=400, box_height_mode="fit",
                     box_background=True, box_background_color="#111111",

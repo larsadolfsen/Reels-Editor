@@ -3,15 +3,26 @@
 // corner radius. Identical for both panels — an always-on background rect drawn behind the whole
 // block/caption box (_highlight_dialogues for TEXT, _caption_highlight_dialogue for CAPTIONS),
 // independent of CAPTIONS' separate per-word karaoke feature (see style-section-spotlight.js).
-// options.fields (default {toggle:"highlight", color:"highlight_color", radius:"highlight_border_radius"})
-// lets a caller point this at different preset fields — e.g. the CAPTIONS Spotlight subpage
-// reuses this file for the spotlight_highlight* fields instead of a new file.
+// Before 2026-07-30 this file also carried CAPTIONS' karaoke MODE group under this same
+// "Highlight" row/label — split out because "highlight" on TEXT (a static box background) and
+// the old bundled behavior on CAPTIONS (that background PLUS a per-word karaoke mode) were not
+// actually the same feature, despite sharing one row. Spotlight now owns the MODE group; this
+// section owns only the on/off marker. The two features still share highlight_color/
+// highlight_border_radius by design (one rounded-rect recipe, two independent triggers for
+// drawing it) — not a data-model change, just two settings rows over the same fields.
+// highlight/highlight_color are FormatRun-capable (setField/getFieldValue);
+// highlight_border_radius is not (setPresetField/getPreset). As of the spotlight per-word style
+// overrides feature, options.fields (default {toggle:"highlight", color:"highlight_color",
+// radius:"highlight_border_radius"}) lets a caller point this whole section at different preset
+// fields — the CAPTIONS Spotlight subpage reuses this file for the spotlight_highlight* fields
+// (its own on/off marker for the per-word rect) instead of a new file.
 window.StyleSection = window.StyleSection || {};
 
 window.StyleSection.highlight = function highlightSection(container, target, options) {
   const host = options.host;
   const f = options.fields || { toggle: "highlight", color: "highlight_color", radius: "highlight_border_radius" };
 
+  // Built once, in the factory. render() only ever calls the setValue updater captured below.
   const group = document.createElement("div");
   group.className = "style-group";
   const rowEl = document.createElement("div");
@@ -19,9 +30,16 @@ window.StyleSection.highlight = function highlightSection(container, target, opt
   group.appendChild(rowEl);
   container.appendChild(group);
 
+  // getFieldValue, not getPreset()[f.toggle]: with a stage text selection active the row must
+  // show that selection's FormatRun override.
   function isOn() { return !!target.getFieldValue(f.toggle); }
   function colorValue() { return target.getFieldValue(f.color); }
 
+  // Construction-time value/swatchColor are placeholders, not isOn()/colorValue(): this factory
+  // runs once at panel load, before any text block/caption track necessarily exists —
+  // target.getFieldValue(...) throws in that state (style-section-outline.js's fix, same reason
+  // applies here). render() supplies the real value immediately after, once a block/track
+  // exists (each panel's own empty-state guard).
   const setRowValue = UI.settingsRow(rowEl, {
     label: "Highlight",
     value: "",
@@ -29,6 +47,9 @@ window.StyleSection.highlight = function highlightSection(container, target, opt
     onClick: () => page.open(),
   });
 
+  // target.exists() guards the closeAll()-triggered call: closeAll() fires this subpage's
+  // onClose even when the panel is about to show its own empty state (e.g. the block was
+  // just deleted while this subpage was open) — nothing to refresh in that case.
   function refreshRow() {
     if (!target.exists()) return;
     setRowValue(isOn() ? "ON" : "OFF", null, isOn() ? colorValue() : null);

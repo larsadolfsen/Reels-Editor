@@ -128,6 +128,16 @@ class TextPreset(BaseModel):
         if isinstance(data, dict) and "bold" in data and "weight" not in data:
             data = dict(data)
             data["weight"] = 700 if data.pop("bold") else 400
+        if isinstance(data, dict) and data.get("highlight_mode") == "background":
+            # Legacy "background" highlight_mode was removed by the spotlight per-word style
+            # overrides feature — its old rect-behind-the-active-word behavior becomes the
+            # spotlight_highlight toggle instead (works with either remaining mode). Mirrors
+            # static/panel-captions.js's ensureCaptionPreset() JS self-heal, but runs here too so
+            # every load path (export, preview, panel) self-heals, not just the CAPTIONS panel.
+            data = dict(data)
+            data["highlight_mode"] = "current_word"
+            data["spotlight_highlight"] = True
+            data["spotlight_highlight_color"] = data.get("highlight_color", cls.model_fields["spotlight_highlight_color"].default)
         return data
 
 class FormatRun(BaseModel):

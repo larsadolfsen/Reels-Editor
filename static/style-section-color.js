@@ -15,6 +15,8 @@ window.StyleSection.color = function color(container, target, options) {
   group.appendChild(rowEl);
   container.appendChild(group);
 
+  // The host rebuilds a subpage's body on every open(), by design, so the swatch is created
+  // here rather than in the factory. That is the host's contract — not a per-render rebuild.
   const page = options.host.page("Color", (body) => {
     const bodyGroup = document.createElement("div");
     bodyGroup.className = "style-group";
@@ -31,6 +33,11 @@ window.StyleSection.color = function color(container, target, options) {
     });
   });
 
+  // Built ONCE — UI.settingsRow wipes its container, and render() uses the returned setter.
+  // The initial value/swatchColor are placeholders, not target.getFieldValue(field): this
+  // factory runs once at panel load, before any text block/caption track necessarily exists
+  // yet, and getFieldValue throws in that state. render() supplies the real color immediately
+  // after, and only ever runs once a block/track exists (each panel's own empty-state guard).
   const setRowValue = UI.settingsRow(rowEl, {
     label: "Color",
     value: "",

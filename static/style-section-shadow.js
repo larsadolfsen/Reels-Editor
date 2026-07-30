@@ -11,6 +11,7 @@ window.StyleSection.shadow = function shadowSection(container, target, options) 
   const host = options.host;
   const f = options.fields || { toggle: "shadow", color: "shadow_color", offsetX: "shadow_offset_x", offsetY: "shadow_offset_y", blur: "shadow_blur" };
 
+  // Built once, in the factory. render() only ever calls the setValue updater captured below.
   const group = document.createElement("div");
   group.className = "style-group";
   const rowEl = document.createElement("div");
@@ -20,6 +21,11 @@ window.StyleSection.shadow = function shadowSection(container, target, options) 
 
   function isOn() { return !!target.getPreset()[f.toggle]; }
 
+  // Construction-time value/swatchColor are placeholders, not isOn()/getPreset(): this factory
+  // runs once at panel load, before any text block/caption track necessarily exists —
+  // target.getPreset() throws in that state (style-section-outline.js's fix, same reason
+  // applies here). render() supplies the real value immediately after, once a block/track
+  // exists (each panel's own empty-state guard).
   const setRowValue = UI.settingsRow(rowEl, {
     label: "Shadow",
     value: "",
@@ -27,6 +33,9 @@ window.StyleSection.shadow = function shadowSection(container, target, options) 
     onClick: () => page.open(),
   });
 
+  // target.exists() guards the closeAll()-triggered call: closeAll() fires this subpage's
+  // onClose even when the panel is about to show its own empty state (e.g. the block was
+  // just deleted while this subpage was open) — nothing to refresh in that case.
   function refreshRow() {
     if (!target.exists()) return;
     setRowValue(isOn() ? "ON" : "OFF", null, isOn() ? target.getPreset()[f.color] : null);
@@ -61,6 +70,8 @@ window.StyleSection.shadow = function shadowSection(container, target, options) 
 
     bodyEl.append(toggleGroup, colorGroup, offsetGroup, blurGroup);
 
+    // The four detail fields are hidden individually, not their .style-group wrappers, so the
+    // group's own margin still occupies the same space it did before this refactor.
     function syncFields() {
       const hidden = !isOn();
       colorField.hidden = hidden;
