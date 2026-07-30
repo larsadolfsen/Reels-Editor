@@ -185,11 +185,15 @@ function reRenderAfterRestore() {
 
 const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, "image-box": openImageBoxPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel };
 
-// Rail = insert (creation). TEXT inserts a new block and drops into on-stage edit; the other
+// TEXT arms the text tool (window.ToolMode = "text", replacing the top toolbar's Text button
+// removed 2026-07-30, remove-text-tool-top-bar) instead of opening its panel or inserting
+// directly: the stage cursor becomes a text cursor, a click on an existing .text-block enters
+// edit mode (ui-text-interaction.js), and a click elsewhere inserts a new block at that point
+// (stage-click-router.js), which reverts ToolMode to "select" once the insert lands. The other
 // rail buttons open their panel (CAPTIONS's openCaptionsPanel already create-or-opens the track).
 // Opening an *existing* text block still happens via a timeline/stage click (onTimelineSelect).
 UI.iconRail(document.getElementById("panel-nav"), PANEL_NAV_ITEMS, "files", (value) => {
-  if (value === "text") { addTextBlockAndEdit(); return; }
+  if (value === "text") { ToolMode.set("text"); return; }
   PANEL_NAV_HANDLERS[value]();
 });
 
