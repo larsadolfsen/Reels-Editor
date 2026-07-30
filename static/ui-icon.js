@@ -1,8 +1,8 @@
 // Reusable icon service, framework-free. Attaches to window.UI.
 // Depends on nothing. Path data for every icon currently in use lives here — this file's own
 // payload, not a shared catch-all (see the UI-consistency design spec's non-goals).
-const globalObj = typeof window !== "undefined" ? window : global;
-globalObj.UI = globalObj.UI || {};
+const uiIconGlobal = typeof window !== "undefined" ? window : global;
+uiIconGlobal.UI = uiIconGlobal.UI || {};
 
 // Lucide-sourced path/shape data, viewBox 0 0 24 24. Key = kebab-case Lucide icon name.
 // Every entry below has been spot-checked against its real current call site in this codebase
@@ -52,7 +52,7 @@ const ICON_PATHS = {
 // Note: play/pause/step-back/step-forward use fill="currentColor" shapes rather than stroked
 // paths in the current markup; their per-shape fill="currentColor" attribute overrides the
 // wrapper's fill="none" so the shapes render solid, matching current behavior.
-globalObj.UI.icon = function icon(name, { size = 24 } = {}) {
+uiIconGlobal.UI.icon = function icon(name, { size = 24 } = {}) {
   const inner = ICON_PATHS[name];
   if (!inner) {
     throw new Error(`UI.icon: unknown icon "${name}"`);
