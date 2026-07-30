@@ -1,7 +1,7 @@
 // Reusable presentational UI helper, framework-free. Attaches to window.UI.
 // Inline "save current style" form for the TEXT/CAPTIONS Style tabs: themed name input +
 // Save/Cancel buttons + overwrite hint, replacing the native prompt(). Depends on
-// the .style-save-form CSS component (style-save-form.css) and .panel-button.
+// the .style-save-form CSS component (style-save-form.css) and UI.button.
 window.UI = window.UI || {};
 
 // styleSaveForm(container, {onSave, onCancel}) -> the form element.
@@ -28,19 +28,8 @@ window.UI.styleSaveForm = function styleSaveForm(container, { onSave, onCancel }
   const buttons = document.createElement("div");
   buttons.className = "style-save-form-buttons";
 
-  const saveBtn = document.createElement("button");
-  saveBtn.type = "button";
-  saveBtn.className = "panel-button";
-  saveBtn.textContent = "Save";
-  saveBtn.addEventListener("click", commit);
-  buttons.appendChild(saveBtn);
-
-  const cancelBtn = document.createElement("button");
-  cancelBtn.type = "button";
-  cancelBtn.className = "panel-button";
-  cancelBtn.textContent = "Cancel";
-  cancelBtn.addEventListener("click", () => { if (onCancel) onCancel(); });
-  buttons.appendChild(cancelBtn);
+  UI.button(buttons, { label: "Save", onClick: commit });
+  UI.button(buttons, { label: "Cancel", onClick: () => { if (onCancel) onCancel(); } });
 
   const hint = document.createElement("div");
   hint.className = "style-save-form-hint";

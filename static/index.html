@@ -136,7 +136,7 @@
       <div id="panel-files" class="context-panel">
         <div id="panel-files-header" class="context-panel-header text-eyebrow">FILES</div>
         <div id="panel-files-add">
-          <button id="add-clip" class="panel-button panel-button-dashed"><span class="icon">+</span><span class="label">IMPORT MEDIA</span></button>
+          <button id="add-clip" data-button data-button-intent="dashed" data-button-icon="plus" hidden>IMPORT MEDIA</button>
         </div>
         <ol id="clip-list"></ol>
       </div>
@@ -200,11 +200,11 @@
         </div>
 
         <div class="style-group">
-          <button id="video-duplicate" class="panel-button col-8" type="button">Duplicate clip</button>
+          <button id="video-duplicate" class="col-8" data-button hidden>Duplicate clip</button>
         </div>
 
         <div class="style-group">
-          <button id="video-delete" class="panel-button panel-button-danger col-8" type="button">Delete clip</button>
+          <button id="video-delete" class="col-8" data-button data-button-intent="danger" hidden>Delete clip</button>
         </div>
       </div>
 
@@ -216,7 +216,7 @@
 
           <div id="caption-style-body">
             <div class="style-group">
-              <button id="caption-style-save" class="panel-button col-8" type="button">+ Save current style</button>
+              <button id="caption-style-save" class="col-8" data-button hidden>+ Save current style</button>
             </div>
             <div id="caption-style-form" class="style-group" hidden></div>
             <div class="style-group">
@@ -290,7 +290,7 @@
 
           <div id="caption-filler-body">
             <div class="style-group">
-              <button id="caption-filler-auto-remove-btn" class="panel-button col-8" type="button"><span class="icon" data-icon="slice" data-icon-size="16"></span><span class="label">Auto-remove filler words</span></button>
+              <button id="caption-filler-auto-remove-btn" class="col-8" data-button data-button-icon="slice" hidden>Auto-remove filler words</button>
             </div>
 
             <div class="section-label-spacer text-eyebrow">FILLER WORDS</div>
@@ -426,7 +426,7 @@
       <div id="panel-projects" class="context-panel" hidden>
         <div class="context-panel-header text-eyebrow">PROJECTS</div>
         <div class="style-group">
-          <button id="project-create" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">NEW PROJECT</span></button>
+          <button id="project-create" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>NEW PROJECT</button>
         </div>
         <ul id="project-list" class="project-list-row-list"></ul>
       </div>
@@ -434,7 +434,7 @@
       <div id="panel-video-box" class="context-panel" hidden>
         <div class="context-panel-header text-eyebrow">VIDEO BOX</div>
         <div class="style-group">
-          <button id="video-box-add" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD VIDEO BOX</span></button>
+          <button id="video-box-add" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>ADD VIDEO BOX</button>
         </div>
         <div id="video-box-picker" hidden>
           <ul id="video-box-picker-list" class="font-list scroll-list"></ul>
@@ -485,12 +485,12 @@
               </div>
             </div>
             <div class="style-group">
-              <button id="video-box-mask-flip" type="button" class="panel-button col-8">Flip side</button>
+              <button id="video-box-mask-flip" class="col-8" data-button hidden>Flip side</button>
             </div>
           </div>
 
           <div class="style-group">
-            <button id="video-box-delete" type="button" class="panel-button panel-button-danger col-8">Delete video box</button>
+            <button id="video-box-delete" class="col-8" data-button data-button-intent="danger" hidden>Delete video box</button>
           </div>
         </div>
       </div>
@@ -498,7 +498,7 @@
       <div id="panel-image-box" class="context-panel" hidden>
         <div class="context-panel-header text-eyebrow">IMAGE BOX</div>
         <div class="style-group">
-          <button id="image-box-add" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD IMAGE BOX</span></button>
+          <button id="image-box-add" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>ADD IMAGE BOX</button>
         </div>
         <div id="image-box-picker" hidden>
           <ul id="image-box-picker-list" class="font-list scroll-list"></ul>
@@ -544,12 +544,12 @@
               </div>
             </div>
             <div class="style-group">
-              <button id="image-box-mask-flip" type="button" class="panel-button col-8">Flip side</button>
+              <button id="image-box-mask-flip" class="col-8" data-button hidden>Flip side</button>
             </div>
           </div>
 
           <div class="style-group">
-            <button id="image-box-delete" type="button" class="panel-button panel-button-danger col-8">Delete image box</button>
+            <button id="image-box-delete" class="col-8" data-button data-button-intent="danger" hidden>Delete image box</button>
           </div>
         </div>
       </div>
@@ -557,7 +557,7 @@
       <div id="panel-audio" class="context-panel" hidden>
         <div class="context-panel-header text-eyebrow">AUDIO</div>
         <div id="audio-empty-state" class="style-group">
-          <button id="audio-add-music" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD MUSIC</span></button>
+          <button id="audio-add-music" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>ADD MUSIC</button>
         </div>
         <div id="audio-detail" hidden>
           <div id="audio-music-name" class="context-panel-name"></div>
@@ -574,10 +574,10 @@
           </div>
 
           <div class="style-group">
-            <button id="audio-replace" class="panel-button col-8" type="button">Replace music</button>
+            <button id="audio-replace" class="col-8" data-button hidden>Replace music</button>
           </div>
           <div class="style-group">
-            <button id="audio-remove" class="panel-button col-8" type="button">Remove music</button>
+            <button id="audio-remove" class="col-8" data-button data-button-intent="danger" hidden>Remove music</button>
           </div>
         </div>
       </div>
@@ -596,7 +596,7 @@
             </div>
 
             <div class="style-group">
-              <button id="audio-auto-caption-btn" class="panel-button col-8" type="button"><span class="icon" data-icon="pencil-sparkles" data-icon-size="16"></span><span class="label">Auto-caption</span></button>
+              <button id="audio-auto-caption-btn" class="col-8" data-button data-button-icon="pencil-sparkles" hidden>Auto-caption</button>
               <p id="audio-transcribe-error" class="context-panel-name col-8 caption-transcribe-error" hidden></p>
             </div>
 
@@ -605,27 +605,27 @@
             <div id="auto-slice-idle" class="style-group">
               <p class="auto-slice-hint text-hint">Detect silence and filler words (um, uh…) and remove them from the timeline.</p>
               <p id="auto-slice-no-transcript-hint" class="auto-slice-hint text-hint" hidden>No transcript yet — only silence will be detected. Run Auto-caption above to also catch filler words.</p>
-              <button id="auto-slice-detect-btn" type="button" class="panel-button col-8"><span class="icon" data-icon="pencil-sparkles" data-icon-size="16"></span><span class="label">Detect Silence &amp; Filler Words</span></button>
+              <button id="auto-slice-detect-btn" class="col-8" data-button data-button-icon="pencil-sparkles" hidden>Detect Silence &amp; Filler Words</button>
             </div>
 
             <div id="auto-slice-results" hidden>
               <div id="auto-slice-summary" class="auto-slice-summary"></div>
               <ul id="auto-slice-list" class="auto-slice-list scroll-list"></ul>
               <div class="style-group">
-                <button id="auto-slice-continue" type="button" class="panel-button col-8">Continue</button>
+                <button id="auto-slice-continue" class="col-8" data-button hidden>Continue</button>
               </div>
               <div class="style-group">
-                <button id="auto-slice-redetect" type="button" class="panel-button col-8">Re-detect</button>
+                <button id="auto-slice-redetect" class="col-8" data-button hidden>Re-detect</button>
               </div>
             </div>
 
             <div id="auto-slice-confirm" hidden>
               <p id="auto-slice-confirm-summary" class="auto-slice-hint text-hint"></p>
               <div class="style-group">
-                <button id="auto-slice-confirm-apply" type="button" class="panel-button panel-button-danger col-8">Confirm &amp; Apply</button>
+                <button id="auto-slice-confirm-apply" class="col-8" data-button data-button-intent="danger" hidden>Confirm &amp; Apply</button>
               </div>
               <div class="style-group">
-                <button id="auto-slice-back" type="button" class="panel-button col-8">Back</button>
+                <button id="auto-slice-back" class="col-8" data-button hidden>Back</button>
               </div>
             </div>
           </div>
@@ -643,14 +643,14 @@
 
         <div id="text-empty-state" class="style-group" hidden>
           <p class="context-panel-name col-8">No text yet.</p>
-          <button id="text-add-block-btn" class="panel-button panel-button-dashed col-8" type="button">+ Add text</button>
+          <button id="text-add-block-btn" class="col-8" data-button data-button-intent="dashed" hidden>+ Add text</button>
         </div>
 
         <div id="text-accordions">
         <div id="text-tab-bar"></div>
         <div id="text-style-body">
           <div class="style-group">
-            <button id="text-style-save" class="panel-button col-8" type="button">+ Save current style</button>
+            <button id="text-style-save" class="col-8" data-button hidden>+ Save current style</button>
           </div>
           <div id="text-style-form" class="style-group" hidden></div>
           <div class="style-group">
@@ -729,11 +729,11 @@
 
         <div id="text-edit-actions">
         <div class="style-group">
-          <button id="text-duplicate" class="panel-button col-8" type="button">Duplicate text</button>
+          <button id="text-duplicate" class="col-8" data-button hidden>Duplicate text</button>
         </div>
 
         <div class="style-group">
-          <button id="text-delete" class="panel-button panel-button-danger col-8" type="button">Delete text</button>
+          <button id="text-delete" class="col-8" data-button data-button-intent="danger" hidden>Delete text</button>
         </div>
         </div>
 
@@ -846,6 +846,32 @@
 <script src="/static/ui-icon-rail.js"></script>
 <script src="/static/ui-tab-bar.js"></script>
 <script src="/static/ui-button.js"></script>
+<script>
+  // Hydrates [data-button] placeholders (see Batch 3 Task 15) into real UI.button elements,
+  // preserving each placeholder's id/extra classes so getElementById wiring in editor.js/panel-
+  // *.js keeps working unmodified. Must run after ui-button.js loads and before any script that
+  // wires a button's id at parse time (e.g. clip-sequence.js, panel-text.js, panel-auto-slice.js).
+  document.querySelectorAll("[data-button]").forEach((buttonEl) => {
+    const buttonIntent = buttonEl.dataset.buttonIntent || "neutral";
+    const buttonSize = buttonEl.dataset.buttonSize || "md";
+    const buttonIcon = buttonEl.dataset.buttonIcon || undefined;
+    const buttonLabel = buttonEl.textContent.trim();
+    const buttonParent = buttonEl.parentNode;
+    const builtBtn = UI.button(buttonParent, {
+      label: buttonLabel,
+      icon: buttonIcon,
+      size: buttonSize,
+      intent: buttonIntent,
+    });
+    builtBtn.id = buttonEl.id;
+    if (buttonEl.className) {
+      builtBtn.classList.add(
+        ...buttonEl.className.split(" ").filter((c) => c && c !== "panel-button" && !c.startsWith("panel-button-"))
+      );
+    }
+    buttonParent.replaceChild(builtBtn, buttonEl);
+  });
+</script>
 <script src="/static/tool-mode.js"></script>
 <script src="/static/ui-toolbar.js"></script>
 <script src="/static/ui-list-row.js"></script>
