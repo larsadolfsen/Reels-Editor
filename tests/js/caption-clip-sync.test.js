@@ -2,7 +2,7 @@
 // clip they overlap when a clip is deleted, moved, or a new clip is inserted mid-sequence.
 const test = require("node:test");
 const assert = require("node:assert");
-const { clipRanges } = require("../../static/caption-clip-sync.js");
+const { clipRanges, shiftCaptionsAfterEdit } = require("../../static/caption-clip-sync.js");
 
 test("clipRanges: accumulates timeline start/end in order", () => {
   const clips = [
@@ -40,4 +40,61 @@ test("clipRanges: missing speed defaults to 1", () => {
 
 test("clipRanges: empty clip list returns empty array", () => {
   assert.deepStrictEqual(clipRanges([]), []);
+});
+
+test("shiftCaptionsAfterEdit (delete): removes words inside the deleted range", () => {
+  const words = [
+    { id: "1", text: "a", t_start: 5, t_end: 5.4 },
+    { id: "2", text: "b", t_start: 7, t_end: 7.4 },
+  ];
+  const result = shiftCaptionsAfterEdit(words, 5, 3, 0);
+  assert.deepStrictEqual(result, []);
+});
+
+test("shiftCaptionsAfterEdit (delete): leaves earlier words untouched and shifts later ones left", () => {
+  const words = [
+    { id: "1", text: "before", t_start: 1, t_end: 1.4 },
+    { id: "2", text: "inside", t_start: 6, t_end: 6.4 },
+    { id: "3", text: "after", t_start: 10, t_end: 10.4 },
+  ];
+  // Clip deleted was [5, 8) — 3 seconds long.
+  const result = shiftCaptionsAfterEdit(words, 5, 3, 0);
+  assert.deepStrictEqual(result, [
+    { id: "1", text: "before", t_start: 1, t_end: 1.4 },
+    { id: "3", text: "after", t_start: 7, t_end: 7.4 },
+  ]);
+});
+
+test("shiftCaptionsAfterEdit (delete): deleting the last clip removes with nothing to shift", () => {
+  const words = [
+    { id: "1", text: "before", t_start: 1, t_end: 1.4 },
+    { id: "2", text: "inside", t_start: 6, t_end: 6.4 },
+  ];
+  const result = shiftCaptionsAfterEdit(words, 5, 3, 0);
+  assert.deepStrictEqual(result, [{ id: "1", text: "before", t_start: 1, t_end: 1.4 }]);
+});
+
+test("shiftCaptionsAfterEdit (insert): words before the drop point are untouched", () => {
+  const words = [{ id: "1", text: "before", t_start: 1, t_end: 1.4 }];
+  const result = shiftCaptionsAfterEdit(words, 5, 0, 2.5);
+  assert.deepStrictEqual(result, [{ id: "1", text: "before", t_start: 1, t_end: 1.4 }]);
+});
+
+test("shiftCaptionsAfterEdit (insert): words at/after the drop point shift right", () => {
+  const words = [
+    { id: "1", text: "at-point", t_start: 5, t_end: 5.4 },
+    { id: "2", text: "after", t_start: 8, t_end: 8.4 },
+  ];
+  const result = shiftCaptionsAfterEdit(words, 5, 0, 2.5);
+  assert.deepStrictEqual(result, [
+    { id: "1", text: "at-point", t_start: 7.5, t_end: 7.9 },
+    { id: "2", text: "after", t_start: 10.5, t_end: 10.9 },
+  ]);
+});
+
+test("shiftCaptionsAfterEdit: returns a new array, does not mutate the input", () => {
+  const words = [{ id: "1", text: "a", t_start: 1, t_end: 1.4 }];
+  const result = shiftCaptionsAfterEdit(words, 5, 0, 2.5);
+  assert.notStrictEqual(result, words);
+  assert.strictEqual(words[0].t_start, 1);
 });

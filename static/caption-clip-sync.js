@@ -16,7 +16,23 @@
     });
   }
 
-  const api = { clipRanges };
+  // One splice-point edit on the flat caption timeline, covering both delete and insert:
+  // delete passes newDuration=0 (removes the range, shifts what follows left by oldDuration);
+  // insert passes oldDuration=0 (nothing to remove, shifts what follows right by newDuration).
+  function shiftCaptionsAfterEdit(words, editStart, oldDuration, newDuration) {
+    const editEnd = editStart + oldDuration;
+    const delta = newDuration - oldDuration;
+    return words
+      .filter((w) => !(w.t_start >= editStart && w.t_start < editEnd))
+      .map((w) => {
+        if (w.t_start >= editEnd) {
+          return { ...w, t_start: w.t_start + delta, t_end: w.t_end + delta };
+        }
+        return w;
+      });
+  }
+
+  const api = { clipRanges, shiftCaptionsAfterEdit };
   if (typeof window !== "undefined") window.CaptionClipSync = api;
   if (typeof module !== "undefined") module.exports = api;
 })();
