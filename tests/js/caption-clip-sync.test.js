@@ -2,7 +2,7 @@
 // clip they overlap when a clip is deleted, moved, or a new clip is inserted mid-sequence.
 const test = require("node:test");
 const assert = require("node:assert");
-const { clipRanges, shiftCaptionsAfterEdit } = require("../../static/caption-clip-sync.js");
+const { clipRanges, shiftCaptionsAfterEdit, resyncCaptionsAfterReorder } = require("../../static/caption-clip-sync.js");
 
 test("clipRanges: accumulates timeline start/end in order", () => {
   const clips = [
@@ -95,6 +95,63 @@ test("shiftCaptionsAfterEdit (insert): words at/after the drop point shift right
 test("shiftCaptionsAfterEdit: returns a new array, does not mutate the input", () => {
   const words = [{ id: "1", text: "a", t_start: 1, t_end: 1.4 }];
   const result = shiftCaptionsAfterEdit(words, 5, 0, 2.5);
+  assert.notStrictEqual(result, words);
+  assert.strictEqual(words[0].t_start, 1);
+});
+
+test("resyncCaptionsAfterReorder: shifts each word by its owning clip's own delta", () => {
+  // Old order: A(0-5), B(5-8), C(8-10). New order after moving C to the front: C(0-2), A(2-7), B(7-10).
+  const oldRanges = [
+    { id: "a", start: 0, end: 5 },
+    { id: "b", start: 5, end: 8 },
+    { id: "c", start: 8, end: 10 },
+  ];
+  const newRanges = [
+    { id: "c", start: 0, end: 2 },
+    { id: "a", start: 2, end: 7 },
+    { id: "b", start: 7, end: 10 },
+  ];
+  const words = [
+    { id: "1", text: "in-a", t_start: 1, t_end: 1.4 },
+    { id: "2", text: "in-b", t_start: 6, t_end: 6.4 },
+    { id: "3", text: "in-c", t_start: 9, t_end: 9.4 },
+  ];
+  const result = resyncCaptionsAfterReorder(words, oldRanges, newRanges);
+  assert.deepStrictEqual(result, [
+    { id: "1", text: "in-a", t_start: 3, t_end: 3.4 },     // A moved 0 -> 2, delta +2
+    { id: "2", text: "in-b", t_start: 8, t_end: 8.4 },     // B moved 5 -> 7, delta +2
+    { id: "3", text: "in-c", t_start: 1, t_end: 1.4 },     // C moved 8 -> 0, delta -8
+  ]);
+});
+
+test("resyncCaptionsAfterReorder: a word exactly on a clip boundary resolves to the later clip", () => {
+  const oldRanges = [
+    { id: "a", start: 0, end: 5 },
+    { id: "b", start: 5, end: 8 },
+  ];
+  const newRanges = [
+    { id: "b", start: 0, end: 3 },
+    { id: "a", start: 3, end: 8 },
+  ];
+  const words = [{ id: "1", text: "boundary", t_start: 5, t_end: 5.4 }];
+  // t_start=5 belongs to B (half-open [5,8)), which moved 5 -> 0, delta -5.
+  const result = resyncCaptionsAfterReorder(words, oldRanges, newRanges);
+  assert.deepStrictEqual(result, [{ id: "1", text: "boundary", t_start: 0, t_end: 0.4 }]);
+});
+
+test("resyncCaptionsAfterReorder: a word outside every old range is left unchanged", () => {
+  const oldRanges = [{ id: "a", start: 0, end: 5 }];
+  const newRanges = [{ id: "a", start: 0, end: 5 }];
+  const words = [{ id: "1", text: "past-end", t_start: 9, t_end: 9.4 }];
+  const result = resyncCaptionsAfterReorder(words, oldRanges, newRanges);
+  assert.deepStrictEqual(result, [{ id: "1", text: "past-end", t_start: 9, t_end: 9.4 }]);
+});
+
+test("resyncCaptionsAfterReorder: returns a new array, does not mutate the input", () => {
+  const oldRanges = [{ id: "a", start: 0, end: 5 }];
+  const newRanges = [{ id: "a", start: 2, end: 7 }];
+  const words = [{ id: "1", text: "a", t_start: 1, t_end: 1.4 }];
+  const result = resyncCaptionsAfterReorder(words, oldRanges, newRanges);
   assert.notStrictEqual(result, words);
   assert.strictEqual(words[0].t_start, 1);
 });

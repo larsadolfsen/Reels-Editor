@@ -32,7 +32,30 @@
       });
   }
 
-  const api = { clipRanges, shiftCaptionsAfterEdit };
+  function findOwningRange(ranges, t) {
+    return ranges.find((r) => t >= r.start && t < r.end) || null;
+  }
+
+  // Drag-reorder is a non-monotonic permutation (unlike delete/insert's single splice point):
+  // each word is shifted by its own owning clip's start delta, found by matching clip id between
+  // the pre- and post-reorder clipRanges() snapshots.
+  function resyncCaptionsAfterReorder(words, oldRanges, newRanges) {
+    const newById = new Map(newRanges.map((r) => [r.id, r]));
+    return words.map((w) => {
+      const oldRange = findOwningRange(oldRanges, w.t_start);
+      if (!oldRange) return w;
+      const newRange = newById.get(oldRange.id);
+      if (!newRange) return w;
+      const delta = newRange.start - oldRange.start;
+      if (delta === 0) return w;
+      // Round to avoid floating-point precision errors when applying negative deltas.
+      const newStart = Math.round((w.t_start + delta) * 1e10) / 1e10;
+      const newEnd = Math.round((w.t_end + delta) * 1e10) / 1e10;
+      return { ...w, t_start: newStart, t_end: newEnd };
+    });
+  }
+
+  const api = { clipRanges, shiftCaptionsAfterEdit, resyncCaptionsAfterReorder };
   if (typeof window !== "undefined") window.CaptionClipSync = api;
   if (typeof module !== "undefined") module.exports = api;
 })();
