@@ -7,9 +7,10 @@
 // "Highlight" row/label — split out because "highlight" on TEXT (a static box background) and
 // the old bundled behavior on CAPTIONS (that background PLUS a per-word karaoke mode) were not
 // actually the same feature, despite sharing one row. Spotlight now owns the MODE group; this
-// section owns only the on/off marker. The two features still share highlight_color/
-// highlight_border_radius by design (one rounded-rect recipe, two independent triggers for
-// drawing it) — not a data-model change, just two settings rows over the same fields.
+// section owns only the on/off marker. As of the spotlight per-word style overrides feature
+// (2026-07-30), the two rows no longer share any fields — Spotlight's rect uses its own
+// spotlight_highlight/spotlight_highlight_color/spotlight_highlight_border_radius fields (see
+// below), independent of this section's highlight_color/highlight_border_radius.
 // highlight/highlight_color are FormatRun-capable (setField/getFieldValue);
 // highlight_border_radius is not (setPresetField/getPreset). As of the spotlight per-word style
 // overrides feature, options.fields (default {toggle:"highlight", color:"highlight_color",
