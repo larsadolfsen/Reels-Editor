@@ -10,7 +10,7 @@ window.UI.accordionSection = function accordionSection(container, body, { title,
   header.type = "button";
   header.className = "accordion-header";
   UI.text(header, { variant: "eyebrow", content: title });
-  header.insertAdjacentHTML("beforeend", '<svg class="accordion-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>');
+  header.insertAdjacentHTML("beforeend", UI.icon("chevron-right", { size: 14 }).replace("<svg ", '<svg class="accordion-chevron" '));
 
   body.classList.add("accordion-body");
   container.appendChild(header);
