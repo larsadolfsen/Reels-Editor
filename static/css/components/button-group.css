@@ -1,5 +1,6 @@
-/* Reusable toggle-button row/grid microcomponent (.btn-group) and icon-button styling. */
-/* Exposes .btn-group, .btn-group button, .icon-btn. Depends on tokens.css. Built by static/ui-components.js. */
+/* Reusable toggle-button row/grid microcomponent (.btn-group). Standalone icon-button styling
+   retired 2026-07-30 (Task 17) in favor of UI.button's .button-sm — see button.css. */
+/* Exposes .btn-group, .btn-group button, .btn-group-inline, .icon-hidden. Depends on tokens.css. Built by static/ui-components.js. */
 .btn-group {
   display: grid;
   grid-template-columns: repeat(8, 28px);
@@ -21,43 +22,16 @@
 
 /* Modifier for a .btn-group that should share its parent .style-row's grid instead of
    opening its own: the buttons become direct grid items of the row, so a button group can
-   sit on the same row as standalone .icon-btn toggles (e.g. Italic/Underline + case group). */
+   sit on the same row as standalone UI.button toggles (e.g. Italic/Underline + case group). */
 .btn-group-inline { display: contents; }
 
-/* Match the standalone .icon-btn box so both kinds of button line up on the shared row. */
+/* Match the standalone UI.button .button-sm box so both kinds of button line up on the shared row. */
 .btn-group-inline button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: 28px;
   padding: 0;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-md);
-  font-size: var(--fs-md);
-  padding: 0;
-}
-
-.icon-btn:disabled {
-  cursor: default;
-  opacity: 0.35;
-}
-
-.icon-btn:disabled:hover {
-  color: var(--text-muted);
-  border-color: var(--border);
-}
-
-.icon-btn[aria-pressed="true"] {
-  border-color: var(--accent);
-  color: var(--text);
-  background: var(--accent-tint);
 }
 
 .icon-hidden { display: none; }

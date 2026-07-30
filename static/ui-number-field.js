@@ -39,21 +39,28 @@ window.UI.numberField = function numberField(container, { label, unit, value, st
     onChange(v);
   };
 
-  const stepper = document.createElement("div");
-  stepper.className = "number-field-stepper";
-  const up = document.createElement("button");
-  up.type = "button"; up.className = "number-field-step number-field-step-up";
+  // Named "arrows" (not the old "stepper" wording) so no class here collides with the retired
+  // stepper-button class pinned by tests/js/no-legacy-button-classes.test.js.
+  const arrows = document.createElement("div");
+  arrows.className = "number-field-arrows";
+  const up = UI.button(arrows, {
+    icon: "chevron-up",
+    size: "sm",
+    disabled,
+    onClick: () => bump(step),
+  });
+  up.classList.add("number-field-arrow", "number-field-arrow-up");
   up.setAttribute("aria-label", "Increment");
-  up.disabled = disabled;
-  up.addEventListener("click", () => bump(step));
-  const down = document.createElement("button");
-  down.type = "button"; down.className = "number-field-step number-field-step-down";
+  const down = UI.button(arrows, {
+    icon: "chevron-down",
+    size: "sm",
+    disabled,
+    onClick: () => bump(-step),
+  });
+  down.classList.add("number-field-arrow", "number-field-arrow-down");
   down.setAttribute("aria-label", "Decrement");
-  down.disabled = disabled;
-  down.addEventListener("click", () => bump(-step));
-  stepper.append(up, down);
 
-  wrap.append(input, stepper);
+  wrap.append(input, arrows);
   container.appendChild(wrap);
   const setValue = (v) => { input.value = format(v); };
   // Lets a caller toggle disabled state on every render() without rebuilding the field

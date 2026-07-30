@@ -4,18 +4,11 @@
 window.StyleSection = window.StyleSection || {};
 
 (() => {
-  // Copied verbatim from the two hand-written copies in index.html (Lucide a-arrow-down /
-  // a-arrow-up), so the icons are byte-identical after the move into JS.
-  const STEP_DOWN_ICON = UI.icon("a-arrow-down", { size: 16 });
-  const STEP_UP_ICON = UI.icon("a-arrow-up", { size: 16 });
-
-  function stepButton(icon, label) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "icon-btn col-1";
+  function stepButton(container, icon, label) {
+    const btn = UI.button(container, { icon, size: "sm" });
     btn.title = label;
     btn.setAttribute("aria-label", label);
-    btn.innerHTML = icon;
+    btn.classList.add("col-1");
     return btn;
   }
 
@@ -29,10 +22,12 @@ window.StyleSection = window.StyleSection || {};
     row.className = "style-row style-size-row" + (opts.compactRow ? " style-size-row--compact" : "");
     group.appendChild(row);
 
-    const stepDown = stepButton(STEP_DOWN_ICON, "Decrease font size");
+    // UI.button appends to its container immediately, so build in the row's intended visual
+    // order (step-down, field, step-up) rather than creating all three then appending.
+    const stepDown = stepButton(row, "a-arrow-down", "Decrease font size");
     const fieldEl = document.createElement("label");
-    const stepUp = stepButton(STEP_UP_ICON, "Increase font size");
-    row.append(stepDown, fieldEl, stepUp);
+    row.appendChild(fieldEl);
+    const stepUp = stepButton(row, "a-arrow-up", "Increase font size");
     container.appendChild(group);
 
     // Built ONCE. UI.numberField wipes and rebuilds its container, so calling it again from

@@ -1,6 +1,6 @@
 /* Inline save-current-style form (UI.styleSaveForm, static/ui-style-save-form.js):
    name input + Save/Cancel row + overwrite hint in the TEXT/CAPTIONS Style tabs.
-   Depends on tokens.css; buttons use panel-button.css. */
+   Depends on tokens.css; buttons are built via UI.button (button.css). */
 .style-save-form {
   grid-column: 1 / -1;
   display: flex;
@@ -19,7 +19,7 @@
   gap: var(--space-2);
 }
 
-.style-save-form-buttons .panel-button { flex: 1; }
+.style-save-form-buttons .button { flex: 1; }
 
 .style-save-form-hint {
   font-family: var(--font-ui);

@@ -1,5 +1,5 @@
 /* Top toolbar strip: centers the tool-mode icon buttons (Select/Text) above the 3-column main layout. */
-/* Exposes #toolbar only; button styling comes from button-group.css's .icon-btn. Depends on tokens.css. */
+/* Exposes #toolbar only; button styling comes from UI.button's .button-sm (button.css). Depends on tokens.css. */
 #toolbar {
   display: flex;
   align-items: center;

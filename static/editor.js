@@ -148,9 +148,6 @@ ImageBoxPreview.setOnActivate((boxId) => {
   ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
 });
 
-UI.button(document.getElementById("theme-toggle"), { variant: "icon" });
-UI.button(document.getElementById("export"), { variant: "accent" });
-
 UI.toolbar(document.getElementById("toolbar"));
 
 function setSafeZonesVisible(visible) {

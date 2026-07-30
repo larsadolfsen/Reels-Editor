@@ -1,5 +1,10 @@
 /* Custom up/down stepper for number inputs (the native OS spin control can't be restyled). */
-/* Exposes .number-field-wrap/.number-field-stepper/.number-field-step. Built by static/ui-components.js. Depends on tokens.css. */
+/* Exposes .number-field-wrap/.number-field-arrows/.number-field-arrow. The up/down buttons are
+   built by static/ui-number-field.js via UI.button (chevron-up/chevron-down icons, size "sm") —
+   this file only lays them out in a stacked column and squares off the shared corners against
+   the input field; button.css owns their look (border/background/hover). Named "arrows" (not
+   the old "stepper" wording) so no selector here collides with the retired stepper-button class
+   pinned by tests/js/no-legacy-button-classes.test.js. */
 .number-field-wrap { display: flex; align-items: stretch; }
 
 .style-field .number-field-wrap input[type="number"] {
@@ -10,49 +15,20 @@
   border-right: none;
 }
 
-.number-field-stepper {
+.number-field-arrows {
   display: flex;
   flex-direction: column;
-  width: 20px;
   flex-shrink: 0;
-  border: 1px solid var(--border);
   border-top-right-radius: var(--radius-lg);
   border-bottom-right-radius: var(--radius-lg);
   overflow: hidden;
 }
 
-.number-field-step {
+.number-field-arrow {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface);
-  border: none;
+  width: 20px;
+  height: auto;
   border-radius: 0;
-  padding: 0;
-  cursor: pointer;
 }
 
-.number-field-step-up { border-bottom: 1px solid var(--border-soft); }
-
-.number-field-step:hover,
-.number-field-step:focus-visible {
-  background: var(--border-soft);
-  outline: none;
-}
-
-.number-field-step::before {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-}
-
-.number-field-step-up::before { border-bottom: 5px solid var(--text-muted); }
-.number-field-step-down::before { border-top: 5px solid var(--text-muted); }
-
-.number-field-step:hover.number-field-step-up::before,
-.number-field-step:focus-visible.number-field-step-up::before { border-bottom-color: var(--text); }
-.number-field-step:hover.number-field-step-down::before,
-.number-field-step:focus-visible.number-field-step-down::before { border-top-color: var(--text); }
+.number-field-arrow-up { border-bottom: 1px solid var(--border-soft); }

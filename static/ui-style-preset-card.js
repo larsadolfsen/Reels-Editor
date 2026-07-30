@@ -44,16 +44,16 @@ window.UI = window.UI || {};
     li.appendChild(nameEl);
 
     if (onDelete) {
-      const trashBtn = document.createElement("button");
-      trashBtn.type = "button";
-      trashBtn.className = "icon-btn style-preset-card-delete";
-      trashBtn.title = "Delete style";
-      trashBtn.innerHTML = UI.icon("trash", { size: 14 });
-      trashBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        onDelete(preset);
+      const trashBtn = UI.button(li, {
+        icon: "trash",
+        size: "sm",
+        onClick: (e) => {
+          e.stopPropagation();
+          onDelete(preset);
+        },
       });
-      li.appendChild(trashBtn);
+      trashBtn.title = "Delete style";
+      trashBtn.classList.add("style-preset-card-delete");
     }
 
     return li;

@@ -1,5 +1,5 @@
 // Reusable presentational UI helper, framework-free. Attaches to window.UI.
-// Depends on the .project-list-row CSS component, .icon-btn (button-group.css), and
+// Depends on the .project-list-row CSS component, UI.button (ui-button.js), and
 // UI.listRow() (ui-list-row.js) for the shared card/hover/selected styling. No app
 // state — callers own the project data and own persisting any change the callbacks report.
 // Reused by both the full-screen picker (open + delete) and the in-editor PROJECTS panel
@@ -48,23 +48,23 @@ window.UI.projectListRow = function projectListRow(project, { onOpen, onRename, 
   li.append(nameEl, metaEl);
 
   if (onDuplicate) {
-    const dupBtn = document.createElement("button");
-    dupBtn.type = "button";
-    dupBtn.className = "icon-btn project-list-row-action";
+    const dupBtn = UI.button(li, {
+      icon: "copy",
+      size: "sm",
+      onClick: (e) => { e.stopPropagation(); onDuplicate(); },
+    });
     dupBtn.title = "Duplicate";
-    dupBtn.innerHTML = UI.icon("copy", { size: 14 });
-    dupBtn.addEventListener("click", (e) => { e.stopPropagation(); onDuplicate(); });
-    li.appendChild(dupBtn);
+    dupBtn.classList.add("project-list-row-action");
   }
 
   if (onDelete) {
-    const delBtn = document.createElement("button");
-    delBtn.type = "button";
-    delBtn.className = "icon-btn project-list-row-action";
+    const delBtn = UI.button(li, {
+      icon: "trash",
+      size: "sm",
+      onClick: (e) => { e.stopPropagation(); onDelete(); },
+    });
     delBtn.title = "Delete";
-    delBtn.innerHTML = UI.icon("trash", { size: 14 });
-    delBtn.addEventListener("click", (e) => { e.stopPropagation(); onDelete(); });
-    li.appendChild(delBtn);
+    delBtn.classList.add("project-list-row-action");
   }
 
   if (onOpen) li.addEventListener("click", () => onOpen());
