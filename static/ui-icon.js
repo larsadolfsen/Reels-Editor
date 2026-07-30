@@ -31,7 +31,7 @@ const ICON_PATHS = {
   // Added Task 10 (index.html SVG migration). Path data verified against Lucide's GitHub repo
   // (github.com/lucide-icons/lucide) via `gh api search/code`, byte-for-byte where noted.
   shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
-  slice: '<path d="M11 16.586V19a1 1 0 0 1-1 1H2L18.37 3.63a1 1 0 1 1 3 3l-9.663 9.663a1 1 0 0 1-1.414 0L8 14"/>',
+  slice: '<path d="M11 16.586V19a1 1 0 0 1-1 1H2L18.37 3.63a1 1 0 1 1 3 3l-9.663 9.663a1 1 0 0 1-1.414 0L8 14"/><path d="M10 3H8"/><path d="M9 2v2"/><path d="M20 15v4"/><path d="M22 17h-4"/><path d="M4 5v4"/><path d="M6 7H2"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
   // moon: the site's markup predates Lucide's squiggle-moon redesign (real current Lucide "moon"
   // uses a single curved path). Kept the original pre-redesign path data verbatim per this file's
