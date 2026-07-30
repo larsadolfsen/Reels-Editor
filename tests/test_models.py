@@ -371,3 +371,65 @@ def test_boxes_saved_before_the_mask_feature_load_with_the_mask_off():
                                       "out_point": 5.0, "height": 1920})
     b = ImageBoxLayer.model_validate({"media_id": "m1", "file_path": "pic.jpg", "height": 1920})
     assert v.mask_enabled is False and b.mask_enabled is False
+
+def test_text_preset_spotlight_fields_default():
+    p = TextPreset(name="Caption")
+    assert p.spotlight_color == "#FFD400"
+    assert p.spotlight_outline is False
+    assert p.spotlight_outline_color == "#000000"
+    assert p.spotlight_outline_px == 4
+    assert p.spotlight_shadow is False
+    assert p.spotlight_shadow_color == "#000000"
+    assert p.spotlight_shadow_offset_x == 4
+    assert p.spotlight_shadow_offset_y == 4
+    assert p.spotlight_shadow_blur == 0
+    assert p.spotlight_highlight is False
+    assert p.spotlight_highlight_color == "#FFD400"
+    assert p.spotlight_highlight_border_radius == 4
+
+def test_text_preset_spotlight_fields_round_trip():
+    p = TextPreset(name="Caption",
+                   spotlight_color="#00FF00",
+                   spotlight_outline=True,
+                   spotlight_outline_color="#FF0000",
+                   spotlight_outline_px=2,
+                   spotlight_shadow=True,
+                   spotlight_shadow_color="#0000FF",
+                   spotlight_shadow_offset_x=-5,
+                   spotlight_shadow_offset_y=10,
+                   spotlight_shadow_blur=3,
+                   spotlight_highlight=True,
+                   spotlight_highlight_color="#FFFF00",
+                   spotlight_highlight_border_radius=8)
+    loaded = TextPreset.model_validate_json(p.model_dump_json())
+    assert loaded == p
+    assert loaded.spotlight_color == "#00FF00"
+    assert loaded.spotlight_outline is True
+    assert loaded.spotlight_outline_color == "#FF0000"
+    assert loaded.spotlight_outline_px == 2
+    assert loaded.spotlight_shadow is True
+    assert loaded.spotlight_shadow_color == "#0000FF"
+    assert loaded.spotlight_shadow_offset_x == -5
+    assert loaded.spotlight_shadow_offset_y == 10
+    assert loaded.spotlight_shadow_blur == 3
+    assert loaded.spotlight_highlight is True
+    assert loaded.spotlight_highlight_color == "#FFFF00"
+    assert loaded.spotlight_highlight_border_radius == 8
+
+def test_text_preset_old_saved_json_without_spotlight_fields_loads_with_defaults():
+    # Ensure backwards compatibility: old JSON without spotlight fields loads with defaults
+    import json
+    old_json = json.dumps({"name": "Pop"})
+    loaded = TextPreset.model_validate_json(old_json)
+    assert loaded.spotlight_color == "#FFD400"
+    assert loaded.spotlight_outline is False
+    assert loaded.spotlight_outline_color == "#000000"
+    assert loaded.spotlight_outline_px == 4
+    assert loaded.spotlight_shadow is False
+    assert loaded.spotlight_shadow_color == "#000000"
+    assert loaded.spotlight_shadow_offset_x == 4
+    assert loaded.spotlight_shadow_offset_y == 4
+    assert loaded.spotlight_shadow_blur == 0
+    assert loaded.spotlight_highlight is False
+    assert loaded.spotlight_highlight_color == "#FFD400"
+    assert loaded.spotlight_highlight_border_radius == 4

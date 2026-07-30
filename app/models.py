@@ -105,6 +105,19 @@ class TextPreset(BaseModel):
     highlight: bool = False            # block-level highlight default (off); highlight_color above is shared with captions
     highlight_border_radius: int = 4   # px on the 1080x1920 canvas; shared by TEXT's marker-highlight rect and CAPTIONS' "background" mode word rect
 
+    spotlight_color: str = "#FFD400"   # per-word karaoke (CAPTIONS only): active word text color swap
+    spotlight_outline: bool = False    # per-word outline on/off
+    spotlight_outline_color: str = "#000000"
+    spotlight_outline_px: int = 4
+    spotlight_shadow: bool = False     # per-word drop-shadow on/off
+    spotlight_shadow_color: str = "#000000"
+    spotlight_shadow_offset_x: int = 4
+    spotlight_shadow_offset_y: int = 4
+    spotlight_shadow_blur: int = 0
+    spotlight_highlight: bool = False  # per-word background rect on/off
+    spotlight_highlight_color: str = "#FFD400"
+    spotlight_highlight_border_radius: int = 4
+
     @model_validator(mode="before")
     @classmethod
     def _migrate_legacy_box_fields(cls, data):
