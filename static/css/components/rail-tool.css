@@ -1,12 +1,10 @@
-/* Container for the left rail's Select-tool button (selector-tool-rail feature), sitting between */
-/* #panel-nav-top (PROJECTS/FILES) and #panel-nav-bottom (TEXT/CAPTIONS/...) — */
-/* selector-tool-rail-placement feature. The Text tool is armed via the existing TEXT entry in */
-/* #panel-nav-bottom instead of a second button here (remove-text-tool-top-bar, see panel-nav.js). */
-/* Reuses icon-rail.css's .icon-rail-btn styling for the button itself; this file only sets the */
-/* container's spacing. Depends on icon-rail.css/tokens.css. */
+/* The left rail's Select-tool button (selector-tool-rail feature), sitting between #panel-nav-top */
+/* (PROJECTS/FILES) and #panel-nav-bottom (TEXT/CAPTIONS/...) — selector-tool-rail-placement */
+/* feature. The Text tool is armed via the existing TEXT entry in #panel-nav-bottom instead of a */
+/* second button here (remove-text-tool-top-bar, see panel-nav.js). Built via the shared */
+/* UI.iconRail component (ui-rail-tool-button.js), which stamps its own .icon-rail class with */
+/* display/padding/gap onto #rail-tool — this file only adds the extra vertical margin that sets */
+/* #rail-tool apart from the panel-nav groups it sits between. Depends on icon-rail.css/tokens.css. */
 #rail-tool {
-  display: flex;
-  flex-direction: column;
-  padding: 0 10px;
-  margin-bottom: var(--space-3);
+  margin: var(--space-2) 0;
 }
