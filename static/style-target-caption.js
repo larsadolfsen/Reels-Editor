@@ -28,6 +28,11 @@ function forCaptionTrack(deps) {
     kind: "caption",
     supportsFormatRuns: false,
 
+    // A caption track is auto-created by ensureCaptionTrack() the first time it's needed,
+    // so unlike the text target it never has a "no track" state a section must guard against.
+    // Exists purely so section code can call target.exists() without branching on target.kind.
+    exists() { return true; },
+
     getPreset: () => d.getPreset(),
     getFieldValue: (field) => d.getPreset()[field],
 

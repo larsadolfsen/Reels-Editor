@@ -72,3 +72,8 @@ test("setFields writes several preset fields with exactly one save", () => {
   assert.strictEqual(calls.saves, 1);
   assert.strictEqual(calls.previews, 1);
 });
+
+test("exists() is always true — a caption track is auto-created, never absent", () => {
+  const { target } = makeTarget();
+  assert.strictEqual(target.exists(), true);
+});

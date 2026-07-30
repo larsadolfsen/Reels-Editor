@@ -151,3 +151,34 @@ test("getFieldValue never reads font from a FormatRun even if one somehow has it
   const { target } = makeTarget({ selection: { blockId: "b1", start: 0, end: 2 }, block, preset: { id: "p1", font: "Public Sans" } });
   assert.strictEqual(target.getFieldValue("font"), "Public Sans");
 });
+
+test("exists() reflects whether getBlock() currently returns a block", () => {
+  const { forTextBlock } = require("../../static/style-target-text.js");
+  const withBlock = forTextBlock({
+    getBlock: () => ({ id: "b1", preset_id: "p1", formatting_runs: [] }),
+    getPreset: () => ({ id: "p1" }),
+    getSelection: () => null,
+    save: () => {},
+    rerenderPreview: () => {},
+    rerenderPanel: () => {},
+    getBoxSize: () => ({ width: 0, height: 0 }),
+    renderPreviewWith: () => {},
+    allPresets: () => ({}),
+    upsert: () => {},
+  });
+  assert.strictEqual(withBlock.exists(), true);
+
+  const withoutBlock = forTextBlock({
+    getBlock: () => null,
+    getPreset: () => ({ id: "p1" }),
+    getSelection: () => null,
+    save: () => {},
+    rerenderPreview: () => {},
+    rerenderPanel: () => {},
+    getBoxSize: () => ({ width: 0, height: 0 }),
+    renderPreviewWith: () => {},
+    allPresets: () => ({}),
+    upsert: () => {},
+  });
+  assert.strictEqual(withoutBlock.exists(), false);
+});
