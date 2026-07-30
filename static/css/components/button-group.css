@@ -21,17 +21,25 @@
   background: var(--accent-tint);
 }
 
-/* Segmented "pill" control (added connected-button-groups): options sit flush inside one rounded
+/* Segmented control (added connected-button-groups): options sit flush inside one rounded
    track with no gap between them, and a single sliding indicator — positioned in px by
    ui-button-group.js from the active button's own rendered box, so it works for any mix of
    spans — animates behind whichever button is active instead of toggling per-button
-   border/background. Scoped off .btn-group-inline, whose buttons share a row with unrelated
+   border/background. Rounded with the app's standard --radius-md, matching every other button
+   in the app, not a full pill/stadium shape, and the indicator reuses the regular
+   .button[aria-pressed="true"] recipe (accent border + tint, no shadow — this app doesn't use
+   drop shadows on controls) instead of inventing a new "raised" look. `1fr` columns (rather than
+   the base rule's fixed --control-size-sm tracks) so the track always fills exactly the width
+   its container assigns it — the base rule's fixed 28px columns can total less than that width
+   depending on the surrounding grid's own gaps, leaving a dead strip of container background
+   exposed on the right. Scoped off .btn-group-inline, whose buttons share a row with unrelated
    standalone UI.button toggles rather than forming one segmented control. */
 .btn-group:not(.btn-group-inline) {
   position: relative;
+  grid-template-columns: repeat(8, 1fr);
   gap: 0;
   background: var(--bg-2);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   padding: 2px;
 }
 
@@ -40,7 +48,7 @@
   z-index: 1;
   border: none;
   background: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
 }
 
 .btn-group:not(.btn-group-inline) button[aria-pressed="true"] {
@@ -53,9 +61,9 @@
   top: 0;
   left: 0;
   z-index: 0;
-  background: var(--surface);
-  border-radius: var(--radius-pill);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  background: var(--accent-tint);
+  border: var(--border-width) solid var(--accent);
+  border-radius: var(--radius-md);
   transition: transform 180ms ease, width 180ms ease, height 180ms ease;
   pointer-events: none;
 }

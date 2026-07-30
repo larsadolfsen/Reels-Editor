@@ -11,12 +11,18 @@ window.UI = window.UI || {};
 // Renders a sliding `.btn-group-indicator` behind the active button (skipped for
 // .btn-group-inline, which has no single track to slide within — see button-group.css)
 // positioned in px from the button's own rendered box, so it works for any mix of spans.
+// An option is always marked active (falls back to the first one if activeValue matches
+// none), and a ResizeObserver re-syncs the indicator once the container gets a real size —
+// several callers build a group while its panel is still `hidden`, where offsetLeft/Width
+// read as 0 and the indicator would otherwise stay collapsed until the user's first click.
 window.UI.buttonGroup = function buttonGroup(container, options, activeValue, onSelect, { containerSpan = 8 } = {}) {
   container.innerHTML = "";
   container.classList.add("btn-group", `col-${containerSpan}`);
   const sliding = !container.classList.contains("btn-group-inline");
 
   let indicator = null;
+  let currentActive = null;
+
   if (sliding) {
     indicator = document.createElement("div");
     indicator.className = "btn-group-indicator";
@@ -46,9 +52,9 @@ window.UI.buttonGroup = function buttonGroup(container, options, activeValue, on
       btn.textContent = label;
     }
     btn.dataset.value = value;
-    btn.setAttribute("aria-pressed", String(value === activeValue));
     btn.addEventListener("click", () => {
-      buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === value)));
+      buttons.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+      currentActive = btn;
       moveIndicator(btn);
       onSelect(value);
     });
@@ -56,10 +62,19 @@ window.UI.buttonGroup = function buttonGroup(container, options, activeValue, on
     return btn;
   });
 
-  moveIndicator(buttons.find((b) => b.dataset.value === activeValue) || buttons[0], true);
+  currentActive = buttons.find((b) => b.dataset.value === activeValue) || buttons[0];
+  buttons.forEach((b) => b.setAttribute("aria-pressed", String(b === currentActive)));
+  moveIndicator(currentActive, true);
+
+  if (sliding && typeof ResizeObserver !== "undefined") {
+    const ro = new ResizeObserver(() => moveIndicator(currentActive, true));
+    ro.observe(container);
+  }
 
   return (value) => {
-    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === value)));
-    moveIndicator(buttons.find((b) => b.dataset.value === value));
+    const btn = buttons.find((b) => b.dataset.value === value) || buttons[0];
+    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+    currentActive = btn;
+    moveIndicator(btn);
   };
 };
