@@ -16,6 +16,10 @@ function defaultCaptionPreset(id) {
     box_border_width: 0, box_border_color: "#FFFFFF", box_border_radius: 0,
     align: "center", x: 540, y: Math.round(SafeZoneGeometry.CAPTION_ZONE_TOP), entrance: "none",
     highlight: false, highlight_color: "#FFD400", highlight_mode: "current_word", highlight_border_radius: 4,
+    spotlight_color: "#FFD400",
+    spotlight_outline: false, spotlight_outline_color: "#000000", spotlight_outline_px: 4,
+    spotlight_shadow: false, spotlight_shadow_color: "#000000", spotlight_shadow_offset_x: 4, spotlight_shadow_offset_y: 4, spotlight_shadow_blur: 0,
+    spotlight_highlight: false, spotlight_highlight_color: "#FFD400", spotlight_highlight_border_radius: 4,
   };
 }
 
@@ -31,6 +35,13 @@ function ensureCaptionPreset(id) {
     preset.box_height_mode = "fixed";
     preset.box_width = preset.box_width > 0 ? preset.box_width : 900;
     preset.box_height = preset.box_height > 0 ? preset.box_height : 350;
+  }
+  // Self-heal presets saved before "Background" mode was folded into the spotlight_highlight
+  // toggle (2026-07-30, spotlight per-word styles) — see docs/superpowers/specs/2026-07-30-spotlight-word-styles-design.md.
+  if (preset.highlight_mode === "background") {
+    preset.highlight_mode = "current_word";
+    preset.spotlight_highlight = true;
+    preset.spotlight_highlight_color = preset.highlight_color;
   }
   return preset;
 }
