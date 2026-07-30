@@ -31,14 +31,24 @@ window.StyleSection = window.StyleSection || {};
     group.appendChild(groupEl);
     container.appendChild(group);
 
-    const setActive = UI.buttonGroup(groupEl, ALIGN_OPTIONS, target.getPreset().align,
+    // Construction-time value is a placeholder, not target.getPreset().align: this factory runs
+    // once at panel load (now inside the Design tab's eagerly-built section list — see
+    // style-tab-design.js), before any text block/caption track necessarily exists yet, and
+    // getPreset() throws in that state (same class of bug style-section-size.js documents fixing
+    // for the same reason). render() (below) supplies the real value immediately after.
+    const setActive = UI.buttonGroup(groupEl, ALIGN_OPTIONS, "center",
       (value) => target.setPresetField("align", value));
 
     // Changing align moves the box on stage (stage.css keys its transform off it) but does NOT
     // re-render the panel — matching the old behaviour, where HORIZONTAL kept its stored value.
     function render() { setActive(target.getPreset().align); }
 
-    render();
+    // Not self-invoked at construction (unlike this file's very first version): this section now
+    // constructs eagerly inside the Design tab (style-tab-design.js), before any text block/
+    // caption track necessarily exists, and render() calling target.getPreset() this early throws
+    // for the same reason the comment above documents. Every other Design-tab section already
+    // defers its first real render() to the panel's own renderTextPanel()/renderCaptionPanel()
+    // call, which only ever runs once a block/track exists — this section now matches that.
     return { render };
   };
 })();
