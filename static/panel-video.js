@@ -114,10 +114,11 @@ UI.divider(document.getElementById("video-order-divider"));
     document.getElementById("video-duplicate").onclick = () => duplicateClip(c.id);
   }
 
-  // Removes a clip from the sequence: renumbers the remaining clips' `order` so no gaps appear,
-  // drops its clipDurations cache entry, clears selection back to a neutral panel, and if the
-  // playhead was inside the deleted clip's timeline range, seeks it to that clip's former start
-  // (clamped to the shorter post-delete sequence duration).
+  // Removes a clip from the sequence: shifts project.captions.words to close the gap the deleted
+  // clip's range leaves (removing any words that fell inside it), renumbers the remaining clips'
+  // `order` so no gaps appear, drops its clipDurations cache entry, clears selection back to a
+  // neutral panel, and if the playhead was inside the deleted clip's timeline range, seeks it to
+  // that clip's former start (clamped to the shorter post-delete sequence duration).
   async function deleteClip(clipId) {
     const c = project.clips.find((x) => x.id === clipId);
     if (!c) return;
@@ -128,10 +129,15 @@ UI.divider(document.getElementById("video-order-divider"));
       if (clip.id === c.id) break;
       start += (clip.out_point - clip.in_point) / (clip.speed || 1);
     }
+    const duration = (c.out_point - c.in_point) / (c.speed || 1);
     const wasInside = (() => {
       const t = parseFloat(document.getElementById("time").textContent) || 0;
-      return t >= start && t < start + (c.out_point - c.in_point) / (c.speed || 1);
+      return t >= start && t < start + duration;
     })();
+
+    if (project.captions) {
+      project.captions.words = CaptionClipSync.shiftCaptionsAfterEdit(project.captions.words, start, duration, 0);
+    }
 
     project.clips = project.clips.filter((x) => x.id !== clipId);
     project.clips.sort((a, b) => a.order - b.order).forEach((x, i) => { x.order = i; });
