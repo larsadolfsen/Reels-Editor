@@ -182,7 +182,24 @@ async function renderTextPanel() {
     // ui-text-interaction.js preventDefaults the mousedown), so the still-editing block's later
     // blur used to write its text into whichever block had meanwhile become selected. These
     // callbacks only do the selected-block-agnostic side effects.
-    onEditEnd: async () => { renderTextPreview(); await saveProject(); },
+    onEditEnd: async () => {
+      // Typing into a block that's still auto-sizing to its content (`fit`) freezes it to a
+      // manually-resizable fixed size the moment editing ends with text present — mirrors the
+      // existing precedent in handleBoxResizeEnd, which does the same thing on a resize drag.
+      // One-way: once frozen, later clearing the text back to empty does not revert this.
+      if (preset.box_width_mode === "fit" && (block.heading || "").trim()) {
+        const size = Preview.getTextBoxSize(block.id);
+        if (size) {
+          preset.box_width = Math.round(size.width);
+          preset.box_height = Math.round(size.height);
+          preset.box_width_mode = "fixed";
+          preset.box_height_mode = "fixed";
+          renderBoxTab();
+        }
+      }
+      renderTextPreview();
+      await saveProject();
+    },
     // preview.js already tracks the active selection itself (Preview.getActiveFormatSelection());
     // this is just a pass-through hook in case a future panel needs to react live to selection
     // changes. FONT accordion controls read the selection on demand instead, so no-op for now.
@@ -221,15 +238,11 @@ function handleBoxResize(preset, { width, height }) {
 
 async function handleBoxResizeEnd(preset, { width, height }) {
   const scale = stageScale();
-  // Dragging a handle from FIT means "give this an explicit size" (switches to FREE), but
-  // dragging while already in FILL should stay in FILL — autofit is only ever an explicit
-  // opt-in via the SIZE button group, never a side effect of a resize drag.
-  const wasFill = preset.box_width_mode === "fill";
-  preset.box_width_mode = wasFill ? "fill" : "fixed";
-  preset.box_height_mode = wasFill ? "fill" : "fixed";
+  preset.box_width_mode = "fixed";
+  preset.box_height_mode = "fixed";
   preset.box_width = Math.round(width * scale);
   preset.box_height = Math.round(height * scale);
-  renderTextPreview(); // re-triggers FILL's refit against the new box dimensions, must run before save so the fitted size_px persists
+  renderTextPreview();
   await saveProject();
   renderBoxTab();
 }
