@@ -3,8 +3,8 @@
 // else, which is what stops the two panels drifting apart again.
 window.StyleTab = window.StyleTab || {};
 
-// options.sizeModes is forwarded to StyleSection.box: true for TEXT (FIT/FREE/FILL), false for
-// CAPTIONS (a caption box is always a fixed size).
+// options.sizeModes is forwarded to StyleSection.box: true for TEXT (hides WIDTH/HEIGHT while
+// auto-sizing to content), false for CAPTIONS (a caption box is always a fixed size).
 window.StyleTab.box = function box(container, target, options) {
   const opts = options || {};
 

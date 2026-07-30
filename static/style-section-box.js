@@ -52,8 +52,8 @@ window.StyleSection.box = function box(container, target, options) {
 
   function render() {
     const preset = target.getPreset();
-    // WIDTH/HEIGHT serve FREE (manual fixed size) — only FIT sizes the box to its content and
-    // has no use for them. A block auto-freezes from FIT to FIXED once it has content (see
+    // WIDTH/HEIGHT serve a manually-resizable fixed size — only "fit" sizes the box to its
+    // content and has no use for them. A block auto-freezes from "fit" to "fixed" once it has content (see
     // panel-text.js's onEditEnd/handleBoxResizeEnd), so this is never user-toggled; with
     // sizeModes off (CAPTIONS) there is no FIT to be in, so they always show.
     const sizeFieldsHidden = sizeModes && preset.box_width_mode === "fit";
