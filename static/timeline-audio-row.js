@@ -30,7 +30,7 @@ window.TimelineAudioRow = (() => {
     return null;
   }
 
-  function drawWaveform(canvas, peaks, alpha = 1) {
+  function drawWaveform(canvas, peaks, maxPeak, alpha = 1) {
     const ctx = canvas.getContext("2d");
     const w = canvas.width, h = canvas.height, mid = h / 2;
     ctx.clearRect(0, 0, w, h);
@@ -42,7 +42,7 @@ window.TimelineAudioRow = (() => {
     }
     const barWidth = Math.max(1, w / peaks.length);
     peaks.forEach((p, i) => {
-      const barH = Math.max(2, p * h);
+      const barH = Math.max(2, (p / maxPeak) * h);
       ctx.fillRect(i * barWidth, mid - barH / 2, Math.max(1, barWidth - 1), barH);
     });
   }
@@ -71,18 +71,29 @@ window.TimelineAudioRow = (() => {
     track.innerHTML = "";
     const rowHeight = track.clientHeight || 40;
 
-    let acc = 0;
+    // First pass: gather each clip's (already trimmed) peaks and find the loudest peak across
+    // ALL clips, so every clip's bars scale against one shared reference — a quiet clip stays
+    // visibly quieter than a loud one, instead of each clip being stretched to fill the row on
+    // its own.
+    const clipPeaks = [];
+    let maxPeak = 0.0001;
     for (const c of ordered(project.clips || [])) {
-      const d = clipDuration(c);
       const media = (project.media_library || []).find((m) => m.id === c.media_id);
+      let peaks = null;
+      if (media && media.has_audio) {
+        const raw = getPeaks(media.id, media.file_path, onReady);
+        peaks = sliceForTrim(raw, media.duration, c.in_point, c.out_point);
+        if (peaks) maxPeak = Math.max(maxPeak, ...peaks);
+      }
+      clipPeaks.push({ c, media, peaks });
+    }
+
+    let acc = 0;
+    for (const { c, peaks } of clipPeaks) {
+      const d = clipDuration(c);
       const canvas = makeCanvas("audio-clip-waveform", acc * pxPerSec, d * pxPerSec, rowHeight);
       track.appendChild(canvas);
-      if (media && media.has_audio) {
-        const peaks = getPeaks(media.id, media.file_path, onReady);
-        drawWaveform(canvas, sliceForTrim(peaks, media.duration, c.in_point, c.out_point));
-      } else {
-        drawWaveform(canvas, []);
-      }
+      drawWaveform(canvas, peaks, maxPeak);
       acc += d;
     }
 
@@ -95,7 +106,9 @@ window.TimelineAudioRow = (() => {
         const peaks = getPeaks(media.id, media.file_path, onReady);
         const reelFraction = media.duration > 0 ? Math.min(1, acc / media.duration) : 1;
         const sliceEnd = Math.round((peaks || []).length * reelFraction) || (peaks || []).length;
-        drawWaveform(canvas, (peaks || []).slice(0, sliceEnd), 0.5);
+        const musicSlice = (peaks || []).slice(0, sliceEnd);
+        const musicMax = musicSlice.length ? Math.max(0.0001, ...musicSlice) : 0.0001;
+        drawWaveform(canvas, musicSlice, musicMax, 0.5);
       }
     }
   }
