@@ -41,8 +41,8 @@
 }
 
 .settings-row-swatch {
-  width: 16px;
-  height: 16px;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
   flex-shrink: 0;
   border: var(--border);
   border-radius: var(--radius-md);

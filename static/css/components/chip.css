@@ -5,8 +5,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 16px;
-  padding: 0 4px;
+  height: var(--icon-size-sm);
+  padding: 0 var(--space-1);
   border-radius: var(--radius-sm);
   background: var(--bg-1);
   border: var(--border-width) solid var(--border-soft);
@@ -18,7 +18,7 @@
 
 /* Usage-count pill (FILES panel). */
 .chip--pill {
-  min-width: 16px;
+  min-width: var(--icon-size-sm);
   border-radius: var(--radius-pill);
 }
 

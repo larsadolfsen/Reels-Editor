@@ -50,7 +50,7 @@
   background: var(--surface);
   border: var(--border);
   color: var(--text-secondary);
-  padding: 4px;
+  padding: var(--space-1);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-chip);
 }
@@ -82,16 +82,16 @@
   padding: var(--space-2) 0;
 }
 
-#ruler-label { height: 28px; }
+#ruler-label { height: var(--control-size-sm); }
 
 #timeline-labels .row-label {
-  padding-left: 12px;
+  padding-left: var(--space-2-5);
   display: flex;
   align-items: center;
 }
 #label-captions { height: 44px; }
 #label-video { height: 56px; }
-#label-audio { height: 40px; }
+#label-audio { height: var(--control-height-md); }
 
 /* Unified overlay z-order stack: #label-overlays/#row-overlays stack one 44px lane per
    text block + video box (static/timeline.js's renderOverlaysRow), height set inline per
@@ -105,7 +105,7 @@
   height: 44px;
   flex-shrink: 0;
   position: relative;
-  padding-left: 12px;
+  padding-left: var(--space-2-5);
   display: flex;
   align-items: center;
 }
@@ -176,7 +176,7 @@
 #timeline-labels .row-label[hidden] { display: none; }
 .timeline-row[data-row="captions"] { height: 44px; }
 .timeline-row[data-row="video"] { height: 56px; }
-.timeline-row[data-row="audio"] { height: 40px; }
+.timeline-row[data-row="audio"] { height: var(--control-height-md); }
 
 #row-overlays {
   display: flex;
@@ -325,7 +325,7 @@
   opacity: 0;
   cursor: grab;
   color: var(--text-tertiary);
-  margin-right: 4px;
+  margin-right: var(--space-1);
 }
 .overlay-lane-label:hover .overlay-lane-handle { opacity: 1; }
 .overlay-lane-label.dragging {

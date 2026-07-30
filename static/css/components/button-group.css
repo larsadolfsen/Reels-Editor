@@ -3,14 +3,14 @@
 /* Exposes .btn-group, .btn-group button, .btn-group-inline, .icon-hidden. Depends on tokens.css. Built by static/ui-components.js. */
 .btn-group {
   display: grid;
-  grid-template-columns: repeat(8, 28px);
-  gap: 4px;
+  grid-template-columns: repeat(8, var(--control-size-sm));
+  gap: var(--space-1);
 }
 
 .btn-group button {
-  padding: 8px 0;
+  padding: var(--space-2) 0;
   font-size: var(--fs-xs);
-  letter-spacing: 0.03em;
+  letter-spacing: var(--ls-tight);
   border-radius: var(--radius-md);
 }
 
@@ -30,7 +30,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 28px;
+  height: var(--control-size-sm);
   padding: 0;
 }
 

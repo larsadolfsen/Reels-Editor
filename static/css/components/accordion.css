@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  height: 40px;
+  height: var(--control-height-md);
   padding: 0;
   background: none;
   border: none;
