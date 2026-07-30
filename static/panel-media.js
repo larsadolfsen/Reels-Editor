@@ -17,8 +17,10 @@
 // 2026-07-30 files-row-hover-actions-fix) dropping list-row.css's always-on grey card fill —
 // the row's `--border-soft` border stays visible at rest and turns `--border-hover-color`
 // (blue accent) on hover via list-row.css's own `:hover` rule, with no hover background. The
-// `.clip-actions` action-icon group (style-panel.css) is `display: none` until that same row
-// hover, not just opacity 0, so it's fully absent from layout/interaction at rest. A "no audio" icon
+// `.clip-actions` action-icon group (style-panel.css) fades in/out on that same row's hover via
+// `opacity`/`visibility` transitioning over the shared `--transition-fade` token (tokens.css,
+// added 2026-07-30) — `visibility: hidden`/`pointer-events: none` at rest keep it out of the
+// accessibility tree and unclickable between hovers. A "no audio" icon
 // is shown for clips with no audio stream (m.has_audio === false) and, for video clips that do
 // have a stream, also when its cached waveform peaks are all silent (checkSilentAudio, added
 // 2026-07-23 — an audio stream can technically exist but carry no actual sound).

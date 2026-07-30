@@ -229,12 +229,20 @@
 }
 
 .clip-actions {
-  display: none;
+  display: flex;
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition-fade), visibility var(--transition-fade);
 }
-#clip-list li:hover .clip-actions { display: flex; }
+#clip-list li:hover .clip-actions {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
 
 #panel-export #export { width: 100%; }
 
