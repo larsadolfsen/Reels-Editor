@@ -134,7 +134,7 @@
       </button>
 
       <div id="panel-files" class="context-panel">
-        <div class="style-panel-header">FILES</div>
+        <div id="panel-files-header" class="context-panel-header text-eyebrow">FILES</div>
         <div id="panel-files-add">
           <button id="add-clip" class="panel-button panel-button-dashed"><span class="icon">+</span><span class="label">IMPORT MEDIA</span></button>
         </div>
@@ -142,7 +142,7 @@
       </div>
 
       <div id="panel-video" class="context-panel" hidden>
-        <div class="style-panel-header">VIDEO</div>
+        <div class="context-panel-header text-eyebrow">VIDEO</div>
 
         <div class="style-group">
           <div id="video-name" class="context-panel-name col-8"></div>
@@ -151,17 +151,17 @@
         <div id="video-tab-bar"></div>
 
         <div id="video-design-body">
-          <div class="style-group-label">FILL</div>
+          <div class="section-label-spacer text-eyebrow">FILL</div>
           <div class="style-group">
             <div id="video-fill-mode-group"></div>
           </div>
 
-          <div class="style-group-label">SPEED</div>
+          <div class="section-label-spacer text-eyebrow">SPEED</div>
           <div class="style-group">
             <div id="video-speed-field"></div>
           </div>
 
-          <div class="style-group-label">VOLUME</div>
+          <div class="section-label-spacer text-eyebrow">VOLUME</div>
           <div class="style-group">
             <div class="style-row">
               <div id="video-volume-field" class="col-6"></div>
@@ -174,7 +174,7 @@
         </div>
 
         <div id="video-time-body">
-          <div class="style-group-label">TRIM</div>
+          <div class="section-label-spacer text-eyebrow">TRIM</div>
           <div class="style-group">
             <div class="style-row">
               <label id="video-in-field"></label>
@@ -190,7 +190,7 @@
 
           <div id="video-order-divider"></div>
 
-          <div class="style-group-label">ORDER</div>
+          <div class="section-label-spacer text-eyebrow">ORDER</div>
           <div class="style-group">
             <div class="style-row">
               <button class="col-4" id="video-move-up">&#9650; Move up</button>
@@ -210,7 +210,7 @@
 
       <div id="panel-captions" class="context-panel" hidden>
         <div id="panel-captions-main">
-          <div class="style-panel-header">CAPTIONS</div>
+          <div class="context-panel-header text-eyebrow">CAPTIONS</div>
 
           <div id="caption-tab-bar"></div>
 
@@ -261,12 +261,12 @@
 
             <div id="caption-box-border-position-divider"></div>
 
-            <div class="style-group-label">TEXT ALIGN</div>
+            <div class="section-label-spacer text-eyebrow">TEXT ALIGN</div>
             <div class="style-group">
               <div id="caption-align-group"></div>
             </div>
 
-            <div class="style-group-label">POSITION</div>
+            <div class="section-label-spacer text-eyebrow">POSITION</div>
             <div class="style-group">
               <div id="caption-position-group"></div>
             </div>
@@ -283,7 +283,7 @@
           <div id="caption-words-body">
             <p id="caption-words-empty-hint" class="auto-slice-hint">No transcript yet — run Auto-caption in the AUDIO panel.</p>
             <div id="caption-transcript-section">
-              <div class="style-group-label">TRANSCRIPT</div>
+              <div class="section-label-spacer text-eyebrow">TRANSCRIPT</div>
               <ul id="caption-words-list" class="font-list"></ul>
             </div>
           </div>
@@ -293,7 +293,7 @@
               <button id="caption-filler-auto-remove-btn" class="panel-button col-8" type="button"><span class="icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 16.586V19a1 1 0 0 1-1 1H2L18.37 3.63a1 1 0 1 1 3 3l-9.663 9.663a1 1 0 0 1-1.414 0L8 14"/><path d="M10 3H8"/><path d="M9 2v2"/><path d="M20 15v4"/><path d="M22 17h-4"/><path d="M4 5v4"/><path d="M6 7H2"/></svg></span><span class="label">Auto-remove filler words</span></button>
             </div>
 
-            <div class="style-group-label">FILLER WORDS</div>
+            <div class="section-label-spacer text-eyebrow">FILLER WORDS</div>
             <div class="style-group">
               <div class="style-row">
                 <input id="caption-filler-word-input" type="text" class="col-6" placeholder="e.g. øh">
@@ -368,11 +368,11 @@
 
         <div id="panel-captions-highlight" hidden>
           <div id="caption-highlight-subpanel-header"></div>
-          <div class="style-group-label">MARKER</div>
+          <div class="section-label-spacer text-eyebrow">MARKER</div>
           <div class="style-group">
             <div id="caption-highlight-marker-group"></div>
           </div>
-          <div class="style-group-label">MODE</div>
+          <div class="section-label-spacer text-eyebrow">MODE</div>
           <div class="style-group">
             <div id="caption-highlight-mode-group"></div>
           </div>
@@ -387,9 +387,9 @@
       </div>
 
       <div id="panel-settings" class="context-panel" hidden>
-        <div class="style-panel-header">SETTINGS</div>
+        <div class="context-panel-header text-eyebrow">SETTINGS</div>
 
-        <div class="style-group-label">APPEARANCE</div>
+        <div class="section-label-spacer text-eyebrow">APPEARANCE</div>
         <div class="style-group">
           <div class="style-row">
             <span class="context-panel-name col-6">Theme</span>
@@ -402,14 +402,14 @@
       </div>
 
       <div id="panel-export" class="context-panel" hidden>
-        <div class="style-panel-header">EXPORT</div>
+        <div class="context-panel-header text-eyebrow">EXPORT</div>
 
-        <div class="style-group-label">FILENAME</div>
+        <div class="section-label-spacer text-eyebrow">FILENAME</div>
         <div class="style-group">
           <label id="export-filename-field"></label>
         </div>
 
-        <div class="style-group-label">QUALITY</div>
+        <div class="section-label-spacer text-eyebrow">QUALITY</div>
         <div class="style-group">
           <div id="export-quality-group"></div>
         </div>
@@ -424,7 +424,7 @@
       </div>
 
       <div id="panel-projects" class="context-panel" hidden>
-        <div class="style-panel-header">PROJECTS</div>
+        <div class="context-panel-header text-eyebrow">PROJECTS</div>
         <div class="style-group">
           <button id="project-create" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">NEW PROJECT</span></button>
         </div>
@@ -432,7 +432,7 @@
       </div>
 
       <div id="panel-video-box" class="context-panel" hidden>
-        <div class="style-panel-header">VIDEO BOX</div>
+        <div class="context-panel-header text-eyebrow">VIDEO BOX</div>
         <div class="style-group">
           <button id="video-box-add" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD VIDEO BOX</span></button>
         </div>
@@ -445,7 +445,7 @@
           <div id="video-box-tab-bar"></div>
 
           <div id="video-box-box-body">
-            <div class="style-group-label">SIZE &amp; POSITION</div>
+            <div class="section-label-spacer text-eyebrow">SIZE &amp; POSITION</div>
             <div class="style-group">
               <div class="style-row">
                 <label id="video-box-x-field"></label>
@@ -457,7 +457,7 @@
               </div>
             </div>
 
-            <div class="style-group-label">TRIM</div>
+            <div class="section-label-spacer text-eyebrow">TRIM</div>
             <div class="style-group">
               <div class="style-row">
                 <label id="video-box-in-field"></label>
@@ -467,14 +467,14 @@
           </div>
 
           <div id="video-box-time-body">
-            <div class="style-group-label">TIME</div>
+            <div class="section-label-spacer text-eyebrow">TIME</div>
             <div class="style-group">
               <label id="video-box-start-field"></label>
             </div>
           </div>
 
           <div id="video-box-mask-body">
-            <div class="style-group-label">EDGE MASK</div>
+            <div class="section-label-spacer text-eyebrow">EDGE MASK</div>
             <div class="style-group">
               <div id="video-box-mask-toggle"></div>
             </div>
@@ -496,7 +496,7 @@
       </div>
 
       <div id="panel-image-box" class="context-panel" hidden>
-        <div class="style-panel-header">IMAGE BOX</div>
+        <div class="context-panel-header text-eyebrow">IMAGE BOX</div>
         <div class="style-group">
           <button id="image-box-add" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD IMAGE BOX</span></button>
         </div>
@@ -509,7 +509,7 @@
           <div id="image-box-tab-bar"></div>
 
           <div id="image-box-box-body">
-            <div class="style-group-label">SIZE &amp; POSITION</div>
+            <div class="section-label-spacer text-eyebrow">SIZE &amp; POSITION</div>
             <div class="style-group">
               <div class="style-row">
                 <label id="image-box-x-field"></label>
@@ -523,7 +523,7 @@
           </div>
 
           <div id="image-box-time-body">
-            <div class="style-group-label">TIME</div>
+            <div class="section-label-spacer text-eyebrow">TIME</div>
             <div class="style-group">
               <div class="style-row">
                 <label id="image-box-start-field"></label>
@@ -533,7 +533,7 @@
           </div>
 
           <div id="image-box-mask-body">
-            <div class="style-group-label">EDGE MASK</div>
+            <div class="section-label-spacer text-eyebrow">EDGE MASK</div>
             <div class="style-group">
               <div id="image-box-mask-toggle"></div>
             </div>
@@ -555,14 +555,14 @@
       </div>
 
       <div id="panel-audio" class="context-panel" hidden>
-        <div class="style-panel-header">AUDIO</div>
+        <div class="context-panel-header text-eyebrow">AUDIO</div>
         <div id="audio-empty-state" class="style-group">
           <button id="audio-add-music" type="button" class="panel-button panel-button-dashed col-8"><span class="icon">+</span><span class="label">ADD MUSIC</span></button>
         </div>
         <div id="audio-detail" hidden>
           <div id="audio-music-name" class="context-panel-name"></div>
 
-          <div class="style-group-label">VOLUME</div>
+          <div class="section-label-spacer text-eyebrow">VOLUME</div>
           <div class="style-group">
             <div class="style-row">
               <div id="audio-volume-field" class="col-6"></div>
@@ -584,12 +584,12 @@
 
       <div id="panel-audio-track" class="context-panel" hidden>
         <div id="panel-audio-track-main">
-          <div class="style-panel-header">AUDIO</div>
+          <div class="context-panel-header text-eyebrow">AUDIO</div>
 
           <div id="audio-track-tab-bar"></div>
 
           <div id="audio-track-auto-body">
-            <div class="style-group-label">AUTO CAPTION</div>
+            <div class="section-label-spacer text-eyebrow">AUTO CAPTION</div>
 
             <div class="style-group">
               <div id="audio-language-row" class="col-8"></div>
@@ -600,7 +600,7 @@
               <p id="audio-transcribe-error" class="context-panel-name col-8 caption-transcribe-error" hidden></p>
             </div>
 
-            <div class="style-group-label">AUTO SILENCE</div>
+            <div class="section-label-spacer text-eyebrow">AUTO SILENCE</div>
 
             <div id="auto-slice-idle" class="style-group">
               <p class="auto-slice-hint">Detect silence and filler words (um, uh…) and remove them from the timeline.</p>
@@ -639,7 +639,7 @@
 
       <div id="panel-text" class="context-panel" hidden>
         <div id="panel-text-main">
-          <div class="style-panel-header">TEXT</div>
+          <div class="context-panel-header text-eyebrow">TEXT</div>
 
         <div id="text-empty-state" class="style-group" hidden>
           <p class="context-panel-name col-8">No text yet.</p>
@@ -676,7 +676,7 @@
 
         <div id="text-box-body">
 
-          <div class="style-group-label">SIZE</div>
+          <div class="section-label-spacer text-eyebrow">SIZE</div>
           <div class="style-group">
             <div id="text-box-size-mode-group"></div>
           </div>
@@ -699,12 +699,12 @@
 
           <div id="text-box-border-position-divider"></div>
 
-          <div class="style-group-label">TEXT ALIGN</div>
+          <div class="section-label-spacer text-eyebrow">TEXT ALIGN</div>
           <div class="style-group">
             <div id="text-align-group"></div>
           </div>
 
-          <div class="style-group-label">POSITION</div>
+          <div class="section-label-spacer text-eyebrow">POSITION</div>
           <div class="style-group">
             <div id="position-group"></div>
           </div>

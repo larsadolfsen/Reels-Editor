@@ -8,18 +8,16 @@
   padding: 0;
   background: none;
   border: none;
-  font-family: var(--font-ui);
-  font-size: var(--fs-xs);
   line-height: 1;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
   cursor: pointer;
   margin-bottom: var(--space-2);
 }
-.accordion-header:hover { color: var(--text); }
+.accordion-header:hover .text-eyebrow { color: var(--text); }
+.accordion-header:hover .accordion-chevron { color: var(--text); }
 
 .accordion-chevron {
   flex-shrink: 0;
+  color: var(--text-muted);
   transition: transform 0.15s ease;
   transform: rotate(90deg);
 }
