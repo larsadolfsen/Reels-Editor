@@ -365,10 +365,16 @@ git commit -m "refactor: migrate panel-*.js and timeline.js SVGs to UI.icon"
 
 ## Task 13: Migrate `text-panel-*.js`/`caption-panel-*.js` SVGs + add the no-raw-svg guard test
 
-**Files:** `static/text-panel-align.js`, `static/text-panel-case.js`,
-`static/text-panel-position.js`, `static/caption-panel-box.js`, `static/caption-panel-case.js`,
-`static/caption-panel-filler-words.js`, `static/panel-audio-track.js` (already covered in Task
-12 — skip if already done) (24 SVGs across the remaining files, per the audit)
+**Files:** `static/text-panel-align.js`, `static/text-panel-position.js`,
+`static/caption-panel-box.js`, `static/style-section-emphasis.js`, `static/style-section-size.js`,
+`static/caption-panel-filler-words.js` (file list updated 2026-07-29 after an upstream merge:
+the original `text-panel-case.js`/`caption-panel-case.js` and
+`text-panel-font-style.js`/`caption-panel-font-style.js` were deleted and their icons — italic,
+underline, and the bold/case-style icons — consolidated into the new shared
+`style-section-emphasis.js`/`style-section-size.js`, which now serve both the TEXT and CAPTIONS
+panels from one file each. This is a net simplification: the cross-panel duplicate this task
+originally called out is already deduplicated upstream, so there is only one site per icon to
+migrate, not two.)
 - Create: `tests/js/no-raw-svg.test.js`
 
 **Interfaces:**
@@ -376,13 +382,15 @@ git commit -m "refactor: migrate panel-*.js and timeline.js SVGs to UI.icon"
 
 - [ ] **Step 1: Migrate each site**
 
-Same rule as Tasks 11–12. Note the two explicitly-called-out cross-panel duplicates from the
-spec — confirm both sides resolve to the same registry name:
+Same rule as Tasks 11–12. Note the cross-panel duplicate still relevant here — confirm both
+sides resolve to the same registry name:
 
 - `text-panel-position.js`'s anchor-grid icons ↔ `caption-panel-box.js`'s POSITION anchor icons
   (same path data, same name).
-- `text-panel-case.js`'s bold/case icon ↔ `caption-panel-case.js`'s bold/case icon (same path
-  data, same name, e.g. `"bold"`).
+
+(The former TEXT/CAPTIONS bold/case-icon duplicate no longer applies — `style-section-emphasis.js`
+now serves both panels from one file, so its italic/underline/bold icons each need migrating
+exactly once, not once per panel.)
 
 - [ ] **Step 2: Verify no `<svg` literal remains anywhere in `static/*.js`**
 
@@ -434,7 +442,7 @@ identically to before.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add static/text-panel-align.js static/text-panel-case.js static/text-panel-position.js static/caption-panel-box.js static/caption-panel-case.js static/caption-panel-filler-words.js static/ui-icon.js tests/js/no-raw-svg.test.js
+git add static/text-panel-align.js static/text-panel-position.js static/caption-panel-box.js static/style-section-emphasis.js static/style-section-size.js static/caption-panel-filler-words.js static/ui-icon.js tests/js/no-raw-svg.test.js
 git commit -m "refactor: migrate remaining text/caption panel SVGs to UI.icon; add no-raw-svg guard test"
 ```
 
