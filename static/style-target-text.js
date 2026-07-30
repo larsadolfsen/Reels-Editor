@@ -47,6 +47,13 @@
       kind: "text",
       supportsFormatRuns: true,
 
+      // Sections whose subpage's onClose refreshes the settings row (Batch 4's Outline/
+      // Shadow/Highlight) must check this before touching the target: StylePanelHost.closeAll()
+      // fires onClose for an open subpage even when the panel is about to render its own
+      // empty state (e.g. the block was just deleted while that subpage was open), and every
+      // other method here dereferences d.getBlock() unconditionally.
+      exists() { return !!d.getBlock(); },
+
       getPreset: preset,
 
       getFieldValue(field) {
