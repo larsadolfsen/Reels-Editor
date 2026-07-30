@@ -1,8 +1,10 @@
-// Shared Box-tab section: SIZE mode (FIT/FREE/FILL), WIDTH/HEIGHT, box background colour and
-// opacity, and border width/radius/colour — one file serving both the TEXT and CAPTIONS panels.
-// Builds its own markup once in the factory; render() only pushes current values back through
-// the setters the UI.* primitives returned. Every write here is whole-preset (setPresetField):
-// no box field is FormatRun-capable.
+// Shared Box-tab section: SIZE mode (FIT/FREE/FILL) and WIDTH/HEIGHT — one file serving both the
+// TEXT and CAPTIONS panels. Background and border are NOT built here: they already have their own
+// settings-row + drill-down UI (text-panel-background.js/text-panel-border.js and the CAPTIONS
+// equivalents), rendered as siblings of this section inside the same Box tab body — this section
+// must not duplicate or replace that UI. Builds its own markup once in the factory; render() only
+// pushes current values back through the setters the UI.* primitives returned. Every write here is
+// whole-preset (setPresetField): no box field is FormatRun-capable.
 window.StyleSection = window.StyleSection || {};
 
 // options.sizeModes
@@ -34,11 +36,6 @@ window.StyleSection.box = function box(container, target, options) {
     children.forEach((c) => r.appendChild(c));
     return r;
   }
-  function addDivider() {
-    const d = document.createElement("div");
-    container.appendChild(d);
-    UI.divider(d);
-  }
 
   const preset0 = target.getPreset();
 
@@ -53,20 +50,6 @@ window.StyleSection.box = function box(container, target, options) {
   const widthEl = document.createElement("label");
   const heightEl = document.createElement("label");
   styleGroup(styleRow([widthEl, heightEl]));
-
-  addDivider();
-
-  const bgColorEl = document.createElement("div");
-  const bgOpacityEl = document.createElement("label");
-  styleGroup(styleRow([bgColorEl, bgOpacityEl]));
-
-  addDivider();
-
-  groupLabel("BORDER");
-  const borderWidthEl = document.createElement("label");
-  const borderRadiusEl = document.createElement("label");
-  const borderColorEl = document.createElement("div");
-  styleGroup(styleRow([borderWidthEl, borderRadiusEl, borderColorEl]));
 
   // ---- controls, built once; render() drives the setters they return --------------------
   let setSizeMode = null;
@@ -101,32 +84,6 @@ window.StyleSection.box = function box(container, target, options) {
     { label: "HEIGHT", unit: "PX", value: preset0.box_height, min: 1, max: 1920, span: 4,
       onChange: (v) => target.setPresetField("box_height", v) });
 
-  const setBgColor = UI.colorSwatch(bgColorEl,
-    { label: "Background", showLabel: false, value: preset0.box_background_color, span: 1,
-      onChange: (v) => {
-        // Picking a background colour also switches the background on — the same paired write
-        // the old renderBoxPanel()/CaptionPanel.renderBox() did. box_background is never
-        // rendered as its own control, so there is nothing for render() to refresh for it.
-        target.getPreset().box_background = true;
-        target.setPresetField("box_background_color", v);
-      } });
-
-  const setBgOpacity = UI.numberField(bgOpacityEl,
-    { label: "OPACITY", unit: "%", value: preset0.box_background_opacity, min: 0, max: 100, span: 7,
-      onChange: (v) => target.setPresetField("box_background_opacity", v) });
-
-  const setBorderWidth = UI.numberField(borderWidthEl,
-    { label: "BORDER", unit: "PX", value: preset0.box_border_width, min: 0, max: 40, span: 4,
-      onChange: (v) => target.setPresetField("box_border_width", v) });
-
-  const setBorderRadius = UI.numberField(borderRadiusEl,
-    { label: "RADIUS", unit: "PX", value: preset0.box_border_radius, min: 0, max: 200, span: 3,
-      onChange: (v) => target.setPresetField("box_border_radius", v) });
-
-  const setBorderColor = UI.colorSwatch(borderColorEl,
-    { label: "Border Color", showLabel: false, value: preset0.box_border_color, span: 1,
-      onChange: (v) => target.setPresetField("box_border_color", v) });
-
   function render() {
     const preset = target.getPreset();
     if (setSizeMode) setSizeMode(preset.box_width_mode);
@@ -138,11 +95,6 @@ window.StyleSection.box = function box(container, target, options) {
     heightEl.hidden = sizeFieldsHidden;
     setWidth(preset.box_width);
     setHeight(preset.box_height);
-    setBgColor(preset.box_background_color);
-    setBgOpacity(preset.box_background_opacity);
-    setBorderWidth(preset.box_border_width);
-    setBorderRadius(preset.box_border_radius);
-    setBorderColor(preset.box_border_color);
   }
 
   render();
