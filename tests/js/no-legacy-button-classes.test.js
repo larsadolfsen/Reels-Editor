@@ -6,7 +6,7 @@ const assert = require("node:assert");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const RETIRED_CLASSES = ["panel-button", "icon-btn", "row-add-btn", "number-field-step"];
+const RETIRED_CLASSES = ["panel-button", "icon-btn", "row-add-btn", "zoom-btn", "number-field-step"];
 
 function allSourceFiles(dir, exts) {
   const out = [];

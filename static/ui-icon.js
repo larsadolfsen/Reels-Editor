@@ -107,6 +107,8 @@ const ICON_PATHS = {
   // Added Task 13: caption-panel-filler-words.js's "found in transcript" warning icon, copied
   // verbatim from the removed inline literal.
   "message-circle-warning": '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+  // Added for the timeline zoom-out button (final review finding 4: retired zoom button migration).
+  minus: '<path d="M5 12h14"/>',
 };
 
 // Wrapper attributes shared by every icon already inlined across this codebase's markup

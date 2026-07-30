@@ -23,18 +23,6 @@
 
 #zoom-controls { display: flex; align-items: center; gap: var(--space-1); }
 
-.zoom-btn {
-  background: none;
-  border: none;
-  color: var(--text-dim);
-  font-family: var(--font-ui);
-  font-size: var(--fs-lg);
-  cursor: pointer;
-  width: 22px;
-  line-height: 1;
-}
-.zoom-btn:hover { color: var(--text); }
-
 .toolbar-divider {
   width: 1px;
   align-self: stretch;
