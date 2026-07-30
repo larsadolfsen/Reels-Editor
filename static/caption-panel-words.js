@@ -78,6 +78,7 @@ window.CaptionPanel = window.CaptionPanel || {};
 
       const input = document.createElement("input");
       input.type = "text";
+      input.className = "font-list-row-text";
       input.value = word.text;
       input.addEventListener("change", () => commitWordEdit(word, input.value).then(renderWordsList));
       li.appendChild(input);
