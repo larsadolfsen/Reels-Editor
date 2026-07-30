@@ -7,7 +7,7 @@
   flex-direction: column;
   flex-shrink: 0;
   background: var(--bg-2);
-  border-top: 1px solid var(--border-soft);
+  border-top: var(--border-width) solid var(--border-soft);
   font-family: var(--font-ui);
 }
 
@@ -18,7 +18,7 @@
   align-items: center;
   gap: 10px;
   padding: 0 14px;
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: var(--border-width) solid var(--border-soft);
 }
 
 #zoom-controls { display: flex; align-items: center; gap: var(--space-1); }
@@ -48,7 +48,7 @@
   align-items: center;
   gap: 2px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: var(--border);
   color: var(--text-secondary);
   padding: 4px;
   border-radius: var(--radius-md);
@@ -78,7 +78,7 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border-soft);
+  border-right: var(--border-width) solid var(--border-soft);
   padding: var(--space-2) 0;
 }
 
@@ -153,7 +153,7 @@
   position: relative;
   height: 20px;
   margin-bottom: var(--space-2);
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: var(--border-width) solid var(--border-soft);
   cursor: pointer;
 }
 
@@ -168,7 +168,7 @@
 .timeline-row {
   display: flex;
   align-items: center;
-  border-top: 1px solid var(--border-soft);
+  border-top: var(--border-width) solid var(--border-soft);
 }
 /* Empty rows (and their labels) are collapsed out via the `hidden` attribute; this
    overrides the row's display:flex / the label's display:flex above. */
@@ -201,7 +201,7 @@
   top: 5px;
   bottom: 5px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border-soft);
+  border: var(--border-width) solid var(--border-soft);
   background: var(--surface);
   overflow: hidden;
   cursor: pointer;

@@ -5,7 +5,7 @@
   width: 320px;
   flex-shrink: 0;
   background: var(--surface);
-  border-left: 1px solid var(--border-soft);
+  border-left: var(--border-width) solid var(--border-soft);
   overflow-y: auto;
   padding: 18px 20px;
 }
@@ -137,7 +137,7 @@
   font-size: var(--fs-md);
   color: var(--text);
   background: var(--bg-2);
-  border: 1px solid var(--border-soft);
+  border: var(--border-width) solid var(--border-soft);
   border-radius: var(--radius-lg);
   padding: 10px 12px;
 }
@@ -146,7 +146,7 @@
 
 #add-clip {
   width: 100%;
-  border: 1px dashed var(--border);
+  border: var(--border-width) dashed var(--border-color);
   color: var(--text-secondary);
   font-size: var(--fs-sm);
   padding: 9px 0;
@@ -175,7 +175,7 @@
   flex-shrink: 0;
   border-radius: var(--radius-sm);
   background: repeating-linear-gradient(135deg, var(--stripe-a) 0px, var(--stripe-a) 6px, var(--stripe-b) 6px, var(--stripe-b) 12px);
-  border: 1px solid var(--border-soft);
+  border: var(--border-width) solid var(--border-soft);
   overflow: hidden;
 }
 
@@ -198,7 +198,7 @@
   font: inherit;
   color: inherit;
   background: var(--bg-1);
-  border: 1px solid var(--accent);
+  border: var(--border-width) solid var(--accent);
   border-radius: var(--radius-sm);
   padding: 1px 3px;
 }

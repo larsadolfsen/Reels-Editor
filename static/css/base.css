@@ -18,7 +18,7 @@ button {
   letter-spacing: 0.03em;
   cursor: pointer;
   background: none;
-  border: 1px solid var(--border);
+  border: var(--border);
   color: var(--text-muted);
   border-radius: 0;
   padding: var(--space-1) var(--space-2);
@@ -31,7 +31,7 @@ input, textarea {
   font-family: var(--font-content);
   font-size: 1rem;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: var(--border);
   color: var(--text);
   border-radius: 0;
   padding: var(--space-1) var(--space-2);

@@ -6,7 +6,7 @@
   --bg-1: #16171A;
   --bg-2: #18191C;
   --surface: #1C1E20;
-  --border: #2B2D30;
+  --border-color: #2B2D30;
   --border-soft: #26282B;
   --text: #E7E7E6;
   --text-muted: #8A8B8F;
@@ -32,7 +32,9 @@
   --space-3: 16px;
   --space-4: 24px;
 
-  --border-hover-width: 1px;
+  --border-width: 1px;
+  --border: var(--border-width) solid var(--border-color);
+  --border-hover-width: var(--border-width);
   --border-hover-color: var(--accent);
 
   --fs-2xs: 9px;
@@ -64,7 +66,7 @@
   --bg-1: #EDEDEC;
   --bg-2: #E7E7E6;
   --surface: #FFFFFF;
-  --border: #D8D8D6;
+  --border-color: #D8D8D6;
   --border-soft: #E2E2E0;
   --text: #1C1D1F;
   --text-muted: #6A6B6F;

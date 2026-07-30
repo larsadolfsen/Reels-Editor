@@ -12,7 +12,7 @@
   height: 10px;
   margin: -5px;
   background: var(--accent);
-  border: 1px solid var(--on-accent);
+  border: var(--border-width) solid var(--on-accent);
   border-radius: 2px;
   pointer-events: auto;
 }
