@@ -33,7 +33,15 @@
    pre-seeked standby element still shows a black frame until it catches up — defeating the
    whole point of preloading. Opacity keeps the element decoding/rendering while invisible. */
 .video-standby { opacity: 0; pointer-events: none; }
-#overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+/* isolation: isolate forms a stacking context so #overlay's own negative z-index children
+   (VideoBoxLayer/ImageBoxLayer default to z_index: -1) stay scoped to comparisons against each
+   other and the text-block/caption layers inside #overlay, instead of escaping to the document
+   root — where #stage/#overlay/#player are all unpositioned-for-stacking (position without an
+   explicit z-index doesn't create a context) and a -1 child would then compare directly against
+   #player (z-index: auto) and always lose, rendering every video/image box invisible behind the
+   main video. Without isolation, #overlay as a whole still wins its slot in #stage's paint order
+   (it's the later sibling), but its own negative-z-index descendants don't. */
+#overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; isolation: isolate; }
 
 .text-block {
   position: absolute;
