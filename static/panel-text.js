@@ -153,7 +153,33 @@ async function renderTextPanel() {
     // ui-text-interaction.js preventDefaults the mousedown), so the still-editing block's later
     // blur used to write its text into whichever block had meanwhile become selected. These
     // callbacks only do the selected-block-agnostic side effects.
-    onEditEnd: async () => { renderTextPreview(); await saveProject(); },
+    //
+    // The freeze below is NOT selected-block-agnostic, though — it must apply to whichever block
+    // actually blurred, not to `block`/`preset` closed over from this renderTextPanel() call.
+    // preview-text.js passes the blurred block's own id (blockId) precisely because
+    // boxResizeCallbacks gets reassigned the moment a different block becomes selected — if block
+    // A is left editing, block B gets selected (re-registering these callbacks for B), and A
+    // blurs afterward, this closure's `block`/`preset` would be B's, not A's. Resolve fresh by id.
+    onEditEnd: async (text, blockId) => {
+      // Typing into a block that's still auto-sizing to its content (`fit`) freezes it to a
+      // manually-resizable fixed size the moment editing ends with text present — mirrors the
+      // existing precedent in handleBoxResizeEnd, which does the same thing on a resize drag.
+      // One-way: once frozen, later clearing the text back to empty does not revert this.
+      const targetBlock = (project.text_blocks || []).find((b) => b.id === blockId) || block;
+      const targetPreset = targetBlock ? project.text_presets[targetBlock.preset_id] : preset;
+      if (targetBlock && targetPreset && targetPreset.box_width_mode === "fit" && (targetBlock.heading || "").trim()) {
+        const size = Preview.getTextBoxSize(targetBlock.id);
+        if (size) {
+          targetPreset.box_width = Math.round(size.width);
+          targetPreset.box_height = Math.round(size.height);
+          targetPreset.box_width_mode = "fixed";
+          targetPreset.box_height_mode = "fixed";
+          renderBoxTab();
+        }
+      }
+      renderTextPreview();
+      await saveProject();
+    },
     // preview.js already tracks the active selection itself (Preview.getActiveFormatSelection());
     // this is just a pass-through hook in case a future panel needs to react live to selection
     // changes. FONT accordion controls read the selection on demand instead, so no-op for now.
@@ -162,7 +188,7 @@ async function renderTextPanel() {
 }
 
 // The Box tab now renders as: existing Background/Border settings-row + subpage UI (unchanged,
-// predates this refactor), then the shared StyleTab.box sections (SIZE/WIDTH/HEIGHT, TEXT
+// predates this refactor), then the shared StyleTab.box sections (WIDTH/HEIGHT, TEXT
 // ALIGN, POSITION) mounted into #text-box-shared-body. Built lazily — #text-box-shared-body
 // only has anything to show once a text block exists, and Preview/project are not defined yet
 // when this file loads.
@@ -192,15 +218,11 @@ function handleBoxResize(preset, { width, height }) {
 
 async function handleBoxResizeEnd(preset, { width, height }) {
   const scale = stageScale();
-  // Dragging a handle from FIT means "give this an explicit size" (switches to FREE), but
-  // dragging while already in FILL should stay in FILL — autofit is only ever an explicit
-  // opt-in via the SIZE button group, never a side effect of a resize drag.
-  const wasFill = preset.box_width_mode === "fill";
-  preset.box_width_mode = wasFill ? "fill" : "fixed";
-  preset.box_height_mode = wasFill ? "fill" : "fixed";
+  preset.box_width_mode = "fixed";
+  preset.box_height_mode = "fixed";
   preset.box_width = Math.round(width * scale);
   preset.box_height = Math.round(height * scale);
-  renderTextPreview(); // re-triggers FILL's refit against the new box dimensions, must run before save so the fitted size_px persists
+  renderTextPreview();
   await saveProject();
   renderBoxTab();
 }
