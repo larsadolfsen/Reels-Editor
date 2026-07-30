@@ -15,7 +15,7 @@ body {
 button {
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
-  letter-spacing: 0.03em;
+  letter-spacing: var(--ls-tight);
   cursor: pointer;
   background: none;
   border: var(--border);

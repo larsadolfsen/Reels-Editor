@@ -29,8 +29,13 @@
 
   --space-1: 4px;
   --space-2: 8px;
+  --space-2-5: 12px;
   --space-3: 16px;
   --space-4: 24px;
+
+  --icon-size-sm: var(--space-3);
+  --control-size-sm: 28px;
+  --control-height-md: 40px;
 
   --border-width: 1px;
   --border: var(--border-width) solid var(--border-color);
@@ -46,6 +51,7 @@
   --fs-2xl: 20px;
 
   --ls-tight: 0.03em;
+  --ls-wide-sm: 0.04em;
   --ls-wide: 0.05em;
   --ls-wider: 0.06em;
 

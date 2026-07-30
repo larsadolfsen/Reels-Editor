@@ -22,7 +22,7 @@
 .project-picker-heading {
   font-family: var(--font-ui);
   font-size: var(--fs-md);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--ls-wide-sm);
   color: var(--text);
   margin-bottom: var(--space-3);
 }
