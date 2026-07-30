@@ -5,23 +5,23 @@
 window.StyleSection = window.StyleSection || {};
 
 (() => {
-  const ITALIC_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>';
-  const UNDERLINE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>';
+  const ITALIC_ICON = UI.icon("italic", { size: 16 });
+  const UNDERLINE_ICON = UI.icon("underline", { size: 16 });
 
   // Copied verbatim — SVG paths included — from text-panel-case.js, which caption-panel-case.js
   // held a byte-identical second copy of. This is now the only copy.
   const CASE_OPTIONS = [
     {
       value: "lower", label: "LOWERCASE", span: 1,
-      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="12" r="3" /><path d="M10 9v6" /><circle cx="17" cy="12" r="3" /><path d="M14 7v8" /></svg>',
+      icon: UI.icon("case-lower", { size: 16 }),
     },
     {
       value: "upper", label: "UPPERCASE", span: 1,
-      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 15 4-8 4 8" /><path d="M4 13h6" /><path d="M15 11h4.5a2 2 0 0 1 0 4H15V7h4a2 2 0 0 1 0 4" /></svg>',
+      icon: UI.icon("case-upper", { size: 16 }),
     },
     {
       value: "none", label: "AS TYPED", span: 1,
-      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 15 4-8 4 8" /><path d="M4 13h6" /><circle cx="18" cy="12" r="3" /><path d="M21 9v6" /></svg>',
+      icon: UI.icon("case-sensitive", { size: 16 }),
     },
   ];
 

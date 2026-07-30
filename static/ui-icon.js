@@ -68,6 +68,41 @@ const ICON_PATHS = {
   "columns-2": '<path d="M8 19H5c-1 0-2-1-2-2V7c0-1 1-2 2-2h3"/><path d="M16 5h3c1 0 2 1 2 2v10c0 1-1 2-2 2h-3"/><line x1="12" x2="12" y1="4" y2="20"/>',
   sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
   "closed-captioning": '<rect width="18" height="14" x="3" y="5" rx="2" ry="2"/><path d="M7 15h4M15 15h2M7 11h2M13 11h4"/>',
+  // Added Task 13 (final text/caption panel SVG migration). Path data copied verbatim from the
+  // removed inline literals in text-panel-align.js/caption-panel-box.js (identical bytes in
+  // both files, confirmed before removal).
+  "align-left": '<path d="M21 5H3"/><path d="M15 12H3"/><path d="M17 19H3"/>',
+  "align-center": '<path d="M21 5H3"/><path d="M17 12H7"/><path d="M19 19H5"/>',
+  "align-right": '<path d="M21 5H3"/><path d="M21 12H9"/><path d="M21 19H7"/>',
+  // Position-anchor arrows: shared byte-identical between text-panel-position.js and
+  // caption-panel-box.js (confirmed before removal) — top/btm/left/right only.
+  "arrow-up-to-line": '<path d="M5 3h14"/><path d="m18 13-6-6-6 6"/><path d="M12 7v14"/>',
+  "arrow-down-to-line": '<path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/>',
+  "arrow-left-to-line": '<path d="M3 19V5"/><path d="m13 6-6 6 6 6"/><path d="M21 12H7"/>',
+  "arrow-right-to-line": '<path d="M17 12H3"/><path d="m11 18 6-6-6-6"/><path d="M21 5v14"/>',
+  // The MID HORIZONTAL/MID VERTICAL centering anchors are NOT identical between the two files —
+  // verified byte-by-byte while migrating (text-panel-position.js uses a newer bracket+dashed-
+  // line Lucide style, caption-panel-box.js uses an older solid-line+corner-notch style). Kept
+  // each file's actual current markup verbatim under its own name rather than unifying them,
+  // since this task migrates existing rendering to UI.icon and does not change appearance —
+  // see task-13-report.md for the discrepancy note.
+  "align-horizontal-justify-center": '<path d="M8 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h3"/><path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><path d="M12 20v2"/><path d="M12 14v2"/><path d="M12 8v2"/><path d="M12 2v2"/>',
+  "align-vertical-justify-center": '<path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3"/><path d="M4 12H2"/><path d="M10 12H8"/><path d="M16 12h-2"/><path d="M22 12h-2"/>',
+  "align-center-vertical": '<path d="M12 2v20"/><path d="M8 10H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h4"/><path d="M16 10h4a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-4"/><path d="M8 20H7a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h1"/><path d="M16 14h1a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-1"/>',
+  "align-center-horizontal": '<path d="M2 12h20"/><path d="M10 16v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4"/><path d="M10 8V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v4"/><path d="M20 16v1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-1"/><path d="M14 8V7c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2v1"/>',
+  // Added Task 13: Emphasis row (style-section-emphasis.js) — underline + case-style icons,
+  // copied verbatim from the removed inline literals (byte-for-byte, single shared copy since
+  // this file already serves both TEXT and CAPTIONS panels).
+  underline: '<path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/>',
+  "case-lower": '<circle cx="7" cy="12" r="3"/><path d="M10 9v6"/><circle cx="17" cy="12" r="3"/><path d="M14 7v8"/>',
+  "case-upper": '<path d="m3 15 4-8 4 8"/><path d="M4 13h6"/><path d="M15 11h4.5a2 2 0 0 1 0 4H15V7h4a2 2 0 0 1 0 4"/>',
+  "case-sensitive": '<path d="m3 15 4-8 4 8"/><path d="M4 13h6"/><circle cx="18" cy="12" r="3"/><path d="M21 9v6"/>',
+  // Added Task 13: SIZE stepper's up-arrow (style-section-size.js) — mirror of the existing
+  // "a-arrow-down" entry, copied verbatim from the removed inline literal.
+  "a-arrow-up": '<path d="m14 11 4-4 4 4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/>',
+  // Added Task 13: caption-panel-filler-words.js's "found in transcript" warning icon, copied
+  // verbatim from the removed inline literal.
+  "message-circle-warning": '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
 };
 
 // Wrapper attributes shared by every icon already inlined across this codebase's markup

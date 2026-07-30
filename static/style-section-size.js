@@ -6,8 +6,8 @@ window.StyleSection = window.StyleSection || {};
 (() => {
   // Copied verbatim from the two hand-written copies in index.html (Lucide a-arrow-down /
   // a-arrow-up), so the icons are byte-identical after the move into JS.
-  const STEP_DOWN_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 12 4 4 4-4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>';
-  const STEP_UP_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 11 4-4 4 4"/><path d="M18 16V7"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/></svg>';
+  const STEP_DOWN_ICON = UI.icon("a-arrow-down", { size: 16 });
+  const STEP_UP_ICON = UI.icon("a-arrow-up", { size: 16 });
 
   function stepButton(icon, label) {
     const btn = document.createElement("button");

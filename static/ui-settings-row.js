@@ -33,7 +33,8 @@ window.UI.settingsRow = function settingsRow(container, { label, value, valueFon
 
   const valueGroup = document.createElement("span");
   valueGroup.className = "settings-row-value-group";
-  valueGroup.innerHTML = UI.icon("chevron-right", { size: 16 }).replace("<svg ", '<svg class="settings-row-chevron" ');
+  valueGroup.innerHTML = UI.icon("chevron-right", { size: 16 });
+  valueGroup.querySelector("svg").classList.add("settings-row-chevron");
   valueGroup.prepend(valueInner);
 
   btn.append(valueGroup);
