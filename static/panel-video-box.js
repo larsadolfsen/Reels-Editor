@@ -231,6 +231,7 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
   function render(selectedId) {
     document.getElementById("video-box-add").onclick = renderPicker;
     const box = selectedId ? project.video_boxes.find((b) => b.id === selectedId) : null;
+    document.getElementById("video-box-add-group").hidden = !!box;
     document.getElementById("video-box-picker").hidden = !!box;
     document.getElementById("video-box-detail").hidden = !box;
     if (!box) {
