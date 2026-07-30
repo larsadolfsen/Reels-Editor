@@ -85,7 +85,7 @@ session convention — so anyone looking at the branch can see which batch is un
 | Batch | Status |
 | --- | --- |
 | 1 — Tokens & CSS primitives | done |
-| 1b — UI.text | not started |
+| 1b — UI.text | in progress |
 | 2 — UI.icon | not started |
 | 3 — UI.button | not started |
 | 4 — UI.safeZones | not started |
