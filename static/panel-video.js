@@ -2,6 +2,8 @@
 // into Design (FILL + SPEED) and Time (TRIM + ORDER) tab panes via UI.tabBar (Design default).
 // Exposes window.VideoPanel.render()/select()/deleteClip()/moveClipTo(), plus the shared clampTrim()
 // helper (also used by panel-video-box.js).
+// Note: there is no duplicate-clip feature — it was removed because duplicateClip() didn't
+// shift/sync captions the way delete/move/insert do (static/caption-clip-sync.js).
 window.VideoPanel = window.VideoPanel || {};
 
 function clampTrim(inP, outP, dur) {
@@ -111,7 +113,6 @@ UI.divider(document.getElementById("video-order-divider"));
     };
 
     document.getElementById("video-delete").onclick = () => deleteClip(c.id);
-    document.getElementById("video-duplicate").onclick = () => duplicateClip(c.id);
   }
 
   // Removes a clip from the sequence: shifts project.captions.words to close the gap the deleted
@@ -185,22 +186,8 @@ UI.divider(document.getElementById("video-order-divider"));
     renderTimeline();
   }
 
-  // Deep-copies a clip, inserting it immediately after the original (order+1), and selects it.
-  async function duplicateClip(clipId) {
-    const c = project.clips.find((x) => x.id === clipId);
-    if (!c) return;
-    project.clips.forEach((x) => { if (x.order > c.order) x.order += 1; });
-    const copy = { ...c, id: crypto.randomUUID().replaceAll("-", ""), order: c.order + 1 };
-    project.clips.push(copy);
-    if (clipDurations[c.id] !== undefined) clipDurations[copy.id] = clipDurations[c.id];
-    await saveProject();
-    Preview.load(project);
-    select(copy);   // sets selected, opens VIDEO panel on the copy, renders + renderTimeline
-  }
-
   window.VideoPanel.render = render;
   window.VideoPanel.select = select;
   window.VideoPanel.deleteClip = deleteClip;
   window.VideoPanel.moveClipTo = moveClipTo;
-  window.VideoPanel.duplicateClip = duplicateClip;
 })();
