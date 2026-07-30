@@ -327,11 +327,6 @@ document.addEventListener("keydown", (e) => {
   if (!inFormField && mod && (e.key === "z" || e.key === "Z") && !e.shiftKey) { e.preventDefault(); undoEdit(); return; }
   if (!inFormField && mod && ((e.key === "z" || e.key === "Z") && e.shiftKey || e.key === "y" || e.key === "Y")) { e.preventDefault(); redoEdit(); return; }
   if (inFormField || el.isContentEditable) return;
-  if (mod && (e.key === "d" || e.key === "D")) {
-    e.preventDefault();
-    if (selected && selected.type === "text") duplicateTextBlock(selected.item.id);
-    return;
-  }
   if (e.key === "ArrowLeft") { e.preventDefault(); nudgeTime(-0.1); }
   else if (e.key === "ArrowRight") { e.preventDefault(); nudgeTime(0.1); }
   else if (e.key === "ArrowUp") { e.preventDefault(); if (Preview.isPaused()) Preview.play(); else Preview.pause(); }

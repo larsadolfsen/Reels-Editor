@@ -136,7 +136,7 @@
       </div>
 
       <div id="panel-video" class="context-panel" hidden>
-        <div id="video-main">
+        <div id="video-main" class="context-panel-body">
           <div class="context-panel-header text-eyebrow">VIDEO</div>
 
           <div class="style-group">
@@ -239,7 +239,7 @@
             </div>
           </div>
 
-          <div class="style-group">
+          <div class="style-group panel-danger-footer">
             <button id="video-delete" class="col-8" data-button data-button-intent="danger" hidden>Delete clip</button>
           </div>
         </div>
@@ -388,7 +388,7 @@
         <div id="video-box-picker" hidden>
           <ul id="video-box-picker-list" class="font-list scroll-list"></ul>
         </div>
-        <div id="video-box-detail" hidden>
+        <div id="video-box-detail" class="context-panel-body" hidden>
           <div id="video-box-name" class="context-panel-name"></div>
 
           <div id="video-box-tab-bar"></div>
@@ -438,7 +438,7 @@
             </div>
           </div>
 
-          <div class="style-group">
+          <div class="style-group panel-danger-footer">
             <button id="video-box-delete" class="col-8" data-button data-button-intent="danger" hidden>Delete video box</button>
           </div>
         </div>
@@ -452,7 +452,7 @@
         <div id="image-box-picker" hidden>
           <ul id="image-box-picker-list" class="font-list scroll-list"></ul>
         </div>
-        <div id="image-box-detail" hidden>
+        <div id="image-box-detail" class="context-panel-body" hidden>
           <div id="image-box-name" class="context-panel-name"></div>
 
           <div id="image-box-tab-bar"></div>
@@ -497,7 +497,7 @@
             </div>
           </div>
 
-          <div class="style-group">
+          <div class="style-group panel-danger-footer">
             <button id="image-box-delete" class="col-8" data-button data-button-intent="danger" hidden>Delete image box</button>
           </div>
         </div>
@@ -508,7 +508,7 @@
         <div id="audio-empty-state" class="style-group">
           <button id="audio-add-music" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>ADD MUSIC</button>
         </div>
-        <div id="audio-detail" hidden>
+        <div id="audio-detail" class="context-panel-body" hidden>
           <div id="audio-music-name" class="context-panel-name"></div>
 
           <div class="section-label-spacer text-eyebrow">VOLUME</div>
@@ -528,14 +528,14 @@
           <div class="style-group">
             <button id="audio-replace" class="col-8" data-button hidden>Replace music</button>
           </div>
-          <div class="style-group">
+          <div class="style-group panel-danger-footer">
             <button id="audio-remove" class="col-8" data-button data-button-intent="danger" hidden>Remove music</button>
           </div>
         </div>
       </div>
 
       <div id="panel-text" class="context-panel" hidden>
-        <div id="panel-text-main">
+        <div id="panel-text-main" class="context-panel-body">
           <div class="context-panel-header text-eyebrow">TEXT</div>
 
         <div id="text-empty-state" class="style-group" hidden>
@@ -543,7 +543,7 @@
           <button id="text-add-block-btn" class="col-8" data-button data-button-intent="dashed" hidden>+ Add text</button>
         </div>
 
-        <div id="text-accordions">
+        <div id="text-accordions" class="context-panel-body">
         <div id="text-tab-bar"></div>
         <div id="text-style-body"></div>
 
@@ -574,11 +574,7 @@
           </div>
         </div>
 
-        <div id="text-edit-actions">
-        <div class="style-group">
-          <button id="text-duplicate" class="col-8" data-button hidden>Duplicate text</button>
-        </div>
-
+        <div id="text-edit-actions" class="panel-danger-footer">
         <div class="style-group">
           <button id="text-delete" class="col-8" data-button data-button-intent="danger" hidden>Delete text</button>
         </div>

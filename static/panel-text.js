@@ -101,31 +101,6 @@ async function deleteSelectedTextBlock() {
   renderTimeline();
 }
 
-// Deep-copies the block AND its preset (new ids, preset_id re-linked), offsets the copy's
-// position +20/+20 px so it's visibly distinct, selects the copy, saves and re-renders.
-async function duplicateTextBlock(blockId) {
-  const src = (project.text_blocks || []).find((b) => b.id === blockId);
-  if (!src) return;
-  const newPresetId = crypto.randomUUID().replaceAll("-", "");
-  const srcPreset = project.text_presets[src.preset_id] || defaultTextPreset(newPresetId);
-  project.text_presets[newPresetId] = {
-    ...srcPreset, id: newPresetId,
-    x: (srcPreset.x || 0) + 20, y: (srcPreset.y || 0) + 20,
-  };
-  const copy = {
-    ...src,
-    id: crypto.randomUUID().replaceAll("-", ""),
-    preset_id: newPresetId,
-    formatting_runs: (src.formatting_runs || []).map((r) => ({ ...r })),
-  };
-  project.text_blocks.push(copy);
-  selectedTextBlockId = copy.id;
-  selected = { type: "text", item: copy };
-  await saveProject();
-  await renderTextPanel();
-  renderTimeline();
-}
-
 // `position` ({x, y} in 1080x1920 canvas px), when given, overrides the new block's default
 // centered placement — used by stage-click-router.js's Text-tool insert-at-click (added
 // 2026-07-24, top-toolbar). Omitted, this is identical to the pre-existing behavior.
@@ -272,9 +247,6 @@ let activeTextTab = "style";
 function showTextTab(value) {
   activeTextTab = value;
   Object.entries(textTabPanes).forEach(([k, el]) => { el.hidden = k !== value; });
-  // Duplicate/Delete act on the whole text block, not on picking a saved style — hide them
-  // while the Style tab (the saved-style library) is open.
-  document.getElementById("text-edit-actions").hidden = value === "style";
 }
 UI.tabBar(document.getElementById("text-tab-bar"), TEXT_TABS, activeTextTab, showTextTab);
 showTextTab(activeTextTab);
@@ -306,7 +278,3 @@ const textStyleTab = StyleTab.styleLibrary(document.getElementById("text-style-b
 
 document.getElementById("text-add-block-btn").addEventListener("click", () => addTextBlockAndEdit());
 document.getElementById("text-delete").addEventListener("click", () => deleteSelectedTextBlock());
-document.getElementById("text-duplicate").addEventListener("click", () => {
-  const b = currentTextBlock();
-  if (b) duplicateTextBlock(b.id);
-});
