@@ -203,7 +203,6 @@ document.getElementById("export").addEventListener("click", exportProject);
   setSafeZonesVisible(localStorage.getItem("safeZonesVisible") === "1");
   const storedTheme = localStorage.getItem("theme");
   setTheme(storedTheme || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
-  await TextPanel.loadSavedPresets();
 
   window.addEventListener("beforeunload", () => {
     if (!project) return;

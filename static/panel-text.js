@@ -165,7 +165,7 @@ async function renderTextPanel() {
   const preset = ensureTextPreset(block.preset_id);
 
   await textDesignTab.render();
-  TextPanel.renderStyle();
+  textStyleTab.render();
   renderBoxTab();
   TextPanel.renderTime();
 
@@ -299,6 +299,10 @@ const textDesignTab = StyleTab.design(
     compactSizeRow: true,
   },
 );
+
+// Style tab: built once against the same text style target the Design/Box tabs use, then
+// re-rendered on every renderTextPanel() call. Sections are built once, rendered many times.
+const textStyleTab = StyleTab.styleLibrary(document.getElementById("text-style-body"), textStyleTarget, {});
 
 document.getElementById("text-add-block-btn").addEventListener("click", () => addTextBlockAndEdit());
 document.getElementById("text-delete").addEventListener("click", () => deleteSelectedTextBlock());
