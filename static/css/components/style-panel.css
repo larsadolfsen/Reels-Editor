@@ -222,11 +222,13 @@
 
 /* TEXT ALIGN's buttons are icons, not text — the group's 28px grid tracks would otherwise
    stretch/pad them like text-label buttons, so pin them to plain 28x28 squares (matching
-   UI.button's .button-sm) with the SVG centered. Scoped to TEXT's and CAPTIONS' identical align
-   groups; other button-group uses (POSITION row/col, BOX size mode, etc.) keep the default
-   text-label sizing. */
+   UI.button's .button-sm) with the SVG centered. Other button-group uses (POSITION row/col, BOX
+   size mode, etc.) keep the default text-label sizing.
+   .style-align-group is StyleSection.align's own group element; the two id selectors are the
+   hand-written TEXT/CAPTIONS markup it replaces and are dropped as each panel is migrated. */
 #text-align-group button,
-#caption-align-group button {
+#caption-align-group button,
+.style-align-group button {
   width: 28px;
   height: 28px;
   padding: 0;
