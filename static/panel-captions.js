@@ -65,7 +65,6 @@ async function renderCaptionPanel() {
   CaptionPanel.renderBox();
   CaptionPanel.renderBackground();
   CaptionPanel.renderBorder();
-  CaptionPanel.renderHighlight();
   CaptionPanel.renderFillerWords();
   CaptionPanel.renderWords();
 
@@ -115,6 +114,8 @@ const captionDesignTab = StyleTab.design(
     // A caption track has no single heading to preview — its text is a per-word transcript spread
     // across pages — so the Weight list shows the fixed sample caption-panel-font-weight.js used.
     sampleText: () => "kind of insane",
+    // CAPTIONS gets the karaoke MODE group inside the Highlight subpage; TEXT does not.
+    highlightModes: true,
   },
 );
 
