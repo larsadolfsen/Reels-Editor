@@ -134,68 +134,117 @@
       </div>
 
       <div id="panel-video" class="context-panel" hidden>
-        <div class="context-panel-header text-eyebrow">VIDEO</div>
+        <div id="video-main">
+          <div class="context-panel-header text-eyebrow">VIDEO</div>
 
-        <div class="style-group">
-          <div id="video-name" class="context-panel-name col-8"></div>
+          <div class="style-group">
+            <div id="video-name" class="context-panel-name col-8"></div>
+          </div>
+
+          <div id="video-tab-bar"></div>
+
+          <div id="video-design-body">
+            <div class="section-label-spacer text-eyebrow">FILL</div>
+            <div class="style-group">
+              <div id="video-fill-mode-group"></div>
+            </div>
+
+            <div class="section-label-spacer text-eyebrow">SPEED</div>
+            <div class="style-group">
+              <div id="video-speed-field"></div>
+            </div>
+
+            <div class="section-label-spacer text-eyebrow">VOLUME</div>
+            <div class="style-group">
+              <div class="style-row">
+                <div id="video-volume-field" class="col-6"></div>
+                <!-- Not a [data-button] hydration site: needs BOTH icons present at once (one
+                     hidden via .icon-hidden, toggled by panel-video.js), same reason as
+                     #play-pause above. -->
+                <button id="video-mute-btn" type="button" class="col-2 button button-sm button-neutral" title="Mute clip audio">
+                  <span class="icon-volume" data-icon="volume-2" data-icon-size="18"></span>
+                  <span class="icon-volume-muted icon-hidden" data-icon="volume-x" data-icon-size="18"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="video-time-body">
+            <div class="section-label-spacer text-eyebrow">TRIM</div>
+            <div class="style-group">
+              <div class="style-row">
+                <label id="video-in-field"></label>
+                <label id="video-out-field"></label>
+              </div>
+            </div>
+            <div class="style-group">
+              <div class="style-row">
+                <button class="col-4" id="video-set-in">Set in</button>
+                <button class="col-4" id="video-set-out">Set out</button>
+              </div>
+            </div>
+
+            <div id="video-order-divider"></div>
+
+            <div class="section-label-spacer text-eyebrow">ORDER</div>
+            <div class="style-group">
+              <div class="style-row">
+                <button class="col-4" id="video-move-up">&#9650; Move up</button>
+                <button class="col-4" id="video-move-down">&#9660; Move down</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="video-auto-body">
+            <div class="section-label-spacer text-eyebrow">AUTO CAPTION</div>
+
+            <div class="style-group">
+              <div id="audio-language-row" class="col-8"></div>
+            </div>
+
+            <div class="style-group">
+              <button id="audio-auto-caption-btn" class="col-8" data-button data-button-icon="pencil-sparkles" hidden>Auto-caption</button>
+              <p id="audio-transcribe-error" class="context-panel-name col-8 caption-transcribe-error" hidden></p>
+            </div>
+
+            <div class="section-label-spacer text-eyebrow">AUTO SILENCE</div>
+
+            <div id="auto-slice-idle" class="style-group">
+              <p class="auto-slice-hint text-hint">Detect silence and filler words (um, uh…) and remove them from the timeline.</p>
+              <p id="auto-slice-no-transcript-hint" class="auto-slice-hint text-hint" hidden>No transcript yet — only silence will be detected. Run Auto-caption above to also catch filler words.</p>
+              <button id="auto-slice-detect-btn" class="col-8" data-button data-button-icon="pencil-sparkles" hidden>Detect Silence &amp; Filler Words</button>
+            </div>
+
+            <div id="auto-slice-results" hidden>
+              <div id="auto-slice-summary" class="auto-slice-summary"></div>
+              <ul id="auto-slice-list" class="auto-slice-list scroll-list"></ul>
+              <div class="style-group">
+                <button id="auto-slice-continue" class="col-8" data-button hidden>Continue</button>
+              </div>
+              <div class="style-group">
+                <button id="auto-slice-redetect" class="col-8" data-button hidden>Re-detect</button>
+              </div>
+            </div>
+
+            <div id="auto-slice-confirm" hidden>
+              <p id="auto-slice-confirm-summary" class="auto-slice-hint text-hint"></p>
+              <div class="style-group">
+                <button id="auto-slice-confirm-apply" class="col-8" data-button data-button-intent="danger" hidden>Confirm &amp; Apply</button>
+              </div>
+              <div class="style-group">
+                <button id="auto-slice-back" class="col-8" data-button hidden>Back</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="style-group">
+            <button id="video-delete" class="col-8" data-button data-button-intent="danger" hidden>Delete clip</button>
+          </div>
         </div>
 
-        <div id="video-tab-bar"></div>
-
-        <div id="video-design-body">
-          <div class="section-label-spacer text-eyebrow">FILL</div>
-          <div class="style-group">
-            <div id="video-fill-mode-group"></div>
-          </div>
-
-          <div class="section-label-spacer text-eyebrow">SPEED</div>
-          <div class="style-group">
-            <div id="video-speed-field"></div>
-          </div>
-
-          <div class="section-label-spacer text-eyebrow">VOLUME</div>
-          <div class="style-group">
-            <div class="style-row">
-              <div id="video-volume-field" class="col-6"></div>
-              <!-- Not a [data-button] hydration site: needs BOTH icons present at once (one
-                   hidden via .icon-hidden, toggled by panel-video.js), same reason as
-                   #play-pause above. -->
-              <button id="video-mute-btn" type="button" class="col-2 button button-sm button-neutral" title="Mute clip audio">
-                <span class="icon-volume" data-icon="volume-2" data-icon-size="18"></span>
-                <span class="icon-volume-muted icon-hidden" data-icon="volume-x" data-icon-size="18"></span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div id="video-time-body">
-          <div class="section-label-spacer text-eyebrow">TRIM</div>
-          <div class="style-group">
-            <div class="style-row">
-              <label id="video-in-field"></label>
-              <label id="video-out-field"></label>
-            </div>
-          </div>
-          <div class="style-group">
-            <div class="style-row">
-              <button class="col-4" id="video-set-in">Set in</button>
-              <button class="col-4" id="video-set-out">Set out</button>
-            </div>
-          </div>
-
-          <div id="video-order-divider"></div>
-
-          <div class="section-label-spacer text-eyebrow">ORDER</div>
-          <div class="style-group">
-            <div class="style-row">
-              <button class="col-4" id="video-move-up">&#9650; Move up</button>
-              <button class="col-4" id="video-move-down">&#9660; Move down</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="style-group">
-          <button id="video-delete" class="col-8" data-button data-button-intent="danger" hidden>Delete clip</button>
+        <div id="video-audio-language" hidden>
+          <div id="audio-language-subpanel-header"></div>
+          <ul id="audio-language-list" class="font-list"></ul>
         </div>
       </div>
 
@@ -480,61 +529,6 @@
           <div class="style-group">
             <button id="audio-remove" class="col-8" data-button data-button-intent="danger" hidden>Remove music</button>
           </div>
-        </div>
-      </div>
-
-      <div id="panel-audio-track" class="context-panel" hidden>
-        <div id="panel-audio-track-main">
-          <div class="context-panel-header text-eyebrow">AUDIO</div>
-
-          <div id="audio-track-tab-bar"></div>
-
-          <div id="audio-track-auto-body">
-            <div class="section-label-spacer text-eyebrow">AUTO CAPTION</div>
-
-            <div class="style-group">
-              <div id="audio-language-row" class="col-8"></div>
-            </div>
-
-            <div class="style-group">
-              <button id="audio-auto-caption-btn" class="col-8" data-button data-button-icon="pencil-sparkles" hidden>Auto-caption</button>
-              <p id="audio-transcribe-error" class="context-panel-name col-8 caption-transcribe-error" hidden></p>
-            </div>
-
-            <div class="section-label-spacer text-eyebrow">AUTO SILENCE</div>
-
-            <div id="auto-slice-idle" class="style-group">
-              <p class="auto-slice-hint text-hint">Detect silence and filler words (um, uh…) and remove them from the timeline.</p>
-              <p id="auto-slice-no-transcript-hint" class="auto-slice-hint text-hint" hidden>No transcript yet — only silence will be detected. Run Auto-caption above to also catch filler words.</p>
-              <button id="auto-slice-detect-btn" class="col-8" data-button data-button-icon="pencil-sparkles" hidden>Detect Silence &amp; Filler Words</button>
-            </div>
-
-            <div id="auto-slice-results" hidden>
-              <div id="auto-slice-summary" class="auto-slice-summary"></div>
-              <ul id="auto-slice-list" class="auto-slice-list scroll-list"></ul>
-              <div class="style-group">
-                <button id="auto-slice-continue" class="col-8" data-button hidden>Continue</button>
-              </div>
-              <div class="style-group">
-                <button id="auto-slice-redetect" class="col-8" data-button hidden>Re-detect</button>
-              </div>
-            </div>
-
-            <div id="auto-slice-confirm" hidden>
-              <p id="auto-slice-confirm-summary" class="auto-slice-hint text-hint"></p>
-              <div class="style-group">
-                <button id="auto-slice-confirm-apply" class="col-8" data-button data-button-intent="danger" hidden>Confirm &amp; Apply</button>
-              </div>
-              <div class="style-group">
-                <button id="auto-slice-back" class="col-8" data-button hidden>Back</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="panel-audio-track-language" hidden>
-          <div id="audio-language-subpanel-header"></div>
-          <ul id="audio-language-list" class="font-list"></ul>
         </div>
       </div>
 

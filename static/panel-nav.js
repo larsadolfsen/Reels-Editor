@@ -10,7 +10,7 @@ function showPanel(type) {
   if (type !== "video-box") VideoBoxPreview.setSelectedVideoBox(null, null);
   if (type !== "image-box") ImageBoxPreview.setSelectedImageBox(null, null);
   document.getElementById("style-panel").hidden = false;
-  ["files", "video", "text", "captions", "video-box", "image-box", "settings", "export", "projects", "audio", "audio-track"].forEach((t) => {
+  ["files", "video", "text", "captions", "video-box", "image-box", "settings", "export", "projects", "audio"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;
   });
 }
@@ -81,11 +81,6 @@ const PANEL_NAV_ITEMS = [
     icon: UI.icon("music", { size: 20 }),
   },
   {
-    value: "audio-track",
-    label: "AUTO",
-    icon: UI.icon("audio-lines", { size: 20 }),
-  },
-  {
     value: "settings",
     label: "SETTINGS",
     icon: UI.icon("settings", { size: 20 }),
@@ -151,13 +146,6 @@ function openAudioPanel() {
   renderTimeline();
 }
 
-function openAudioTrackPanel() {
-  selected = { type: "audio-track" };
-  showPanel("audio-track");
-  AudioTrackPanel.render();
-  renderTimeline();
-}
-
 async function openProjectsPanel() {
   selected = { type: "projects" };
   showPanel("projects");
@@ -210,7 +198,7 @@ function reRenderAfterRestore() {
   }
 }
 
-const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, "image-box": openImageBoxPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel, "audio-track": openAudioTrackPanel };
+const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, "image-box": openImageBoxPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel };
 
 // Rail = insert (creation). TEXT inserts a new block and drops into on-stage edit; the other
 // rail buttons open their panel (CAPTIONS's openCaptionsPanel already create-or-opens the track).
