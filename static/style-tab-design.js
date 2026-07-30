@@ -3,10 +3,12 @@
 // convention each panel re-states. The order lives here and nowhere else.
 window.StyleTab = window.StyleTab || {};
 
-// The final order (master plan) is: fontFamily, fontWeight, size, emphasis, color, outline,
+// The final order (master plan) is: fontFamily, fontWeight, size, emphasis, align, color, outline,
 // shadow, highlight, [spotlight]. spotlight (opts.spotlight, CAPTIONS-only) is the per-word
 // karaoke mode — a distinct feature from highlight's static box background that happens to share
 // its color/radius fields; see style-section-spotlight.js's header for why they're split.
+// align moved here from the Box tab (2026-07-30) so it sits next to the other text-shaping
+// controls (emphasis/case) instead of beside box sizing/position.
 window.StyleTab.design = function design(container, target, options) {
   const opts = options || {};
 
@@ -26,6 +28,7 @@ window.StyleTab.design = function design(container, target, options) {
     StyleSection.fontWeight(sectionWrapper(), target, { host: opts.host, sampleText: opts.sampleText }),
     StyleSection.size(sectionWrapper(), target, { compactRow: opts.compactSizeRow }),
     StyleSection.emphasis(sectionWrapper(), target, {}),
+    StyleSection.align(sectionWrapper(), target, {}),
     StyleSection.color(sectionWrapper(), target, { host: opts.host }),
     StyleSection.outline(sectionWrapper(), target, { host: opts.host }),
     StyleSection.shadow(sectionWrapper(), target, { host: opts.host }),
