@@ -24,6 +24,10 @@ test("UI.icon embeds the icon-specific path data", () => {
   assert.match(global.UI.icon("trash"), /M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6/);
 });
 
+test("UI.icon embeds the clapperboard icon's path data", () => {
+  assert.match(global.UI.icon("clapperboard"), /M20.2 6 3 11l-.9-2.4/);
+});
+
 test("UI.icon throws on an unrecognized name", () => {
   assert.throws(() => global.UI.icon("not-a-real-icon"), /unknown icon/i);
 });
