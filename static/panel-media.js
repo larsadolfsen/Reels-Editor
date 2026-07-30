@@ -12,9 +12,11 @@
 // selected; an audio row shows one plus icon that sets/replaces Project.music with that file
 // (mirrors panel-audio.js's addMusic()/replaceMusic(), one music track only) and opens the AUDIO
 // panel.
-// Clip rows use UI.listRow(li, { subtle: true }) / list-row.css's `.list-row--subtle` variant
-// (static/ui-list-row.js) for shared card styling — transparent background/border at rest, the
-// card look only appears on hover/selected (added 2026-07-30, files-row-hover-actions-fix); the
+// Clip rows use UI.listRow() (static/ui-list-row.js) for shared border/selected styling, with
+// an `#clip-list li.list-row { background: transparent }` override (style-panel.css, added
+// 2026-07-30 files-row-hover-actions-fix) dropping list-row.css's always-on grey card fill —
+// the row's `--border-soft` border stays visible at rest and turns `--border-hover-color`
+// (blue accent) on hover via list-row.css's own `:hover` rule, with no hover background. The
 // `.clip-actions` action-icon group (style-panel.css) is `display: none` until that same row
 // hover, not just opacity 0, so it's fully absent from layout/interaction at rest. A "no audio" icon
 // is shown for clips with no audio stream (m.has_audio === false) and, for video clips that do
@@ -126,7 +128,7 @@ window.MediaPanel = window.MediaPanel || {};
 
   function buildRow(m) {
     const li = document.createElement("li");
-    UI.listRow(li, { selected: selectedMediaId === m.id, subtle: true });
+    UI.listRow(li, { selected: selectedMediaId === m.id });
     li.draggable = true; // drag onto the timeline's VIDEO row to place this file as a clip
     li.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/media-id", m.id));
 
