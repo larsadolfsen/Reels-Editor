@@ -149,6 +149,7 @@ ImageBoxPreview.setOnActivate((boxId) => {
 });
 
 UI.toolbar(document.getElementById("toolbar"));
+UI.safeZones(document.getElementById("safe-zones"));
 
 function setSafeZonesVisible(visible) {
   document.getElementById("safe-zones").hidden = !visible;
