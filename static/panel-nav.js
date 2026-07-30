@@ -66,21 +66,6 @@ const PANEL_NAV_ITEMS = [
     icon: UI.icon("captions", { size: 20 }),
   },
   {
-    value: "video-box",
-    label: "VIDEO",
-    icon: UI.icon("picture-in-picture", { size: 20 }),
-  },
-  {
-    value: "image-box",
-    label: "IMAGE",
-    icon: UI.icon("image", { size: 20 }),
-  },
-  {
-    value: "audio",
-    label: "AUDIO",
-    icon: UI.icon("music", { size: 20 }),
-  },
-  {
     value: "audio-track",
     label: "AUTO",
     icon: UI.icon("audio-lines", { size: 20 }),
