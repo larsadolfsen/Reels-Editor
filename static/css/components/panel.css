@@ -21,5 +21,5 @@
   gap: 4px;
   padding-top: var(--space-3);
 }
-#panel-brand #brand-dot { width: 6px; height: 6px; border-radius: var(--radius); background: var(--accent); }
+#panel-brand #brand-dot { width: 6px; height: 6px; border-radius: 0; background: var(--accent); }
 #panel-brand #brand-name { font-family: var(--font-ui); font-weight: 600; font-size: var(--fs-xs); letter-spacing: 0.02em; }
