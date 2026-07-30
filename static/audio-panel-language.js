@@ -1,4 +1,4 @@
-// AUDIO panel, Auto tab: the language passed to faster-whisper when transcribing
+// VIDEO panel's Auto tab: the language passed to faster-whisper when transcribing
 // (CaptionTrack.language, "" = auto-detect). Settings-row + drill-down subpanel, same pattern as
 // caption-panel-font-family.js. Exposes window.AudioTrackPanel.renderLanguage(). Reaches into
 // editor.js's project/saveProject/ensureCaptionTrack/AVAILABLE_LANGUAGES globals.
@@ -9,13 +9,13 @@ window.AudioTrackPanel = window.AudioTrackPanel || {};
 
   function openLanguagePanel() {
     renderLanguageList();
-    document.getElementById("panel-audio-track-main").hidden = true;
-    document.getElementById("panel-audio-track-language").hidden = false;
+    document.getElementById("video-main").hidden = true;
+    document.getElementById("video-audio-language").hidden = false;
   }
 
   function closeLanguagePanel() {
-    document.getElementById("panel-audio-track-language").hidden = true;
-    document.getElementById("panel-audio-track-main").hidden = false;
+    document.getElementById("video-audio-language").hidden = true;
+    document.getElementById("video-main").hidden = false;
   }
 
   function labelFor(code) {

@@ -1,7 +1,9 @@
 // VIDEO context-panel section: trim/order/fill-mode/speed/delete for the selected clip, split
-// into Design (FILL + SPEED) and Time (TRIM + ORDER) tab panes via UI.tabBar (Design default).
-// Exposes window.VideoPanel.render()/select()/deleteClip()/moveClipTo(), plus the shared clampTrim()
-// helper (also used by panel-video-box.js).
+// into Design (FILL + SPEED), Time (TRIM + ORDER), and Auto (AUTO CAPTION + AUTO SILENCE, added
+// 2026-07-30 replacing the standalone AUTO rail entry — content unchanged, just relocated and
+// rendered via panel-audio-track.js's AudioTrackPanel.render()) tab panes via UI.tabBar (Design
+// default). Exposes window.VideoPanel.render()/select()/deleteClip()/moveClipTo(), plus the shared
+// clampTrim() helper (also used by panel-video-box.js).
 // Note: there is no duplicate-clip feature — it was removed because duplicateClip() didn't
 // shift/sync captions the way delete/move/insert do (static/caption-clip-sync.js).
 window.VideoPanel = window.VideoPanel || {};
@@ -18,14 +20,17 @@ UI.divider(document.getElementById("video-order-divider"));
 (() => {
   const VIDEO_TAB_ICON_DESIGN = UI.icon("pencil", { size: 18 });
   const VIDEO_TAB_ICON_TIME = UI.icon("timer", { size: 18 });
+  const VIDEO_TAB_ICON_AUTO = UI.icon("sparkles", { size: 18 });
 
   const VIDEO_TABS = [
     { value: "design", icon: VIDEO_TAB_ICON_DESIGN, label: "Design" },
     { value: "time", icon: VIDEO_TAB_ICON_TIME, label: "Time" },
+    { value: "auto", icon: VIDEO_TAB_ICON_AUTO, label: "Auto" },
   ];
   const videoTabPanes = {
     design: document.getElementById("video-design-body"),
     time: document.getElementById("video-time-body"),
+    auto: document.getElementById("video-auto-body"),
   };
   let activeVideoTab = "design";
   function showVideoTab(value) {
@@ -113,6 +118,8 @@ UI.divider(document.getElementById("video-order-divider"));
     };
 
     document.getElementById("video-delete").onclick = () => deleteClip(c.id);
+
+    AudioTrackPanel.render();
   }
 
   // Removes a clip from the sequence: shifts project.captions.words to close the gap the deleted
