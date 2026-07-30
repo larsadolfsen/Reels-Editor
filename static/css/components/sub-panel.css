@@ -1,5 +1,5 @@
 /* Drill-down sub-panel: back-arrow + title header, plus the font-selection list it hosts. */
-/* Exposes .sub-panel-header/.sub-panel-back/.font-list/.font-list-row/.font-list-row-name/.font-list-row-name-group/.filler-word-warning-icon/.font-list-row-time/.font-list-checkmark/.font-list-divider/.font-weight-row-content/.font-weight-row-preview. Depends on tokens.css, button.css, divider.css. */
+/* Exposes .sub-panel-header/.sub-panel-back/.font-list/.font-list-row/.font-list-row-name/.font-list-row-name-group/.filler-word-warning-icon/.font-list-row-time/.font-list-row-text/.font-list-checkmark/.font-list-divider/.font-weight-row-content/.font-weight-row-preview. Depends on tokens.css, button.css, divider.css. */
 .sub-panel-header {
   display: flex;
   align-items: center;
@@ -68,6 +68,19 @@
   font-size: var(--fs-md);
   padding: var(--space-1);
   text-align: center;
+  border-radius: var(--radius-sm);
+}
+
+/* The transcript word text field (static/caption-panel-words.js) — flex:1/min-width:0 let it
+   shrink below its native intrinsic width instead of overflowing the row, which is what made
+   the row spill past the panel's edge before this class existed (it previously had no class
+   at all). */
+.font-list-row-text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-md);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
 }
 
 .font-list-checkmark {
