@@ -214,8 +214,8 @@ window.MediaPanel = window.MediaPanel || {};
   function appendGroup(list, label, items) {
     if (!items.length) return;
     const labelLi = document.createElement("li");
-    labelLi.className = "clip-section-label";
-    labelLi.textContent = label;
+    labelLi.className = "clip-section-row";
+    UI.text(labelLi, { variant: "eyebrow", content: label });
     list.appendChild(labelLi);
     items.forEach((m) => list.appendChild(buildRow(m)));
   }

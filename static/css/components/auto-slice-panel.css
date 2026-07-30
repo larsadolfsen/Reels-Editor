@@ -2,12 +2,12 @@
    .auto-slice-summary, .auto-slice-list/.auto-slice-row/.auto-slice-row-time/.auto-slice-row-label.
    The status badge itself is the shared .chip .chip--tinted .chip--{silence,filler} recipe
    (chip.css, added 2026-07-29 chip component) — no longer defined here. Rows use UI.listRow for
-   card/hover styling (list-row.css); this file only adds row-internal flex layout. Depends on
-   tokens.css, chip.css, scroll-list.css. */
+   card/hover styling (list-row.css); this file only adds row-internal flex layout. .auto-slice-hint
+   is layout-only (grid placement + spacing) — its typography comes from the shared .text-hint
+   class (text.css/ui-text.js) added alongside it in markup. Depends on tokens.css, chip.css,
+   scroll-list.css, text.css. */
 .auto-slice-hint {
   grid-column: 1 / -1;   /* .style-group is an 8-col grid; span it like .style-group > .style-row does */
-  font-size: var(--fs-md);
-  color: var(--text-muted);
   margin: 0 0 var(--space-2);
 }
 

@@ -1,5 +1,6 @@
 // Reusable presentational UI helper, framework-free. Attaches to window.UI.
-// Depends on the .style-field/number-field CSS components. No app state — callers own data.
+// Depends on the .style-field/number-field CSS components and UI.text (ui-text.js) for the
+// label's typography. No app state — callers own data.
 window.UI = window.UI || {};
 
 // Renders a labeled number input (label always shows its unit, e.g. "START (SEC)") with a
@@ -10,10 +11,8 @@ window.UI = window.UI || {};
 window.UI.numberField = function numberField(container, { label, unit, value, step = 1, min, max, decimals, disabled = false, span = 8, onChange }) {
   container.innerHTML = "";
   container.classList.add("style-field", `col-${span}`);
-  const labelEl = document.createElement("span");
-  labelEl.className = "number-field-label";
-  labelEl.textContent = unit ? `${label} (${unit})` : label;
-  container.appendChild(labelEl);
+  const labelEl = UI.text(container, { variant: "label", content: unit ? `${label} (${unit})` : label });
+  labelEl.classList.add("number-field-label");
 
   const format = (v) => (decimals !== undefined ? v.toFixed(decimals) : v);
 
