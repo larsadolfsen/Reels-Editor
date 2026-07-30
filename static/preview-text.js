@@ -7,8 +7,8 @@
 // another block whenever one is activated (takeEditOnOtherBlock) — exactly one block edits at a
 // time, since a stage click alone never blurs the editing div. getBoxSizeCanvasPx(blockId) reads
 // a block's live on-stage rendered size (in 1080x1920 canvas px) for the POSITION anchor-grid
-// shortcut. Case styling (preset.text_case): displayed via CSS text-transform, measured via
-// TextCase.apply so BOX FILL sizing matches. Exposes window.PreviewText.
+// shortcut. Case styling (preset.text_case): displayed via CSS text-transform only — TextCase.apply
+// is not used here. Exposes window.PreviewText.
 // {renderText, setSelectedTextBlock, getActiveFormatSelection, setOnStageTextActivate, enterEditMode, getBoxSizeCanvasPx}.
 window.PreviewText = (() => {
   let textProject = null;
