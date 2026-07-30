@@ -16,6 +16,11 @@
 // moves the box regardless of tool, only the plain-click outcome differs. enterEditMode() itself
 // (the returned handle) is NOT gated — a caller invoking it programmatically always enters edit
 // mode, tool mode notwithstanding.
+// Double-click-to-edit (added 2026-07-30, select-tool-layer-panel): in Select-tool mode a plain
+// click only selects (see onSelectClick above) — there was previously no way to enter edit mode
+// without switching to the Text tool. A dblclick listener enters edit mode directly, mirroring
+// Figma/Canva. Text-tool mode already enters edit on the first click, so the second click of a
+// double-click there is a no-op (enterEditMode's own already-editing guard handles it).
 window.UI = window.UI || {};
 
 window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput, onEditEnd, onMove, onMoveEnd, onSelectionChange, onSelectClick, isPlaceholder } = {}) {
@@ -100,6 +105,12 @@ window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput
     };
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
+  });
+
+  div.addEventListener("dblclick", (e) => {
+    if (e.target.closest(".resize-handle")) return;
+    if (div.contentEditable === "true") return;
+    if (!isTextToolActive()) enterEditMode();
   });
 
   return { enterEditMode, exitEditMode };
