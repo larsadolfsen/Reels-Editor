@@ -27,13 +27,15 @@
    spans — animates behind whichever button is active instead of toggling per-button
    border/background. Rounded with the app's standard --radius-md, matching every other button
    in the app, not a full pill/stadium shape. The indicator's look is the plain neutral-button
-   surface + accent border (button.css's `.button-neutral:hover` recipe), no shadow, no
-   accent-tinted fill. `1fr` columns (rather than the base rule's fixed --control-size-sm
-   tracks) so the track always fills exactly the width its container assigns it — the base
-   rule's fixed 28px columns can total less than that width depending on the surrounding grid's
-   own gaps, leaving a dead strip of container background exposed on the right. Scoped off
-   .btn-group-inline, whose buttons share a row with unrelated standalone UI.button toggles
-   rather than forming one segmented control. */
+   surface (button.css's `.button-neutral` recipe), no shadow, no accent-tinted fill, no
+   focus-ring glow — its accent border only appears while the active option is hovered
+   (`:has()` below), mirroring how a regular button only shows its accent border on hover
+   rather than all the time. `1fr` columns (rather than the base rule's fixed
+   --control-size-sm tracks) so the track always fills exactly the width its container assigns
+   it — the base rule's fixed 28px columns can total less than that width depending on the
+   surrounding grid's own gaps, leaving a dead strip of container background exposed on the
+   right. Scoped off .btn-group-inline, whose buttons share a row with unrelated standalone
+   UI.button toggles rather than forming one segmented control. */
 .btn-group:not(.btn-group-inline) {
   position: relative;
   grid-template-columns: repeat(8, 1fr);
@@ -51,6 +53,10 @@
   border-radius: var(--radius-md);
 }
 
+.btn-group:not(.btn-group-inline) button:focus {
+  outline: none;
+}
+
 .btn-group:not(.btn-group-inline) button[aria-pressed="true"] {
   border-color: transparent;
   background: none;
@@ -62,10 +68,15 @@
   left: 0;
   z-index: 0;
   background: var(--surface);
-  border: var(--border-width) solid var(--accent);
+  border: var(--border-width) solid transparent;
   border-radius: var(--radius-md);
-  transition: transform 180ms ease, width 180ms ease, height 180ms ease;
+  box-shadow: none;
+  transition: transform 180ms ease, width 180ms ease, height 180ms ease, border-color 120ms ease;
   pointer-events: none;
+}
+
+.btn-group:not(.btn-group-inline):has(button[aria-pressed="true"]:hover) .btn-group-indicator {
+  border-color: var(--accent);
 }
 
 /* Modifier for a .btn-group that should share its parent .style-row's grid instead of
