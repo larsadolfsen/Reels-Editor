@@ -36,8 +36,8 @@ window.PreviewCaptions = (() => {
     if (paginationCache && paginationCache.key === key) return paginationCache.pages;
     const rawMeasure = FontFit.canvasMeasurer(preset.font, preset.size_px, { weight: preset.weight, italic: preset.italic });
     const measure = (s) => rawMeasure(TextCase.apply(s, preset.text_case));
-    const padX = 0.35 * preset.size_px * 2;
-    const padY = 0.15 * preset.size_px * 2;
+    const padX = 4 + 4; // left + right, mirrors app/ass_render.py's CAPTION_PAD_LEFT_PX/CAPTION_PAD_RIGHT_PX
+    const padY = 4 + 3; // top + bottom, mirrors app/ass_render.py's CAPTION_PAD_TOP_PX/CAPTION_PAD_BOTTOM_PX
     const pages = CaptionLayout.paginateWords(track.words, measure,
       Math.max(1, preset.box_width - padX), Math.max(1, preset.box_height - padY), preset.size_px);
     paginationCache = { key, pages };
