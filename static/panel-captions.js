@@ -124,6 +124,8 @@ function showCaptionTab(value) {
 UI.tabBar(document.getElementById("caption-tab-bar"), CAPTION_TABS, activeCaptionTab, showCaptionTab);
 showCaptionTab(activeCaptionTab);
 
+UI.contextPanelHeader(document.getElementById("captions-header"), { icon: UI.icon("captions", { size: 18 }), label: "Captions" });
+
 // Built ONCE, mirroring panel-text.js — the sections are re-rendered afterwards, never rebuilt.
 const captionStyleTarget = StyleTarget.forCaptionTrack();
 const captionStyleHost = StylePanelHost(
