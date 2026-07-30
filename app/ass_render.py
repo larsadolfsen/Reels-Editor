@@ -263,7 +263,7 @@ def _caption_style(p: TextPreset, weight: int) -> str:
     fontname = f"{p.font} {WEIGHT_LABELS[weight]}"
     alignment = {"left": 7, "right": 9}.get(p.align, 8)
     if p.highlight_mode == "progressive_fill":
-        primary, secondary = hex_to_ass(p.highlight_color), hex_to_ass(p.color)
+        primary, secondary = hex_to_ass(p.spotlight_color), hex_to_ass(p.color)
     else:
         primary, secondary = hex_to_ass(p.color), hex_to_ass(p.color)
     italic = -1 if p.italic else 0
@@ -284,8 +284,17 @@ def _karaoke_dialogue(page: list[list[CaptionWord]], p: TextPreset) -> str:
 
 def _current_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> list[str]:
     fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
-    highlight = _ass_override_color(p.highlight_color)
+    highlight = _ass_override_color(p.spotlight_color)
     normal = _ass_override_color(p.color)
+    outline_on = f"\\3c{_ass_override_color(p.spotlight_outline_color)}\\bord{p.spotlight_outline_px}" if p.spotlight_outline else ""
+    outline_off = f"\\3c{_ass_override_color(p.outline_color)}\\bord{p.outline_px}" if p.spotlight_outline else ""
+    shadow_on = (f"\\4c{_ass_override_color(p.spotlight_shadow_color)}\\4a00"
+                 f"\\xshad{p.spotlight_shadow_offset_x}\\yshad{p.spotlight_shadow_offset_y}\\blur{p.spotlight_shadow_blur}"
+                 if p.spotlight_shadow else "")
+    shadow_off = ("\\4c" + _ass_override_color(p.shadow_color) + "\\4a00" +
+                  f"\\xshad{p.shadow_offset_x}\\yshad{p.shadow_offset_y}\\blur{p.shadow_blur}"
+                  if p.spotlight_shadow and p.shadow else
+                  ("\\4a&HFF&" if p.spotlight_shadow else ""))
     flat = [word for line in page for word in line]
     dialogues = []
     for active in flat:
@@ -294,7 +303,10 @@ def _current_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> lis
             segments = []
             for j, other in enumerate(line):
                 seg = other.text + (" " if j < len(line) - 1 else "")
-                segments.append(f"{{\\1c{highlight}}}{seg}{{\\1c{normal}}}" if other is active else seg)
+                if other is active:
+                    segments.append(f"{{\\1c{highlight}{outline_on}{shadow_on}}}{seg}{{\\1c{normal}{outline_off}{shadow_off}}}")
+                else:
+                    segments.append(seg)
             line_bodies.append("".join(segments))
         body = "\\N".join(line_bodies)
         dialogues.append(f"Dialogue: 0,{ass_time(active.t_start)},{ass_time(active.t_end)},"
@@ -303,7 +315,7 @@ def _current_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> lis
 
 def _line_word_offsets(line: list[CaptionWord], measure: Callable[[str], float]) -> tuple[list[tuple[float, float]], float]:
     """For one line of words: per-word (x_offset, bare glyph width) plus the line's total width
-    (word widths + inter-word spaces). Shared by _background_word_dialogues and
+    (word widths + inter-word spaces). Shared by _active_word_highlight_dialogues and
     _caption_highlight_dialogues so both measure lines identically."""
     offsets = []
     x = 0.0
@@ -320,31 +332,26 @@ def _line_left_origin(p: TextPreset, line_width: float) -> float:
         return p.x - line_width
     return p.x - line_width / 2
 
-def _background_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> list[str]:
-    """CAPTIONS 'background' highlight mode: draws a rounded rect behind the currently-active
-    word (no text-color swap, unlike _current_word_dialogues), following the same per-line
-    x-offset/width math _highlight_dialogues uses for TEXT-block marker highlights, and the same
-    align-relative left-origin convention _caption_style's Alignment field expects (p.x is the
-    line's left/right/center anchor depending on p.align). The rect is padded by HIGHLIGHT_PAD_EM
-    on all 4 sides around the word's tight glyph box (size_px tall, not the looser
-    size_px*LINE_HEIGHT line pitch), vertically centered within that line's pitch slot so the
-    padding reads as equal on all sides rather than being swallowed by line-height leading. One
-    rect+text dialogue pair is emitted per active word, with the rect appended first so it renders
-    underneath the text."""
+def _active_word_highlight_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> list[str]:
+    """Draws a rounded rect behind the currently-active word (no text-color swap). Callable
+    regardless of highlight_mode — the caller (render_caption_ass) decides when to invoke it,
+    gated on preset.spotlight_highlight. Same per-line x-offset/width math _caption_highlight_dialogues
+    uses for TEXT-block marker highlights, and the same align-relative left-origin convention
+    _caption_style's Alignment field expects (p.x is the line's left/right/center anchor depending
+    on p.align). The rect is padded by HIGHLIGHT_PAD_EM on all 4 sides around the word's tight
+    glyph box (size_px tall, not the looser size_px*LINE_HEIGHT line pitch), vertically centered
+    within that line's pitch slot so the padding reads as equal on all sides rather than being
+    swallowed by line-height leading."""
+    if not p.spotlight_highlight or not page:
+        return []
     weight = _resolved_weight(p)
     measure = pil_font_measurer(p.font, p.size_px, weight)
-    fill = _ass_override_color(p.highlight_color)
+    fill = _ass_override_color(p.spotlight_highlight_color)
     pad = HIGHLIGHT_PAD_EM * p.size_px
     line_pitch = p.size_px * LINE_HEIGHT
     rect_height = p.size_px + 2 * pad
-    text_fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
 
     line_layout = [_line_word_offsets(line, measure) for line in page]
-
-    line_bodies = []
-    for line in page:
-        line_bodies.append("".join(word.text + (" " if j < len(line) - 1 else "") for j, word in enumerate(line)))
-    text_body = "\\N".join(line_bodies)
 
     dialogues = []
     for line_i, line in enumerate(page):
@@ -354,22 +361,20 @@ def _background_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> 
         for word_i, active in enumerate(line):
             word_x, word_w = offsets[word_i]
             left = left_origin + word_x - pad
-            path = _rounded_rect_path(word_w + 2 * pad, rect_height, p.highlight_border_radius)
+            path = _rounded_rect_path(word_w + 2 * pad, rect_height, p.spotlight_highlight_border_radius)
             rect_fx = f"\\an7\\pos({left:.0f},{top:.0f})\\1a&H00&\\3a&HFF&\\1c{fill}\\p1"
             dialogues.append(f"Dialogue: 0,{ass_time(active.t_start)},{ass_time(active.t_end)},"
                               f"{CAPTION_STYLE_NAME},,0,0,0,,{{{rect_fx}}}{path}{{\\p0}}")
-            dialogues.append(f"Dialogue: 0,{ass_time(active.t_start)},{ass_time(active.t_end)},"
-                              f"{CAPTION_STYLE_NAME},,0,0,0,,{{{text_fx}}}{text_body}")
     return dialogues
 
 def _caption_highlight_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> list[str]:
     """CAPTIONS always-on marker highlight (preset.highlight): one rounded rect per visible line,
     hugging that line's actual rendered text (not the fixed caption box), padded by
-    HIGHLIGHT_PAD_EM on all 4 sides the same way _background_word_dialogues pads a word — tight to
-    the glyph height (size_px), vertically centered in the line's pitch slot. Independent of
-    highlight_mode's per-word rendering (current_word/progressive_fill/background). Spans the
-    whole page's active window (first word's t_start to last word's t_end in this page), same as
-    the page's own text dialogue."""
+    HIGHLIGHT_PAD_EM on all 4 sides the same way _active_word_highlight_dialogues pads a word —
+    tight to the glyph height (size_px), vertically centered in the line's pitch slot. Independent
+    of highlight_mode's per-word rendering (current_word/progressive_fill) and of the separate
+    spotlight_highlight-gated active-word rect. Spans the whole page's active window (first word's
+    t_start to last word's t_end in this page), same as the page's own text dialogue."""
     if not p.highlight or not page:
         return []
     weight = _resolved_weight(p)
@@ -411,10 +416,10 @@ def render_caption_ass(project: Project, preset: TextPreset) -> str:
     event_lines = []
     for page in pages:
         event_lines.extend(_caption_highlight_dialogues(page, preset))
+        if preset.highlight_mode != "off":
+            event_lines.extend(_active_word_highlight_dialogues(page, preset))
         if preset.highlight_mode == "current_word":
             event_lines.extend(_current_word_dialogues(page, preset))
-        elif preset.highlight_mode == "background":
-            event_lines.extend(_background_word_dialogues(page, preset))
         else:
             event_lines.append(_karaoke_dialogue(page, preset))
     events = ("\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"

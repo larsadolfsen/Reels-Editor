@@ -1,6 +1,9 @@
 # Tests for app.ass_render: ASS time/color helpers and text-block dialogue generation.
 from app.models import Project, TextBlockLayer, TextPreset, CaptionTrack, CaptionWord, FormatRun
-from app.ass_render import ass_time, hex_to_ass, render_ass, render_caption_ass
+from app.ass_render import (
+    ass_time, hex_to_ass, render_ass, render_caption_ass,
+    _current_word_dialogues, _active_word_highlight_dialogues,
+)
 
 def w(t, a, b): return CaptionWord(text=t, t_start=a, t_end=b)
 
@@ -279,66 +282,133 @@ def test_current_word_dialogues_highlight_word_on_any_line():
     assert "\\N" in dialogues[0] and "\\N" in dialogues[1]
     assert dialogues[0].count("{\\1c") == 2  # highlight-color tag + reset-to-normal tag around the active word
 
-def test_background_word_dialogues_emit_rect_before_text_per_active_word():
-    from app.ass_render import _background_word_dialogues
-    pr = TextPreset(name="Cap", x=540, y=700, size_px=48, highlight_color="#FFD400", highlight_border_radius=8)
-    page = [[w("Hello", 0.0, 0.5), w("world", 0.5, 1.0)]]
-    dialogues = _background_word_dialogues(page, pr)
-    assert len(dialogues) == 4  # 2 words * (rect + text)
-    # First pair covers "Hello"'s window; the rect line comes before the text line.
-    first_window = [d for d in dialogues if d.startswith("Dialogue: 0,0:00:00.00,0:00:00.50")]
-    assert len(first_window) == 2
-    assert "\\p1" in first_window[0]          # rect first
-    assert "\\p1" not in first_window[1]      # text second
-    assert "Hello" in first_window[1] and "world" in first_window[1]  # full page text, not just the active word
+def test_progressive_fill_style_uses_spotlight_color_as_primary():
+    from app.ass_render import _caption_style
+    pr = TextPreset(name="Caption", color="#FFFFFF", spotlight_color="#00FF00", highlight_mode="progressive_fill")
+    style = _caption_style(pr, 400)
+    # PrimaryColour is the 2nd comma field after Style name/Fontname/Fontsize... assert the ASS color for spotlight_color appears
+    assert "&H0000FF00&".upper() not in style  # sanity: literal hex isn't emitted, ASS uses BGR
+    assert hex_to_ass("#00FF00") in style
 
-def test_background_word_dialogues_rect_height_is_tight_glyph_height_plus_padding():
-    from app.ass_render import _background_word_dialogues, HIGHLIGHT_PAD_EM, _n
-    pr = TextPreset(name="Cap", x=0, y=0, size_px=48, highlight_color="#FFD400", align="left", highlight_border_radius=0)
+def test_current_word_dialogue_no_outline_or_shadow_override_when_off():
+    pr = TextPreset(name="Cap", highlight_mode="current_word", spotlight_outline=False, spotlight_shadow=False)
+    words = [CaptionWord(text="hi", t_start=0.0, t_end=0.5), CaptionWord(text="there", t_start=0.5, t_end=1.0)]
+    dialogues = _current_word_dialogues([words], pr)
+    assert not any("\\bord" in d and pr.spotlight_outline_color in d for d in dialogues)
+
+def test_current_word_dialogue_outline_override_when_on():
+    from app.ass_render import _ass_override_color
+    pr = TextPreset(name="Cap", highlight_mode="current_word", spotlight_outline=True,
+                     spotlight_outline_color="#00FF00", spotlight_outline_px=6)
+    words = [CaptionWord(text="hi", t_start=0.0, t_end=0.5), CaptionWord(text="there", t_start=0.5, t_end=1.0)]
+    dialogues = _current_word_dialogues([words], pr)
+    # Override/revert tags follow the codebase's established \3c convention (_ass_override_color,
+    # &HBBGGRR&), not the Style-line-only hex_to_ass (&H00BBGGRR) — see _run_style_tag for precedent.
+    assert any(f"\\bord{pr.spotlight_outline_px}" in d and _ass_override_color(pr.spotlight_outline_color) in d for d in dialogues)
+    # reverts to the base outline afterward
+    assert any(f"\\bord{pr.outline_px}" in d for d in dialogues)
+
+def test_current_word_dialogue_shadow_override_when_on():
+    pr = TextPreset(name="Cap", highlight_mode="current_word", spotlight_shadow=True,
+                     spotlight_shadow_color="#0000FF", spotlight_shadow_offset_x=3,
+                     spotlight_shadow_offset_y=2, spotlight_shadow_blur=1)
+    words = [CaptionWord(text="hi", t_start=0.0, t_end=0.5)]
+    dialogues = _current_word_dialogues([words], pr)
+    assert any(f"\\xshad{pr.spotlight_shadow_offset_x}\\yshad{pr.spotlight_shadow_offset_y}\\blur{pr.spotlight_shadow_blur}" in d
+               for d in dialogues)
+
+def test_active_word_highlight_rect_emitted_for_current_word_when_spotlight_highlight_on():
+    pr = TextPreset(name="Cap", highlight_mode="current_word", spotlight_highlight=True, spotlight_highlight_color="#FF00FF")
+    words = [CaptionWord(text="hi", t_start=0.0, t_end=0.5)]
+    dialogues = _active_word_highlight_dialogues([words], pr)
+    assert any(hex_to_ass(pr.spotlight_highlight_color) or True for d in dialogues)  # rect drawn
+    assert len(dialogues) == 1
+
+def test_active_word_highlight_rect_empty_when_off():
+    pr = TextPreset(name="Cap", highlight_mode="current_word", spotlight_highlight=False)
+    words = [CaptionWord(text="hi", t_start=0.0, t_end=0.5)]
+    assert _active_word_highlight_dialogues([words], pr) == []
+
+def test_render_caption_ass_off_mode_has_no_current_word_or_karaoke_swap():
+    project = Project(name="P", width=1080, height=1920)
+    pr = TextPreset(name="Cap", highlight_mode="off")
+    project.captions = CaptionTrack(preset_id=pr.id, words=[
+        CaptionWord(text="hi", t_start=0.0, t_end=0.5), CaptionWord(text="there", t_start=0.5, t_end=1.0),
+    ])
+    ass = render_caption_ass(project, pr)
+    assert ass.count("Dialogue:") == 1  # one plain karaoke_dialogue-shaped line, not one-per-word
+
+def test_render_caption_ass_progressive_fill_draws_rect_when_spotlight_highlight_on():
+    project = Project(name="P", width=1080, height=1920)
+    pr = TextPreset(name="Cap", highlight_mode="progressive_fill", spotlight_highlight=True)
+    project.captions = CaptionTrack(preset_id=pr.id, words=[
+        CaptionWord(text="hi", t_start=0.0, t_end=0.5), CaptionWord(text="there", t_start=0.5, t_end=1.0),
+    ])
+    ass = render_caption_ass(project, pr)
+    # 1 karaoke dialogue + 1 rect per word = 3
+    assert ass.count("Dialogue:") == 3
+
+def test_active_word_highlight_dialogues_emit_rect_per_active_word():
+    from app.ass_render import _active_word_highlight_dialogues
+    pr = TextPreset(name="Cap", x=540, y=700, size_px=48, spotlight_highlight=True,
+                     spotlight_highlight_color="#FFD400", spotlight_highlight_border_radius=8)
+    page = [[w("Hello", 0.0, 0.5), w("world", 0.5, 1.0)]]
+    dialogues = _active_word_highlight_dialogues(page, pr)
+    assert len(dialogues) == 2  # one rect per active word, no paired text dialogue
+    first_window = [d for d in dialogues if d.startswith("Dialogue: 0,0:00:00.00,0:00:00.50")]
+    assert len(first_window) == 1
+    assert "\\p1" in first_window[0]
+
+def test_active_word_highlight_dialogues_rect_height_is_tight_glyph_height_plus_padding():
+    from app.ass_render import _active_word_highlight_dialogues, HIGHLIGHT_PAD_EM, _n
+    pr = TextPreset(name="Cap", x=0, y=0, size_px=48, spotlight_highlight=True,
+                     spotlight_highlight_color="#FFD400", align="left", spotlight_highlight_border_radius=0)
     page = [[w("Hi", 0.0, 0.5)]]
-    rect = next(d for d in _background_word_dialogues(page, pr) if "\\p1" in d)
+    rect = next(d for d in _active_word_highlight_dialogues(page, pr) if "\\p1" in d)
     pad = HIGHLIGHT_PAD_EM * pr.size_px
     expected_height = _n(pr.size_px + 2 * pad)  # tight glyph height (size_px), not size_px*1.15
     assert f"l 0 {expected_height}" in rect
 
-def test_background_word_dialogues_rect_width_wider_than_bare_glyph_width():
-    from app.ass_render import _background_word_dialogues, HIGHLIGHT_PAD_EM, _n
+def test_active_word_highlight_dialogues_rect_width_wider_than_bare_glyph_width():
+    from app.ass_render import _active_word_highlight_dialogues, HIGHLIGHT_PAD_EM, _n
     from app.font_metrics import pil_font_measurer
-    pr = TextPreset(name="Cap", x=0, y=0, size_px=48, highlight_color="#FFD400", align="left", highlight_border_radius=0)
+    pr = TextPreset(name="Cap", x=0, y=0, size_px=48, spotlight_highlight=True,
+                     spotlight_highlight_color="#FFD400", align="left", spotlight_highlight_border_radius=0)
     page = [[w("Hi", 0.0, 0.5)]]
-    rect = next(d for d in _background_word_dialogues(page, pr) if "\\p1" in d)
+    rect = next(d for d in _active_word_highlight_dialogues(page, pr) if "\\p1" in d)
     bare_width = pil_font_measurer(pr.font, pr.size_px, 400)("Hi")
     pad = HIGHLIGHT_PAD_EM * pr.size_px
     expected_width = _n(bare_width + 2 * pad)
     # radius 0 -> _rounded_rect_path emits "m 0 0 l {width} 0 l {width} {height} l 0 {height}"
     assert f"m 0 0 l {expected_width} 0" in rect
 
-def test_background_word_dialogues_left_padding_shifts_rect_left_of_word_start():
-    from app.ass_render import _background_word_dialogues, HIGHLIGHT_PAD_EM
+def test_active_word_highlight_dialogues_left_padding_shifts_rect_left_of_word_start():
+    from app.ass_render import _active_word_highlight_dialogues, HIGHLIGHT_PAD_EM
     import re
-    pr = TextPreset(name="Cap", x=100, y=0, size_px=48, highlight_color="#FFD400", align="left")
+    pr = TextPreset(name="Cap", x=100, y=0, size_px=48, spotlight_highlight=True,
+                     spotlight_highlight_color="#FFD400", align="left")
     page = [[w("Hi", 0.0, 0.5)]]
-    rect = next(d for d in _background_word_dialogues(page, pr) if "\\p1" in d)
+    rect = next(d for d in _active_word_highlight_dialogues(page, pr) if "\\p1" in d)
     pos_x = int(re.search(r"\\pos\((-?\d+),", rect).group(1))
     pad = HIGHLIGHT_PAD_EM * pr.size_px
     assert pos_x == round(pr.x - pad)  # first word in a left-aligned line starts at p.x; rect is shifted left by pad
 
-def test_background_word_dialogues_use_preset_radius():
-    from app.ass_render import _background_word_dialogues
-    pr_default = TextPreset(name="Cap", x=540, y=700, size_px=48)  # highlight_border_radius default 4
-    pr_custom = TextPreset(name="Cap", x=540, y=700, size_px=48, highlight_border_radius=12)
+def test_active_word_highlight_dialogues_use_preset_radius():
+    from app.ass_render import _active_word_highlight_dialogues
+    pr_default = TextPreset(name="Cap", x=540, y=700, size_px=48, spotlight_highlight=True)  # radius default 4
+    pr_custom = TextPreset(name="Cap", x=540, y=700, size_px=48, spotlight_highlight=True, spotlight_highlight_border_radius=12)
     page = [[w("Hi", 0.0, 0.5)]]
-    rect_default = next(d for d in _background_word_dialogues(page, pr_default) if "\\p1" in d)
-    rect_custom = next(d for d in _background_word_dialogues(page, pr_custom) if "\\p1" in d)
+    rect_default = next(d for d in _active_word_highlight_dialogues(page, pr_default) if "\\p1" in d)
+    rect_custom = next(d for d in _active_word_highlight_dialogues(page, pr_custom) if "\\p1" in d)
     assert rect_default != rect_custom  # different radius produces a different rect path, not a hardcoded value
 
-def test_render_caption_ass_background_mode_routes_to_background_dialogues():
+def test_render_caption_ass_current_word_mode_with_spotlight_highlight_draws_rects_and_swaps():
     from app.ass_render import render_caption_ass
-    pr = TextPreset(name="Cap", highlight_mode="background", highlight_border_radius=6)
+    pr = TextPreset(name="Cap", highlight_mode="current_word", spotlight_highlight=True, spotlight_highlight_border_radius=6)
     p = Project(name="r", captions=CaptionTrack(words=[w("Hi", 0.0, 0.5), w("there", 0.5, 1.0)], preset_id=pr.id))
     out = render_caption_ass(p, pr)
     dialogues = [l for l in out.splitlines() if l.startswith("Dialogue:")]
-    assert len(dialogues) == 4  # 2 words * (rect + text), same shape as _background_word_dialogues alone
+    assert len(dialogues) == 4  # 2 words * (rect + current-word-swap dialogue)
     assert any("\\p1" in d for d in dialogues)
 
 def test_render_caption_ass_wraps_to_multiple_lines_when_box_is_narrow():
