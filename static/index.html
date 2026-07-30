@@ -137,11 +137,7 @@
 
       <div id="panel-video" class="context-panel" hidden>
         <div id="video-main" class="context-panel-body">
-          <div class="context-panel-header text-eyebrow">VIDEO</div>
-
-          <div class="style-group">
-            <div id="video-name" class="context-panel-name col-8"></div>
-          </div>
+          <div id="video-header" class="context-panel-header"></div>
 
           <div id="video-tab-bar"></div>
 
@@ -445,7 +441,7 @@
       </div>
 
       <div id="panel-image-box" class="context-panel" hidden>
-        <div class="context-panel-header text-eyebrow">IMAGE BOX</div>
+        <div id="image-box-header" class="context-panel-header"></div>
         <div class="style-group">
           <button id="image-box-add" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>ADD IMAGE BOX</button>
         </div>
@@ -453,8 +449,6 @@
           <ul id="image-box-picker-list" class="font-list scroll-list"></ul>
         </div>
         <div id="image-box-detail" class="context-panel-body" hidden>
-          <div id="image-box-name" class="context-panel-name"></div>
-
           <div id="image-box-tab-bar"></div>
 
           <div id="image-box-box-body">
@@ -504,13 +498,11 @@
       </div>
 
       <div id="panel-audio" class="context-panel" hidden>
-        <div class="context-panel-header text-eyebrow">AUDIO</div>
+        <div id="audio-header" class="context-panel-header"></div>
         <div id="audio-empty-state" class="style-group">
           <button id="audio-add-music" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>ADD MUSIC</button>
         </div>
         <div id="audio-detail" class="context-panel-body" hidden>
-          <div id="audio-music-name" class="context-panel-name"></div>
-
           <div class="section-label-spacer text-eyebrow">VOLUME</div>
           <div class="style-group">
             <div class="style-row">
@@ -637,6 +629,7 @@
 <script src="/static/settings-row-value.js"></script>
 <script src="/static/ui-accordion-section.js"></script>
 <script src="/static/ui-sub-panel-header.js"></script>
+<script src="/static/ui-context-panel-header.js"></script>
 <script src="/static/ui-divider.js"></script>
 <script src="/static/ui-resize-handles.js"></script>
 <script src="/static/ui-video-box-drag.js"></script>

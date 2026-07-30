@@ -18,6 +18,7 @@ function clampTrim(inP, outP, dur) {
 UI.divider(document.getElementById("video-order-divider"));
 
 (() => {
+  const VIDEO_HEADER_ICON = UI.icon("video", { size: 18 });
   const VIDEO_TAB_ICON_DESIGN = UI.icon("pencil", { size: 18 });
   const VIDEO_TAB_ICON_TIME = UI.icon("timer", { size: 18 });
   const VIDEO_TAB_ICON_AUTO = UI.icon("sparkles", { size: 18 });
@@ -43,8 +44,8 @@ UI.divider(document.getElementById("video-order-divider"));
   function render(c) {
     const dur = clipDurations[c.id] ?? c.out_point;
     const media = project.media_library.find((m) => m.id === c.media_id);
-    document.getElementById("video-name").textContent =
-      (media && (media.name || media.file_path.split(/[\\/]/).pop())) || c.file_path.split(/[\\/]/).pop();
+    const name = (media && (media.name || media.file_path.split(/[\\/]/).pop())) || c.file_path.split(/[\\/]/).pop();
+    UI.contextPanelHeader(document.getElementById("video-header"), { icon: VIDEO_HEADER_ICON, label: name });
 
     async function applyTrim(inP, outP) {
       const t = clampTrim(inP, outP, dur);
