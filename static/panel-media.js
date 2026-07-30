@@ -1,6 +1,7 @@
 // FILES/MEDIA context-panel section: media-library list (thumbnail, name, duration),
-// grouped by type (videos, then images, each with a small section label — omitted when that
-// group is empty), click-to-select, hover-reveal inline rename (pencil icon), remove (trash
+// filterable by type via an icon tab bar (All/Video/Images/Audio, UI.tabBar, mounted in
+// #files-type-tabs, added 2026-07-30 files-icons-tab feature — replaces the old always-grouped
+// VIDEOS/IMAGES/AUDIO section-label rows), click-to-select, hover-reveal inline rename (pencil icon), remove (trash
 // icon, swapped for a disabled lock icon when the media item is referenced by any ClipLayer),
 // and a plus icon (added 2026-07-24) that adds the item directly: a video row appends a new
 // clip to the end of the VIDEO timeline sequence (appendMediaClipToSequence, clip-sequence.js);
@@ -22,6 +23,36 @@ window.MediaPanel = window.MediaPanel || {};
   const SILENCE_THRESHOLD = 0.02;
 
   const MUTED_ICON_SVG = UI.icon("volume-x", { size: 11 });
+
+  let activeMediaFilter = "all"; // "all" | "video" | "image" | "audio" — files-icons-tab feature
+  let typeTabsBuilt = false;
+
+  const TYPE_FILTERS = {
+    all: (m) => true,
+    video: (m) => m.kind !== "image" && m.kind !== "audio",
+    image: (m) => m.kind === "image",
+    audio: (m) => m.kind === "audio",
+  };
+
+  function buildTypeTabs() {
+    const container = document.getElementById("files-type-tabs");
+    if (!container || typeTabsBuilt) return;
+    typeTabsBuilt = true;
+    UI.tabBar(
+      container,
+      [
+        { value: "all", icon: UI.icon("layout-grid", { size: 18 }), label: "All" },
+        { value: "video", icon: UI.icon("video", { size: 18 }), label: "Video" },
+        { value: "image", icon: UI.icon("image", { size: 18 }), label: "Images" },
+        { value: "audio", icon: UI.icon("music", { size: 18 }), label: "Audio" },
+      ],
+      activeMediaFilter,
+      (value) => {
+        activeMediaFilter = value;
+        render();
+      }
+    );
+  }
 
   function appendMutedIcon(durationRow) {
     if (durationRow.querySelector(".clip-audio-muted-icon")) return;
@@ -211,24 +242,13 @@ window.MediaPanel = window.MediaPanel || {};
     return li;
   }
 
-  function appendGroup(list, label, items) {
-    if (!items.length) return;
-    const labelLi = document.createElement("li");
-    labelLi.className = "clip-section-row";
-    UI.text(labelLi, { variant: "eyebrow", content: label });
-    list.appendChild(labelLi);
-    items.forEach((m) => list.appendChild(buildRow(m)));
-  }
-
   function render() {
+    buildTypeTabs();
     const list = document.getElementById("clip-list");
     list.innerHTML = "";
-    const videos = project.media_library.filter((m) => m.kind !== "image" && m.kind !== "audio");
-    const images = project.media_library.filter((m) => m.kind === "image");
-    const audios = project.media_library.filter((m) => m.kind === "audio");
-    appendGroup(list, "VIDEOS", videos);
-    appendGroup(list, "IMAGES", images);
-    appendGroup(list, "AUDIO", audios);
+    project.media_library
+      .filter(TYPE_FILTERS[activeMediaFilter])
+      .forEach((m) => list.appendChild(buildRow(m)));
   }
 
   window.MediaPanel.render = render;

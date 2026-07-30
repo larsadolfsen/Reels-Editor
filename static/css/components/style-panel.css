@@ -241,12 +241,6 @@
   padding: 1px 3px;
 }
 
-.clip-section-row {
-  padding: var(--space-2) 0 var(--space-1);
-  list-style: none;
-}
-.clip-section-row:first-child { padding-top: 0; }
-
 .clip-actions {
   display: flex;
   align-items: center;
