@@ -6,8 +6,10 @@ from app.font_metrics import wrap_text, wrap_text_runs, pil_font_measurer, WEIGH
 from app.caption_layout import paginate_words
 from app.text_case import apply_text_case
 
-CAPTION_PAD_X_EM = 0.35   # captions only — text blocks are padding-free, their box hugs the glyphs
-CAPTION_PAD_Y_EM = 0.15
+CAPTION_PAD_LEFT_PX = 4   # captions only — text blocks are padding-free, their box hugs the glyphs
+CAPTION_PAD_RIGHT_PX = 4
+CAPTION_PAD_TOP_PX = 4
+CAPTION_PAD_BOTTOM_PX = 3
 LINE_HEIGHT = 1.15
 HIGHLIGHT_PAD_EM = 0.2    # equal padding on all 4 sides of a per-line/per-word highlight rect
 
@@ -404,8 +406,8 @@ def render_caption_ass(project: Project, preset: TextPreset) -> str:
     styles = _caption_style(preset, weight)
     box_width = preset.box_width if preset.box_width_mode == "fixed" and preset.box_width > 0 else CAPTION_DEFAULT_BOX_WIDTH
     box_height = preset.box_height if preset.box_height_mode == "fixed" and preset.box_height > 0 else CAPTION_DEFAULT_BOX_HEIGHT
-    pad_x = CAPTION_PAD_X_EM * preset.size_px * 2
-    pad_y = CAPTION_PAD_Y_EM * preset.size_px * 2
+    pad_x = CAPTION_PAD_LEFT_PX + CAPTION_PAD_RIGHT_PX
+    pad_y = CAPTION_PAD_TOP_PX + CAPTION_PAD_BOTTOM_PX
     measure = pil_font_measurer(preset.font, preset.size_px, weight)
     pages = paginate_words(words, measure, max(1, box_width - pad_x), max(1, box_height - pad_y), preset.size_px, LINE_HEIGHT)
     event_lines = []
