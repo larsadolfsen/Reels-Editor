@@ -52,6 +52,7 @@ Each site is a small, local change: capture old state, run the existing mutation
 - No new persisted data (`CaptionWord` gets no `clip_id` field) — the clip/caption relationship is always recomputed from timestamps.
 - Appending a clip at the end of the sequence (`appendMediaClipToSequence`) needs no caption shift — nothing after it exists to shift.
 - Backend `/auto-slice/apply` already has its own independent caption-shift logic (`app/auto_slice.py`'s `_cut_caption_words`) for the silence/filler-cut feature — this design does not touch or reuse that backend path, since clip delete/move/insert are frontend-only mutations.
+- `VideoPanel.duplicateClip()` (the VIDEO panel's Duplicate button / Ctrl+D on a clip) also inserts a clip's worth of duration mid-sequence, the same way `insertClipIntoSequence` does, but is not wired to this feature — duplicating a clip does not shift the captions after it. This was flagged during review as the same class of desync this feature exists to prevent, but is deliberately left out of scope here: the user decided to remove `duplicateClip()` entirely instead of syncing it, as a separate follow-up task.
 
 ## Testing
 
