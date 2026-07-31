@@ -264,7 +264,7 @@ window.Timeline = (() => {
   // TEXT/VIDEO BOX rows. Each lane still renders its item exactly as before (time-positioned
   // block, resize handle for text/image boxes/shapes, drag-to-timeline for video boxes) — only
   // the vertical grouping/order changed. #label-overlays gets one
-  // "TEXT"/"VIDEO BOX"/"IMAGE BOX"/"SHAPE" label per lane, height-matched to its lane.
+  // "TEXT"/"VIDEO BOX"/"IMAGE"/"SHAPE" label per lane, height-matched to its lane.
   // Reordering (drag handle) is wired in static/timeline-overlay-layer-drag.js via
   // OverlayLayers.mergedEntries/renumber. A lane with entry.item.locked shows a "lock" icon
   // instead of "grip-vertical" and is not draggable — see
@@ -287,7 +287,7 @@ window.Timeline = (() => {
       const handleTitle = entry.item.locked ? "Locked — click to unlock" : "Lock layer";
       laneLabel.innerHTML = `<span class="overlay-lane-handle" title="${handleTitle}">${UI.icon(handleIcon, { size: 14 })}</span>`;
       const text = document.createElement("span");
-      text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO BOX" : entry.kind === "image_box" ? "IMAGE BOX" : "SHAPE";
+      text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO BOX" : entry.kind === "image_box" ? "IMAGE" : "SHAPE";
       laneLabel.appendChild(text);
       labelContainer.appendChild(laneLabel);
 
