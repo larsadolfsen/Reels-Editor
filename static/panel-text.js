@@ -118,6 +118,7 @@ async function addTextBlockAndEdit(position) {
 function renderTextPreview() {
   Preview.renderText(project, project.text_presets, Preview.currentTimelineTime());
   VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+  ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
 }
 
 async function renderTextPanel() {
