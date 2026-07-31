@@ -14,7 +14,20 @@ window.TranscriptSidebar = (() => {
 
   function render(project) {
     const words = (project.captions && project.captions.words) || [];
-    const sentences = TranscriptSentences.groupBySentence(words);
+    // Sort a copy before grouping so out-of-order timestamps (e.g. from a bad manual edit)
+    // can't produce a sentence whose end precedes its start — groupBySentence itself stays a
+    // simple, sort-free pure function (see its own header/tests).
+    const sortedWords = [...words].sort((a, b) => a.t_start - b.t_start);
+    const sentences = TranscriptSentences.groupBySentence(sortedWords);
+
+    // A caption STYLE change (color, border-radius, ...) calls render() just as much as a real
+    // word-list change does, tearing down and rebuilding every sentence/word div. Remember which
+    // sentence was active *before* the rebuild so updateHighlight can skip the scroll-into-view
+    // when the active sentence didn't actually change — otherwise activeSentenceIndex always
+    // resets to -1 below, updateHighlight's change-detection always fires on the very next call,
+    // and the sidebar scroll-jumps back to whatever sentence happens to be first even when a
+    // later sentence was the one actually showing.
+    const prevActiveIndex = activeSentenceIndex;
 
     container.innerHTML = "";
     sentenceEls = [];
@@ -42,10 +55,10 @@ window.TranscriptSidebar = (() => {
       sentenceEls.push({ sentence, el: sentenceDiv });
     });
 
-    updateHighlight(Preview.currentTimelineTime());
+    updateHighlight(Preview.currentTimelineTime(), { skipScrollIfIndex: prevActiveIndex });
   }
 
-  function updateHighlight(timelineTime) {
+  function updateHighlight(timelineTime, opts) {
     if (sentenceEls.length === 0) return;
 
     const newIndex = sentenceEls.findIndex(
@@ -53,7 +66,8 @@ window.TranscriptSidebar = (() => {
     if (newIndex !== activeSentenceIndex) {
       sentenceEls.forEach(({ el }, i) => el.classList.toggle("active", i === newIndex));
       activeSentenceIndex = newIndex;
-      if (newIndex >= 0) {
+      const skipScroll = !!opts && opts.skipScrollIfIndex === newIndex;
+      if (newIndex >= 0 && !skipScroll) {
         sentenceEls[newIndex].el.scrollIntoView({ block: "center", behavior: "smooth" });
       }
     }
