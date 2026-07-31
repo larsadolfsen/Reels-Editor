@@ -31,6 +31,9 @@
 // (see panel-nav.js); TEXT-row and IMAGE BOX lanes instead render a right-edge resize handle
 // (`resizable` option on addBlock, dataset.blockId set on each block) driven by
 // timeline-text-resize.js / timeline-image-resize.js respectively.
+// MAIN and AUDIO's labels get a static, non-interactive lock icon (ensureFixedRowLockIcons,
+// idempotent, called from render()) signaling they can never be reordered — see the overlay
+// row's own per-layer lock toggle in renderOverlaysRow/timeline-overlay-layer-drag.js instead.
 // Exposes window.Timeline.{render, groupWords, timeAtX, tick, resetZoom, PX_PER_SEC}.
 // PX_PER_SEC is a live getter reflecting the current zoom level (see the header comment
 // above for the zoom scale itself). tick() is a cheap playhead-only update driven every
@@ -263,7 +266,9 @@ window.Timeline = (() => {
   // the vertical grouping/order changed. #label-overlays gets one
   // "TEXT"/"VIDEO BOX"/"IMAGE BOX"/"SHAPE" label per lane, height-matched to its lane.
   // Reordering (drag handle) is wired in static/timeline-overlay-layer-drag.js via
-  // OverlayLayers.mergedEntries/renumber.
+  // OverlayLayers.mergedEntries/renumber. A lane with entry.item.locked shows a "lock" icon
+  // instead of "grip-vertical" and is not draggable — see
+  // static/timeline-overlay-layer-drag.js for the click-to-toggle/drag-skip logic.
   function renderOverlaysRow(project, px, selected, onSelect) {
     const entries = OverlayLayers.mergedEntries(project);
     const rowEl = document.querySelector('.timeline-row[data-row="overlays"]');
@@ -276,9 +281,11 @@ window.Timeline = (() => {
 
     for (const entry of entries) {
       const laneLabel = document.createElement("div");
-      laneLabel.className = "row-label overlay-lane-label";
+      laneLabel.className = "row-label overlay-lane-label" + (entry.item.locked ? " locked" : "");
       laneLabel.dataset.entryId = entry.id;
-      laneLabel.innerHTML = `<span class="overlay-lane-handle">${UI.icon("grip-vertical", { size: 14 })}</span>`;
+      const handleIcon = entry.item.locked ? "lock" : "grip-vertical";
+      const handleTitle = entry.item.locked ? "Locked — click to unlock" : "Lock layer";
+      laneLabel.innerHTML = `<span class="overlay-lane-handle" title="${handleTitle}">${UI.icon(handleIcon, { size: 14 })}</span>`;
       const text = document.createElement("span");
       text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO BOX" : entry.kind === "image_box" ? "IMAGE BOX" : "SHAPE";
       laneLabel.appendChild(text);
@@ -320,7 +327,24 @@ window.Timeline = (() => {
     }
   }
 
+  // MAIN and AUDIO are fixed rows outside the draggable overlay stack (unlike TEXT/VIDEO
+  // BOX/IMAGE BOX, they were never reorderable in the first place) — this is a purely static
+  // visual cue, not a per-layer toggle, so it's rendered once and left alone rather than
+  // rebuilt every render() the way overlay lanes are.
+  function ensureFixedRowLockIcons() {
+    for (const rowName of ["video", "audio"]) {
+      const label = document.getElementById(`label-${rowName}`);
+      if (!label || label.querySelector(".row-label-lock")) continue;
+      const icon = document.createElement("span");
+      icon.className = "row-label-lock";
+      icon.innerHTML = UI.icon("lock", { size: 14 });
+      icon.title = "Always locked";
+      label.prepend(icon);
+    }
+  }
+
   function render(project, timelineTime, selected, onSelect, actions = {}) {
+    ensureFixedRowLockIcons();
     const clips = ordered(project.clips || []);
     const duration = totalDuration(project);
     lastDuration = duration;

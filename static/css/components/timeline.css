@@ -93,6 +93,13 @@
 #label-video { height: 56px; }
 #label-audio { height: var(--control-height-md); }
 
+.row-label-lock {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-dim);
+  margin-right: var(--space-1);
+}
+
 /* Unified overlay z-order stack: #label-overlays/#row-overlays stack one 44px lane per
    text block + video box (static/timeline.js's renderOverlaysRow), height set inline per
    render from lane count. */
@@ -328,6 +335,10 @@
   margin-right: var(--space-1);
 }
 .overlay-lane-label:hover .overlay-lane-handle { opacity: 1; }
+.overlay-lane-label.locked .overlay-lane-handle {
+  opacity: 1;
+  cursor: pointer;
+}
 .overlay-lane-label.dragging {
   z-index: 5;
   opacity: 0.85;

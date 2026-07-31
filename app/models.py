@@ -51,6 +51,7 @@ class VideoBoxLayer(BaseModel):
     mask_angle: float = 0.0    # degrees; 0 = vertical cut line, increasing rotates clockwise on screen
     mask_offset: float = 0.0   # signed canvas px from the box's center to the line, perpendicular to it
     mask_flip: bool = False    # which side of the line is kept
+    locked: bool = False       # blocks timeline drag-reorder in the overlay stack; stage move/resize unaffected
 
 class ImageBoxLayer(BaseModel):
     id: str = Field(default_factory=new_id)
@@ -67,6 +68,7 @@ class ImageBoxLayer(BaseModel):
     mask_angle: float = 0.0    # degrees; 0 = vertical cut line, increasing rotates clockwise on screen
     mask_offset: float = 0.0   # signed canvas px from the box's center to the line, perpendicular to it
     mask_flip: bool = False    # which side of the line is kept
+    locked: bool = False       # blocks timeline drag-reorder in the overlay stack; stage move/resize unaffected
 
 class ShapeLayer(BaseModel):
     id: str = Field(default_factory=new_id)
@@ -180,6 +182,7 @@ class TextBlockLayer(BaseModel):
     end: float = 3.0
     z_index: int = 0
     formatting_runs: list[FormatRun] = []   # sparse per-range style overrides; [] = today's flat-style rendering
+    locked: bool = False           # blocks timeline drag-reorder in the overlay stack; stage move/resize unaffected
 
 class CaptionWord(BaseModel):
     id: str = Field(default_factory=new_id)
