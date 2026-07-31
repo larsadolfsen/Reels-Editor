@@ -84,7 +84,6 @@ window.Preview = (() => {
       const c = clips[activeIndex];
       const timelineTime = computeTimelineTime();
       renderOverlaysAt(timelineTime);
-      timeUpdateListeners.forEach((fn) => fn(timelineTime));
       if (el.currentTime >= c.out_point) {
         if (activeIndex + 1 < clips.length) {
           playClipAt(activeIndex + 1);
@@ -146,6 +145,7 @@ window.Preview = (() => {
     if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], timelineTime);
     if (textProject) ImageBoxPreview.render(textProject.image_boxes || [], timelineTime);
     if (textProject) ShapePreview.render(textProject.shapes || [], timelineTime);
+    timeUpdateListeners.forEach((fn) => fn(timelineTime));
   }
 
   function playClipAt(index, autoplay = true) {
@@ -272,12 +272,7 @@ window.Preview = (() => {
       setPlayingIcon(false);
       PreviewAudio.pause();
     }
-    timeEl.textContent = virtualTime.toFixed(1);
-    if (textProject) renderText(textProject, textPresets, virtualTime);
-    if (textProject) renderCaptions(textProject, textPresets, virtualTime);
-    if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], virtualTime);
-    if (textProject) ImageBoxPreview.render(textProject.image_boxes || [], virtualTime);
-    if (textProject) ShapePreview.render(textProject.shapes || [], virtualTime);
+    renderOverlaysAt(virtualTime);
     Timeline.tick(virtualTime);
     if (virtualPlaying) virtualRafId = requestAnimationFrame(virtualTick);
   }
@@ -309,6 +304,7 @@ window.Preview = (() => {
     standbyReadyIndex = -1;
     standbySeeked = false;
     PreviewAudio.load(project);
+    TranscriptSidebar.render(project);
     if (clips.length > 0) {
       playClipAt(0, false);
     } else {
