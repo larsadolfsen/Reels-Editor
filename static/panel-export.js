@@ -4,6 +4,8 @@
 window.ExportPanel = window.ExportPanel || {};
 
 (() => {
+  UI.contextPanelHeader(document.getElementById("export-header"), { icon: UI.icon("upload", { size: 18 }), label: "Export" });
+
   function defaultFilename() {
     return `${project.name}-${project.id.slice(0, 8)}`;
   }
