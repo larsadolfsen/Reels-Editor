@@ -342,4 +342,11 @@ document.addEventListener("keydown", (e) => {
   else if (!mod && (e.key === "c" || e.key === "C")) { e.preventDefault(); navOnSelect("captions"); }
   else if (!mod && (e.key === "s" || e.key === "S")) { e.preventDefault(); navOnSelect("settings"); }
   else if (!mod && (e.key === "e" || e.key === "E")) { e.preventDefault(); navOnSelect("export"); }
+  // Timeline toolbar shortcuts (added 2026-07-31, timeline-toolbar-tooltips): zoom-in/out and the
+  // safe-zone guide toggle just click their existing button — zoomIn/zoomOut live inside
+  // timeline.js's closure and aren't exposed on window.Timeline, and #safe-zones-toggle's click
+  // listener already does exactly what a keyboard press should (setSafeZonesVisible + persist).
+  else if (!mod && (e.key === "+" || e.key === "=")) { e.preventDefault(); document.getElementById("zoom-in").click(); }
+  else if (!mod && (e.key === "-" || e.key === "_")) { e.preventDefault(); document.getElementById("zoom-out").click(); }
+  else if (!mod && (e.key === "g" || e.key === "G")) { e.preventDefault(); document.getElementById("safe-zones-toggle").click(); }
 });
