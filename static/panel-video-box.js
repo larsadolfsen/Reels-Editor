@@ -1,10 +1,14 @@
-// #panel-video-box context-panel section: add-from-media-library picker, trim/time/position/size
+// #panel-video-box context-panel section: add-from-media-library picker, time/position/size
 // fields, drag-to-move/resize on stage (via VideoBoxPreview), delete. The detail view is split
-// into Box (SIZE & POSITION + TRIM), Time (START) and Mask (EDGE MASK) tab panes via UI.tabBar
-// (Box default), with Delete as an always-visible footer. Exposes window.VideoBoxPanel.render(selectedId)
-// and window.VideoBoxPanel.createVideoBox(mediaItem) (added 2026-07-30, video-hover-icons-files:
-// pushes a new VideoBoxLayer into project.video_boxes and returns it, no save/render — caller's
-// responsibility; reused by panel-media.js's hover-reveal PIP icon).
+// into Box (SIZE + POSITION, via the shared BoxSizePositionPanel — box-panel-size-position.js),
+// Time (START) and Mask (EDGE MASK) tab panes via UI.tabBar (Box default), with Delete as an
+// always-visible footer. No trim (IN/OUT) controls — removed 2026-07-30, the in_point/out_point
+// fields still exist on VideoBoxLayer (set once at creation from the source media's full
+// duration) but are no longer user-editable via this panel. Exposes
+// window.VideoBoxPanel.render(selectedId) and window.VideoBoxPanel.createVideoBox(mediaItem)
+// (added 2026-07-30, video-hover-icons-files: pushes a new VideoBoxLayer into
+// project.video_boxes and returns it, no save/render — caller's responsibility; reused by
+// panel-media.js's hover-reveal PIP icon).
 // One video box selected at a time; multiple boxes live in project.video_boxes (see app/models.py's VideoBoxLayer).
 window.VideoBoxPanel = window.VideoBoxPanel || {};
 
@@ -31,10 +35,6 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
   }
   UI.tabBar(document.getElementById("video-box-tab-bar"), VIDEO_BOX_TABS, activeVideoBoxTab, showVideoBoxTab);
   showVideoBoxTab(activeVideoBoxTab);
-
-  function findMedia(box) {
-    return project.media_library.find((m) => m.id === box.media_id);
-  }
 
   function probeVideoAspect(filePath) {
     return new Promise((resolve) => {
@@ -139,51 +139,18 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
   }
 
   function renderDetail(box) {
-    const media = findMedia(box);
-    const dur = media ? media.duration : box.out_point;
-
-    async function applyTrim(inP, outP) {
-      const t = clampTrim(inP, outP, dur);
-      box.in_point = t.in_point; box.out_point = t.out_point;
-      await saveProject();
-      renderTimeline();
-      renderDetail(box);
-    }
-
-    UI.numberField(document.getElementById("video-box-in-field"),
-      { label: "IN", unit: "SEC", value: box.in_point, step: 0.1, span: 4,
-        onChange: (v) => applyTrim(v, box.out_point) });
-    UI.numberField(document.getElementById("video-box-out-field"),
-      { label: "OUT", unit: "SEC", value: box.out_point, step: 0.1, span: 4,
-        onChange: (v) => applyTrim(box.in_point, v) });
-
     UI.numberField(document.getElementById("video-box-start-field"),
       { label: "START", unit: "SEC", value: box.start, step: 0.1, min: 0, span: 8,
         onChange: async (v) => { box.start = v; await saveProject(); renderTimeline(); } });
 
-    UI.numberField(document.getElementById("video-box-x-field"),
-      { label: "X", unit: "PX", value: box.x, min: 0, max: 1080, span: 4,
-        onChange: async (v) => { box.x = v; await saveProject(); renderTimeline(); VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime()); } });
-    UI.numberField(document.getElementById("video-box-y-field"),
-      { label: "Y", unit: "PX", value: box.y, min: 0, max: 1920, span: 4,
-        onChange: async (v) => { box.y = v; await saveProject(); VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime()); } });
-
-    UI.numberField(document.getElementById("video-box-width-field"),
-      { label: "WIDTH", unit: "PX", value: box.width, min: 1, max: 1080, span: 4,
-        onChange: async (v) => {
-          const { width, height } = applyAspectLock(box, { width: v, height: box.height });
-          box.width = width; box.height = height;
-          await saveProject(); renderTimeline(); renderDetail(box);
-          VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
-        } });
-    UI.numberField(document.getElementById("video-box-height-field"),
-      { label: "HEIGHT", unit: "PX", value: box.height, min: 1, max: 1920, span: 4,
-        onChange: async (v) => {
-          const { width, height } = applyAspectLock(box, { width: box.width, height: v });
-          box.width = width; box.height = height;
-          await saveProject(); renderTimeline(); renderDetail(box);
-          VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
-        } });
+    BoxSizePositionPanel.render(document.getElementById("video-box-size-position"), box, {
+      onChange: async () => {
+        await saveProject();
+        renderTimeline();
+        VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+      },
+      getNaturalSize: () => probeVideoAspect(box.file_path),
+    });
 
     document.getElementById("video-box-delete").onclick = async () => {
       project.video_boxes = project.video_boxes.filter((b) => b.id !== box.id);

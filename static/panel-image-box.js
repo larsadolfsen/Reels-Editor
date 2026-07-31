@@ -1,7 +1,8 @@
 // #panel-image-box context-panel section: add-from-media-library picker (images only),
 // size/position/time fields, drag-to-move/resize on stage (via ImageBoxPreview), delete. The
-// detail view is split into Box (SIZE & POSITION), Time (START + DURATION) and Mask (EDGE MASK)
-// tab panes via UI.tabBar (Box default), with Delete as an always-visible footer. Exposes
+// detail view is split into Box (SIZE + POSITION, via the shared BoxSizePositionPanel —
+// box-panel-size-position.js), Time (START + DURATION) and Mask (EDGE MASK) tab panes via
+// UI.tabBar (Box default), with Delete as an always-visible footer. Exposes
 // window.ImageBoxPanel.render(selectedId). One image box selected at a time; multiple boxes
 // live in project.image_boxes (see app/models.py's ImageBoxLayer). Mirrors panel-video-box.js;
 // createImageBox() is also exposed as window.ImageBoxPanel.createImageBox so the MEDIA panel's
@@ -140,29 +141,14 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
       { label: "DURATION", unit: "SEC", value: box.duration, step: 0.1, min: 0.1, span: 4,
         onChange: async (v) => { box.duration = v; await saveProject(); renderTimeline(); } });
 
-    UI.numberField(document.getElementById("image-box-x-field"),
-      { label: "X", unit: "PX", value: box.x, min: 0, max: 1080, span: 4,
-        onChange: async (v) => { box.x = v; await saveProject(); ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime()); } });
-    UI.numberField(document.getElementById("image-box-y-field"),
-      { label: "Y", unit: "PX", value: box.y, min: 0, max: 1920, span: 4,
-        onChange: async (v) => { box.y = v; await saveProject(); ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime()); } });
-
-    UI.numberField(document.getElementById("image-box-width-field"),
-      { label: "WIDTH", unit: "PX", value: box.width, min: 1, max: 1080, span: 4,
-        onChange: async (v) => {
-          const { width, height } = applyAspectLock(box, { width: v, height: box.height });
-          box.width = width; box.height = height;
-          await saveProject(); renderTimeline(); renderDetail(box);
-          ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
-        } });
-    UI.numberField(document.getElementById("image-box-height-field"),
-      { label: "HEIGHT", unit: "PX", value: box.height, min: 1, max: 1920, span: 4,
-        onChange: async (v) => {
-          const { width, height } = applyAspectLock(box, { width: box.width, height: v });
-          box.width = width; box.height = height;
-          await saveProject(); renderTimeline(); renderDetail(box);
-          ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
-        } });
+    BoxSizePositionPanel.render(document.getElementById("image-box-size-position"), box, {
+      onChange: async () => {
+        await saveProject();
+        renderTimeline();
+        ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+      },
+      getNaturalSize: () => probeImageAspect(box.file_path),
+    });
 
     document.getElementById("image-box-delete").onclick = async () => {
       project.image_boxes = project.image_boxes.filter((b) => b.id !== box.id);
