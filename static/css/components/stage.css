@@ -70,6 +70,7 @@
 #stage[data-tool="select"] .text-block { cursor: default; }
 #stage[data-tool="text"] .text-block { cursor: text; }
 #stage[data-tool] .text-block[contenteditable="true"] { cursor: text; }
+#stage[data-tool="shape"] { cursor: crosshair; }
 
 .text-block--align-left { transform: translate(0, 0); }
 .text-block--align-center { transform: translate(-50%, 0); }

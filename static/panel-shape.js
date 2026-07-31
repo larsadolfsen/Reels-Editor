@@ -3,7 +3,9 @@
 // delete. Detail view split into Box/Style/Time tab panes via UI.tabBar (Box default), with
 // Delete as an always-visible footer. Exposes window.ShapePanel.render(selectedId) and
 // window.ShapePanel.createShape() (pushes a new shape into project.shapes and returns it, no
-// save/render — caller's responsibility, same contract as ImageBoxPanel.createImageBox). One
+// save/render — caller's responsibility, same contract as ImageBoxPanel.createImageBox) plus
+// window.ShapePanel.createShapeAt(rect) (same contract, overriding x/y/width/height from `rect` —
+// used by stage-shape-draw.js's click-drag creation; createShape() is createShapeAt({})). One
 // shape selected at a time; multiple shapes live in project.shapes (see app/models.py's
 // ShapeLayer). No add-from-media picker (a shape isn't sourced from media) and no Mask tab
 // (corner radius already covers its shaping need) — mirrors panel-image-box.js otherwise.
@@ -33,10 +35,14 @@ window.ShapePanel = window.ShapePanel || {};
   UI.tabBar(document.getElementById("shape-tab-bar"), SHAPE_TABS, activeShapeTab, showShapeTab);
   showShapeTab(activeShapeTab);
 
-  function createShape() {
-    const shape = { id: crypto.randomUUID().replaceAll("-", ""), ...ShapeDefaults.centeredShape() };
+  function createShapeAt(rect) {
+    const shape = { id: crypto.randomUUID().replaceAll("-", ""), ...ShapeDefaults.centeredShape(), ...rect };
     project.shapes.push(shape);
     return shape;
+  }
+
+  function createShape() {
+    return createShapeAt({});
   }
 
   function repaintStage() {
@@ -150,4 +156,5 @@ window.ShapePanel = window.ShapePanel || {};
 
   window.ShapePanel.render = render;
   window.ShapePanel.createShape = createShape;
+  window.ShapePanel.createShapeAt = createShapeAt;
 })();
