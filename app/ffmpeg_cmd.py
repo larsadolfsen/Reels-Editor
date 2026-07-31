@@ -22,6 +22,10 @@
 # and alphamerge writes it as the box stream's alpha immediately before the existing overlay — for a
 # video box, before the setpts timeline offset so both alphamerge inputs start at t=0. No "mask_path"
 # on any band produces a byte-identical command to the pre-mask baseline.
+# Banded export also supports "shape" bands: a `-loop 1 -t <duration>` looped PNG input
+# (pre-rendered by app/shape_render.py, exactly the shape's own width x height with its
+# fill/opacity baked into the PNG's alpha channel) is overlaid directly — no scale or
+# alphamerge step, since the PNG already carries everything the compositing needs.
 from app.models import Project
 from app.timeline import ordered, sequence_duration
 
@@ -150,7 +154,7 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
             fc += (f";{current}[box{step}]overlay=x={v.x}:y={v.y}:"
                    f"enable='between(t\\,{_num(v.start)}\\,{_num(end)})'{out_label}")
             current = out_label
-        else:  # "image_box"
+        elif band["kind"] == "image_box":
             b = band["image_box"]
             cmd += ["-loop", "1", "-t", _num(b.duration), "-i", b.file_path]
             box_input = next_input_index
@@ -172,6 +176,20 @@ def build_export_cmd(p: Project, out_path: str, ass_path: str | None = None, ban
                 fc += f";[{box_input}:v]scale={b.width}:{b.height}[box{step}]"
             fc += (f";{current}[box{step}]overlay=x={b.x}:y={b.y}:"
                    f"enable='between(t\\,{_num(b.start)}\\,{_num(end)})'{out_label}")
+            current = out_label
+        else:  # "shape"
+            s = band["shape"]
+            png_path = band["png_path"]
+            cmd += ["-loop", "1", "-t", _num(s.duration), "-i", png_path]
+            box_input = next_input_index
+            next_input_index += 1
+            end = s.start + s.duration
+            out_label = f"[ov{step}]"
+            # The PNG already carries the shape's fill/opacity baked into its own alpha channel
+            # (app/shape_render.py) and is already exactly s.width x s.height, so — unlike
+            # video_box/image_box — no scale or alphamerge step is needed before the overlay.
+            fc += (f";{current}[{box_input}:v]overlay=x={s.x}:y={s.y}:"
+                   f"enable='between(t\\,{_num(s.start)}\\,{_num(end)})'{out_label}")
             current = out_label
 
     if caption_ass_path:
