@@ -22,12 +22,18 @@ def _fall_back_to_cpu():
     _model_kwargs = {"device": "cpu", "compute_type": "int8"}
     _model = None
 
-def _run_transcribe(path: str, language: str | None) -> list[CaptionWord]:
-    segments, _info = _get_model().transcribe(path, word_timestamps=True, language=language or None)
-    return words_from_segments(segments)
+def _run_transcribe(path: str, language: str | None, on_progress=None) -> list[CaptionWord]:
+    segments, info = _get_model().transcribe(path, word_timestamps=True, language=language or None)
+    collected = []
+    for seg in segments:
+        collected.append(seg)
+        if on_progress is not None and info.duration:
+            on_progress(min(100.0, seg.end / info.duration * 100))
+    return words_from_segments(collected)
 
-def transcribe_file(path: str, language: str | None = None) -> list[CaptionWord]:
-    """language is an ISO 639-1 code (e.g. "da"); None or "" auto-detects.
+def transcribe_file(path: str, language: str | None = None, on_progress=None) -> list[CaptionWord]:
+    """language is an ISO 639-1 code (e.g. "da"); None or "" auto-detects. on_progress, when given,
+    is called with a 0-100 percent as each segment is transcribed (see _run_transcribe).
 
     A CUDA device can be present (so WhisperModel(...) constructs fine) without its CUDA
     Toolkit runtime libraries (cuBLAS) actually being installed — that failure only surfaces
@@ -35,7 +41,7 @@ def transcribe_file(path: str, language: str | None = None) -> list[CaptionWord]
     once on CPU rather than failing every transcription outright.
     """
     try:
-        return _run_transcribe(path, language)
+        return _run_transcribe(path, language, on_progress)
     except RuntimeError:
         _fall_back_to_cpu()
-        return _run_transcribe(path, language)
+        return _run_transcribe(path, language, on_progress)

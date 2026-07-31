@@ -153,32 +153,43 @@ def delete_preset(preset_id: str) -> None:
     store.delete_preset(preset_id, DATA_DIR)
 
 @app.post("/api/projects/{pid}/transcribe")
-def transcribe_project(pid: str) -> Project:
+def transcribe_project(pid: str) -> dict:
     p = store.load_project(pid, DATA_DIR)
     out_dir = DATA_DIR / "exports"
     out_dir.mkdir(parents=True, exist_ok=True)
     wav_path = out_dir / f"{p.id[:8]}-audio.wav"
-
-    media.run_export(ffmpeg_cmd.build_audio_cmd(p, str(wav_path)))
     language = p.captions.language if p.captions else ""
-    try:
-        words = transcribe.transcribe_file(str(wav_path), language=language)
-    except ImportError:
-        raise HTTPException(503, "Transcription not available on this deployment")
-    except RuntimeError as e:
-        raise HTTPException(503, f"Transcription failed: {e}")
 
-    if p.captions:
-        p.captions.words = words
-    else:
-        preset = TextPreset(name="Caption", size_px=72, x=540, y=1520, align="center",
-                             highlight_color="#FFD400", highlight_mode="current_word",
-                             box_width_mode="fixed", box_height_mode="fixed", box_width=900, box_height=350)
-        p.text_presets[preset.id] = preset
-        p.captions = CaptionTrack(words=words, preset_id=preset.id)
+    def run(on_progress):
+        media.run_export(ffmpeg_cmd.build_audio_cmd(p, str(wav_path)))
+        try:
+            words = transcribe.transcribe_file(str(wav_path), language=language, on_progress=on_progress)
+        except ImportError:
+            raise RuntimeError("Transcription not available on this deployment")
+        except RuntimeError as e:
+            raise RuntimeError(f"Transcription failed: {e}")
 
-    store.save_project(p, DATA_DIR)
-    return p
+        fresh = store.load_project(pid, DATA_DIR)
+        if fresh.captions:
+            fresh.captions.words = words
+        else:
+            preset = TextPreset(name="Caption", size_px=72, x=540, y=1520, align="center",
+                                 highlight_color="#FFD400", highlight_mode="current_word",
+                                 box_width_mode="fixed", box_height_mode="fixed", box_width=900, box_height=350)
+            fresh.text_presets[preset.id] = preset
+            fresh.captions = CaptionTrack(words=words, preset_id=preset.id)
+        store.save_project(fresh, DATA_DIR)
+        return pid
+
+    job_id = export_jobs.start_job(run)
+    return {"job_id": job_id}
+
+@app.get("/api/transcribe-jobs/{job_id}")
+def transcribe_status(job_id: str) -> dict:
+    job = export_jobs.get_job(job_id)
+    if job is None:
+        raise HTTPException(404, f"unknown transcribe job: {job_id}")
+    return job
 
 @app.post("/api/projects/{pid}/auto-slice/detect")
 def detect_auto_slice(pid: str) -> dict:
