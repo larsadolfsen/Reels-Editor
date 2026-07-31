@@ -341,6 +341,16 @@
   cursor: grabbing;
 }
 
+/* Drag-to-reposition-in-time (static/timeline-overlay-time-drag.js): same visual treatment as
+   the VIDEO row's clip drag, applied to overlay lanes (TEXT/IMAGE BOX/VIDEO BOX). No
+   snap-to-boundary indicator here — this drag doesn't snap. */
+.timeline-row[data-row="overlays"] .timeline-block.dragging {
+  z-index: 5;
+  opacity: 0.85;
+  box-shadow: var(--shadow-chip);
+  cursor: grabbing;
+}
+
 .overlay-lane-handle {
   display: inline-flex;
   align-items: center;
