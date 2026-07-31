@@ -446,3 +446,21 @@ def test_text_preset_old_saved_json_without_spotlight_fields_loads_with_defaults
     assert loaded.spotlight_highlight is False
     assert loaded.spotlight_highlight_color == "#FFD400"
     assert loaded.spotlight_highlight_border_radius == 4
+
+def test_shape_layer_defaults():
+    from app.models import ShapeLayer
+    s = ShapeLayer(x=100, y=200)
+    assert s.start == 0.0
+    assert s.duration == 3.0
+    assert s.width == 300.0
+    assert s.height == 300.0
+    assert s.fill_color == "#4C6FFF"
+    assert s.opacity == 1.0
+    assert s.corner_radius == 0
+    assert s.z_index == -1
+    assert s.id  # non-empty, generated
+
+def test_project_shapes_defaults_empty():
+    from app.models import Project
+    p = Project(name="r")
+    assert p.shapes == []
