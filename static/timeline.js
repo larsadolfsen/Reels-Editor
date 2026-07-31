@@ -263,6 +263,8 @@ window.Timeline = (() => {
   // vertical grouping/order changed. #label-overlays gets one "TEXT"/"VIDEO BOX"/"IMAGE BOX"
   // label per lane, height-matched to its lane. Reordering (drag handle) is wired in
   // static/timeline-overlay-layer-drag.js via OverlayLayers.mergedEntries/renumber.
+  // A lane with entry.item.locked shows a "lock" icon instead of "grip-vertical" and is not
+  // draggable — see static/timeline-overlay-layer-drag.js for the click-to-toggle/drag-skip logic.
   function renderOverlaysRow(project, px, selected, onSelect) {
     const entries = OverlayLayers.mergedEntries(project);
     const rowEl = document.querySelector('.timeline-row[data-row="overlays"]');
@@ -275,9 +277,10 @@ window.Timeline = (() => {
 
     for (const entry of entries) {
       const laneLabel = document.createElement("div");
-      laneLabel.className = "row-label overlay-lane-label";
+      laneLabel.className = "row-label overlay-lane-label" + (entry.item.locked ? " locked" : "");
       laneLabel.dataset.entryId = entry.id;
-      laneLabel.innerHTML = `<span class="overlay-lane-handle">${UI.icon("grip-vertical", { size: 14 })}</span>`;
+      const handleIcon = entry.item.locked ? "lock" : "grip-vertical";
+      laneLabel.innerHTML = `<span class="overlay-lane-handle">${UI.icon(handleIcon, { size: 14 })}</span>`;
       const text = document.createElement("span");
       text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO BOX" : "IMAGE BOX";
       laneLabel.appendChild(text);

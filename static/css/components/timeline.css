@@ -328,6 +328,10 @@
   margin-right: var(--space-1);
 }
 .overlay-lane-label:hover .overlay-lane-handle { opacity: 1; }
+.overlay-lane-label.locked .overlay-lane-handle {
+  opacity: 1;
+  cursor: pointer;
+}
 .overlay-lane-label.dragging {
   z-index: 5;
   opacity: 0.85;
