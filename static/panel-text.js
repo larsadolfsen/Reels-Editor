@@ -269,6 +269,8 @@ function showTextTab(value) {
 UI.tabBar(document.getElementById("text-tab-bar"), TEXT_TABS, activeTextTab, showTextTab);
 showTextTab(activeTextTab);
 
+UI.contextPanelHeader(document.getElementById("text-header"), { icon: UI.icon("type", { size: 18 }), label: "Text" });
+
 // The shared style sections are built ONCE, here, and only re-rendered afterwards — never
 // rebuilt. The host appends every drill-down subpage as a new child of #panel-text itself,
 // the same place the remaining per-control subpanels (#panel-text-background, etc.) already

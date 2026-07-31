@@ -7,6 +7,8 @@
 window.AudioPanel = window.AudioPanel || {};
 
 (() => {
+  const AUDIO_HEADER_ICON = UI.icon("music", { size: 18 });
+
   async function importMusicFile() {
     const path = await Api.pickFile("audio");
     if (!path) return null;
@@ -51,14 +53,15 @@ window.AudioPanel = window.AudioPanel || {};
 
   function render() {
     const music = project.music;
+    const media = music ? project.media_library.find((m) => m.id === music.media_id) : null;
+    UI.contextPanelHeader(document.getElementById("audio-header"), {
+      icon: AUDIO_HEADER_ICON,
+      label: music ? ((media && (media.name || media.file_path.split(/[\\/]/).pop())) || "Unknown file") : "Audio",
+    });
     document.getElementById("audio-empty-state").hidden = !!music;
     document.getElementById("audio-detail").hidden = !music;
     document.getElementById("audio-add-music").onclick = addMusic;
     if (!music) return;
-
-    const media = project.media_library.find((m) => m.id === music.media_id);
-    document.getElementById("audio-music-name").textContent =
-      (media && (media.name || media.file_path.split(/[\\/]/).pop())) || "Unknown file";
 
     UI.numberField(document.getElementById("audio-volume-field"),
       { label: "VOLUME", unit: "%", value: Math.round(music.volume * 100), step: 5, min: 0, max: 200, decimals: 0, span: 6,

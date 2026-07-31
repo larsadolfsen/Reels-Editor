@@ -10,6 +10,7 @@
 window.ImageBoxPanel = window.ImageBoxPanel || {};
 
 (() => {
+  const IMAGE_BOX_HEADER_ICON = UI.icon("image", { size: 18 });
   const IMAGE_BOX_TAB_ICON_BOX = UI.icon("square-dashed", { size: 18 });
   const IMAGE_BOX_TAB_ICON_TIME = UI.icon("timer", { size: 18 });
   const IMAGE_BOX_TAB_ICON_MASK = UI.icon("columns-2", { size: 18 });
@@ -132,8 +133,6 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
   }
 
   function renderDetail(box) {
-    document.getElementById("image-box-name").textContent = box.file_path.split(/[\\/]/).pop();
-
     UI.numberField(document.getElementById("image-box-start-field"),
       { label: "START", unit: "SEC", value: box.start, step: 0.1, min: 0, span: 4,
         onChange: async (v) => { box.start = v; await saveProject(); renderTimeline(); } });
@@ -211,6 +210,10 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
   function render(selectedId) {
     document.getElementById("image-box-add").onclick = renderPicker;
     const box = selectedId ? project.image_boxes.find((b) => b.id === selectedId) : null;
+    UI.contextPanelHeader(document.getElementById("image-box-header"), {
+      icon: IMAGE_BOX_HEADER_ICON,
+      label: box ? box.file_path.split(/[\\/]/).pop() : "Image",
+    });
     document.getElementById("image-box-add-group").hidden = !!box;
     document.getElementById("image-box-picker").hidden = !!box;
     document.getElementById("image-box-detail").hidden = !box;

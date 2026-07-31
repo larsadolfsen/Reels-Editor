@@ -127,7 +127,7 @@
       </button>
 
       <div id="panel-files" class="context-panel">
-        <div id="panel-files-header" class="context-panel-header text-eyebrow">FILES</div>
+        <div id="panel-files-header" class="context-panel-header"></div>
         <div id="files-type-tabs"></div>
         <div id="panel-files-add">
           <button id="add-clip" data-button data-button-intent="dashed" data-button-icon="plus" hidden>IMPORT MEDIA</button>
@@ -137,11 +137,7 @@
 
       <div id="panel-video" class="context-panel" hidden>
         <div id="video-main" class="context-panel-body">
-          <div class="context-panel-header text-eyebrow">VIDEO</div>
-
-          <div class="style-group">
-            <div id="video-name" class="context-panel-name col-8"></div>
-          </div>
+          <div id="video-header" class="context-panel-header"></div>
 
           <div id="video-tab-bar"></div>
 
@@ -252,7 +248,7 @@
 
       <div id="panel-captions" class="context-panel" hidden>
         <div id="panel-captions-main">
-          <div class="context-panel-header text-eyebrow">CAPTIONS</div>
+          <div id="captions-header" class="context-panel-header"></div>
 
           <div id="caption-tab-bar"></div>
 
@@ -333,7 +329,7 @@
       </div>
 
       <div id="panel-settings" class="context-panel" hidden>
-        <div class="context-panel-header text-eyebrow">SETTINGS</div>
+        <div id="settings-header" class="context-panel-header"></div>
 
         <div class="section-label-spacer text-eyebrow">APPEARANCE</div>
         <div class="style-group">
@@ -351,7 +347,7 @@
       </div>
 
       <div id="panel-export" class="context-panel" hidden>
-        <div class="context-panel-header text-eyebrow">EXPORT</div>
+        <div id="export-header" class="context-panel-header"></div>
 
         <div class="section-label-spacer text-eyebrow">FILENAME</div>
         <div class="style-group">
@@ -373,7 +369,7 @@
       </div>
 
       <div id="panel-projects" class="context-panel" hidden>
-        <div class="context-panel-header text-eyebrow">PROJECTS</div>
+        <div id="projects-header" class="context-panel-header"></div>
         <div class="style-group">
           <button id="project-create" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>NEW PROJECT</button>
         </div>
@@ -381,7 +377,7 @@
       </div>
 
       <div id="panel-video-box" class="context-panel" hidden>
-        <div class="context-panel-header text-eyebrow">VIDEO BOX</div>
+        <div id="video-box-header" class="context-panel-header"></div>
         <div id="video-box-add-group" class="style-group">
           <button id="video-box-add" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>ADD VIDEO BOX</button>
         </div>
@@ -389,8 +385,6 @@
           <ul id="video-box-picker-list" class="font-list scroll-list"></ul>
         </div>
         <div id="video-box-detail" class="context-panel-body" hidden>
-          <div id="video-box-name" class="context-panel-name"></div>
-
           <div id="video-box-tab-bar"></div>
 
           <div id="video-box-box-body">
@@ -445,7 +439,7 @@
       </div>
 
       <div id="panel-image-box" class="context-panel" hidden>
-        <div class="context-panel-header text-eyebrow">IMAGE BOX</div>
+        <div id="image-box-header" class="context-panel-header"></div>
         <div id="image-box-add-group" class="style-group">
           <button id="image-box-add" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>ADD IMAGE BOX</button>
         </div>
@@ -453,8 +447,6 @@
           <ul id="image-box-picker-list" class="font-list scroll-list"></ul>
         </div>
         <div id="image-box-detail" class="context-panel-body" hidden>
-          <div id="image-box-name" class="context-panel-name"></div>
-
           <div id="image-box-tab-bar"></div>
 
           <div id="image-box-box-body">
@@ -504,13 +496,11 @@
       </div>
 
       <div id="panel-audio" class="context-panel" hidden>
-        <div class="context-panel-header text-eyebrow">AUDIO</div>
+        <div id="audio-header" class="context-panel-header"></div>
         <div id="audio-empty-state" class="style-group">
           <button id="audio-add-music" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>ADD MUSIC</button>
         </div>
         <div id="audio-detail" class="context-panel-body" hidden>
-          <div id="audio-music-name" class="context-panel-name"></div>
-
           <div class="section-label-spacer text-eyebrow">VOLUME</div>
           <div class="style-group">
             <div class="style-row">
@@ -536,7 +526,7 @@
 
       <div id="panel-text" class="context-panel" hidden>
         <div id="panel-text-main" class="context-panel-body">
-          <div class="context-panel-header text-eyebrow">TEXT</div>
+          <div id="text-header" class="context-panel-header"></div>
 
         <div id="text-empty-state" class="style-group" hidden>
           <p class="context-panel-name col-8">No text yet.</p>
@@ -637,6 +627,7 @@
 <script src="/static/settings-row-value.js"></script>
 <script src="/static/ui-accordion-section.js"></script>
 <script src="/static/ui-sub-panel-header.js"></script>
+<script src="/static/ui-context-panel-header.js"></script>
 <script src="/static/ui-divider.js"></script>
 <script src="/static/ui-resize-handles.js"></script>
 <script src="/static/ui-video-box-drag.js"></script>
@@ -766,6 +757,7 @@
 <script src="/static/audio-panel-language.js"></script>
 <script src="/static/audio-panel-auto-caption.js"></script>
 <script src="/static/panel-export.js"></script>
+<script src="/static/panel-settings.js"></script>
 <script src="/static/export-progress.js"></script>
 <script src="/static/preview-text.js"></script>
 <script src="/static/preview-captions.js"></script>
