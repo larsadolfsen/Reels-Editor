@@ -287,7 +287,7 @@ window.Timeline = (() => {
       const handleTitle = entry.item.locked ? "Locked — click to unlock" : "Lock layer";
       laneLabel.innerHTML = `<span class="overlay-lane-handle" title="${handleTitle}">${UI.icon(handleIcon, { size: 14 })}</span>`;
       const text = document.createElement("span");
-      text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO BOX" : entry.kind === "image_box" ? "IMAGE" : "SHAPE";
+      text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO" : entry.kind === "image_box" ? "IMAGE" : "SHAPE";
       laneLabel.appendChild(text);
       labelContainer.appendChild(laneLabel);
 
