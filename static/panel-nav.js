@@ -153,13 +153,6 @@ function openImageBoxPanel() {
   renderTimeline();
 }
 
-function openShapePanel() {
-  selected = { type: "shape", item: null };
-  showPanel("shape");
-  ShapePanel.render(null);
-  renderTimeline();
-}
-
 function openAudioPanel() {
   selected = { type: "audio" };
   showPanel("audio");
@@ -222,20 +215,34 @@ function reRenderAfterRestore() {
   }
 }
 
-const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, "image-box": openImageBoxPanel, shape: openShapePanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel };
+const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, "image-box": openImageBoxPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel };
 
-// TEXT arms the text tool (window.ToolMode = "text", replacing the top toolbar's Text button
-// removed 2026-07-30, remove-text-tool-top-bar) instead of opening its panel or inserting
-// directly: the stage cursor becomes a text cursor, a click on an existing .text-block enters
-// edit mode (ui-text-interaction.js), and a click elsewhere inserts a new block at that point
-// (stage-click-router.js), which reverts ToolMode to "select" once the insert lands. The other
-// rail buttons open their panel (CAPTIONS's openCaptionsPanel already create-or-opens the track).
-// Opening an *existing* text block still happens via a timeline/stage click (onTimelineSelect).
-// Split into two iconRail calls (top/bottom, see PANEL_NAV_TOP_ITEMS/PANEL_NAV_BOTTOM_ITEMS) so
-// #rail-tool's Select button can sit between them; both share one active value via navSetActive.
+// TEXT and SHAPE arm their stage tools (window.ToolMode = "text"/"shape") instead of opening a
+// panel or inserting directly: the stage cursor changes (stage.css), a click/drag on the stage
+// does the tool's thing (stage-click-router.js for Text, stage-shape-draw.js for Shape), and each
+// reverts ToolMode to "select" once its one-shot action lands. The other rail buttons open their
+// panel (CAPTIONS's openCaptionsPanel already create-or-opens the track). Opening an *existing*
+// text block or shape still happens via a timeline/stage click (onTimelineSelect). Split into two
+// iconRail calls (top/bottom, see PANEL_NAV_TOP_ITEMS/PANEL_NAV_BOTTOM_ITEMS) so #rail-tool's
+// Select button can sit between them; both share one active value via navSetActive.
+//
+// armedTool tracks which of TEXT/SHAPE is the currently-highlighted tool (or null). It exists so
+// the highlight can be cleared correctly when ToolMode reverts to "select" from ANY source — not
+// just a rail click, but also stage-click-router.js's/stage-shape-draw.js's own auto-revert after
+// a one-shot insert/draw completes. Before this, only a click on another nav item could clear a
+// stale TEXT/SHAPE highlight (the Select rail button's own highlight already synced correctly via
+// ui-rail-tool-button.js's ToolMode.onChange subscription — this brings TEXT/SHAPE in line with
+// it, so Select/Text/Shape are a genuinely mutually-exclusive set under any transition).
+let armedTool = null; // "text" | "shape" | null
 function navOnSelect(value) {
+  if (value === "text" || value === "shape") {
+    armedTool = value;
+    navSetActive(value);
+    ToolMode.set(value);
+    return;
+  }
+  armedTool = null;
   navSetActive(value);
-  if (value === "text") { ToolMode.set("text"); return; }
   PANEL_NAV_HANDLERS[value]();
 }
 const setNavTopActive = UI.iconRail(document.getElementById("panel-nav-top"), PANEL_NAV_TOP_ITEMS, "files", navOnSelect);
@@ -244,7 +251,14 @@ function navSetActive(value) {
   setNavTopActive(value);
   setNavBottomActive(value);
 }
+ToolMode.onChange((mode) => {
+  if (mode === "select" && armedTool) {
+    armedTool = null;
+    navSetActive(null);
+  }
+});
 
 // Select tool-mode button, sits between FILES and TEXT (selector-tool-rail-placement feature).
-// Text has no counterpart here — it's armed via the TEXT entry above (navOnSelect).
+// Text/Shape have no counterpart here — they're armed via the TEXT/SHAPE entries above
+// (navOnSelect).
 UI.railToolButton(document.getElementById("rail-tool"));
