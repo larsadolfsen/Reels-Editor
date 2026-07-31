@@ -3,7 +3,8 @@
 // tab-bar/divider wiring (UI.tabBar; Design tab is one body (`#caption-font-body`)).
 // Plain globals shared with caption-panel-*.js; reaches into editor.js's
 // `project`/`saveProject`/`renderTimeline` globals. Transcription itself (the Auto-caption button
-// and the Language row) lives in the AUDIO panel — see static/audio-panel-auto-caption.js.
+// and the Language row) lives in this panel's own Auto tab as of 2026-07-31 — see
+// static/caption-panel-auto-caption.js/caption-panel-language.js.
 
 function defaultCaptionPreset(id) {
   return {
@@ -89,6 +90,7 @@ async function renderCaptionPanel() {
   captionStyleTab.render();
   await captionDesignTab.render();
   renderCaptionBoxTab();
+  CaptionPanel.renderLanguage();
   CaptionPanel.renderFillerWords();
   CaptionPanel.renderWords();
 
@@ -99,11 +101,13 @@ const CAPTION_TAB_ICON_STYLE = UI.icon("paintbrush", { size: 18 });
 const CAPTION_TAB_ICON_DESIGN = UI.icon("pencil", { size: 18 });
 const CAPTION_TAB_ICON_BOX = UI.icon("square-dashed", { size: 18 });
 const CAPTION_TAB_ICON_CLOSED_CAPTION = UI.icon("closed-captioning", { size: 18 });
-const CAPTION_TAB_ICON_FILLER = UI.icon("slice", { size: 18 });
+// Same icon as VIDEO panel's own Auto tab (static/panel-video.js's VIDEO_TAB_ICON_AUTO), for
+// visual consistency between the two "Auto" tabs across panels.
+const CAPTION_TAB_ICON_AUTO = UI.icon("sparkles", { size: 18 });
 
 const CAPTION_TABS = [
   { value: "closed-caption", icon: CAPTION_TAB_ICON_CLOSED_CAPTION, label: "Closed captions" },
-  { value: "filler", icon: CAPTION_TAB_ICON_FILLER, label: "Filler words" },
+  { value: "auto", icon: CAPTION_TAB_ICON_AUTO, label: "Auto" },
   { value: "style", icon: CAPTION_TAB_ICON_STYLE, label: "Style" },
   { value: "design", icon: CAPTION_TAB_ICON_DESIGN, label: "Design" },
   { value: "box", icon: CAPTION_TAB_ICON_BOX, label: "Box" },
@@ -114,7 +118,7 @@ const captionTabPanes = {
   design: [document.getElementById("caption-font-body")],
   box: [document.getElementById("caption-box-body")],
   "closed-caption": [document.getElementById("caption-words-body")],
-  filler: [document.getElementById("caption-filler-body")],
+  auto: [document.getElementById("caption-auto-body")],
 };
 let activeCaptionTab = "closed-caption";
 function showCaptionTab(value) {

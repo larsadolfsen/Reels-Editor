@@ -1,9 +1,8 @@
 // VIDEO context-panel section: trim/order/fill-mode/speed/delete for the selected clip, split
-// into Design (FILL + SPEED), Time (TRIM + ORDER), and Auto (AUTO CAPTION + AUTO SILENCE, added
-// 2026-07-30 replacing the standalone AUTO rail entry — content unchanged, just relocated and
-// rendered via panel-audio-track.js's AudioTrackPanel.render()) tab panes via UI.tabBar (Design
-// default). Exposes window.VideoPanel.render()/select()/deleteClip()/moveClipTo(), plus the shared
-// clampTrim() helper (also used by panel-video-box.js).
+// into Design (FILL + SPEED), Time (TRIM + ORDER), and Auto (AUTO SILENCE only as of 2026-07-31 —
+// AUTO CAPTION moved to the CAPTIONS panel's own Auto tab, see panel-audio-track.js) tab panes via
+// UI.tabBar (Design default). Exposes window.VideoPanel.render()/select()/deleteClip()/moveClipTo(),
+// plus the shared clampTrim() helper (also used by panel-video-box.js).
 // Note: there is no duplicate-clip feature — it was removed because duplicateClip() didn't
 // shift/sync captions the way delete/move/insert do (static/caption-clip-sync.js).
 window.VideoPanel = window.VideoPanel || {};

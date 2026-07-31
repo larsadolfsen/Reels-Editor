@@ -1,21 +1,21 @@
-// VIDEO panel's Auto tab: the language passed to faster-whisper when transcribing
+// CAPTIONS panel's Auto tab: the language passed to faster-whisper when transcribing
 // (CaptionTrack.language, "" = auto-detect). Settings-row + drill-down subpanel, same pattern as
-// caption-panel-font-family.js. Exposes window.AudioTrackPanel.renderLanguage(). Reaches into
+// caption-panel-background.js. Exposes window.CaptionPanel.renderLanguage(). Reaches into
 // editor.js's project/saveProject/ensureCaptionTrack/AVAILABLE_LANGUAGES globals.
-window.AudioTrackPanel = window.AudioTrackPanel || {};
+window.CaptionPanel = window.CaptionPanel || {};
 
 (() => {
   let languageRowSetValue = null;
 
   function openLanguagePanel() {
     renderLanguageList();
-    document.getElementById("video-main").hidden = true;
-    document.getElementById("video-audio-language").hidden = false;
+    document.getElementById("panel-captions-main").hidden = true;
+    document.getElementById("panel-captions-language").hidden = false;
   }
 
   function closeLanguagePanel() {
-    document.getElementById("video-audio-language").hidden = true;
-    document.getElementById("video-main").hidden = false;
+    document.getElementById("panel-captions-language").hidden = true;
+    document.getElementById("panel-captions-main").hidden = false;
   }
 
   function labelFor(code) {
@@ -32,7 +32,7 @@ window.AudioTrackPanel = window.AudioTrackPanel || {};
   }
 
   function renderLanguageList() {
-    const listEl = document.getElementById("audio-language-list");
+    const listEl = document.getElementById("caption-language-list");
     listEl.innerHTML = "";
     const track = ensureCaptionTrack();
     AVAILABLE_LANGUAGES.forEach((lang) => {
@@ -65,7 +65,7 @@ window.AudioTrackPanel = window.AudioTrackPanel || {};
     });
   }
 
-  UI.subPanelHeader(document.getElementById("audio-language-subpanel-header"), { title: "Language", onBack: closeLanguagePanel });
+  UI.subPanelHeader(document.getElementById("caption-language-subpanel-header"), { title: "Language", onBack: closeLanguagePanel });
 
   function renderLanguage() {
     const track = ensureCaptionTrack();
@@ -73,12 +73,12 @@ window.AudioTrackPanel = window.AudioTrackPanel || {};
     if (languageRowSetValue) {
       languageRowSetValue(label);
     } else {
-      languageRowSetValue = UI.settingsRow(document.getElementById("audio-language-row"), {
+      languageRowSetValue = UI.settingsRow(document.getElementById("caption-language-row"), {
         label: "Language", value: label,
         onClick: openLanguagePanel,
       });
     }
   }
 
-  window.AudioTrackPanel.renderLanguage = renderLanguage;
+  window.CaptionPanel.renderLanguage = renderLanguage;
 })();
