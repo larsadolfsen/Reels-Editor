@@ -45,7 +45,7 @@ Body: {"paths": ["C:/...", ...]}
 
 For each path, in order:
 1. Skip if any existing `MediaItem.source_path` already equals this path (dedup — mirrors today's client-side `file_path`-based check, now keyed on the original path since `file_path` no longer is one).
-2. Otherwise: generate a new id, copy the file via `copy_into_media_dir`, probe it (`probe_duration`/`has_audio_stream`, skipped for images exactly as `/api/probe` does today), determine `kind` via `is_image_path`, and build the `MediaItem` (`file_path` = the copy's path, `source_path` = the original path).
+2. Otherwise: generate a new id, copy the file via `copy_into_media_dir`, probe it (`probe_duration`/`has_audio_stream`, skipped for images exactly as `/api/probe` does today), determine `kind` via `is_image_path`, and build the `MediaItem` (`file_path` = the copy's path, `source_path` = the original path, **`name` = the original path's basename** — `MediaItem.display_name` falls back to `file_path`'s basename when `name` is empty, and `file_path` is no longer the meaningful original filename, so `name` must be set explicitly or the FILES panel would start showing opaque `{id}.ext` names instead of the user's real filenames).
 
 Saves the project once after processing all paths. Returns:
 
