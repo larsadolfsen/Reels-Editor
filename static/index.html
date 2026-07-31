@@ -34,6 +34,7 @@
 <link rel="stylesheet" href="/static/css/components/mask-line-guide.css">
 <link rel="stylesheet" href="/static/css/components/auto-slice-panel.css">
 <link rel="stylesheet" href="/static/css/components/export-progress.css">
+<link rel="stylesheet" href="/static/css/components/tooltip.css">
 </head><body>
 <div id="app">
   <main>
@@ -56,16 +57,16 @@
           <div id="safe-zones" hidden></div>
         </div>
         <div id="transport">
-          <button id="restart" data-button data-button-size="sm" data-button-icon="restart" title="Restart from beginning" hidden></button>
-          <button id="step-back" data-button data-button-size="sm" data-button-icon="step-back" title="Step back 0.1s" hidden></button>
+          <button id="restart" data-button data-button-size="sm" data-button-icon="restart" title="Restart from beginning" data-tooltip-shortcut="&#8595;" hidden></button>
+          <button id="step-back" data-button data-button-size="sm" data-button-icon="step-back" title="Step back 0.1s" data-tooltip-shortcut="&#8592;" hidden></button>
           <!-- Not a [data-button] hydration site: needs BOTH icons present at once (one hidden
                via .icon-hidden, toggled by preview.js), which UI.button's single-icon option
                doesn't support — mirrors the existing #video-mute-btn pattern. -->
-          <button id="play-pause" class="button button-sm button-neutral" type="button" title="Play/Pause">
+          <button id="play-pause" class="button button-sm button-neutral" type="button" title="Play/Pause" data-tooltip-shortcut="&#8593;">
             <span class="icon-play" data-icon="play" data-icon-size="14"></span>
             <span class="icon-pause icon-hidden" data-icon="pause" data-icon-size="14"></span>
           </button>
-          <button id="step-forward" data-button data-button-size="sm" data-button-icon="step-forward" title="Step forward 0.1s" hidden></button>
+          <button id="step-forward" data-button data-button-size="sm" data-button-icon="step-forward" title="Step forward 0.1s" data-tooltip-shortcut="&#8594;" hidden></button>
           <span id="time">0.0</span>
         </div>
       </section>
@@ -581,6 +582,7 @@
 </div>
 <div id="project-picker" hidden></div>
 <script src="/static/ui-icon.js"></script>
+<script src="/static/ui-tooltip.js"></script>
 <script>
   document.querySelectorAll("[data-icon]").forEach((el) => {
     const size = el.dataset.iconSize ? Number(el.dataset.iconSize) : undefined;
@@ -620,6 +622,9 @@
   // existing runtime contract) never removes — copying the attribute directly instead relies
   // solely on button.css's [aria-pressed="true"] selector for both the initial and every later
   // state, so a pressed-at-hydration button can still be un-pressed correctly afterward.
+  // data-tooltip-shortcut pass-through added 2026-07-31 (tooltip design refresh): carries a
+  // placeholder's optional keyboard-shortcut label onto the built button, for ui-tooltip.js's
+  // MutationObserver to pick up once it rebinds the button's title into a styled tooltip.
   document.querySelectorAll("[data-button]").forEach((buttonEl) => {
     const buttonIntent = buttonEl.dataset.buttonIntent || "neutral";
     const buttonSize = buttonEl.dataset.buttonSize || "md";
@@ -634,6 +639,7 @@
     });
     builtBtn.id = buttonEl.id;
     if (buttonEl.title) builtBtn.title = buttonEl.title;
+    if (buttonEl.dataset.tooltipShortcut) builtBtn.dataset.tooltipShortcut = buttonEl.dataset.tooltipShortcut;
     if (buttonEl.hasAttribute("aria-pressed")) {
       builtBtn.setAttribute("aria-pressed", buttonEl.getAttribute("aria-pressed"));
     }
