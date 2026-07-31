@@ -369,6 +369,7 @@ A free-form rectangle overlay with fill color, opacity, and corner radius — a 
 - `static/panel-shape.js` — `window.ShapePanel.{render, createShape}`: the `#panel-shape` context section — Box (X/Y/WIDTH/HEIGHT)/Style (fill color, opacity, corner radius)/Time (START/DURATION) tabs, Delete footer; mirrors `panel-image-box.js` minus the add-picker and Mask tab.
 - `static/panel-nav.js` — SHAPE rail entry (between TEXT and CAPTIONS) opens `#panel-shape` via `openShapePanel()`; `onTimelineSelect`/`reRenderAfterRestore` handle `type: "shape"` the same way they handle `"image-box"`.
 - `static/timeline.js` — `renderOverlaysRow` renders a shape's lane labeled "SHAPE" with a resize handle (start/duration), alongside text/video-box/image-box lanes in the unified overlay z-order row.
+- `static/timeline-shape-resize.js` — drag-to-resize driver for that handle: mousedown on the lane's `.timeline-resize-handle` changes the dragged `ShapeLayer`'s `duration`, clamped to a 0.1s minimum; exact structural mirror of `static/timeline-image-resize.js` (same `#row-overlays` delegated-mousedown pattern), retargeted at `project.shapes`/`selected.type === "shape"`/`ShapePanel.render`.
 - `static/timeline-overlay-layers.js` — `mergedEntries`/`renumber` include shapes in the cross-layer z-order list.
 - `static/css/components/shape-panel.css` — `#panel-shape`'s internal layout, mirrors `image-box-panel.css`.
 - `static/css/components/stage.css` — `.shape-box` base styling (position/box-sizing), alongside `.video-box`/`.image-box`.
