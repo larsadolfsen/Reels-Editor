@@ -61,3 +61,34 @@ def test_transcribe_file_raises_if_cpu_fallback_also_fails():
          patch("app.transcribe._fall_back_to_cpu"):
         with pytest.raises(RuntimeError, match="still broken"):
             transcribe_file("audio.wav")
+
+def test_transcribe_file_calls_on_progress_per_segment():
+    segments = [NS(end=1.0, words=None), NS(end=2.0, words=None), NS(end=4.0, words=None)]
+    fake_model = NS(transcribe=lambda path, word_timestamps, language: (segments, NS(duration=4.0)))
+    progress = []
+    with patch("app.transcribe._get_model", return_value=fake_model):
+        transcribe_file("audio.wav", on_progress=progress.append)
+    assert progress == [25.0, 50.0, 100.0]
+
+def test_transcribe_file_on_progress_clamps_to_100():
+    segments = [NS(end=5.5, words=None)]
+    fake_model = NS(transcribe=lambda path, word_timestamps, language: (segments, NS(duration=5.0)))
+    progress = []
+    with patch("app.transcribe._get_model", return_value=fake_model):
+        transcribe_file("audio.wav", on_progress=progress.append)
+    assert progress == [100.0]
+
+def test_transcribe_file_skips_on_progress_when_duration_is_zero():
+    segments = [NS(end=1.0, words=None)]
+    fake_model = NS(transcribe=lambda path, word_timestamps, language: (segments, NS(duration=0.0)))
+    progress = []
+    with patch("app.transcribe._get_model", return_value=fake_model):
+        transcribe_file("audio.wav", on_progress=progress.append)
+    assert progress == []
+
+def test_transcribe_file_works_without_on_progress():
+    segments = [NS(end=1.0, words=[NS(word=" hi", start=0.0, end=1.0)])]
+    fake_model = NS(transcribe=lambda path, word_timestamps, language: (segments, NS(duration=1.0)))
+    with patch("app.transcribe._get_model", return_value=fake_model):
+        result = transcribe_file("audio.wav")
+    assert [w.text for w in result] == ["hi"]
