@@ -1,5 +1,6 @@
 /* Custom hover tooltip (UI.tooltip, static/ui-tooltip.js), replacing native title-attribute tooltips app-wide. */
 /* Exposes .ui-tooltip (+ .ui-tooltip-visible) and .ui-tooltip-shortcut. Depends on tokens.css. */
+/* Always dark regardless of the app's own light/dark theme — see tokens.css's --tooltip-* set. */
 .ui-tooltip {
   position: fixed;
   z-index: 10000;
@@ -7,9 +8,9 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-2-5);
-  background: var(--bg-0);
-  color: var(--text);
-  border: var(--border-width) solid var(--border-soft);
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  border: var(--border-width) solid var(--tooltip-border);
   border-radius: var(--radius-md);
   font-family: var(--font-content);
   font-size: var(--fs-sm);
@@ -37,11 +38,11 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 6px;
-  background: var(--surface);
-  border: var(--border-width) solid var(--border-color);
+  background: var(--tooltip-shortcut-bg);
+  border: var(--border-width) solid var(--tooltip-shortcut-border);
   border-radius: var(--radius-sm);
   font-family: var(--font-ui);
   font-size: var(--fs-2xs);
-  color: var(--text-secondary);
+  color: var(--tooltip-shortcut-text);
   letter-spacing: var(--ls-tight);
 }
