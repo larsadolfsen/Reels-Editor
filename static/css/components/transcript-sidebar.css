@@ -1,11 +1,12 @@
 /* #transcript-sidebar: the paragraph-style caption transcript beside the stage (editor-only, not exported). */
 /* Exposes #transcript-sidebar and its .transcript-sentence/.transcript-word children. Depends on tokens.css. */
 #transcript-sidebar {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
-  max-width: 480px;
   height: 100%;
   overflow-y: auto;
+  scrollbar-width: none;       /* Firefox: scrolls, just no visible scrollbar */
+  -ms-overflow-style: none;    /* old Edge */
   margin-left: var(--space-4);
   padding: var(--space-2) 0;
   font-family: var(--font-content);
@@ -13,14 +14,20 @@
   line-height: 1.6;
 }
 
+#transcript-sidebar::-webkit-scrollbar {
+  display: none;                /* Chrome/Safari: scrolls, just no visible scrollbar */
+}
+
 .transcript-sentence {
+  max-width: 400px;
   color: var(--text-muted);
   margin-bottom: var(--space-2-5);
   transition: color var(--transition-fade);
 }
 
 .transcript-sentence.active {
-  color: var(--text);
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .transcript-word {
