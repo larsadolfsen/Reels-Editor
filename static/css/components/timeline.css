@@ -358,6 +358,9 @@
   z-index: 5;
   opacity: 0.85;
   cursor: grabbing;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-chip);
 }
 
 .clip-drop-indicator {
