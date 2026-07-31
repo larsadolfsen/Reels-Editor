@@ -511,7 +511,12 @@ def test_import_media_kind_override_labels_audio_files_as_audio(tmp_path, monkey
          patch("app.main.media.has_audio_stream", return_value=True):
         result = import_media(p.id, {"paths": [str(src)], "kind": "audio"})
 
-    assert result["imported"][0].kind == "audio"
+    item = result["imported"][0]
+    assert item.kind == "audio"
+    # A forced kind must still probe for real duration/has_audio — not silently fall through
+    # to the image branch's zeroed-out (0.0, False) shortcut.
+    assert item.duration == 120.0
+    assert item.has_audio is True
 
 def test_import_media_without_kind_override_still_auto_detects_video(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
@@ -524,7 +529,10 @@ def test_import_media_without_kind_override_still_auto_detects_video(tmp_path, m
          patch("app.main.media.has_audio_stream", return_value=True):
         result = import_media(p.id, {"paths": [str(src)]})
 
-    assert result["imported"][0].kind == "video"
+    item = result["imported"][0]
+    assert item.kind == "video"
+    assert item.duration == 5.0
+    assert item.has_audio is True
 
 def test_import_media_raises_for_unreadable_source(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
