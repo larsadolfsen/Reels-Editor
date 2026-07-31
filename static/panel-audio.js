@@ -13,8 +13,17 @@ window.AudioPanel = window.AudioPanel || {};
     const path = await Api.pickFile("audio");
     if (!path) return null;
     const result = await Api.importMedia(project.id, [path], "audio");
-    if (!result) return null;
+    if (!result) {
+      alert("Import failed — the selected file could not be read.");
+      return null;
+    }
     project = result.project;
+    // saveProject() re-persists (redundant with the server's own save) but, more importantly,
+    // reseeds the undo baseline (lastSavedJson) and records the import as its own undo step —
+    // skipping it left an unrelated later Ctrl+Z able to revert past this import and then
+    // persist that reverted state, silently dropping the imported MediaItem (bug found in
+    // final review; same fix as clip-sequence.js's importMedia()).
+    await saveProject();
     // imported is empty when the file was already in the library (dedup) — fall back to the
     // existing entry so re-picking the same source file still returns a usable media id.
     const item = result.imported[0] || project.media_library.find((m) => m.source_path === path);

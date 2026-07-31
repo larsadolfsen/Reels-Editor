@@ -104,11 +104,19 @@ async function importMedia() {
   const paths = await Api.pickFiles();
   if (!paths.length) return;
 
-  // The import route copies each file, probes it, and saves the project server-side — no
-  // client-side saveProject() needed, same as runAutoCaption()'s server-returned project.
+  // The import route copies each file, probes it, and saves the project server-side, but
+  // saveProject() still needs to run client-side afterward — it's not just a persistence
+  // call, it's also what reseeds the undo baseline (lastSavedJson) and records the import as
+  // its own undo step. Skipping it left `project` (in memory) ahead of `lastSavedJson`, so an
+  // unrelated later Ctrl+Z would revert to the pre-import snapshot and then persist that
+  // reverted state, silently dropping the imported MediaItem (bug found in final review).
   const result = await Api.importMedia(project.id, paths);
-  if (!result) return;
+  if (!result) {
+    alert("Import failed — one of the selected files could not be read.");
+    return;
+  }
   project = result.project;
+  await saveProject();
 
   MediaPanel.render();
 }

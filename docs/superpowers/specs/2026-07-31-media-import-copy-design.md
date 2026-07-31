@@ -44,10 +44,10 @@ Body: {"paths": ["C:/...", ...]}
 ```
 
 For each path, in order:
-1. Skip if any existing `MediaItem.source_path` already equals this path (dedup — mirrors today's client-side `file_path`-based check, now keyed on the original path since `file_path` no longer is one).
+1. Skip if any existing `MediaItem.source_path` already equals this path, **or** (added in final-review fix, since a project saved before this feature shipped has `source_path == ""` and `file_path` pointing straight at the original external path) if any existing `MediaItem` has no `source_path` and its `file_path` equals this path — otherwise re-picking a legacy-imported file would create a duplicate `MediaItem` and a redundant copy on disk.
 2. Otherwise: generate a new id, copy the file via `copy_into_media_dir`, probe it (`probe_duration`/`has_audio_stream`, skipped for images exactly as `/api/probe` does today), determine `kind` (see below), and build the `MediaItem` (`file_path` = the copy's path, `source_path` = the original path, **`name` = the original path's basename** — `MediaItem.display_name` falls back to `file_path`'s basename when `name` is empty, and `file_path` is no longer the meaningful original filename, so `name` must be set explicitly or the FILES panel would start showing opaque `{id}.ext` names instead of the user's real filenames).
 
-**`kind` needs an explicit override for audio.** Auto-detection (`is_image_path`) only distinguishes image vs. video — there's no way to detect "this is music" from the file alone the way the old client-side `importMusicFile()` used to just hardcode `kind: "audio"` (its picker was already restricted to audio extensions, so it always knew). The request body accepts an optional `"kind"` field; when present it overrides auto-detection entirely (still probes normally for duration/has_audio). The AUDIO panel's caller passes `"kind": "audio"`; the VIDEO/IMAGE bulk importer omits it and gets auto-detection as before. (Found during manual verification — omitting this would have silently mislabeled every imported music file as `kind: "video"` in the media library.)
+**`kind` needs an explicit override for audio.** Auto-detection (`is_image_path`) only distinguishes image vs. video — there's no way to detect "this is music" from the file alone the way the old client-side `importMusicFile()` used to just hardcode `kind: "audio"` (its picker was already restricted to audio extensions, so it always knew). The request body accepts an optional `"kind"` field; when present it overrides auto-detection entirely (still probes normally for duration/has_audio). The AUDIO panel's caller passes `"kind": "audio"`; the VIDEO/IMAGE bulk importer omits it and gets auto-detection as before. (Found during manual verification — omitting this would have silently mislabeled every imported music file as `kind: "video"` in the media library.) `kind`, when provided, is validated against `("video", "image", "audio")` — anything else raises `HTTPException(400, detail=f"invalid kind: {forced_kind}")` (final-review fix; previously any string was trusted and written straight into `MediaItem.kind`).
 
 Saves the project once after processing all paths. Returns:
 
@@ -57,7 +57,7 @@ Saves the project once after processing all paths. Returns:
 
 `imported` holds only the newly-added items (skipping any deduped), in the same order as the input `paths` — the AUDIO caller needs the specific new id, not just the updated project.
 
-A source file that can't be read fails the whole request with a clear error (matches this app's existing error-surfacing convention, e.g. the transcribe route's `503`/`detail` pattern) rather than silently skipping it.
+A source file that can't be read fails the whole request with `HTTPException(400, detail=f"Could not read source file: {path}")` (final-review fix — `copy_into_media_dir`'s `FileNotFoundError` used to propagate unhandled into a generic 500 with no `detail`; now it matches this app's existing error-surfacing convention, e.g. the transcribe route's `503`/`detail` pattern, and gives the frontend a real message to show).
 
 **`/api/probe` stays as-is.** After this change nothing in the frontend calls it anymore, but it's a general-purpose read-only probe utility, not something this feature owns — removing it is a separate decision, not bundled into this change.
 
@@ -80,13 +80,17 @@ async function importMedia() {
   const paths = await Api.pickFiles();
   if (!paths.length) return;
   const result = await Api.importMedia(project.id, paths);
-  if (!result) return;
+  if (!result) {
+    alert("Import failed — one of the selected files could not be read.");
+    return;
+  }
   project = result.project;
+  await saveProject();
   MediaPanel.render();
 }
 ```
 
-(No client-side `saveProject()` afterward — the server already persisted it, matching how `runAutoCaption()` already handles a server-returned, already-saved project.)
+**`saveProject()` must still run client-side after the server-returned project is assigned** (final-review fix). The server already persists the import, but `saveProject()` isn't just a persistence call — it's also what reseeds the undo baseline (`lastSavedJson`) and records the import as its own undo step (see `static/editor.js`). Skipping it left in-memory `project` ahead of `lastSavedJson`; an unrelated later Ctrl+Z would then revert to the pre-import snapshot and persist that reverted state, silently dropping the imported `MediaItem` (the copied file under `data/media/` becoming orphaned). A failed import (`result` falsy) now also shows a plain `alert()` — this replaces the pre-rewrite `alert("probe failed")` feedback that was lost when the client-side probe+construct path was removed.
 
 **`static/panel-audio.js`'s `importMusicFile()`** — same shape, one path:
 
@@ -95,8 +99,12 @@ async function importMusicFile() {
   const path = await Api.pickFile("audio");
   if (!path) return null;
   const result = await Api.importMedia(project.id, [path], "audio");
-  if (!result) return null;
+  if (!result) {
+    alert("Import failed — the selected file could not be read.");
+    return null;
+  }
   project = result.project;
+  await saveProject();
   // imported is empty when the file was already in the library (dedup) — fall back to the
   // existing entry so re-picking the same source file still returns a usable media id.
   const item = result.imported[0] || project.media_library.find((m) => m.source_path === path);
@@ -104,7 +112,7 @@ async function importMusicFile() {
 }
 ```
 
-`addMusic()`/`replaceMusic()` are unchanged below this point — they still set `project.music` themselves and call `saveProject()`, since that's a separate mutation this route doesn't know about.
+Same `saveProject()`/`alert()` reasoning as `importMedia()` above. `addMusic()`/`replaceMusic()` are unchanged below this point — they still set `project.music` themselves and call their own `saveProject()`, since that's a separate mutation this route doesn't know about (so a single import-then-add-music flow now records two small undo steps rather than one — acceptable, matches how insert-then-edit flows elsewhere in this app already behave).
 
 ## Files
 
@@ -118,7 +126,7 @@ async function importMusicFile() {
 ## Testing
 
 - `tests/test_media.py`: `copy_into_media_dir` — copies to the right path with the right (lowercased) extension, raises on a missing source, doesn't clobber an existing file at the same id (shouldn't happen given fresh ids, but the copy call itself is deterministic given real inputs).
-- `tests/test_main.py`: the new route — imports a fresh path (copies, probes, returns it in `imported`), dedups a path whose `source_path` already exists in `media_library`, skips probing for an image path, surfaces an error for an unreadable source path, returns items in input order, saves the project exactly once.
+- `tests/test_main.py`: the new route — imports a fresh path (copies, probes, returns it in `imported`), dedups a path whose `source_path` already exists in `media_library`, dedups a legacy item (no `source_path`, `file_path` == the picked path), skips probing for an image path, raises `HTTPException(400, detail=...)` for an unreadable source path, rejects an invalid `kind` override with `HTTPException(400, ...)`, returns items in input order, saves the project exactly once.
 - Frontend: both changed files are thin API/DOM wiring (per this project's convention, no unit tests for that layer) — verified live in the browser: import a video, confirm a new file appears under `data/media/`, confirm the project's `file_path` points there, confirm re-importing the same source path does not create a duplicate `MediaItem` or a second copy on disk.
 
 ## Non-goals

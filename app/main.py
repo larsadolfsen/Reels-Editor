@@ -131,12 +131,20 @@ def import_media(pid: str, body: dict) -> dict:
     # restricted file selection to one type — auto-detection below only distinguishes image vs.
     # video, so a caller whose picker only offers audio files must say so explicitly.
     forced_kind = body.get("kind")
+    if forced_kind and forced_kind not in ("video", "image", "audio"):
+        raise HTTPException(400, f"invalid kind: {forced_kind}")
     imported: list[MediaItem] = []
     for path in body.get("paths", []):
-        if path in existing_sources:
+        # A project saved before copy-on-import shipped has MediaItems with source_path=="" and
+        # file_path pointing straight at the original external path — re-picking that same file
+        # today must still be recognized as already-imported, not re-copied as a duplicate.
+        if path in existing_sources or any(m.file_path == path and not m.source_path for m in p.media_library):
             continue
         media_id = new_id()
-        dest = media.copy_into_media_dir(path, media_id, DATA_DIR)
+        try:
+            dest = media.copy_into_media_dir(path, media_id, DATA_DIR)
+        except FileNotFoundError:
+            raise HTTPException(400, detail=f"Could not read source file: {path}")
         if forced_kind:
             duration, has_audio, kind = media.probe_duration(path), media.has_audio_stream(path), forced_kind
         elif media.is_image_path(path):

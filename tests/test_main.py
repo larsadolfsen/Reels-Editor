@@ -3,6 +3,7 @@
 from pathlib import Path
 from unittest.mock import patch
 import pytest
+from fastapi import HTTPException
 from app import export_jobs, store
 from app.main import export_project, list_presets, create_preset, delete_preset, probe, sanitize_export_filename, resolve_export_path, media_peaks, import_media
 from app.models import Project, TextBlockLayer, TextPreset, MediaItem, VideoBoxLayer
@@ -534,10 +535,44 @@ def test_import_media_without_kind_override_still_auto_detects_video(tmp_path, m
     assert item.duration == 5.0
     assert item.has_audio is True
 
-def test_import_media_raises_for_unreadable_source(tmp_path, monkeypatch):
+def test_import_media_raises_http_400_for_unreadable_source(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
     p = Project(name="r")
     store.save_project(p, tmp_path)
 
-    with pytest.raises(FileNotFoundError):
-        import_media(p.id, {"paths": [str(tmp_path / "missing.mp4")]})
+    missing = tmp_path / "missing.mp4"
+    with pytest.raises(HTTPException) as excinfo:
+        import_media(p.id, {"paths": [str(missing)]})
+
+    assert excinfo.value.status_code == 400
+    assert excinfo.value.detail
+    assert str(missing) in excinfo.value.detail
+
+def test_import_media_rejects_invalid_kind(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    src = tmp_path / "clip.mp4"
+    src.write_bytes(b"fake-video")
+    p = Project(name="r")
+    store.save_project(p, tmp_path)
+
+    with pytest.raises(HTTPException) as excinfo:
+        import_media(p.id, {"paths": [str(src)], "kind": "bogus"})
+
+    assert excinfo.value.status_code == 400
+    assert "bogus" in excinfo.value.detail
+
+def test_import_media_dedups_legacy_media_item_with_no_source_path(tmp_path, monkeypatch):
+    # A MediaItem saved before copy-on-import shipped has source_path=="" and file_path pointing
+    # straight at the original external path — re-picking that same external file today must be
+    # recognized as already-imported (by file_path), not re-copied as a duplicate entry.
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    src = tmp_path / "legacy.mp4"
+    src.write_bytes(b"fake-video")
+    legacy = MediaItem(file_path=str(src), source_path="", duration=3.0)
+    p = Project(name="r", media_library=[legacy])
+    store.save_project(p, tmp_path)
+
+    result = import_media(p.id, {"paths": [str(src)]})
+
+    assert result["imported"] == []
+    assert result["project"].media_library == [legacy]
