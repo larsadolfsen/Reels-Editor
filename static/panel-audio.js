@@ -56,7 +56,7 @@ window.AudioPanel = window.AudioPanel || {};
     const media = music ? project.media_library.find((m) => m.id === music.media_id) : null;
     UI.contextPanelHeader(document.getElementById("audio-header"), {
       icon: AUDIO_HEADER_ICON,
-      label: music ? ((media && (media.name || media.file_path.split(/[\\/]/).pop())) || "Unknown file") : "AUDIO",
+      label: music ? ((media && (media.name || media.file_path.split(/[\\/]/).pop())) || "Unknown file") : "Audio",
     });
     document.getElementById("audio-empty-state").hidden = !!music;
     document.getElementById("audio-detail").hidden = !music;

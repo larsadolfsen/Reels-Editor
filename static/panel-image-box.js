@@ -212,7 +212,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     const box = selectedId ? project.image_boxes.find((b) => b.id === selectedId) : null;
     UI.contextPanelHeader(document.getElementById("image-box-header"), {
       icon: IMAGE_BOX_HEADER_ICON,
-      label: box ? box.file_path.split(/[\\/]/).pop() : "IMAGE BOX",
+      label: box ? box.file_path.split(/[\\/]/).pop() : "Image",
     });
     document.getElementById("image-box-add-group").hidden = !!box;
     document.getElementById("image-box-picker").hidden = !!box;

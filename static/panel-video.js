@@ -18,7 +18,7 @@ function clampTrim(inP, outP, dur) {
 UI.divider(document.getElementById("video-order-divider"));
 
 (() => {
-  const VIDEO_HEADER_ICON = UI.icon("video", { size: 18 });
+  const VIDEO_HEADER_ICON = UI.icon("clapperboard", { size: 18 });
   const VIDEO_TAB_ICON_DESIGN = UI.icon("pencil", { size: 18 });
   const VIDEO_TAB_ICON_TIME = UI.icon("timer", { size: 18 });
   const VIDEO_TAB_ICON_AUTO = UI.icon("sparkles", { size: 18 });
