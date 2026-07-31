@@ -7,7 +7,9 @@
 // content, and AUDIO appears when there's a music track or a clip with an audio stream to draw.
 // The playhead-handle box (#slice-btn) tracks the playhead
 // and holds two icons: a grip-vertical handle (dragged in editor.js to scrub the playhead)
-// and a scissors icon (visual only, no slice feature yet).
+// and a scissors icon (static/timeline-slice.js wires its click; updateSliceButton below only
+// drives its disabled-state indicator, priority-aware as of video-box-slice-priority: a
+// selected video box active at the playhead is checked instead of the main clip list).
 // Zoomable pixels-per-second scale: the timeline always shows a fixed window of
 // `visibleSeconds` seconds across the scroll container's width. Defaults to 30s; the
 // toolbar −/+ buttons zoom in/out by 10s steps, clamped to at least [10s, 120s] (see
@@ -46,6 +48,7 @@ window.Timeline = (() => {
   let lastDuration = 1;
   let lastProject = null;
   let lastTimelineTime = 0;
+  let lastSelected = null;
   let visibleSeconds = DEFAULT_VISIBLE_SECONDS;
   let manualZoom = false;
 
@@ -145,8 +148,12 @@ window.Timeline = (() => {
     btn.style.left = `${LABEL_WIDTH + left - scrollEl.scrollLeft}px`;
 
     const sliceAction = document.getElementById("slice-action");
-    const clips = (lastProject && lastProject.clips) || [];
-    const disabled = Timeline.isSliceDisabled(clips, lastTimelineTime);
+    const activeBox = (lastSelected && lastSelected.type === "video-box" && Timeline.isBoxActiveAt(lastSelected.item, lastTimelineTime))
+      ? lastSelected.item
+      : null;
+    const disabled = activeBox
+      ? Timeline.isBoxSliceDisabled(activeBox, lastTimelineTime)
+      : Timeline.isSliceDisabled((lastProject && lastProject.clips) || [], lastTimelineTime);
     sliceAction.classList.toggle("disabled", disabled);
   }
 
@@ -312,6 +319,7 @@ window.Timeline = (() => {
     lastDuration = duration;
     lastProject = project;
     lastTimelineTime = timelineTime;
+    lastSelected = selected;
     if (!manualZoom) visibleSeconds = fitVisibleSeconds(videoDuration(project));
     const px = currentPxPerSecond();
     const contentWidth = duration * px;
