@@ -48,6 +48,7 @@ window.Timeline = (() => {
   let lastDuration = 1;
   let lastProject = null;
   let lastTimelineTime = 0;
+  let lastSelected = null;
   let visibleSeconds = DEFAULT_VISIBLE_SECONDS;
   let manualZoom = false;
 
@@ -147,8 +148,8 @@ window.Timeline = (() => {
     btn.style.left = `${LABEL_WIDTH + left - scrollEl.scrollLeft}px`;
 
     const sliceAction = document.getElementById("slice-action");
-    const activeBox = (selected && selected.type === "video-box" && Timeline.isBoxActiveAt(selected.item, lastTimelineTime))
-      ? selected.item
+    const activeBox = (lastSelected && lastSelected.type === "video-box" && Timeline.isBoxActiveAt(lastSelected.item, lastTimelineTime))
+      ? lastSelected.item
       : null;
     const disabled = activeBox
       ? Timeline.isBoxSliceDisabled(activeBox, lastTimelineTime)
@@ -318,6 +319,7 @@ window.Timeline = (() => {
     lastDuration = duration;
     lastProject = project;
     lastTimelineTime = timelineTime;
+    lastSelected = selected;
     if (!manualZoom) visibleSeconds = fitVisibleSeconds(videoDuration(project));
     const px = currentPxPerSecond();
     const contentWidth = duration * px;

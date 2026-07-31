@@ -41,7 +41,12 @@ test("isBoxSliceDisabled: disabled within eps of start or end, enabled well insi
   assert.strictEqual(isBoxSliceDisabled(box, 10, 0.05), false);    // well inside
 });
 
-test("sliceVideoBox: no-op (newId null, videoBoxes untouched) when disabled", () => {
+test("isBoxSliceDisabled: enabled just outside eps of the boundary", () => {
+  const box = makeBox(); // window [5, 15)
+  assert.strictEqual(isBoxSliceDisabled(box, 5.06, 0.05), false);  // just past eps of start
+});
+
+test("sliceVideoBox: no-op (newId null, videoBoxes untouched) when box inactive at t", () => {
   const box = makeBox();
   const videoBoxes = [box];
   const result = sliceVideoBox(videoBoxes, box, 4, 0.05); // outside the window
@@ -50,8 +55,22 @@ test("sliceVideoBox: no-op (newId null, videoBoxes untouched) when disabled", ()
   assert.strictEqual(box.out_point, 12); // untouched
 });
 
+test("sliceVideoBox: no-op (newId null, videoBoxes untouched) when t is active but within eps of a boundary", () => {
+  const box = makeBox(); // window [5, 15)
+  const videoBoxes = [box];
+  const result = sliceVideoBox(videoBoxes, box, 5.02, 0.05); // inside the window, near start
+  assert.strictEqual(result.newId, null);
+  assert.strictEqual(videoBoxes.length, 1);
+  assert.strictEqual(box.out_point, 12); // untouched
+});
+
 test("sliceVideoBox: splits into two back-to-back boxes at t=10", () => {
-  const box = makeBox(); // start=5, in=2, out=12 -> window [5, 15)
+  // Non-default mask/y/height values, distinguishable from x/width, so a copy-through bug
+  // (e.g. mask fields silently reset to default, or y/x swapped) would actually be caught.
+  const box = makeBox({
+    y: 200, height: 500,
+    mask_enabled: true, mask_angle: 15, mask_offset: 20, mask_flip: true,
+  }); // start=5, in=2, out=12 -> window [5, 15)
   const videoBoxes = [box];
   const result = sliceVideoBox(videoBoxes, box, 10, 0.05);
 
@@ -65,8 +84,14 @@ test("sliceVideoBox: splits into two back-to-back boxes at t=10", () => {
   assert.strictEqual(box.out_point, 7);
   assert.strictEqual(box.start, 5);
   assert.strictEqual(box.x, 100);
+  assert.strictEqual(box.y, 200);
   assert.strictEqual(box.width, 300);
+  assert.strictEqual(box.height, 500);
   assert.strictEqual(box.z_index, -1);
+  assert.strictEqual(box.mask_enabled, true);
+  assert.strictEqual(box.mask_angle, 15);
+  assert.strictEqual(box.mask_offset, 20);
+  assert.strictEqual(box.mask_flip, true);
 
   // New box: new id, same position/size/z-index/mask/media, starts where the first half ends,
   // in_point continues from the split's source time, out_point unchanged from the original (12).
@@ -78,7 +103,12 @@ test("sliceVideoBox: splits into two back-to-back boxes at t=10", () => {
   assert.strictEqual(newBox.media_id, "m1");
   assert.strictEqual(newBox.file_path, "/a.mp4");
   assert.strictEqual(newBox.x, 100);
+  assert.strictEqual(newBox.y, 200);
   assert.strictEqual(newBox.width, 300);
+  assert.strictEqual(newBox.height, 500);
   assert.strictEqual(newBox.z_index, -1);
-  assert.strictEqual(newBox.mask_enabled, false);
+  assert.strictEqual(newBox.mask_enabled, true);
+  assert.strictEqual(newBox.mask_angle, 15);
+  assert.strictEqual(newBox.mask_offset, 20);
+  assert.strictEqual(newBox.mask_flip, true);
 });
