@@ -223,7 +223,7 @@ tests/
   test_models.py
   test_store.py
   test_media.py
-  test_main.py          # export-route tests: ASS rendered + burned in when text blocks exist, skipped otherwise; also probe/presets
+  test_main.py          # export-route tests: ASS rendered + burned in when text blocks exist, skipped otherwise; also probe/presets/import-media
   test_timeline.py
   test_ffmpeg_cmd.py
   test_ass_render.py
