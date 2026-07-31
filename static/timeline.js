@@ -34,6 +34,13 @@
 // MAIN and AUDIO's labels get a static, non-interactive lock icon (ensureFixedRowLockIcons,
 // idempotent, called from render()) signaling they can never be reordered — see the overlay
 // row's own per-layer lock toggle in renderOverlaysRow/timeline-overlay-layer-drag.js instead.
+// Every row/lane label is also clickable (added 2026-07-31, layer-sidepanel-timeline-click):
+// an overlay lane's label text (`.overlay-lane-label-text`, sibling of its lock/drag handle
+// icon so the two interactions stay independent) selects that lane's own item and opens its
+// panel, same as clicking its block; #label-video falls back through the currently-selected
+// clip, else the first clip; #label-audio reuses `actions.onSelectAudio` (same as `#row-audio`'s
+// existing content click); #label-captions calls the new `actions.onOpenCaptionsPanel`. All
+// three fixed-row labels bind their listener once via the existing `dataset.selectBound` guard.
 // Exposes window.Timeline.{render, groupWords, timeAtX, tick, resetZoom, PX_PER_SEC}.
 // PX_PER_SEC is a live getter reflecting the current zoom level (see the header comment
 // above for the zoom scale itself). tick() is a cheap playhead-only update driven every
@@ -291,7 +298,14 @@ window.Timeline = (() => {
       const handleTitle = entry.item.locked ? "Locked — click to unlock" : "Lock layer";
       laneLabel.innerHTML = `<span class="overlay-lane-handle" title="${handleTitle}">${UI.icon(handleIcon, { size: 14 })}</span>`;
       const text = document.createElement("span");
+      text.className = "overlay-lane-label-text";
       text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO" : entry.kind === "image_box" ? "IMAGE" : "SHAPE";
+      text.addEventListener("click", () => {
+        if (entry.kind === "text") onSelect({ type: "text", item: entry.item });
+        else if (entry.kind === "video_box") onSelect({ type: "video-box", item: entry.item });
+        else if (entry.kind === "image_box") onSelect({ type: "image-box", item: entry.item });
+        else onSelect({ type: "shape", item: entry.item });
+      });
       laneLabel.appendChild(text);
       labelContainer.appendChild(laneLabel);
 
@@ -368,6 +382,29 @@ window.Timeline = (() => {
     if (!audioTrack.dataset.selectBound) {
       audioTrack.dataset.selectBound = "1";
       audioTrack.addEventListener("click", () => actions.onSelectAudio && actions.onSelectAudio());
+    }
+
+    const videoLabel = document.getElementById("label-video");
+    if (videoLabel && !videoLabel.dataset.selectBound) {
+      videoLabel.dataset.selectBound = "1";
+      videoLabel.addEventListener("click", () => {
+        const currentClips = ordered((lastProject && lastProject.clips) || []);
+        if (!currentClips.length) return;
+        const current = lastSelected && lastSelected.type === "video"
+          ? currentClips.find((c) => c.id === lastSelected.item.id)
+          : null;
+        onSelect({ type: "video", item: current || currentClips[0] });
+      });
+    }
+    const audioLabel = document.getElementById("label-audio");
+    if (audioLabel && !audioLabel.dataset.selectBound) {
+      audioLabel.dataset.selectBound = "1";
+      audioLabel.addEventListener("click", () => actions.onSelectAudio && actions.onSelectAudio());
+    }
+    const captionsLabel = document.getElementById("label-captions");
+    if (captionsLabel && !captionsLabel.dataset.selectBound) {
+      captionsLabel.dataset.selectBound = "1";
+      captionsLabel.addEventListener("click", () => actions.onOpenCaptionsPanel && actions.onOpenCaptionsPanel());
     }
 
     const scrollEl = document.getElementById("timeline-scroll");
