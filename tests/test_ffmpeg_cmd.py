@@ -1,5 +1,5 @@
 # Tests for app.ffmpeg_cmd: pure construction of the trim+concat+burn export command.
-from app.models import Project, ClipLayer, VideoBoxLayer, ImageBoxLayer, MediaItem
+from app.models import Project, ClipLayer, VideoBoxLayer, ImageBoxLayer, ShapeLayer, MediaItem
 from app.ffmpeg_cmd import build_export_cmd, escape_filter_path
 
 def proj():
@@ -471,6 +471,30 @@ def test_unmasked_band_command_is_unchanged_by_the_mask_feature():
     assert ";[2:v]trim=start=0:end=3,setpts=PTS-STARTPTS+1/TB,scale=300:500[box0]" in fc
     assert ";[vc][box0]overlay=x=100:y=200" in fc
     assert ";[3:v]scale=100:100[box1]" in fc
+
+def test_bands_with_single_shape_adds_looped_png_input_and_overlay():
+    shape = ShapeLayer(x=100, y=200, width=300, height=500, start=1.0, duration=3.0, z_index=5)
+    bands = [{"kind": "shape", "shape": shape, "png_path": "C:/tmp/band0-shape.png"}]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    assert "C:/tmp/band0-shape.png" in cmd
+    idx = cmd.index("C:/tmp/band0-shape.png")
+    assert cmd[idx - 5:idx] == ["-loop", "1", "-t", "3", "-i"]  # -loop 1 -t <duration> -i <png>
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "overlay=x=100:y=200" in fc
+    assert "between(t\\,1\\,4)" in fc  # end = start(1.0) + duration(3.0) = 4.0
+    assert "alphamerge" not in fc and "alphaextract" not in fc  # PNG already carries its own alpha
+
+def test_bands_shape_and_image_box_alternate_correctly():
+    shape = ShapeLayer(x=0, y=0, width=100, height=100, start=0, duration=2, z_index=5)
+    img = ImageBoxLayer(media_id="m1", file_path="pic.jpg", start=0, duration=2, height=1920, z_index=3)
+    bands = [
+        {"kind": "shape", "shape": shape, "png_path": "shape.png"},
+        {"kind": "image_box", "image_box": img},
+    ]
+    cmd = build_export_cmd(proj(), "out.mp4", bands=bands)
+    assert "shape.png" in cmd and "pic.jpg" in cmd
+    map_indices = [i for i, x in enumerate(cmd) if x == "-map"]
+    assert cmd[map_indices[0] + 1] == "[ov1]"  # second band (index 1) is the final output label
 
 def test_masked_band_input_indices_stay_consistent_across_two_boxes():
     a = VideoBoxLayer(media_id="m1", file_path="a-pip.mp4", in_point=0, out_point=2,

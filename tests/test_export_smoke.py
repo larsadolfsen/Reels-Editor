@@ -6,7 +6,7 @@ from app import export_jobs
 from app.main import export_project
 from app.models import (
     Project, MediaItem, ClipLayer, TextPreset, TextBlockLayer, FormatRun,
-    CaptionTrack, CaptionWord, VideoBoxLayer,
+    CaptionTrack, CaptionWord, VideoBoxLayer, ShapeLayer,
 )
 
 def test_export_smoke_all_layer_types_combined(tmp_path, monkeypatch):
@@ -44,6 +44,10 @@ def test_export_smoke_all_layer_types_combined(tmp_path, monkeypatch):
             VideoBoxLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=1,
                           start=0.5, x=50, y=50, width=300, height=400, z_index=-1),
         ],
+        shapes=[
+            ShapeLayer(x=20, y=30, width=200, height=150, start=0, duration=2,
+                       fill_color="#FF00FF", opacity=0.8, corner_radius=12, z_index=-2),
+        ],
     )
 
     with patch("app.main.store.load_project", return_value=p), \
@@ -58,3 +62,7 @@ def test_export_smoke_all_layer_types_combined(tmp_path, monkeypatch):
     assert "anullsrc=channel_layout=stereo:sample_rate=44100" in cmd  # clip m1 has no audio
     assert "-filter_complex" in cmd
     assert cmd[-1].endswith(".mp4")
+
+    shape_pngs = list(tmp_path.glob("exports/*-band*-shape.png"))
+    assert len(shape_pngs) == 1
+    assert "-i" in cmd and str(shape_pngs[0]) in cmd

@@ -68,6 +68,19 @@ class ImageBoxLayer(BaseModel):
     mask_offset: float = 0.0   # signed canvas px from the box's center to the line, perpendicular to it
     mask_flip: bool = False    # which side of the line is kept
 
+class ShapeLayer(BaseModel):
+    id: str = Field(default_factory=new_id)
+    start: float = 0.0        # timeline seconds
+    duration: float = 3.0     # seconds the shape is visible
+    x: int = 0                 # px, left edge on the 1080x1920 canvas
+    y: int = 0                 # px, top edge
+    width: float = 300.0
+    height: float = 300.0
+    fill_color: str = "#4C6FFF"
+    opacity: float = 1.0        # 0.0-1.0
+    corner_radius: int = 0      # px; clamped to min(width, height)/2 when rasterized/rendered
+    z_index: int = -1           # same convention as VideoBoxLayer/ImageBoxLayer
+
 class TextPreset(BaseModel):
     id: str = Field(default_factory=new_id)
     name: str
@@ -202,6 +215,7 @@ class Project(BaseModel):
     clips: list[ClipLayer] = []
     video_boxes: list[VideoBoxLayer] = []
     image_boxes: list[ImageBoxLayer] = []
+    shapes: list[ShapeLayer] = []
     text_blocks: list[TextBlockLayer] = []
     text_presets: dict[str, TextPreset] = {}
     captions: CaptionTrack | None = None

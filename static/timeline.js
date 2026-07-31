@@ -259,10 +259,11 @@ window.Timeline = (() => {
   // Merges TEXT blocks + VIDEO BOX + IMAGE BOX layers into one z_index-ordered stack of 44px
   // lanes inside #row-overlays (top = highest z_index = frontmost), replacing the old separate
   // TEXT/VIDEO BOX rows. Each lane still renders its item exactly as before (time-positioned
-  // block, resize handle for text/image boxes, drag-to-timeline for video boxes) — only the
-  // vertical grouping/order changed. #label-overlays gets one "TEXT"/"VIDEO BOX"/"IMAGE BOX"
-  // label per lane, height-matched to its lane. Reordering (drag handle) is wired in
-  // static/timeline-overlay-layer-drag.js via OverlayLayers.mergedEntries/renumber.
+  // block, resize handle for text/image boxes/shapes, drag-to-timeline for video boxes) — only
+  // the vertical grouping/order changed. #label-overlays gets one
+  // "TEXT"/"VIDEO BOX"/"IMAGE BOX"/"SHAPE" label per lane, height-matched to its lane.
+  // Reordering (drag handle) is wired in static/timeline-overlay-layer-drag.js via
+  // OverlayLayers.mergedEntries/renumber.
   function renderOverlaysRow(project, px, selected, onSelect) {
     const entries = OverlayLayers.mergedEntries(project);
     const rowEl = document.querySelector('.timeline-row[data-row="overlays"]');
@@ -279,7 +280,7 @@ window.Timeline = (() => {
       laneLabel.dataset.entryId = entry.id;
       laneLabel.innerHTML = `<span class="overlay-lane-handle">${UI.icon("grip-vertical", { size: 14 })}</span>`;
       const text = document.createElement("span");
-      text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO BOX" : "IMAGE BOX";
+      text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO BOX" : entry.kind === "image_box" ? "IMAGE BOX" : "SHAPE";
       laneLabel.appendChild(text);
       labelContainer.appendChild(laneLabel);
 
@@ -302,13 +303,19 @@ window.Timeline = (() => {
         const el = laneTrack.lastElementChild;
         el.draggable = true;
         el.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/video-box-id", v.id));
-      } else {
+      } else if (entry.kind === "image_box") {
         const b = entry.item;
         const isSel = !!selected && selected.type === "image-box" && !!selected.item && selected.item.id === b.id;
         const name = b.file_path.split(/[\\/]/).pop();
         addBlock(laneTrack, b.start * px, b.duration * px, name, isSel,
           () => onSelect({ type: "image-box", item: b }), { resizable: true });
         laneTrack.lastElementChild.dataset.blockId = b.id;
+      } else {
+        const s = entry.item;
+        const isSel = !!selected && selected.type === "shape" && !!selected.item && selected.item.id === s.id;
+        addBlock(laneTrack, s.start * px, s.duration * px, "Shape", isSel,
+          () => onSelect({ type: "shape", item: s }), { resizable: true });
+        laneTrack.lastElementChild.dataset.blockId = s.id;
       }
     }
   }
@@ -381,7 +388,7 @@ window.Timeline = (() => {
       const media = mediaById.get(c.media_id);
       return media && media.has_audio;
     });
-    setRowVisible("overlays", (project.text_blocks || []).length > 0 || (project.video_boxes || []).length > 0 || (project.image_boxes || []).length > 0);
+    setRowVisible("overlays", (project.text_blocks || []).length > 0 || (project.video_boxes || []).length > 0 || (project.image_boxes || []).length > 0 || (project.shapes || []).length > 0);
     setRowVisible("captions", groups.length > 0);
     setRowVisible("audio", hasAudioContent);
   }

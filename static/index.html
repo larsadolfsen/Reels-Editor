@@ -31,6 +31,7 @@
 <link rel="stylesheet" href="/static/css/components/scroll-list.css">
 <link rel="stylesheet" href="/static/css/components/video-box-panel.css">
 <link rel="stylesheet" href="/static/css/components/image-box-panel.css">
+<link rel="stylesheet" href="/static/css/components/shape-panel.css">
 <link rel="stylesheet" href="/static/css/components/mask-line-guide.css">
 <link rel="stylesheet" href="/static/css/components/auto-slice-panel.css">
 <link rel="stylesheet" href="/static/css/components/export-progress.css">
@@ -468,6 +469,57 @@
         </div>
       </div>
 
+      <div id="panel-shape" class="context-panel" hidden>
+        <div id="shape-header" class="context-panel-header"></div>
+        <div id="shape-empty-state" class="style-group">
+          <button id="shape-add" class="col-8" data-button data-button-intent="dashed" data-button-icon="plus" hidden>ADD SHAPE</button>
+        </div>
+        <div id="shape-detail" class="context-panel-body" hidden>
+          <div id="shape-tab-bar"></div>
+
+          <div id="shape-box-body">
+            <div class="section-label-spacer text-eyebrow">SIZE &amp; POSITION</div>
+            <div class="style-group">
+              <div class="style-row">
+                <label id="shape-x-field"></label>
+                <label id="shape-y-field"></label>
+              </div>
+              <div class="style-row">
+                <label id="shape-width-field"></label>
+                <label id="shape-height-field"></label>
+              </div>
+            </div>
+          </div>
+
+          <div id="shape-style-body">
+            <div class="section-label-spacer text-eyebrow">FILL</div>
+            <div class="style-group">
+              <div id="shape-fill-color-field"></div>
+            </div>
+            <div class="style-group">
+              <div class="style-row">
+                <label id="shape-opacity-field"></label>
+                <label id="shape-corner-radius-field"></label>
+              </div>
+            </div>
+          </div>
+
+          <div id="shape-time-body">
+            <div class="section-label-spacer text-eyebrow">TIME</div>
+            <div class="style-group">
+              <div class="style-row">
+                <label id="shape-start-field"></label>
+                <label id="shape-duration-field"></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="style-group panel-danger-footer">
+            <button id="shape-delete" class="col-8" data-button data-button-intent="danger" hidden>Delete shape</button>
+          </div>
+        </div>
+      </div>
+
       <div id="panel-audio" class="context-panel" hidden>
         <div id="audio-header" class="context-panel-header"></div>
         <div id="audio-empty-state" class="style-group">
@@ -721,6 +773,10 @@
 <script src="/static/box-panel-size-position.js"></script>
 <script src="/static/panel-video-box.js"></script>
 <script src="/static/panel-image-box.js"></script>
+<script src="/static/shape-defaults.js"></script>
+<script src="/static/shape-color.js"></script>
+<script src="/static/shape-preview.js"></script>
+<script src="/static/panel-shape.js"></script>
 <script src="/static/panel-audio.js"></script>
 <script src="/static/panel-media.js"></script>
 <script src="/static/panel-video.js"></script>
@@ -754,6 +810,7 @@
 <script src="/static/timeline-clip-drag.js"></script>
 <script src="/static/timeline-text-resize.js"></script>
 <script src="/static/timeline-image-resize.js"></script>
+<script src="/static/timeline-shape-resize.js"></script>
 <script src="/static/timeline-overlay-layer-drag.js"></script>
 <script src="/static/undo-history.js"></script>
 <script src="/static/panel-nav.js"></script>

@@ -148,6 +148,15 @@ ImageBoxPreview.setOnActivate((boxId) => {
   ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
 });
 
+// Same wiring as VideoBoxPreview.setOnActivate/ImageBoxPreview.setOnActivate above, mirrored
+// for shapes.
+ShapePreview.setOnActivate((shapeId) => {
+  const shape = project.shapes.find((s) => s.id === shapeId);
+  if (!shape) return;
+  onTimelineSelect({ type: "shape", item: shape });
+  ShapePreview.render(project.shapes, Preview.currentTimelineTime());
+});
+
 UI.safeZones(document.getElementById("safe-zones"));
 
 function setSafeZonesVisible(visible) {

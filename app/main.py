@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack, AutoSliceApplyRequest
-from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip, auth, auto_slice, mask_image
+from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip, auth, auto_slice, mask_image, shape_render
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
 def _resolve_data_dir() -> Path:
@@ -243,7 +243,7 @@ def export_project(pid: str) -> dict:
         cap_file.write_text(ass_render.render_caption_ass(p, caption_preset), encoding="utf-8")
         caption_ass_path = str(cap_file)
 
-    if p.video_boxes or p.image_boxes:
+    if p.video_boxes or p.image_boxes or p.shapes:
         bands = []
         for i, band in enumerate(timeline.banded_layers(p)):
             if band["kind"] == "text":
@@ -261,7 +261,7 @@ def export_project(pid: str) -> dict:
                                               v.mask_angle, v.mask_offset, v.mask_flip)
                     entry["mask_path"] = str(png)
                 bands.append(entry)
-            else:
+            elif band["kind"] == "image_box":
                 b = band["image_box"]
                 entry = {"kind": "image_box", "image_box": b}
                 if b.mask_enabled:
@@ -270,6 +270,12 @@ def export_project(pid: str) -> dict:
                                               b.mask_angle, b.mask_offset, b.mask_flip)
                     entry["mask_path"] = str(png)
                 bands.append(entry)
+            else:  # "shape"
+                s = band["shape"]
+                png = out_dir / f"{p.name}-{p.id[:8]}-band{i}-shape.png"
+                shape_render.write_shape_png(str(png), s.width, s.height, s.fill_color,
+                                             s.opacity, s.corner_radius)
+                bands.append({"kind": "shape", "shape": s, "png_path": str(png)})
         cmd = ffmpeg_cmd.build_export_cmd(p, str(out_path), bands=bands, caption_ass_path=caption_ass_path)
     else:
         ass_path = None

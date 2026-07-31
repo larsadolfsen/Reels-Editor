@@ -9,8 +9,9 @@ function showPanel(type) {
   if (type !== "text") Preview.setSelectedTextBlock(null, null);
   if (type !== "video-box") VideoBoxPreview.setSelectedVideoBox(null, null);
   if (type !== "image-box") ImageBoxPreview.setSelectedImageBox(null, null);
+  if (type !== "shape") ShapePreview.setSelectedShape(null, null);
   document.getElementById("style-panel").hidden = false;
-  ["files", "video", "text", "captions", "video-box", "image-box", "settings", "export", "projects", "audio"].forEach((t) => {
+  ["files", "video", "text", "captions", "video-box", "image-box", "settings", "export", "projects", "audio", "shape"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;
   });
 }
@@ -40,6 +41,9 @@ async function onTimelineSelect({ type, item, groupIndex }) {
   } else if (type === "image-box") {
     showPanel("image-box");
     ImageBoxPanel.render(item.id);
+  } else if (type === "shape") {
+    showPanel("shape");
+    ShapePanel.render(item.id);
   }
   renderTimeline();
 }
@@ -71,6 +75,11 @@ const PANEL_NAV_BOTTOM_ITEMS = [
     icon: UI.icon("type", { size: 20 }),
     title: "Text tool",
     shortcut: "T",
+  },
+  {
+    value: "shape",
+    label: "SHAPE",
+    icon: UI.icon("square", { size: 20 }),
   },
   {
     value: "captions",
@@ -144,6 +153,13 @@ function openImageBoxPanel() {
   renderTimeline();
 }
 
+function openShapePanel() {
+  selected = { type: "shape", item: null };
+  showPanel("shape");
+  ShapePanel.render(null);
+  renderTimeline();
+}
+
 function openAudioPanel() {
   selected = { type: "audio" };
   showPanel("audio");
@@ -190,6 +206,9 @@ function reRenderAfterRestore() {
   } else if (t === "image-box") {
     const box = project.image_boxes.find((b) => selected.item && b.id === selected.item.id);
     if (box) onTimelineSelect({ type: "image-box", item: box }); else openFilesPanel();
+  } else if (t === "shape") {
+    const shape = project.shapes.find((s) => selected.item && s.id === selected.item.id);
+    if (shape) onTimelineSelect({ type: "shape", item: shape }); else openFilesPanel();
   } else if (t === "text") {
     openTextPanel();      // renderTextPanel()/currentTextBlock() self-heal to first block or empty state
   } else if (t === "captions" || t === "caption") {
@@ -203,7 +222,7 @@ function reRenderAfterRestore() {
   }
 }
 
-const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, "image-box": openImageBoxPanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel };
+const PANEL_NAV_HANDLERS = { files: openFilesPanel, text: openTextPanel, captions: openCaptionsPanel, "video-box": openVideoBoxPanel, "image-box": openImageBoxPanel, shape: openShapePanel, settings: openSettingsPanel, export: openExportPanel, projects: openProjectsPanel, audio: openAudioPanel };
 
 // TEXT arms the text tool (window.ToolMode = "text", replacing the top toolbar's Text button
 // removed 2026-07-30, remove-text-tool-top-bar) instead of opening its panel or inserting

@@ -145,3 +145,28 @@ def test_slice_carries_fill_mode_and_speed():
     by_order = sorted(out, key=lambda x: x.order)
     assert by_order[0].out_point == 2.0 and by_order[1].in_point == 2.0
     assert all(x.fill_mode == "fill" and x.speed == 2.0 for x in by_order)
+
+def test_shape_end_derived_from_start_and_duration():
+    from app.models import ShapeLayer
+    from app.timeline import shape_end
+    s = ShapeLayer(x=0, y=0, start=1.0, duration=2.5)
+    assert shape_end(s) == 3.5
+
+def test_banded_layers_shape_between_two_text_blocks():
+    from app.models import ShapeLayer, TextBlockLayer, Project
+    low = TextBlockLayer(heading="a", preset_id="p", z_index=-2)
+    high = TextBlockLayer(heading="b", preset_id="p", z_index=2)
+    shape = ShapeLayer(x=0, y=0, z_index=0)
+    p = Project(name="r", text_blocks=[low, high], shapes=[shape])
+    bands = banded_layers(p)
+    assert [b["kind"] for b in bands] == ["text", "shape", "text"]
+    assert bands[1]["shape"] == shape
+
+def test_banded_layers_shape_video_box_image_box_sorted_by_z_index():
+    from app.models import ShapeLayer, VideoBoxLayer, ImageBoxLayer, Project
+    shape = ShapeLayer(x=0, y=0, z_index=1)
+    img = ImageBoxLayer(media_id="m1", file_path="pic.jpg", height=1920, z_index=2)
+    vid = VideoBoxLayer(media_id="m2", file_path="pip.mp4", out_point=1, height=1920, z_index=3)
+    p = Project(name="r", shapes=[shape], image_boxes=[img], video_boxes=[vid])
+    bands = banded_layers(p)
+    assert [b["kind"] for b in bands] == ["shape", "image_box", "video_box"]

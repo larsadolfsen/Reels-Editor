@@ -1,0 +1,4 @@
+/* #panel-shape internal layout: size/position/style/time detail view, no add-picker (a shape
+   isn't sourced from media) and no mask tab (corner radius already covers its shaping need).
+   Mirrors image-box-panel.css's layout (same grid/spacing), renamed to shape-* ids. */
+/* Exposes #panel-shape's internal layout only. Depends on tokens.css, style-panel.css. */
