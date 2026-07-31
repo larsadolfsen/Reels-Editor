@@ -2,10 +2,15 @@
 // #stage mousedown with the Shape tool armed, tracks the drag, shows a live preview box (reusing
 // the .shape-box CSS class), and on mouseup either creates a ShapeLayer sized to the drawn rect
 // (if the drag was at least MIN_SHAPE_DRAG_PX in both dimensions) or does nothing (a plain click,
-// or a drag too small to be intentional). On creation: selects the new shape, opens the Shape
-// panel, and reverts ToolMode to "select" — mirrors stage-click-router.js's Text-tool "insert
-// once, then select" pattern. Depends on window.ToolMode, window.CanvasPoint (canvas-point.js),
-// window.ShapeDragRect (shape-draw-rect.js), ShapePanel.createShapeAt()/panel-shape.js,
+// or a drag too small to be intentional). On creation: reverts ToolMode to "select" BEFORE the
+// async create/save/select sequence runs (not after), selects the new shape at the current
+// playhead position, and opens the Shape panel — mirrors stage-click-router.js's Text-tool
+// "revert to select before the async work starts, then insert" pattern, and for the same reason:
+// a second drag/click landing mid-flight must already see "select". The new shape's `start` is
+// set to the current playhead time (not the ShapeDefaults 0) so its visible window begins where
+// the user was drawing, not at the head of the reel. Depends on window.ToolMode,
+// window.CanvasPoint (canvas-point.js), window.ShapeDragRect (shape-draw-rect.js),
+// ShapePanel.createShapeAt()/panel-shape.js,
 // ShapePreview.render()/shape-preview.js, and editor.js's project/saveProject/panel-nav.js's
 // onTimelineSelect — all classic-script globals resolved at event time, not at this script's
 // load time, so load order relative to those files doesn't matter (same reasoning as
@@ -48,11 +53,16 @@
 
     if (rect.width < MIN_SHAPE_DRAG_PX || rect.height < MIN_SHAPE_DRAG_PX) return;
 
-    const shape = ShapePanel.createShapeAt(rect);
+    // Revert to Select before the (async) create/save/select sequence resolves, not after — a
+    // second drag starting while this one is still in flight must see "select" already, or the
+    // mousedown guard below would let it start a second concurrent create. Mirrors
+    // stage-click-router.js's Text-tool insert, which reverts before its own async work for the
+    // same reason. This also means a throw anywhere below no longer leaves the tool stuck armed.
+    ToolMode.set("select");
+    const shape = ShapePanel.createShapeAt({ ...rect, start: Preview.currentTimelineTime() });
     await saveProject();
     await onTimelineSelect({ type: "shape", item: shape });
     ShapePreview.render(project.shapes, Preview.currentTimelineTime());
-    ToolMode.set("select");
   }
 
   stageEl.addEventListener("mousedown", (e) => {
