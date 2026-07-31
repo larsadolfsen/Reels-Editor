@@ -37,7 +37,3 @@
 .transcript-word:hover {
   text-decoration: underline;
 }
-
-.transcript-word.active-word {
-  color: var(--accent-gold);
-}
