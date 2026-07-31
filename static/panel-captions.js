@@ -64,6 +64,7 @@ function renderCaptionPreview() {
   if (window.Preview && Preview.renderCaptions) {
     Preview.renderCaptions(project, project.text_presets, Preview.currentTimelineTime());
   }
+  if (window.TranscriptSidebar) TranscriptSidebar.render(project);
 }
 
 // Box tab: existing Background/Border settings-row + subpage UI (unchanged), then the shared

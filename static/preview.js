@@ -309,6 +309,7 @@ window.Preview = (() => {
     standbyReadyIndex = -1;
     standbySeeked = false;
     PreviewAudio.load(project);
+    TranscriptSidebar.render(project);
     if (clips.length > 0) {
       playClipAt(0, false);
     } else {
