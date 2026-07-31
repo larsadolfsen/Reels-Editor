@@ -85,6 +85,11 @@
   object-fit: cover;
 }
 
+.shape-box {
+  position: absolute;
+  box-sizing: border-box;
+}
+
 #transport {
   display: flex;
   align-items: center;
