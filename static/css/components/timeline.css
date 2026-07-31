@@ -106,8 +106,23 @@
 #label-overlays {
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 #label-overlays[hidden] { display: none; }
+
+/* Insertion-point line for overlay-lane drag-to-reorder (static/timeline-overlay-layer-drag.js):
+   a thin horizontal line snapped to the nearest lane boundary, same recipe as
+   .clip-drop-indicator (static/timeline-clip-drag.js) rotated for a vertical lane stack. */
+.overlay-drop-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  display: none;
+  pointer-events: none;
+  z-index: 4;
+}
 .overlay-lane-label {
   height: 44px;
   flex-shrink: 0;
