@@ -9,6 +9,7 @@
 window.VideoBoxPanel = window.VideoBoxPanel || {};
 
 (() => {
+  const VIDEO_BOX_HEADER_ICON = UI.icon("picture-in-picture", { size: 18 });
   const VIDEO_BOX_TAB_ICON_BOX = UI.icon("square-dashed", { size: 18 });
   const VIDEO_BOX_TAB_ICON_TIME = UI.icon("timer", { size: 18 });
   const VIDEO_BOX_TAB_ICON_MASK = UI.icon("columns-2", { size: 18 });
@@ -138,7 +139,6 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
   }
 
   function renderDetail(box) {
-    document.getElementById("video-box-name").textContent = box.file_path.split(/[\\/]/).pop();
     const media = findMedia(box);
     const dur = media ? media.duration : box.out_point;
 
@@ -231,6 +231,10 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
   function render(selectedId) {
     document.getElementById("video-box-add").onclick = renderPicker;
     const box = selectedId ? project.video_boxes.find((b) => b.id === selectedId) : null;
+    UI.contextPanelHeader(document.getElementById("video-box-header"), {
+      icon: VIDEO_BOX_HEADER_ICON,
+      label: box ? box.file_path.split(/[\\/]/).pop() : "Video",
+    });
     document.getElementById("video-box-add-group").hidden = !!box;
     document.getElementById("video-box-picker").hidden = !!box;
     document.getElementById("video-box-detail").hidden = !box;
