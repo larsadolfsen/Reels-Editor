@@ -11,7 +11,7 @@
 async function runAutoCaption() {
   ensureCaptionTrack();
   const btn = document.getElementById("caption-auto-caption-btn");
-  const label = btn.querySelector(".label");
+  const label = btn.querySelector(".button-label");
   const errorEl = document.getElementById("caption-transcribe-error");
   errorEl.hidden = true;
   btn.disabled = true;

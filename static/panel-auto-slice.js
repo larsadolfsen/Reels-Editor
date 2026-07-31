@@ -73,7 +73,7 @@ window.AutoSlicePanel = window.AutoSlicePanel || {};
 
   async function runDetect() {
     const btn = document.getElementById("auto-slice-detect-btn");
-    const label = btn.querySelector(".label");
+    const label = btn.querySelector(".button-label");
     btn.disabled = true;
     label.textContent = "Detecting…";
     try {
