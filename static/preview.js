@@ -145,6 +145,7 @@ window.Preview = (() => {
     if (textProject) renderCaptions(textProject, textPresets, timelineTime);
     if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], timelineTime);
     if (textProject) ImageBoxPreview.render(textProject.image_boxes || [], timelineTime);
+    if (textProject) ShapePreview.render(textProject.shapes || [], timelineTime);
   }
 
   function playClipAt(index, autoplay = true) {
@@ -276,6 +277,7 @@ window.Preview = (() => {
     if (textProject) renderCaptions(textProject, textPresets, virtualTime);
     if (textProject) VideoBoxPreview.render(textProject.video_boxes || [], virtualTime);
     if (textProject) ImageBoxPreview.render(textProject.image_boxes || [], virtualTime);
+    if (textProject) ShapePreview.render(textProject.shapes || [], virtualTime);
     Timeline.tick(virtualTime);
     if (virtualPlaying) virtualRafId = requestAnimationFrame(virtualTick);
   }
