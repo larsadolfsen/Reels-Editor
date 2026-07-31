@@ -153,6 +153,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     document.getElementById("image-box-delete").onclick = async () => {
       project.image_boxes = project.image_boxes.filter((b) => b.id !== box.id);
       await saveProject();
+      repaintStage();
       openFilesPanel();
     };
 

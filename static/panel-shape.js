@@ -83,6 +83,7 @@ window.ShapePanel = window.ShapePanel || {};
     document.getElementById("shape-delete").onclick = async () => {
       project.shapes = project.shapes.filter((s) => s.id !== shape.id);
       await saveProject();
+      repaintStage();
       openFilesPanel();
     };
 
