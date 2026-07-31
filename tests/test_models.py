@@ -446,3 +446,30 @@ def test_text_preset_old_saved_json_without_spotlight_fields_loads_with_defaults
     assert loaded.spotlight_highlight is False
     assert loaded.spotlight_highlight_color == "#FFD400"
     assert loaded.spotlight_highlight_border_radius == 4
+
+def test_video_box_layer_locked_defaults_false():
+    v = VideoBoxLayer(media_id="m1", file_path="a.mp4", out_point=5.0, height=1920)
+    assert v.locked is False
+
+def test_image_box_layer_locked_defaults_false():
+    b = ImageBoxLayer(media_id="m1", file_path="pic.jpg", height=1920)
+    assert b.locked is False
+
+def test_text_block_layer_locked_defaults_false():
+    t = TextBlockLayer(heading="H", preset_id="x")
+    assert t.locked is False
+
+def test_locked_field_round_trips_true():
+    v = VideoBoxLayer(media_id="m1", file_path="a.mp4", out_point=5.0, height=1920, locked=True)
+    assert VideoBoxLayer.model_validate_json(v.model_dump_json()).locked is True
+    b = ImageBoxLayer(media_id="m1", file_path="pic.jpg", height=1920, locked=True)
+    assert ImageBoxLayer.model_validate_json(b.model_dump_json()).locked is True
+    t = TextBlockLayer(heading="H", preset_id="x", locked=True)
+    assert TextBlockLayer.model_validate_json(t.model_dump_json()).locked is True
+
+def test_layers_saved_before_the_lock_feature_load_with_locked_false():
+    # Projects saved before this feature carry no "locked" key at all; they must load unchanged.
+    v = VideoBoxLayer.model_validate({"media_id": "m1", "file_path": "a.mp4", "out_point": 5.0, "height": 1920})
+    b = ImageBoxLayer.model_validate({"media_id": "m1", "file_path": "pic.jpg", "height": 1920})
+    t = TextBlockLayer.model_validate({"heading": "H", "preset_id": "x"})
+    assert v.locked is False and b.locked is False and t.locked is False
