@@ -1,7 +1,5 @@
-// Pure sentence-grouping over a flat CaptionWord[] list: splits into groups ending at any word
-// whose text ends in ".", "!", or "?" — a trailing run with no terminal punctuation still forms
-// a final group so no words are dropped. Consumed by static/transcript-sidebar.js. No Python
-// mirror: editor-display-only, not part of export/ASS rendering.
+// Splits a flat CaptionWord[] into sentence groups by punctuation (./!/?); a trailing run with
+// no terminal punctuation still forms a final group. Consumed by static/transcript-sidebar.js.
 (() => {
   function buildSentence(words) {
     return { start: words[0].t_start, end: words[words.length - 1].t_end, words };
