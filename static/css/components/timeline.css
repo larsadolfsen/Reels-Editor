@@ -93,6 +93,15 @@
 #label-video { height: 56px; }
 #label-audio { height: var(--control-height-md); }
 
+/* Clicking a row label selects/opens that row's side panel (static/timeline.js) — cursor
+   signals the label itself is clickable, not just the block beside it. */
+#label-captions,
+#label-video,
+#label-audio,
+.overlay-lane-label-text {
+  cursor: pointer;
+}
+
 .row-label-lock {
   display: inline-flex;
   align-items: center;

@@ -90,7 +90,7 @@ async function confirmFlushAndSwitch(action) {
 function renderTimeline() {
   const t = parseFloat(document.getElementById("time").textContent) || 0;
   Timeline.render(project, t, selected, onTimelineSelect,
-    { onAddClip: () => importMedia(), onSelectAudio: () => openAudioPanel() });
+    { onAddClip: () => importMedia(), onSelectAudio: () => openAudioPanel(), onOpenCaptionsPanel: () => openCaptionsPanel() });
 }
 
 let stylePanelCollapsed = false;
