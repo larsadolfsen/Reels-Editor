@@ -168,3 +168,17 @@ def generate_thumbnail(media_id: str, file_path: str, data_dir: Path) -> Path:
     resolved, env = _resolve_cmd(cmd, _refreshed_path())
     subprocess.run(resolved, capture_output=True, check=True, env=env)
     return thumb_path
+
+def copy_into_media_dir(source_path: str, media_id: str, data_dir: Path) -> Path:
+    """Copies source_path into <data_dir>/media/<media_id><ext> (ext lowercased, from
+    source_path's own suffix). Raises FileNotFoundError if source_path can't be read —
+    surfaces an import-time failure instead of a silent later playback 404 (copy-on-import,
+    added 2026-07-31)."""
+    src = Path(source_path)
+    if not src.is_file():
+        raise FileNotFoundError(f"source file not found: {source_path}")
+    media_dir = data_dir / "media"
+    media_dir.mkdir(parents=True, exist_ok=True)
+    dest = media_dir / f"{media_id}{src.suffix.lower()}"
+    shutil.copy2(src, dest)
+    return dest

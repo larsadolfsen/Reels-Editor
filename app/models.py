@@ -10,6 +10,7 @@ def new_id() -> str:
 class MediaItem(BaseModel):
     id: str = Field(default_factory=new_id)
     file_path: str
+    source_path: str = ""  # the original external path this file was imported from (added 2026-07-31, copy-on-import); dedup-only, never used for playback/export — file_path is the copy under data/media/ that those actually read
     name: str = ""
     duration: float
     has_audio: bool = True

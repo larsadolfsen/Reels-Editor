@@ -3,8 +3,8 @@
 from pathlib import Path
 from unittest.mock import patch
 import pytest
-from app import export_jobs
-from app.main import export_project, list_presets, create_preset, delete_preset, probe, sanitize_export_filename, resolve_export_path, media_peaks
+from app import export_jobs, store
+from app.main import export_project, list_presets, create_preset, delete_preset, probe, sanitize_export_filename, resolve_export_path, media_peaks, import_media
 from app.models import Project, TextBlockLayer, TextPreset, MediaItem, VideoBoxLayer
 
 def test_export_writes_ass_file_and_burns_it_in(tmp_path, monkeypatch):
@@ -426,3 +426,81 @@ def test_export_writes_no_mask_png_for_an_unmasked_video_box(tmp_path, monkeypat
     cmd = run_export.call_args[0][0]
     fc = cmd[cmd.index("-filter_complex") + 1]
     assert "alphamerge" not in fc
+
+def test_import_media_copies_probes_and_appends_media_item(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    src = tmp_path / "PXL_20260711_091857914.mp4"
+    src.write_bytes(b"fake-video")
+    p = Project(name="r")
+    store.save_project(p, tmp_path)
+
+    with patch("app.main.media.probe_duration", return_value=5.0), \
+         patch("app.main.media.has_audio_stream", return_value=True):
+        result = import_media(p.id, {"paths": [str(src)]})
+
+    assert len(result["imported"]) == 1
+    item = result["imported"][0]
+    assert item.source_path == str(src)
+    assert item.name == "PXL_20260711_091857914.mp4"
+    assert item.duration == 5.0
+    assert item.has_audio is True
+    assert item.kind == "video"
+    assert Path(item.file_path) == tmp_path / "media" / f"{item.id}.mp4"
+    assert Path(item.file_path).read_bytes() == b"fake-video"
+    assert result["project"].media_library == [item]
+    # persisted, not just returned
+    reloaded = store.load_project(p.id, tmp_path)
+    assert reloaded.media_library == [item]
+
+def test_import_media_skips_ffprobe_for_images(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    src = tmp_path / "photo.jpg"
+    src.write_bytes(b"fake-jpeg")
+    p = Project(name="r")
+    store.save_project(p, tmp_path)
+
+    with patch("app.main.media.probe_duration") as pd, \
+         patch("app.main.media.has_audio_stream") as ha:
+        result = import_media(p.id, {"paths": [str(src)]})
+
+    pd.assert_not_called()
+    ha.assert_not_called()
+    item = result["imported"][0]
+    assert item.kind == "image"
+    assert item.duration == 0.0
+    assert item.has_audio is False
+
+def test_import_media_dedups_by_source_path(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    src = tmp_path / "clip.mp4"
+    src.write_bytes(b"fake-video")
+    existing = MediaItem(file_path="already/copied.mp4", source_path=str(src), duration=3.0)
+    p = Project(name="r", media_library=[existing])
+    store.save_project(p, tmp_path)
+
+    result = import_media(p.id, {"paths": [str(src)]})
+
+    assert result["imported"] == []
+    assert result["project"].media_library == [existing]
+
+def test_import_media_dedups_within_the_same_batch(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    src = tmp_path / "clip.mp4"
+    src.write_bytes(b"fake-video")
+    p = Project(name="r")
+    store.save_project(p, tmp_path)
+
+    with patch("app.main.media.probe_duration", return_value=1.0), \
+         patch("app.main.media.has_audio_stream", return_value=False):
+        result = import_media(p.id, {"paths": [str(src), str(src)]})
+
+    assert len(result["imported"]) == 1
+    assert len(result["project"].media_library) == 1
+
+def test_import_media_raises_for_unreadable_source(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    p = Project(name="r")
+    store.save_project(p, tmp_path)
+
+    with pytest.raises(FileNotFoundError):
+        import_media(p.id, {"paths": [str(tmp_path / "missing.mp4")]})

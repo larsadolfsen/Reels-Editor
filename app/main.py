@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Form, Request
 from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack, AutoSliceApplyRequest
+from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack, AutoSliceApplyRequest, MediaItem
 from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip, auth, auto_slice, mask_image, shape_render
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
@@ -122,6 +122,28 @@ def probe(path: str) -> dict:
     if media.is_image_path(path):
         return {"duration": 0.0, "has_audio": False, "kind": "image"}
     return {"duration": media.probe_duration(path), "has_audio": media.has_audio_stream(path), "kind": "video"}
+
+@app.post("/api/projects/{pid}/import-media")
+def import_media(pid: str, body: dict) -> dict:
+    p = store.load_project(pid, DATA_DIR)
+    existing_sources = {m.source_path for m in p.media_library if m.source_path}
+    imported: list[MediaItem] = []
+    for path in body.get("paths", []):
+        if path in existing_sources:
+            continue
+        media_id = new_id()
+        dest = media.copy_into_media_dir(path, media_id, DATA_DIR)
+        if media.is_image_path(path):
+            duration, has_audio, kind = 0.0, False, "image"
+        else:
+            duration, has_audio, kind = media.probe_duration(path), media.has_audio_stream(path), "video"
+        item = MediaItem(id=media_id, file_path=str(dest), source_path=path,
+                          name=Path(path).name, duration=duration, has_audio=has_audio, kind=kind)
+        p.media_library.append(item)
+        imported.append(item)
+        existing_sources.add(path)
+    store.save_project(p, DATA_DIR)
+    return {"project": p, "imported": imported}
 
 @app.get("/api/media/{media_id}/peaks")
 def media_peaks(media_id: str, path: str) -> list[float]:

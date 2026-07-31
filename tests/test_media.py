@@ -1,7 +1,7 @@
 # Tests for app.media: ffprobe command construction, duration parsing, and -progress line parsing.
 from unittest.mock import patch
 import pytest
-from app.media import ffprobe_cmd, probe_duration, has_audio_stream, percent_from_progress_line, run_export, is_image_path, _filedialog_options, generate_thumbnail
+from app.media import ffprobe_cmd, probe_duration, has_audio_stream, percent_from_progress_line, run_export, is_image_path, _filedialog_options, generate_thumbnail, copy_into_media_dir
 
 def test_ffprobe_cmd():
     assert ffprobe_cmd("c.mp4") == ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -167,3 +167,32 @@ def test_generate_thumbnail_reuses_cached_file(tmp_path, monkeypatch):
 
     result = generate_thumbnail("media-3", "c.mp4", tmp_path)
     assert result == cached
+
+def test_copy_into_media_dir_copies_to_media_subfolder_with_id_and_ext(tmp_path):
+    src = tmp_path / "source.MP4"
+    src.write_bytes(b"fake-video-bytes")
+
+    result = copy_into_media_dir(str(src), "abc123", tmp_path)
+
+    assert result == tmp_path / "media" / "abc123.mp4"
+    assert result.read_bytes() == b"fake-video-bytes"
+
+def test_copy_into_media_dir_preserves_extension_case_insensitively(tmp_path):
+    src = tmp_path / "photo.PNG"
+    src.write_bytes(b"fake-png-bytes")
+
+    result = copy_into_media_dir(str(src), "img1", tmp_path)
+
+    assert result.name == "img1.png"
+
+def test_copy_into_media_dir_raises_on_missing_source(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        copy_into_media_dir(str(tmp_path / "does-not-exist.mp4"), "x", tmp_path)
+
+def test_copy_into_media_dir_does_not_mutate_the_source_file(tmp_path):
+    src = tmp_path / "source.mp4"
+    src.write_bytes(b"original-bytes")
+
+    copy_into_media_dir(str(src), "y", tmp_path)
+
+    assert src.read_bytes() == b"original-bytes"
