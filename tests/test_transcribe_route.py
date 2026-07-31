@@ -74,6 +74,24 @@ def test_transcribe_with_no_existing_captions_auto_detects(tmp_path, monkeypatch
 
     assert transcribe_mock.call_args.kwargs["language"] == ""
 
+def test_transcribe_job_reports_progress(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
+    seen = []
+    monkeypatch.setattr("app.export_jobs.update_progress", lambda job_id, pct: seen.append(pct))
+    p = Project(name="r")
+    store.save_project(p, tmp_path)
+
+    def fake(path, language=None, on_progress=None):
+        on_progress(42.0)
+        return []
+
+    with patch("app.main.media.run_export"), \
+         patch("app.main.transcribe.transcribe_file", side_effect=fake):
+        client.post(f"/api/projects/{p.id}/transcribe")
+
+    assert seen == [42.0]
+
 def test_transcribe_job_fails_when_ml_extra_missing(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
     monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())

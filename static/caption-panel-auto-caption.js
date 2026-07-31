@@ -11,8 +11,9 @@
 // elsewhere in this app. Failures (e.g. the `ml` extra not installed, or no usable transcription
 // backend) surface in #caption-transcribe-error.
 async function runAutoCaption() {
-  ensureCaptionTrack();
   const btn = document.getElementById("caption-auto-caption-btn");
+  if (btn.disabled) return;
+  ensureCaptionTrack();
   const label = btn.querySelector(".button-label");
   const errorEl = document.getElementById("caption-transcribe-error");
   errorEl.hidden = true;
@@ -23,11 +24,19 @@ async function runAutoCaption() {
     await new Promise((resolve) => {
       CaptionTranscribeProgress.start(job_id, {
         onDone: async () => {
-          project = await (await fetch(`/api/projects/${project.id}`)).json();
-          await renderCaptionPanel();   // repopulates the CAPTIONS transcript list, even while hidden
-          AudioTrackPanel.render();     // refreshes VIDEO panel's AUTO SILENCE no-transcript hint
-          renderTimeline();
-          resolve();
+          try {
+            const res = await fetch(`/api/projects/${project.id}`);
+            if (!res.ok) throw new Error(`Could not reload project (${res.status}).`);
+            project = await res.json();
+            await renderCaptionPanel();   // repopulates the CAPTIONS transcript list, even while hidden
+            AudioTrackPanel.render();     // refreshes VIDEO panel's AUTO SILENCE no-transcript hint
+            renderTimeline();
+          } catch (err) {
+            errorEl.textContent = err.message || "Transcription finished, but reloading the project failed.";
+            errorEl.hidden = false;
+          } finally {
+            resolve();
+          }
         },
         onFailed: (message) => {
           errorEl.textContent = message || "Transcription failed.";
@@ -36,8 +45,8 @@ async function runAutoCaption() {
         },
       });
     });
-  } catch {
-    errorEl.textContent = "Transcription failed: could not reach the server.";
+  } catch (err) {
+    errorEl.textContent = (err && err.message) || "Transcription failed: could not reach the server.";
     errorEl.hidden = false;
   } finally {
     btn.disabled = false;

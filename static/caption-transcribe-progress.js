@@ -4,7 +4,6 @@ window.CaptionTranscribeProgress = window.CaptionTranscribeProgress || {};
 
 (() => {
   const POLL_MS = 500;
-  let pollHandle = null;
 
   function setLabel(text) {
     const btn = document.getElementById("caption-auto-caption-btn");
@@ -12,7 +11,7 @@ window.CaptionTranscribeProgress = window.CaptionTranscribeProgress || {};
     if (label) label.textContent = text;
   }
 
-  async function poll(jobId, callbacks) {
+  async function poll(jobId, callbacks, token) {
     let job;
     try {
       job = await Api.transcribeStatus(jobId);
@@ -20,9 +19,10 @@ window.CaptionTranscribeProgress = window.CaptionTranscribeProgress || {};
       callbacks.onFailed(err.message);
       return;
     }
+    if (token.cancelled) return;
     if (job.status === "running") {
       setLabel(`Transcribing… ${Math.round(job.percent)}%`);
-      pollHandle = setTimeout(() => poll(jobId, callbacks), POLL_MS);
+      setTimeout(() => poll(jobId, callbacks, token), POLL_MS);
       return;
     }
     if (job.status === "done") {
@@ -33,9 +33,10 @@ window.CaptionTranscribeProgress = window.CaptionTranscribeProgress || {};
   }
 
   function start(jobId, callbacks) {
-    clearTimeout(pollHandle);
+    const token = { cancelled: false };
     setLabel("Transcribing… 0%");
-    poll(jobId, callbacks);
+    poll(jobId, callbacks, token);
+    return token;
   }
 
   window.CaptionTranscribeProgress.start = start;
