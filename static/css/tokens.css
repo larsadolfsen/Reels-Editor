@@ -69,13 +69,14 @@
 
   /* Fixed dark palette for UI.tooltip (static/ui-tooltip.js): unlike --bg-0/--text/etc. above,
      these are NOT overridden by :root[data-theme="light"] — tooltips stay dark in both themes,
-     matching how native OS tooltips read regardless of the app's own light/dark state. */
+     matching how native OS tooltips read regardless of the app's own light/dark state. The
+     shortcut chip is deliberately light-on-dark (inverted from the tooltip body) for contrast. */
   --tooltip-bg: #101113;
   --tooltip-border: #26282B;
   --tooltip-text: #E7E7E6;
-  --tooltip-shortcut-bg: #1C1E20;
-  --tooltip-shortcut-border: #2B2D30;
-  --tooltip-shortcut-text: #B4B5B8;
+  --tooltip-shortcut-bg: #E7E7E6;
+  --tooltip-shortcut-border: #E7E7E6;
+  --tooltip-shortcut-text: #101113;
 }
 
 :root[data-theme="light"] {
