@@ -279,18 +279,16 @@
               <p id="caption-transcribe-error" class="context-panel-name col-8 caption-transcribe-error" hidden></p>
             </div>
 
-            <div class="style-group">
-              <button id="caption-filler-auto-remove-btn" class="col-8" data-button data-button-icon="slice" hidden>Auto-remove filler words</button>
-            </div>
+            <div id="caption-filler-section" hidden>
+              <div class="style-group">
+                <button id="caption-filler-auto-remove-btn" class="col-8" data-button data-button-icon="slice" hidden>Auto-remove filler words</button>
+              </div>
 
-            <div class="section-label-spacer text-eyebrow">FILLER WORDS</div>
-            <div class="style-group">
-              <div class="style-row">
-                <input id="caption-filler-word-input" type="text" class="col-6" placeholder="e.g. øh">
-                <button id="caption-filler-word-add" class="col-2" data-button data-button-size="sm" data-button-icon="plus" title="Add filler word"></button>
+              <div class="section-label-spacer text-eyebrow">FILLER WORDS</div>
+              <div class="style-group">
+                <div id="caption-filler-words-row" class="col-8"></div>
               </div>
             </div>
-            <ul id="caption-filler-words-list" class="font-list"></ul>
           </div>
 
         </div>
@@ -298,6 +296,17 @@
         <div id="panel-captions-language" hidden>
           <div id="caption-language-subpanel-header"></div>
           <ul id="caption-language-list" class="font-list"></ul>
+        </div>
+
+        <div id="panel-captions-filler" hidden>
+          <div id="caption-filler-subpanel-header"></div>
+          <div class="style-group">
+            <div class="style-row">
+              <input id="caption-filler-word-input" type="text" class="col-6" placeholder="e.g. øh">
+              <button id="caption-filler-word-add" class="col-2" data-button data-button-size="sm" data-button-icon="plus" title="Add filler word"></button>
+            </div>
+          </div>
+          <ul id="caption-filler-words-list" class="font-list"></ul>
         </div>
 
         <div id="panel-captions-background" hidden>

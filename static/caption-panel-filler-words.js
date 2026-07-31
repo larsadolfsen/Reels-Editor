@@ -1,17 +1,33 @@
-// CAPTIONS panel Filler words tab: the project-wide filler-word list (Project.filler_words)
-// that Auto Slice's filler detection matches against — add a new word, see/remove existing ones —
-// plus a one-click "Auto-remove filler words" button that cuts every transcribed word matching
-// that list straight out of the timeline (via FillerWords.detectRanges + the same
-// /auto-slice/apply endpoint AUTO SLICE uses), no silence detection and no review step. Each list
-// entry that actually occurs in the current transcript gets a warning icon next to it, so the
-// user can tell at a glance which words the button would remove.
-// Not language-specific in storage (plain strings); user builds whatever list fits their
-// transcript's language (e.g. Danish "øh"/"øhm"/"altså" instead of the English default).
-// Exposes window.CaptionPanel.renderFillerWords(). Reaches into editor.js's
+// CAPTIONS panel's Auto tab: the project-wide filler-word list (Project.filler_words) that Auto
+// Slice's filler detection matches against — add a new word, see/remove existing ones — plus a
+// one-click "Auto-remove filler words" button that cuts every transcribed word matching that list
+// straight out of the timeline (via FillerWords.detectRanges + the same /auto-slice/apply
+// endpoint AUTO SLICE uses), no silence detection and no review step. Each list entry that
+// actually occurs in the current transcript gets a warning icon next to it, so the user can tell
+// at a glance which words the button would remove. The whole FILLER WORDS section (button +
+// settings row) stays hidden until a transcript exists — matching this list against no transcript
+// is meaningless. Not language-specific in storage (plain strings); user builds whatever list
+// fits their transcript's language (e.g. Danish "øh"/"øhm"/"altså" instead of the English
+// default). Exposes window.CaptionPanel.renderFillerWords(). Reaches into editor.js's
 // project/saveProject/renderTimeline globals.
 window.CaptionPanel = window.CaptionPanel || {};
 
 (() => {
+  let fillerWordsRowSetValue = null;
+
+  function openFillerPanel() {
+    renderFillerWordsList();
+    document.getElementById("panel-captions-main").hidden = true;
+    document.getElementById("panel-captions-filler").hidden = false;
+  }
+
+  function closeFillerPanel() {
+    document.getElementById("panel-captions-filler").hidden = true;
+    document.getElementById("panel-captions-main").hidden = false;
+  }
+
+  UI.subPanelHeader(document.getElementById("caption-filler-subpanel-header"), { title: "Filler words", onBack: closeFillerPanel });
+
   async function addFillerWord() {
     const input = document.getElementById("caption-filler-word-input");
     const value = input.value.trim().toLowerCase();
@@ -21,13 +37,15 @@ window.CaptionPanel = window.CaptionPanel || {};
       project.filler_words.push(value);
       await saveProject();
     }
-    renderFillerWords();
+    renderFillerWordsList();
+    renderFillerWordsRow();
   }
 
   async function removeFillerWord(word) {
     project.filler_words = project.filler_words.filter((w) => w !== word);
     await saveProject();
-    renderFillerWords();
+    renderFillerWordsList();
+    renderFillerWordsRow();
   }
 
   // True when `word` (normalized the same way as detection) occurs anywhere in the current
@@ -38,7 +56,7 @@ window.CaptionPanel = window.CaptionPanel || {};
     return words.some((w) => FillerWords.normalizeWord(w.text) === normalized);
   }
 
-  function renderFillerWords() {
+  function renderFillerWordsList() {
     const listEl = document.getElementById("caption-filler-words-list");
     listEl.innerHTML = "";
     (project.filler_words || []).forEach((word) => {
@@ -83,6 +101,19 @@ window.CaptionPanel = window.CaptionPanel || {};
     if (e.key === "Enter") { e.preventDefault(); addFillerWord(); }
   });
 
+  function renderFillerWordsRow() {
+    const count = (project.filler_words || []).length;
+    const value = `${count} word${count === 1 ? "" : "s"}`;
+    if (fillerWordsRowSetValue) {
+      fillerWordsRowSetValue(value);
+    } else {
+      fillerWordsRowSetValue = UI.settingsRow(document.getElementById("caption-filler-words-row"), {
+        label: "Filler words", value,
+        onClick: openFillerPanel,
+      });
+    }
+  }
+
   async function autoRemoveFillerWords() {
     const track = ensureCaptionTrack();
     const ranges = FillerWords.detectRanges(track.words, project.filler_words);
@@ -99,5 +130,9 @@ window.CaptionPanel = window.CaptionPanel || {};
 
   document.getElementById("caption-filler-auto-remove-btn").addEventListener("click", autoRemoveFillerWords);
 
-  window.CaptionPanel.renderFillerWords = renderFillerWords;
+  window.CaptionPanel.renderFillerWords = function renderFillerWords() {
+    document.getElementById("caption-filler-section").hidden = !(project.captions && project.captions.words.length);
+    renderFillerWordsRow();
+    renderFillerWordsList();
+  };
 })();
