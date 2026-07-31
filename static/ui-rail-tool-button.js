@@ -14,7 +14,7 @@
 window.UI = window.UI || {};
 
 window.UI.railToolButton = function railToolButton(container) {
-  const items = [{ value: "select", label: "Select", icon: UI.icon("mouse-pointer-2", { size: 20 }) }];
+  const items = [{ value: "select", label: "Select", icon: UI.icon("mouse-pointer-2", { size: 20 }), title: "Select tool", shortcut: "V" }];
   const setActive = UI.iconRail(container, items, ToolMode.get(), (value) => ToolMode.set(value));
   ToolMode.onChange((mode) => setActive(mode === "select" ? "select" : null));
 };

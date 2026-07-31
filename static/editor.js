@@ -332,4 +332,14 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowDown") { e.preventDefault(); Preview.restart(); }
   else if (e.key === "Delete" && selected && selected.type === "video") { e.preventDefault(); VideoPanel.deleteClip(selected.item.id); }
   else if (e.key === "Delete" && selected && selected.type === "text") { e.preventDefault(); deleteSelectedTextBlock(); }
+  // Single-letter rail shortcuts (added 2026-07-31, rail-nav-tooltips): mirror the left icon
+  // rail's tooltip shortcut chips. Gated on !mod so Ctrl/Cmd+P/F/S/C/V keep their native
+  // print/find/save/copy/paste browser behavior — only the bare key arms the rail action.
+  else if (!mod && (e.key === "v" || e.key === "V")) { e.preventDefault(); ToolMode.set("select"); }
+  else if (!mod && (e.key === "t" || e.key === "T")) { e.preventDefault(); navOnSelect("text"); }
+  else if (!mod && (e.key === "p" || e.key === "P")) { e.preventDefault(); navOnSelect("projects"); }
+  else if (!mod && (e.key === "f" || e.key === "F")) { e.preventDefault(); navOnSelect("files"); }
+  else if (!mod && (e.key === "c" || e.key === "C")) { e.preventDefault(); navOnSelect("captions"); }
+  else if (!mod && (e.key === "s" || e.key === "S")) { e.preventDefault(); navOnSelect("settings"); }
+  else if (!mod && (e.key === "e" || e.key === "E")) { e.preventDefault(); navOnSelect("export"); }
 });

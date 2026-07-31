@@ -52,11 +52,15 @@ const PANEL_NAV_TOP_ITEMS = [
     value: "projects",
     label: "PROJECTS",
     icon: UI.icon("layout-grid", { size: 20 }),
+    title: "Projects",
+    shortcut: "P",
   },
   {
     value: "files",
     label: "FILES",
     icon: UI.icon("file", { size: 20 }),
+    title: "Files",
+    shortcut: "F",
   },
 ];
 
@@ -65,21 +69,29 @@ const PANEL_NAV_BOTTOM_ITEMS = [
     value: "text",
     label: "TEXT",
     icon: UI.icon("type", { size: 20 }),
+    title: "Text tool",
+    shortcut: "T",
   },
   {
     value: "captions",
     label: "CAPTIONS",
     icon: UI.icon("captions", { size: 20 }),
+    title: "Captions",
+    shortcut: "C",
   },
   {
     value: "settings",
     label: "SETTINGS",
     icon: UI.icon("settings", { size: 20 }),
+    title: "Settings",
+    shortcut: "S",
   },
   {
     value: "export",
     label: "EXPORT",
     icon: UI.icon("upload", { size: 20 }),
+    title: "Export",
+    shortcut: "E",
   },
 ];
 
