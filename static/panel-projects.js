@@ -9,6 +9,8 @@
 window.ProjectsPanel = window.ProjectsPanel || {};
 
 (() => {
+  UI.contextPanelHeader(document.getElementById("projects-header"), { icon: UI.icon("layout-grid", { size: 18 }), label: "Projects" });
+
   async function render(currentProjectId, callbacks) {
     const listEl = document.getElementById("project-list");
     listEl.innerHTML = "";
