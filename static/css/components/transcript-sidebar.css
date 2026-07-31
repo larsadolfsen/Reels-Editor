@@ -26,7 +26,7 @@
 }
 
 .transcript-sentence.active {
-  color: var(--accent);
+  color: var(--text);
   font-weight: 700;
 }
 
@@ -36,4 +36,8 @@
 
 .transcript-word:hover {
   text-decoration: underline;
+}
+
+.transcript-word.active-word {
+  color: var(--accent);
 }
