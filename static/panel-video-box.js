@@ -155,6 +155,7 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
     document.getElementById("video-box-delete").onclick = async () => {
       project.video_boxes = project.video_boxes.filter((b) => b.id !== box.id);
       await saveProject();
+      repaintStage();
       openFilesPanel();
     };
 
