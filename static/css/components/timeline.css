@@ -333,8 +333,12 @@
 }
 
 /* Drag-to-reorder (static/timeline-clip-drag.js): the dragged block follows the pointer via
-   `transform`, and a thin vertical line shows the snap-to-boundary drop target. */
-.timeline-row[data-row="video"] .timeline-block.dragging {
+   `transform`, and a thin vertical line shows the snap-to-boundary drop target. Shared with
+   drag-to-reposition-in-time (static/timeline-overlay-time-drag.js), which applies the same
+   visual treatment to overlay lanes (TEXT/IMAGE BOX/VIDEO BOX) — that drag doesn't snap, so
+   there's no snap-to-boundary indicator for it. */
+.timeline-row[data-row="video"] .timeline-block.dragging,
+.timeline-row[data-row="overlays"] .timeline-block.dragging {
   z-index: 5;
   opacity: 0.85;
   box-shadow: var(--shadow-chip);

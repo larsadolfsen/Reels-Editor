@@ -262,9 +262,13 @@ window.Timeline = (() => {
   // Merges TEXT blocks + VIDEO BOX + IMAGE BOX layers into one z_index-ordered stack of 44px
   // lanes inside #row-overlays (top = highest z_index = frontmost), replacing the old separate
   // TEXT/VIDEO BOX rows. Each lane still renders its item exactly as before (time-positioned
-  // block, resize handle for text/image boxes/shapes, drag-to-timeline for video boxes) — only
-  // the vertical grouping/order changed. #label-overlays gets one
-  // "TEXT"/"VIDEO BOX"/"IMAGE"/"SHAPE" label per lane, height-matched to its lane.
+  // block, resize handle for text/image boxes/shapes) — only the vertical grouping/order changed.
+  // As of 2026-07-31 (overlay-lane-time-drag), every lane's block also carries dataset.blockId
+  // (video boxes included) and drag-to-reposition-in-time is wired in
+  // static/timeline-overlay-time-drag.js, which also folds in dragging a VIDEO BOX onto the VIDEO
+  // row to stitch it into the main sequence — replacing the native HTML5 draggable/dragstart
+  // wiring this branch used to set. #label-overlays gets one "TEXT"/"VIDEO BOX"/"IMAGE"/"SHAPE"
+  // label per lane, height-matched to its lane.
   // Reordering (drag handle) is wired in static/timeline-overlay-layer-drag.js via
   // OverlayLayers.mergedEntries/renumber. A lane with entry.item.locked shows a "lock" icon
   // instead of "grip-vertical" and is not draggable — see
@@ -307,9 +311,7 @@ window.Timeline = (() => {
         const name = v.file_path.split(/[\\/]/).pop();
         addBlock(laneTrack, v.start * px, (videoBoxEnd(v) - v.start) * px, name, isSel,
           () => onSelect({ type: "video-box", item: v }));
-        const el = laneTrack.lastElementChild;
-        el.draggable = true;
-        el.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/video-box-id", v.id));
+        laneTrack.lastElementChild.dataset.blockId = v.id;
       } else if (entry.kind === "image_box") {
         const b = entry.item;
         const isSel = !!selected && selected.type === "image-box" && !!selected.item && selected.item.id === b.id;
