@@ -283,7 +283,8 @@ window.Timeline = (() => {
       laneLabel.className = "row-label overlay-lane-label" + (entry.item.locked ? " locked" : "");
       laneLabel.dataset.entryId = entry.id;
       const handleIcon = entry.item.locked ? "lock" : "grip-vertical";
-      laneLabel.innerHTML = `<span class="overlay-lane-handle">${UI.icon(handleIcon, { size: 14 })}</span>`;
+      const handleTitle = entry.item.locked ? "Locked — click to unlock" : "Lock layer";
+      laneLabel.innerHTML = `<span class="overlay-lane-handle" title="${handleTitle}">${UI.icon(handleIcon, { size: 14 })}</span>`;
       const text = document.createElement("span");
       text.textContent = entry.kind === "text" ? "TEXT" : entry.kind === "video_box" ? "VIDEO BOX" : "IMAGE BOX";
       laneLabel.appendChild(text);
