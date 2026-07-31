@@ -31,6 +31,9 @@
 // (see panel-nav.js); TEXT-row and IMAGE BOX lanes instead render a right-edge resize handle
 // (`resizable` option on addBlock, dataset.blockId set on each block) driven by
 // timeline-text-resize.js / timeline-image-resize.js respectively.
+// MAIN and AUDIO's labels get a static, non-interactive lock icon (ensureFixedRowLockIcons,
+// idempotent, called from render()) signaling they can never be reordered — see the overlay
+// row's own per-layer lock toggle in renderOverlaysRow/timeline-overlay-layer-drag.js instead.
 // Exposes window.Timeline.{render, groupWords, timeAtX, tick, resetZoom, PX_PER_SEC}.
 // PX_PER_SEC is a live getter reflecting the current zoom level (see the header comment
 // above for the zoom scale itself). tick() is a cheap playhead-only update driven every
@@ -316,7 +319,24 @@ window.Timeline = (() => {
     }
   }
 
+  // MAIN and AUDIO are fixed rows outside the draggable overlay stack (unlike TEXT/VIDEO
+  // BOX/IMAGE BOX, they were never reorderable in the first place) — this is a purely static
+  // visual cue, not a per-layer toggle, so it's rendered once and left alone rather than
+  // rebuilt every render() the way overlay lanes are.
+  function ensureFixedRowLockIcons() {
+    for (const rowName of ["video", "audio"]) {
+      const label = document.getElementById(`label-${rowName}`);
+      if (!label || label.querySelector(".row-label-lock")) continue;
+      const icon = document.createElement("span");
+      icon.className = "row-label-lock";
+      icon.innerHTML = UI.icon("lock", { size: 14 });
+      icon.title = "Always locked";
+      label.prepend(icon);
+    }
+  }
+
   function render(project, timelineTime, selected, onSelect, actions = {}) {
+    ensureFixedRowLockIcons();
     const clips = ordered(project.clips || []);
     const duration = totalDuration(project);
     lastDuration = duration;
