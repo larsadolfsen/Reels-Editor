@@ -3,8 +3,8 @@
 // The button cuts whichever is the active target at the playhead: a selected video box that's
 // active there takes priority (video-box-slice-priority feature); otherwise it cuts the main
 // video clip under the playhead, as before. Reaches into editor.js's project/selected/
-// saveProject/renderTimeline/onTimelineSelect globals and Preview/VideoBoxPreview/VideoBoxPanel
-// globals. Depends on Preview.locate for the main-clip path; the video-box helpers are pure and
+// saveProject/renderTimeline/onTimelineSelect globals and Preview/VideoBoxPreview globals.
+// Depends on Preview.locate for the main-clip path; the video-box helpers are pure and
 // DOM-free (also exported via module.exports for node --test — see tests/js/timeline-slice.test.js).
 // Wrapped in an IIFE (matching font-size-scale.js/style-fields.js/format-run-write.js) so nothing
 // but window.Timeline/module.exports escapes into global scope.
