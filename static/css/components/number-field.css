@@ -20,6 +20,12 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  /* Matches the input's own fixed height (style-panel.css's .style-field input[type="number"])
+     so the two stacked arrow buttons split it evenly (14px each) instead of falling back to
+     their own ~17px content height apiece — without this, align-items: stretch on
+     .number-field-wrap has nothing to stretch (the input's height is fixed, not auto), so the
+     taller arrows column just made the whole control look lopsided. */
+  height: var(--control-size-sm);
   border: var(--border);
   border-top-right-radius: var(--radius-lg);
   border-bottom-right-radius: var(--radius-lg);

@@ -37,6 +37,11 @@ window.StyleSection.box = function box(container, target, options) {
   const preset0 = target.getPreset();
 
   // ---- markup, built once -------------------------------------------------------------
+  const labelEl = document.createElement("div");
+  labelEl.className = "section-label-spacer";
+  UI.text(labelEl, { variant: "eyebrow", content: "SIZE" });
+  container.appendChild(labelEl);
+
   const widthEl = document.createElement("label");
   const heightEl = document.createElement("label");
   styleGroup(styleRow([widthEl, heightEl]));
@@ -57,6 +62,7 @@ window.StyleSection.box = function box(container, target, options) {
     // panel-text.js's onEditEnd/handleBoxResizeEnd), so this is never user-toggled; with
     // sizeModes off (CAPTIONS) there is no FIT to be in, so they always show.
     const sizeFieldsHidden = sizeModes && preset.box_width_mode === "fit";
+    labelEl.hidden = sizeFieldsHidden;
     widthEl.hidden = sizeFieldsHidden;
     heightEl.hidden = sizeFieldsHidden;
     setWidth(preset.box_width);
