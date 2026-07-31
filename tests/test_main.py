@@ -497,6 +497,35 @@ def test_import_media_dedups_within_the_same_batch(tmp_path, monkeypatch):
     assert len(result["imported"]) == 1
     assert len(result["project"].media_library) == 1
 
+def test_import_media_kind_override_labels_audio_files_as_audio(tmp_path, monkeypatch):
+    # Without an explicit kind, a non-image file always auto-detects as "video" — the AUDIO
+    # panel's picker already restricts selection to audio files, so it must override kind
+    # explicitly or its imports would be mislabeled "video" in the media library.
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    src = tmp_path / "song.m4a"
+    src.write_bytes(b"fake-audio")
+    p = Project(name="r")
+    store.save_project(p, tmp_path)
+
+    with patch("app.main.media.probe_duration", return_value=120.0), \
+         patch("app.main.media.has_audio_stream", return_value=True):
+        result = import_media(p.id, {"paths": [str(src)], "kind": "audio"})
+
+    assert result["imported"][0].kind == "audio"
+
+def test_import_media_without_kind_override_still_auto_detects_video(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    src = tmp_path / "clip.mp4"
+    src.write_bytes(b"fake-video")
+    p = Project(name="r")
+    store.save_project(p, tmp_path)
+
+    with patch("app.main.media.probe_duration", return_value=5.0), \
+         patch("app.main.media.has_audio_stream", return_value=True):
+        result = import_media(p.id, {"paths": [str(src)]})
+
+    assert result["imported"][0].kind == "video"
+
 def test_import_media_raises_for_unreadable_source(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
     p = Project(name="r")

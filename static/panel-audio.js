@@ -12,7 +12,7 @@ window.AudioPanel = window.AudioPanel || {};
   async function importMusicFile() {
     const path = await Api.pickFile("audio");
     if (!path) return null;
-    const result = await Api.importMedia(project.id, [path]);
+    const result = await Api.importMedia(project.id, [path], "audio");
     if (!result) return null;
     project = result.project;
     // imported is empty when the file was already in the library (dedup) — fall back to the

@@ -127,13 +127,19 @@ def probe(path: str) -> dict:
 def import_media(pid: str, body: dict) -> dict:
     p = store.load_project(pid, DATA_DIR)
     existing_sources = {m.source_path for m in p.media_library if m.source_path}
+    # "kind" is an optional caller-supplied override (e.g. "audio") for pickers that already
+    # restricted file selection to one type — auto-detection below only distinguishes image vs.
+    # video, so a caller whose picker only offers audio files must say so explicitly.
+    forced_kind = body.get("kind")
     imported: list[MediaItem] = []
     for path in body.get("paths", []):
         if path in existing_sources:
             continue
         media_id = new_id()
         dest = media.copy_into_media_dir(path, media_id, DATA_DIR)
-        if media.is_image_path(path):
+        if forced_kind:
+            duration, has_audio, kind = media.probe_duration(path), media.has_audio_stream(path), forced_kind
+        elif media.is_image_path(path):
             duration, has_audio, kind = 0.0, False, "image"
         else:
             duration, has_audio, kind = media.probe_duration(path), media.has_audio_stream(path), "video"

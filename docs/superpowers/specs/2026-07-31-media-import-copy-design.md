@@ -45,7 +45,9 @@ Body: {"paths": ["C:/...", ...]}
 
 For each path, in order:
 1. Skip if any existing `MediaItem.source_path` already equals this path (dedup — mirrors today's client-side `file_path`-based check, now keyed on the original path since `file_path` no longer is one).
-2. Otherwise: generate a new id, copy the file via `copy_into_media_dir`, probe it (`probe_duration`/`has_audio_stream`, skipped for images exactly as `/api/probe` does today), determine `kind` via `is_image_path`, and build the `MediaItem` (`file_path` = the copy's path, `source_path` = the original path, **`name` = the original path's basename** — `MediaItem.display_name` falls back to `file_path`'s basename when `name` is empty, and `file_path` is no longer the meaningful original filename, so `name` must be set explicitly or the FILES panel would start showing opaque `{id}.ext` names instead of the user's real filenames).
+2. Otherwise: generate a new id, copy the file via `copy_into_media_dir`, probe it (`probe_duration`/`has_audio_stream`, skipped for images exactly as `/api/probe` does today), determine `kind` (see below), and build the `MediaItem` (`file_path` = the copy's path, `source_path` = the original path, **`name` = the original path's basename** — `MediaItem.display_name` falls back to `file_path`'s basename when `name` is empty, and `file_path` is no longer the meaningful original filename, so `name` must be set explicitly or the FILES panel would start showing opaque `{id}.ext` names instead of the user's real filenames).
+
+**`kind` needs an explicit override for audio.** Auto-detection (`is_image_path`) only distinguishes image vs. video — there's no way to detect "this is music" from the file alone the way the old client-side `importMusicFile()` used to just hardcode `kind: "audio"` (its picker was already restricted to audio extensions, so it always knew). The request body accepts an optional `"kind"` field; when present it overrides auto-detection entirely (still probes normally for duration/has_audio). The AUDIO panel's caller passes `"kind": "audio"`; the VIDEO/IMAGE bulk importer omits it and gets auto-detection as before. (Found during manual verification — omitting this would have silently mislabeled every imported music file as `kind: "video"` in the media library.)
 
 Saves the project once after processing all paths. Returns:
 
@@ -64,8 +66,10 @@ A source file that can't be read fails the whole request with a clear error (mat
 **New `static/api-import-media.js`:**
 
 ```js
-Api.importMedia(projectId, paths) -> Promise<{project, imported} | null>
+Api.importMedia(projectId, paths, kind) -> Promise<{project, imported} | null>
 ```
+
+`kind` is optional — passed through to the backend override described above.
 
 POSTs to the new route; `null` on failure (mirrors this codebase's existing `Api.*` failure convention).
 
@@ -90,10 +94,13 @@ async function importMedia() {
 async function importMusicFile() {
   const path = await Api.pickFile("audio");
   if (!path) return null;
-  const result = await Api.importMedia(project.id, [path]);
-  if (!result || !result.imported.length) return null;
+  const result = await Api.importMedia(project.id, [path], "audio");
+  if (!result) return null;
   project = result.project;
-  return result.imported[0].id;
+  // imported is empty when the file was already in the library (dedup) — fall back to the
+  // existing entry so re-picking the same source file still returns a usable media id.
+  const item = result.imported[0] || project.media_library.find((m) => m.source_path === path);
+  return item ? item.id : null;
 }
 ```
 
