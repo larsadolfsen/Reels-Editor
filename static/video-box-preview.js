@@ -134,6 +134,14 @@ window.VideoBoxPreview = (() => {
       if (inWindow) {
         const srcTime = v.in_point + (timelineTime - v.start);
         if (Math.abs(video.currentTime - srcTime) > 0.15) video.currentTime = srcTime;
+      }
+      // Only actually play while the main stage preview is playing (window.Preview.isPaused()) —
+      // render() is also called on every scrub/seek and after edits while the stage is paused, and
+      // used to call video.play() unconditionally whenever inWindow, which made a PiP box's video
+      // run on its own regardless of the main play/pause state and jump back to its trimmed
+      // in-point (looking like a "restart") the moment it was selected.
+      const shouldPlay = inWindow && (!window.Preview || !window.Preview.isPaused());
+      if (shouldPlay) {
         if (video.paused) video.play().catch(() => {});
       } else {
         if (!video.paused) video.pause();
