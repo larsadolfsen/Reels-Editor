@@ -104,16 +104,12 @@ async function importMedia() {
   const paths = await Api.pickFiles();
   if (!paths.length) return;
 
-  for (const path of paths) {
-    if (project.media_library.some((m) => m.file_path === path)) continue; // already imported
-    const probeResult = await Api.probeMedia(path);
-    if (!probeResult) continue;
-    const { duration, has_audio, kind } = probeResult;
-    const mediaId = crypto.randomUUID().replaceAll("-", "");
-    project.media_library.push({ id: mediaId, file_path: path, duration, has_audio, kind });
-  }
+  // The import route copies each file, probes it, and saves the project server-side — no
+  // client-side saveProject() needed, same as runAutoCaption()'s server-returned project.
+  const result = await Api.importMedia(project.id, paths);
+  if (!result) return;
+  project = result.project;
 
-  await saveProject();
   MediaPanel.render();
 }
 

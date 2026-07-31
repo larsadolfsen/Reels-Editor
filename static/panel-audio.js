@@ -12,12 +12,13 @@ window.AudioPanel = window.AudioPanel || {};
   async function importMusicFile() {
     const path = await Api.pickFile("audio");
     if (!path) return null;
-    const probeResult = await Api.probeMedia(path);
-    if (!probeResult) { alert("probe failed"); return null; }
-    const { duration, has_audio } = probeResult;
-    const mediaId = crypto.randomUUID().replaceAll("-", "");
-    project.media_library.push({ id: mediaId, file_path: path, duration, has_audio, kind: "audio" });
-    return mediaId;
+    const result = await Api.importMedia(project.id, [path]);
+    if (!result) return null;
+    project = result.project;
+    // imported is empty when the file was already in the library (dedup) — fall back to the
+    // existing entry so re-picking the same source file still returns a usable media id.
+    const item = result.imported[0] || project.media_library.find((m) => m.source_path === path);
+    return item ? item.id : null;
   }
 
   async function addMusic() {
