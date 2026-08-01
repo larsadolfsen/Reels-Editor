@@ -1,6 +1,19 @@
 const test = require("node:test");
 const assert = require("node:assert");
 
+// Minimal DOMTokenList stand-in shared by every fake element below — real elements always
+// have add/remove/contains, and static/ui-popover-toolbar.js's idle-gated reveal logic reads
+// toolbar.classList.contains(...) on a plain document.createElement() result, not just the
+// anchor, so both fakes need the same full surface.
+function makeClassList() {
+  return {
+    list: [],
+    add(...names) { names.forEach((n) => { if (!this.list.includes(n)) this.list.push(n); }); },
+    remove(...names) { names.forEach((n) => { const i = this.list.indexOf(n); if (i !== -1) this.list.splice(i, 1); }); },
+    contains(name) { return this.list.includes(name); },
+  };
+}
+
 function makeFakeDocument() {
   return {
     createElement(tag) {
@@ -10,6 +23,7 @@ function makeFakeDocument() {
         innerHTML: "",
         className: "",
         style: {},
+        classList: makeClassList(),
         addEventListener(evt, fn) { this._listeners = this._listeners || {}; this._listeners[evt] = fn; },
         children: [],
         appendChild(el) { this.children.push(el); return el; },
@@ -20,7 +34,7 @@ function makeFakeDocument() {
 
 function makeFakeAnchor(rect = { left: 0, width: 100 }) {
   return {
-    classList: { list: [], add(...names) { this.list.push(...names); } },
+    classList: makeClassList(),
     children: [],
     appendChild(el) { this.children.push(el); return el; },
     addEventListener(evt, fn) { this._listeners = this._listeners || {}; this._listeners[evt] = fn; },
@@ -85,7 +99,12 @@ test("UI.popoverToolbar wires onClick and stops propagation", () => {
   assert.strictEqual(stopped, true);
 });
 
-test("UI.popoverToolbar tracks the pointer's x position across the anchor on mousemove", () => {
+// The reveal is idle-gated (static/ui-popover-toolbar.js's HOVER_DELAY_MS): mousemove only
+// schedules the position write, it doesn't apply it until the pointer has been still for
+// that long. These tests use node:test's mock timers to advance past that delay instead of
+// asserting synchronously right after mousemove.
+test("UI.popoverToolbar tracks the pointer's x position across the anchor on mousemove", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
   global.document = makeFakeDocument();
   require("../../static/ui-icon.js");
   require("../../static/ui-popover-toolbar.js");
@@ -94,20 +113,28 @@ test("UI.popoverToolbar tracks the pointer's x position across the anchor on mou
   const toolbar = global.UI.popoverToolbar(anchor, [{ icon: "copy", title: "Copy", onClick: () => {} }]);
 
   anchor._listeners.mousemove({ clientX: 90 });
+  t.mock.timers.tick(120);
   assert.strictEqual(toolbar.style.left, "40px");
 });
 
-test("UI.popoverToolbar clamps the tracked position to the anchor's own bounds", () => {
+test("UI.popoverToolbar clamps the tracked position to the anchor's own bounds", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
   global.document = makeFakeDocument();
   require("../../static/ui-icon.js");
   require("../../static/ui-popover-toolbar.js");
 
-  const anchor = makeFakeAnchor({ left: 50, width: 100 });
-  const toolbar = global.UI.popoverToolbar(anchor, [{ icon: "copy", title: "Copy", onClick: () => {} }]);
+  // Once revealed, mousemove no longer repositions the toolbar (see the file's own header
+  // comment) — so each clamp direction needs its own fresh, not-yet-visible instance rather
+  // than two sequential moves on one toolbar.
+  const anchorLow = makeFakeAnchor({ left: 50, width: 100 });
+  const toolbarLow = global.UI.popoverToolbar(anchorLow, [{ icon: "copy", title: "Copy", onClick: () => {} }]);
+  anchorLow._listeners.mousemove({ clientX: 0 });
+  t.mock.timers.tick(120);
+  assert.strictEqual(toolbarLow.style.left, "0px");
 
-  anchor._listeners.mousemove({ clientX: 0 });
-  assert.strictEqual(toolbar.style.left, "0px");
-
-  anchor._listeners.mousemove({ clientX: 1000 });
-  assert.strictEqual(toolbar.style.left, "100px");
+  const anchorHigh = makeFakeAnchor({ left: 50, width: 100 });
+  const toolbarHigh = global.UI.popoverToolbar(anchorHigh, [{ icon: "copy", title: "Copy", onClick: () => {} }]);
+  anchorHigh._listeners.mousemove({ clientX: 1000 });
+  t.mock.timers.tick(120);
+  assert.strictEqual(toolbarHigh.style.left, "100px");
 });
