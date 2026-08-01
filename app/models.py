@@ -49,6 +49,7 @@ class VideoBoxLayer(BaseModel):
     height: int                # px; set from source aspect ratio at creation, kept locked on resize
     z_index: int = -1          # new boxes default just below the default text z_index (0)
     mask_shape_id: str | None = None  # id of the ShapeLayer (in Project.shapes) acting as this box's mask, or None
+    mask_enabled: bool = True  # on/off switch independent of mask_shape_id: OFF renders unmasked but keeps the assigned shape's config
     locked: bool = False       # blocks timeline drag-reorder in the overlay stack; stage move/resize unaffected
 
 class ImageBoxLayer(BaseModel):
@@ -63,6 +64,7 @@ class ImageBoxLayer(BaseModel):
     height: int                # px; set from the image's aspect ratio at creation, kept locked on resize
     z_index: int = -1          # same convention as VideoBoxLayer: new boxes default just below text (0)
     mask_shape_id: str | None = None  # id of the ShapeLayer (in Project.shapes) acting as this box's mask, or None
+    mask_enabled: bool = True  # on/off switch independent of mask_shape_id: OFF renders unmasked but keeps the assigned shape's config
     locked: bool = False       # blocks timeline drag-reorder in the overlay stack; stage move/resize unaffected
 
 class ShapeLayer(BaseModel):

@@ -123,6 +123,10 @@ const ICON_PATHS = {
   // Added Task 9 (layer-masking-system, timeline mask accordion): MASK sub-lane icon, verified
   // against Lucide's current "venetian-mask" path data.
   "venetian-mask": '<path d="M18 11c-1.5 0-2.5.5-3 2"/><path d="M4 6a2 2 0 0 0-2 2v4a5 5 0 0 0 5 5 8 8 0 0 1 5 2 8 8 0 0 1 5-2 5 5 0 0 0 5-5V8a2 2 0 0 0-2-2h-3a8 8 0 0 0-5 2 8 8 0 0 0-5-2z"/><path d="M6 11c1.5 0 2.5.5 3 2"/>',
+  // Added 2026-08-01 (mask-enabled-toggle): dummy "Person"/"Text" mask-type rows in the Mask
+  // tab's drill-down list (box-panel-mask.js), alongside the existing "Shape" ("venetian-mask").
+  user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  type: '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/>',
 };
 
 // Wrapper attributes shared by every icon already inlined across this codebase's markup

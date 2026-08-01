@@ -275,11 +275,14 @@ def media_file(path: str):
     return media.media_response(path)
 
 def _rasterize_mask_png(box, shapes: list, out_dir: Path, stem: str, band_index: int) -> str | None:
-    """If box has a mask_shape_id resolving to a real shape, rasterize its mask PNG (named
-    "{stem}-band{band_index}-mask.png" under out_dir) and return its path; else return None.
-    box must have x/y/width/height/mask_shape_id attributes — works for both VideoBoxLayer and
-    ImageBoxLayer via duck typing, since both bands build this the same way."""
-    if not box.mask_shape_id:
+    """If box has a mask_shape_id resolving to a real shape and mask_enabled is not False,
+    rasterize its mask PNG (named "{stem}-band{band_index}-mask.png" under out_dir) and return
+    its path; else return None. box must have x/y/width/height/mask_shape_id/mask_enabled
+    attributes — works for both VideoBoxLayer and ImageBoxLayer via duck typing, since both bands
+    build this the same way. mask_enabled (added 2026-08-01, mask-enabled-toggle) lets a box keep
+    its mask shape configured but temporarily excluded from export, mirroring the Mask tab's
+    preview-side on/off switch (box-mask-render.js's maskingShapeFor)."""
+    if not box.mask_shape_id or not box.mask_enabled:
         return None
     shape = next((s for s in shapes if s.id == box.mask_shape_id), None)
     if not shape:

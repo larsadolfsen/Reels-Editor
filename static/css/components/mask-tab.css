@@ -1,10 +1,17 @@
 /* VIDEO BOX/IMAGE BOX panel's Mask tab (static/box-panel-mask.js): the assigned-mask row
    (icon+label on the left, a remove button on the right, built on the shared .list-row card
-   recipe, list-row.css, applied via UI.listRow). Depends on tokens.css. The unassigned "Type"
-   settings row + drill-down list (added 2026-08-01, mask-list-styling, replacing this file's old
+   recipe, list-row.css, applied via UI.listRow). Depends on tokens.css. The "Type" settings row +
+   drill-down list (added 2026-08-01, mask-list-styling, replacing this file's old
    .mask-add-gallery-wrap/.mask-type-gallery/.mask-type-gallery-card card-grid rules) needs no
-   styling of its own — it composes UI.settingsRow (settings-row.css), UI.subPanelHeader
-   (sub-panel.css), and the shared .font-list rows (sub-panel.css) as-is. */
+   styling of its own beyond .font-list-row-disabled below — it composes UI.settingsRow
+   (settings-row.css), UI.subPanelHeader (sub-panel.css), and the shared .font-list rows
+   (sub-panel.css) as-is. */
+.font-list-row-disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
 .mask-assigned-row {
   display: flex;
   align-items: center;

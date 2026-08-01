@@ -1,5 +1,6 @@
 // Shared shape-as-mask rendering (layer-masking-system) for video/image PiP boxes: a box with
-// mask_shape_id set looks up that ShapeLayer in the (bare-global, classic-script-shared)
+// mask_shape_id set AND mask_enabled !== false (the Mask tab's on/off switch, added 2026-08-01
+// mask-enabled-toggle — box-panel-mask.js) looks up that ShapeLayer in the (bare-global, classic-script-shared)
 // project.shapes, computes its rect in the box's local coordinate space via ShapeMask.localRect,
 // and applies it as a CSS mask-image (ShapeMask.cssMaskImage) — soft-alpha, respecting the
 // shape's opacity and corner_radius. While the masking shape is the currently selected layer
@@ -16,7 +17,7 @@ window.BoxMaskRender = (() => {
   const rubylithOverlays = new Map(); // boxId -> <div>, the translucent red "what gets cut" overlay shown only while its mask shape is selected
 
   function maskingShapeFor(box) {
-    if (!box.mask_shape_id) return null;
+    if (!box.mask_shape_id || box.mask_enabled === false) return null;
     return (project.shapes || []).find((s) => s.id === box.mask_shape_id) || null;
   }
 

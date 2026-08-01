@@ -1,105 +1,152 @@
 // Shared Box-panel MASK tab for VIDEO BOX / IMAGE BOX (added 2026-08-01, mask-visibility-ui,
 // replacing the retired timeline-mask-accordion.js): window.BoxMaskPanel.render(container, box,
-// {onChange, getWindow}) shows a "Type" settings row + drill-down list (only "Shape" today) when
-// box.mask_shape_id is unset, or an assigned-mask row (icon + "Shape" label, trash icon removes
-// the mask) plus inline SIZE & POSITION + OPACITY fields for that mask shape when set — added
-// 2026-08-01, mask-list-styling, replacing the row's old click-to-navigate-to-the-standalone-
-// SHAPE-panel behavior: the mask shape is edited as a subpage of this box's own panel, not on
-// its own page, reusing ShapeSizePositionFields/ShapeOpacityField (shared with panel-shape.js's
-// Box/Style tabs). Field edits use their own lightweight save+repaint (`fieldOnChange`, mirroring
-// panel-shape.js's `repaintStage()`) rather than the caller's `onChange` — that one rebuilds this
-// whole panel via `renderDetail(box)`, which fires on every render of the assign/remove-mask
-// picker but must NOT fire per keystroke (UI.numberField's onChange fires on every `input`
-// event; rebuilding the container mid-keystroke would tear down the very input being typed into,
-// same hazard box-panel-size-position.js documents for its own fields). `getWindow()` returns
-// {start, duration} — the box's own current visible window — used to size a newly-created mask
-// shape and to keep an existing mask shape's start/duration following the box's own on every
-// render. A mask shape has no timing of its own; before this it could drift from its box
-// (edited independently via the SHAPE panel's Time tab, or just never updated after the box's
-// own Time fields changed), which made selecting the mask seek the playhead to a moment the box
-// itself wasn't even visible at — so nothing rendered, defeating the whole point of the rubylith
-// preview. Rebuilds `container` fresh each call, same contract as box-panel-size-position.js.
-//
-// The mask-type picker (added 2026-08-01, mask-list-styling, replacing the retired
-// ui-mask-type-gallery.js card grid) follows the same settings-row + drill-down-list pattern as
-// the shared style sections' Font Family/Weight rows (style-section-font-family.js/
-// style-section-font-weight.js) — a UI.settingsRow opens a UI.subPanelHeader + .font-list of
-// options — but built as a lightweight local main/picker toggle instead of going through
+// {onChange, getWindow}) renders, in order: an ON/OFF switch (box.mask_enabled, added 2026-08-01
+// mask-enabled-toggle — independent of whether a mask type is even picked yet: OFF renders the
+// box unmasked while keeping mask_shape_id/the shape's own config untouched, so switching back ON
+// instantly reapplies the same mask; see box-mask-render.js's maskingShapeFor and
+// app/main.py's _rasterize_mask_png, both of which gate on this same field for preview/export),
+// a "Type" settings row (added 2026-08-01, mask-list-styling, replacing the retired
+// ui-mask-type-gallery.js card grid) that always shows the current selection ("None"/"Shape",
+// mirroring style-section-font-family.js's Font Family row) and opens a drill-down list of mask
+// source kinds — only "Shape" (`MASK_TYPES`) is actually selectable, "Person"/"Text" are
+// disabled placeholder rows, per the retired gallery's own note that more kinds could be added
+// later as more rows — and finally a content area that changes to match the current selection:
+// empty when unassigned, or the assigned-mask row (icon + "Shape" label, trash icon removes the
+// mask) plus inline SIZE & POSITION + OPACITY fields for that mask shape (added 2026-08-01,
+// mask-list-styling, replacing the row's old click-to-navigate-to-the-standalone-SHAPE-panel
+// behavior — the mask shape is edited as a subpage of this box's own panel, not on its own page,
+// reusing ShapeSizePositionFields/ShapeOpacityField shared with panel-shape.js's Box/Style tabs).
+// The picker subpage is a lightweight local main/picker toggle rather than going through
 // StylePanelHost, since this panel has no drill-element pairing wired up in index.html the way
-// TEXT/CAPTIONS do. `MASK_TYPES` is `[{value, icon, label}]`; only "shape" exists today, mirroring
-// the retired gallery's own note that more mask source kinds (text/person) could be added later
-// as more list rows without restructuring this file.
+// TEXT/CAPTIONS do.
+//
+// Field edits use their own lightweight save+repaint (`fieldOnChange`, mirroring
+// panel-shape.js's `repaintStage()`) rather than the caller's `onChange` — that one rebuilds this
+// whole panel via `renderDetail(box)`, which fires on every render of the switch/type-assign/
+// remove-mask actions but must NOT fire per keystroke (UI.numberField's onChange fires on every
+// `input` event; rebuilding the container mid-keystroke would tear down the very input the user
+// is still typing into, same hazard box-panel-size-position.js documents for its own fields).
+// `getWindow()` returns {start, duration} — the box's own current visible window — used to size a
+// newly-created mask shape and to keep an existing mask shape's start/duration following the
+// box's own on every render. A mask shape has no timing of its own; before this it could drift
+// from its box (edited independently via the SHAPE panel's Time tab, or just never updated after
+// the box's own Time fields changed), which made selecting the mask seek the playhead to a moment
+// the box itself wasn't even visible at — so nothing rendered, defeating the whole point of the
+// rubylith preview. Rebuilds `container` fresh each call, same contract as
+// box-panel-size-position.js.
 window.BoxMaskPanel = (() => {
-  const MASK_TYPES = [{ value: "shape", icon: "venetian-mask", label: "Shape" }];
+  const MASK_TYPES = [
+    { value: "shape", icon: "venetian-mask", label: "Shape", enabled: true },
+    { value: "person", icon: "user", label: "Person", enabled: false },
+    { value: "text", icon: "type", label: "Text", enabled: false },
+  ];
 
   function maskShapeFor(box) {
     if (!box.mask_shape_id) return null;
     return (project.shapes || []).find((s) => s.id === box.mask_shape_id) || null;
   }
 
+  function checkmark() {
+    const check = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    check.setAttribute("class", "font-list-checkmark");
+    check.setAttribute("viewBox", "0 0 24 24");
+    check.setAttribute("fill", "none");
+    check.setAttribute("stroke", "currentColor");
+    check.setAttribute("stroke-width", "2");
+    check.setAttribute("stroke-linecap", "round");
+    check.setAttribute("stroke-linejoin", "round");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M20 6 9 17l-5-5");
+    check.appendChild(path);
+    return check;
+  }
+
   function render(container, box, { onChange, getWindow }) {
     container.innerHTML = "";
     const shape = maskShapeFor(box);
+    const currentType = shape ? "shape" : null;
 
     const eyebrow = document.createElement("div");
     eyebrow.className = "section-label-spacer text-eyebrow";
     eyebrow.textContent = "MASK";
     container.appendChild(eyebrow);
 
+    // ---- ON/OFF switch — always shown, independent of whether a type is picked yet ----------
+    const switchGroup = document.createElement("div");
+    switchGroup.className = "style-group";
+    container.appendChild(switchGroup);
+    const switchEl = document.createElement("div");
+    switchGroup.appendChild(switchEl);
+    UI.buttonGroup(switchEl,
+      [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
+      box.mask_enabled ? "on" : "off",
+      async (v) => {
+        box.mask_enabled = v === "on";
+        await onChange();
+      });
+
     const group = document.createElement("div");
     group.className = "style-group";
     container.appendChild(group);
 
-    if (!shape) {
-      async function assignType(kind) {
-        if (kind !== "shape") return;
-        const win = getWindow();
-        const newShape = ShapePanel.createShapeAt({
-          x: box.x, y: box.y, width: box.width, height: box.height,
-          start: win.start, duration: win.duration,
-        });
-        box.mask_shape_id = newShape.id;
-        await onChange();
+    // ---- "Type" settings row + drill-down list ----------------------------------------------
+    async function assignType(kind) {
+      if (kind === currentType) { closePicker(); return; }
+      const win = getWindow();
+      const newShape = ShapePanel.createShapeAt({
+        x: box.x, y: box.y, width: box.width, height: box.height,
+        start: win.start, duration: win.duration,
+      });
+      box.mask_shape_id = newShape.id;
+      await onChange();
+    }
+
+    const mainEl = document.createElement("div");
+    mainEl.className = "col-8";
+    const pickerEl = document.createElement("div");
+    pickerEl.hidden = true;
+    group.append(mainEl, pickerEl);
+
+    function openPicker() { mainEl.hidden = true; pickerEl.hidden = false; }
+    function closePicker() { pickerEl.hidden = true; mainEl.hidden = false; }
+
+    const currentTypeInfo = MASK_TYPES.find((t) => t.value === currentType);
+    UI.settingsRow(mainEl, { label: "Type", value: currentTypeInfo ? currentTypeInfo.label : "None", onClick: openPicker });
+
+    const headerEl = document.createElement("div");
+    pickerEl.appendChild(headerEl);
+    UI.subPanelHeader(headerEl, { title: "Mask Type", onBack: closePicker });
+
+    const listEl = document.createElement("ul");
+    listEl.className = "font-list";
+    pickerEl.appendChild(listEl);
+    MASK_TYPES.forEach((t) => {
+      const li = document.createElement("li");
+      li.className = "font-list-row";
+      UI.listRow(li, { subtle: true });
+      if (t.enabled) {
+        li.addEventListener("click", () => assignType(t.value));
+      } else {
+        li.classList.add("font-list-row-disabled");
       }
 
-      const mainEl = document.createElement("div");
-      mainEl.className = "col-8";
-      const pickerEl = document.createElement("div");
-      pickerEl.hidden = true;
-      group.append(mainEl, pickerEl);
+      const nameGroup = document.createElement("span");
+      nameGroup.className = "font-list-row-name-group";
+      const iconEl = document.createElement("span");
+      iconEl.innerHTML = UI.icon(t.icon, { size: 16 });
+      const nameEl = document.createElement("span");
+      nameEl.className = "font-list-row-name";
+      nameEl.textContent = t.label;
+      nameGroup.append(iconEl, nameEl);
+      li.appendChild(nameGroup);
 
-      function openPicker() { mainEl.hidden = true; pickerEl.hidden = false; }
-      function closePicker() { pickerEl.hidden = true; mainEl.hidden = false; }
+      if (t.value === currentType) li.appendChild(checkmark());
 
-      UI.settingsRow(mainEl, { label: "Type", value: "None", onClick: openPicker });
+      listEl.appendChild(li);
+    });
 
-      const headerEl = document.createElement("div");
-      pickerEl.appendChild(headerEl);
-      UI.subPanelHeader(headerEl, { title: "Mask Type", onBack: closePicker });
-
-      const listEl = document.createElement("ul");
-      listEl.className = "font-list";
-      pickerEl.appendChild(listEl);
-      MASK_TYPES.forEach((t) => {
-        const li = document.createElement("li");
-        li.className = "font-list-row";
-        UI.listRow(li, { subtle: true });
-        li.addEventListener("click", () => assignType(t.value));
-
-        const nameGroup = document.createElement("span");
-        nameGroup.className = "font-list-row-name-group";
-        const iconEl = document.createElement("span");
-        iconEl.innerHTML = UI.icon(t.icon, { size: 16 });
-        const nameEl = document.createElement("span");
-        nameEl.className = "font-list-row-name";
-        nameEl.textContent = t.label;
-        nameGroup.append(iconEl, nameEl);
-        li.appendChild(nameGroup);
-
-        listEl.appendChild(li);
-      });
-      return;
-    }
+    // ---- content area — changes to match the current selection ------------------------------
+    if (!shape) return;
 
     // Write-through, not a one-time seed: a mask shape's window always follows its box's.
     const win = getWindow();
