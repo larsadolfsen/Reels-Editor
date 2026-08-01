@@ -81,7 +81,6 @@ window.ShapePreview = (() => {
       div.style.top = (s.y / 1920 * stageH) + "px";
       div.style.width = (s.width / 1080 * stageW) + "px";
       div.style.height = (s.height / 1920 * stageH) + "px";
-      div.style.zIndex = String(s.z_index);
       // A shape being edited as a mask source (only ever rendered here while selected, see the
       // maskShapeIds skip above) isn't really "content" — its target box's own rubylith overlay
       // (box-mask-render.js) already shows what gets cut. Rendering it with its normal solid
@@ -89,6 +88,12 @@ window.ShapePreview = (() => {
       // outline instead and leave the stage content beneath it visible.
       const isMask = maskShapeIds.has(s.id);
       div.classList.toggle("shape-box-mask-outline", isMask);
+      // The rubylith overlay (box-mask-render.js) is hardcoded to z-index 9999 so it always sits
+      // above the box content it's tinting — but the shape's own z_index is usually just -1, which
+      // put its dashed outline BELOW that red tint while editing, hiding the very handles the user
+      // is trying to drag. Force the outline above the rubylith instead of using the shape's normal
+      // stacking position, which is meaningless anyway now that it renders as an outline, not content.
+      div.style.zIndex = isMask ? "10000" : String(s.z_index);
       div.style.backgroundColor = isMask ? "transparent" : ShapeColor.toRgba(s.fill_color, s.opacity);
       // Corner radius is stored in 1080x1920 canvas px; scale it the same way width/height are
       // scaled to the stage's actual rendered size, so it doesn't visually change with zoom.
