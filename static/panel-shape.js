@@ -88,6 +88,8 @@ window.ShapePanel = window.ShapePanel || {};
       (project.image_boxes || []).forEach((b) => { if (b.mask_shape_id === shape.id) b.mask_shape_id = null; });
       VideoBoxPreview.setActiveMaskShapeId(null);
       ImageBoxPreview.setActiveMaskShapeId(null);
+      VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+      ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
       await saveProject();
       repaintStage();
       renderTimeline();
