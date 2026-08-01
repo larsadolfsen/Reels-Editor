@@ -71,6 +71,23 @@ window.BoxMaskPanel = (() => {
     return check;
   }
 
+  function refreshBoxPreviews() {
+    VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+    ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+  }
+
+  async function persistShapeEdit() {
+    await saveProject();
+    renderTimeline();
+    refreshBoxPreviews();
+  }
+
+  // Remembers the args of the last full render() call so syncActive's own stage-drag callbacks
+  // (below) can trigger a full field refresh after a drag ends, without needing their own copy
+  // of onChange/getWindow — mirrors panel-shape.js's renderDetail(shape) re-call after its own
+  // onDragEnd/onMoveEnd.
+  let lastRenderArgs = null;
+
   // Drive the rubylith "what gets cut" preview — previously only panel-shape.js's own
   // select/deselect set this, but a mask shape is no longer independently selectable
   // (mask-list-styling moved its editing inline into this Mask tab). `active` gates it to only
@@ -80,16 +97,69 @@ window.BoxMaskPanel = (() => {
   // BoxMaskRender-backed variable (see mask-shape-active-id.js), so both always receive the same
   // value regardless of which box kind is open. Exposed as `syncActive` so a plain tab switch
   // (no field change, no re-render of this panel's own DOM) can still update it.
+  //
+  // On-stage resize/move handles for the mask shape itself (resize-target-mask-shape follow-up):
+  // while the Mask tab is active, dragging on the stage resizes/moves the mask shape, not the box
+  // it's masking — the box's own handles are suppressed by panel-video-box.js/panel-image-box.js
+  // for as long as this tab stays open (see their own setSelectedVideoBox/setSelectedImageBox
+  // calls). This reuses ShapePreview's existing selected-shape resize/drag machinery verbatim —
+  // the exact code path panel-shape.js already drives for an ordinary, non-mask shape — rather
+  // than building a second implementation.
   function syncActive(box, active) {
     const shape = box.mask_enabled ? maskShapeFor(box) : null;
     const activeMaskShapeId = active && shape ? shape.id : null;
     VideoBoxPreview.setActiveMaskShapeId(activeMaskShapeId);
     ImageBoxPreview.setActiveMaskShapeId(activeMaskShapeId);
-    VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
-    ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+    refreshBoxPreviews();
+
+    if (active && shape) {
+      ShapePreview.setSelectedShape(shape.id, {
+        onResize: (size) => {
+          const scale = stageScale();
+          const width = Math.round(size.width * scale);
+          const height = Math.round(size.height * scale);
+          ShapePreview.render(
+            project.shapes.map((s) => (s.id === shape.id ? { ...s, width, height } : s)),
+            Preview.currentTimelineTime(),
+          );
+        },
+        onDragEnd: async (size) => {
+          const scale = stageScale();
+          shape.width = Math.round(size.width * scale);
+          shape.height = Math.round(size.height * scale);
+          await persistShapeEdit();
+          if (lastRenderArgs) render(lastRenderArgs.container, lastRenderArgs.box, lastRenderArgs.opts);
+        },
+        onMove: (delta) => {
+          const scale = stageScale();
+          ShapePreview.render(
+            project.shapes.map((s) => (s.id === shape.id ? { ...s, x: s.x + delta.dx * scale, y: s.y + delta.dy * scale } : s)),
+            Preview.currentTimelineTime(),
+          );
+        },
+        onMoveEnd: async (delta) => {
+          const scale = stageScale();
+          shape.x = Math.round(shape.x + delta.dx * scale);
+          shape.y = Math.round(shape.y + delta.dy * scale);
+          await persistShapeEdit();
+          if (lastRenderArgs) render(lastRenderArgs.container, lastRenderArgs.box, lastRenderArgs.opts);
+        },
+      });
+      ShapePreview.render(project.shapes, Preview.currentTimelineTime());
+    } else {
+      ShapePreview.setSelectedShape(null, null);
+      // setSelectedShape only records the deselect — it doesn't unmount an already-mounted
+      // shape's handles by itself (that check, and the shape's own mask-source visibility gate,
+      // both live inside ShapePreview.render()'s loop). Force that render now so leaving the Mask
+      // tab hides the shape's handles (and the shape itself, since a mask source is normally
+      // hidden when it isn't the selected shape) immediately.
+      ShapePreview.render(project.shapes, Preview.currentTimelineTime());
+    }
   }
 
-  function render(container, box, { onChange, getWindow, active }) {
+  function render(container, box, opts) {
+    const { onChange, getWindow, active } = opts;
+    lastRenderArgs = { container, box, opts };
     container.innerHTML = "";
     const shape = box.mask_enabled ? maskShapeFor(box) : null;
     const currentType = shape ? "shape" : "none";

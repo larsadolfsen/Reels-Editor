@@ -35,15 +35,23 @@ window.ShapeMask = (() => {
     return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
   }
 
-  // Inverse mask: a full-canvas white rect (everything visible by default) with the shape's own
-  // rect painted black on top (hidden there) — the complement of cssMaskImage's kept region.
+  // Inverse mask: a full-canvas rect (everything visible by default) with the shape's own rect
+  // punched out (hidden there) — the complement of cssMaskImage's kept region. A CSS mask-image
+  // reads a plain image's ALPHA channel (not its color/luminance) to decide what's masked out —
+  // simply drawing a black rect over a white background does NOT create real transparency there,
+  // since normal SVG rect compositing never erases a destination pixel's existing opacity, it only
+  // paints on top of it. Routing both rects through an SVG <mask> (which IS luminance-based, by
+  // spec, purely as an internal SVG compositing step) bakes the intended visible/hidden split into
+  // the rendered image's real alpha channel before the browser ever reads it as a CSS mask source —
+  // correct regardless of whether the outer CSS mask-image itself reads alpha or luminance.
   function cssInverseMaskImage(targetWidth, targetHeight, rect) {
     const radius = clampedRadius(rect);
     const opacity = clampedOpacity(rect);
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${targetWidth}" height="${targetHeight}">` +
-      `<rect x="0" y="0" width="${targetWidth}" height="${targetHeight}" fill="#fff"/>` +
+      `<mask id="cut"><rect x="0" y="0" width="${targetWidth}" height="${targetHeight}" fill="#fff"/>` +
       `<rect x="${rect.relX}" y="${rect.relY}" width="${rect.width}" height="${rect.height}" ` +
-      `rx="${radius}" fill="#000" fill-opacity="${opacity}"/></svg>`;
+      `rx="${radius}" fill="#000" fill-opacity="${opacity}"/></mask>` +
+      `<rect x="0" y="0" width="${targetWidth}" height="${targetHeight}" fill="#fff" mask="url(#cut)"/></svg>`;
     return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
   }
 

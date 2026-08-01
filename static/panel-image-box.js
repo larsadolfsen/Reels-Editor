@@ -29,6 +29,21 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
   };
   let activeImageBoxTab = "box";
   let currentBox = null;
+  // While the Mask tab is active, on-stage dragging targets the mask shape instead of the box
+  // (see box-panel-mask.js's syncActive) — so the box's own resize/move handles must not also be
+  // live at the same time, or dragging a corner would ambiguously resize both. Passing `null`
+  // callbacks to ImageBoxPreview.setSelectedImageBox leaves the box selected (rubylith etc. still
+  // work) but mounts no handles for it.
+  function updateBoxStageHandles() {
+    if (!currentBox) return;
+    ImageBoxPreview.setSelectedImageBox(currentBox.id, activeImageBoxTab === "mask" ? null : boxDragCallbacks(currentBox));
+    // setSelectedImageBox only records the new callbacks — it doesn't unmount an already-mounted
+    // box's own handles by itself (that check lives in ImageBoxPreview.render()'s per-box loop,
+    // and only runs the next time render() happens to be called for some other reason). Force
+    // that render now so switching to/from the Mask tab shows/hides the right handle set
+    // immediately, not on the next unrelated re-render.
+    ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+  }
   function showImageBoxTab(value) {
     activeImageBoxTab = value;
     Object.entries(imageBoxTabPanes).forEach(([k, el]) => { el.hidden = k !== value; });
@@ -36,6 +51,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     // rubylith overlay — and returning to it must still show it — so sync it directly rather than
     // relying on renderDetail() to run again.
     if (currentBox) BoxMaskPanel.syncActive(currentBox, value === "mask");
+    updateBoxStageHandles();
   }
   UI.tabBar(document.getElementById("image-box-tab-bar"), IMAGE_BOX_TABS, activeImageBoxTab, showImageBoxTab);
   showImageBoxTab(activeImageBoxTab);
@@ -132,7 +148,13 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
       openFilesPanel();
     };
 
-    ImageBoxPreview.setSelectedImageBox(box.id, {
+    updateBoxStageHandles();
+  }
+
+  // Extracted from renderDetail() so updateBoxStageHandles() can also reach these when a tab
+  // switch (not a field edit) is what should re-enable the box's own handles.
+  function boxDragCallbacks(box) {
+    return {
       onResize: (size) => {
         const scale = stageScale();
         const { width, height } = applyAspectLock(box, { width: Math.round(size.width * scale), height: Math.round(size.height * scale) });
@@ -162,7 +184,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
         await saveProject();
         renderDetail(box);
       },
-    });
+    };
   }
 
   let lastSelectedId = null;
