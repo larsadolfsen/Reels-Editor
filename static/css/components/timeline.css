@@ -69,6 +69,51 @@
 #playhead-grip { cursor: grab; }
 #playhead-grip:active { cursor: grabbing; }
 
+.overlay-copy-toolbar {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  z-index: 6;
+  display: flex;
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-chip);
+  padding: var(--space-1);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+}
+.timeline-block:hover .overlay-copy-toolbar {
+  opacity: 1;
+  pointer-events: auto;
+}
+.overlay-copy-toolbar::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border: 5px solid transparent;
+  border-top-color: var(--surface);
+}
+
+.overlay-copy-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.overlay-copy-icon:hover { background: var(--bg-2); }
+
 #timeline-body {
   display: flex;
 }
