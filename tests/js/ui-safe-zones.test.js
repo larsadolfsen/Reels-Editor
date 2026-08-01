@@ -22,3 +22,52 @@ test("SafeZoneGeometry derives the same pixel values it hardcodes today", () => 
   assert.strictEqual(g.CAPTION_ZONE_BOTTOM, 1785.6);
   assert.strictEqual(g.HORIZONTAL_MARGIN, 162);
 });
+
+test("SafeZoneGeometry derives TEXT_IMAGE_SAFE_RECT: mirrored margin, top-zone-to-caption-zone", () => {
+  const g = global.SafeZoneGeometry;
+  assert.deepStrictEqual(g.TEXT_IMAGE_SAFE_RECT, {
+    left: 162,
+    right: 918,
+    top: 115.2,
+    bottom: 1401.6,
+  });
+});
+
+test("SafeZoneGeometry derives CAPTION_SAFE_RECT: today's existing caption band bounds", () => {
+  const g = global.SafeZoneGeometry;
+  assert.deepStrictEqual(g.CAPTION_SAFE_RECT, {
+    left: 0,
+    right: 918,
+    top: 1401.6,
+    bottom: 1785.6,
+  });
+});
+
+test("rectToPercent converts a px rect to percent-of-canvas bounds", () => {
+  delete require.cache[require.resolve("../../static/ui-safe-zones.js")];
+  const { rectToPercent } = require("../../static/ui-safe-zones.js");
+  const pct = rectToPercent({ left: 162, right: 918, top: 115.2, bottom: 1401.6 });
+  assert.strictEqual(pct.left, 15);
+  assert.strictEqual(pct.right, 85);
+  assert.strictEqual(pct.top, 6);
+  assert.strictEqual(pct.bottom, 73);
+});
+
+test("guideCss('text') positions the 4 bars + cutout around TEXT_IMAGE_SAFE_RECT", () => {
+  delete require.cache[require.resolve("../../static/ui-safe-zones.js")];
+  const { guideCss } = require("../../static/ui-safe-zones.js");
+  const css = guideCss("text");
+  assert.match(css, /\.safe-zone-bar-top \{ top: 0%; left: 0%; right: 0%; height: 6%; \}/);
+  assert.match(css, /\.safe-zone-bar-bottom \{ bottom: 0%; left: 0%; right: 0%; height: 27%; \}/);
+  assert.match(css, /\.safe-zone-bar-left \{ top: 6%; height: 67%; left: 0%; width: 15%; \}/);
+  assert.match(css, /\.safe-zone-bar-right \{ top: 6%; height: 67%; left: 85%; right: 0%; \}/);
+  assert.match(css, /\.safe-zone-cutout \{ top: 6%; left: 15%; right: 15%; bottom: 27%; \}/);
+});
+
+test("guideCss('caption') positions the 4 bars + cutout around CAPTION_SAFE_RECT", () => {
+  delete require.cache[require.resolve("../../static/ui-safe-zones.js")];
+  const { guideCss } = require("../../static/ui-safe-zones.js");
+  const css = guideCss("caption");
+  assert.match(css, /\.safe-zone-bar-top \{ top: 0%; left: 0%; right: 0%; height: 73%; \}/);
+  assert.match(css, /\.safe-zone-bar-left \{ top: 73%; height: 20%; left: 0%; width: 0%; \}/);
+});
