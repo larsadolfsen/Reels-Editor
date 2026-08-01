@@ -13,9 +13,9 @@
     const span = e.target.closest(".transcript-word");
     if (!span) return;
 
+    if (span.dataset.sliceToolbarBound) return;
     const tStart = parseFloat(span.dataset.tStart);
     if (Timeline.isSliceDisabled(project.clips, tStart)) return;
-    if (span.dataset.sliceToolbarBound) return;
     span.dataset.sliceToolbarBound = "true";
 
     UI.popoverToolbar(span, [{

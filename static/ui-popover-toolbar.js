@@ -23,6 +23,14 @@
 // visible, only leaving the anchor's whole subtree (mouseleave) hides it again — mousemove never
 // hides (or repositions) an already-visible toolbar, so moving the cursor up into the popover
 // itself (still a descendant of anchorEl, hence never a mouseleave) never makes it disappear.
+//
+// The chip defaults to rendering above the anchor (`bottom: 100%` in popover-toolbar.css). When
+// the anchor sits near the top of the viewport — e.g. a transcript-sidebar word on the topmost
+// visible line, added 2026-08-01 for the transcript hover-slice feature — that would clip the
+// chip against a scrolling ancestor's own overflow. Right before revealing, the chip's own
+// (already-laid-out, just invisible) getBoundingClientRect() is checked; if its top would land
+// above the viewport, the `ui-popover-toolbar-below` class flips it to render below the anchor
+// instead (mirrors ui-tooltip.js's own above/below flip logic).
 const uiPopoverToolbarGlobal = typeof window !== "undefined" ? window : global;
 uiPopoverToolbarGlobal.UI = uiPopoverToolbarGlobal.UI || {};
 
@@ -63,6 +71,7 @@ uiPopoverToolbarGlobal.UI.popoverToolbar = function popoverToolbar(anchorEl, but
       clearTimeout(hoverTimer);
       hoverTimer = setTimeout(() => {
         toolbar.style.left = `${lastX}px`;
+        toolbar.classList.toggle("ui-popover-toolbar-below", toolbar.getBoundingClientRect().top < 0);
         toolbar.classList.add("ui-popover-toolbar-visible");
       }, UI_POPOVER_TOOLBAR_HOVER_DELAY_MS);
     }
