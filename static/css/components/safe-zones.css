@@ -1,7 +1,7 @@
 /* Safe-zone darkening guide: dims everything outside a "safe rectangle" — the centered
    text/image area by default, or the narrower caption-only area while a caption is selected —
    with a solid accent border outlining the cutout. Toggled from the timeline toolbar. */
-/* Exposes #safe-zones (+ .safe-zone-bar/.safe-zone-bar-*/.safe-zone-cutout). #safe-zones-toggle
+/* Exposes #safe-zones (+ .safe-zone-bar/.safe-zone-bar-N/.safe-zone-cutout). #safe-zones-toggle
    lives in #timeline-toolbar and is built via UI.button (button.css's .button[aria-pressed="true"])
    for its pressed state. Depends on tokens.css (--safe-zone-scrim, --safe-zone), #stage (position:
    relative, in stage.css). Each bar's/the cutout's position (top/right/bottom/left/width/height)
