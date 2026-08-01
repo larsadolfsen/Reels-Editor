@@ -21,8 +21,10 @@ const STYLE_EL_ID = "safe-zone-geometry-style";
 
 // Percent-of-canvas division (e.g. 162 / 1080 * 100) lands on values like 15.000000000000002 due
 // to binary floating point — round to squash that drift back to the clean decimal, same fix
-// safe-zone-geometry.js applies to its own derived constants.
-function round(n) { return Math.round(n * 1e6) / 1e6; }
+// safe-zone-geometry.js applies to its own derived constants. Named specifically (not the generic
+// `round`, a classic-script top-level function here would collide with any other file's own
+// top-level `round`/`const round`) since this is a plain script, not an IIFE.
+function roundPct(n) { return Math.round(n * 1e6) / 1e6; }
 
 // Converts a SafeZoneGeometry px rect ({left, right, top, bottom}, safe-zone-geometry.js) into
 // percent-of-canvas bounds — the unit the generated <style> rules below are written in.
@@ -30,10 +32,10 @@ function rectToPercent(rect) {
   const w = uiSafeZonesGlobal.SafeZoneGeometry.CANVAS_W;
   const h = uiSafeZonesGlobal.SafeZoneGeometry.CANVAS_H;
   return {
-    top: round((rect.top / h) * 100),
-    bottom: round((rect.bottom / h) * 100),
-    left: round((rect.left / w) * 100),
-    right: round((rect.right / w) * 100),
+    top: roundPct((rect.top / h) * 100),
+    bottom: roundPct((rect.bottom / h) * 100),
+    left: roundPct((rect.left / w) * 100),
+    right: roundPct((rect.right / w) * 100),
   };
 }
 
