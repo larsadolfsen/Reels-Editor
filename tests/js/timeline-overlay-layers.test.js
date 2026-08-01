@@ -28,3 +28,17 @@ test("renumber reassigns z_index by position, including shape entries", () => {
   assert.strictEqual(shapeItem.z_index, 1);
   assert.strictEqual(textItem.z_index, 0);
 });
+
+test("mergedEntries excludes a shape used as a box's mask", () => {
+  const project = {
+    text_blocks: [],
+    video_boxes: [{ id: "box1", z_index: 5, mask_shape_id: "mask-shape" }],
+    image_boxes: [],
+    shapes: [
+      { id: "mask-shape", z_index: -1 },
+      { id: "visible-shape", z_index: 2 },
+    ],
+  };
+  const entries = mergedEntries(project);
+  assert.deepStrictEqual(entries.map((e) => e.id).sort(), ["box1", "visible-shape"].sort());
+});
