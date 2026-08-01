@@ -1,16 +1,17 @@
 /* Safe-zone darkening guide: dims everything outside a "safe rectangle" — the centered
    text/image area by default, or the narrower caption-only area while a caption is selected —
-   plus a "SAFE ZONE" label (shield icon + text) just below the top edge of the stage. Toggled
-   from the timeline toolbar. */
-/* Exposes #safe-zones (+ .safe-zone-bar/.safe-zone-bar-top/-bottom/-left/-right/.safe-zone-cutout/
-   .safe-zone-label). #safe-zones-toggle lives in #timeline-toolbar and is built via UI.button
-   (button.css's .button[aria-pressed="true"]) for its pressed state. Depends on tokens.css
-   (--safe-zone-scrim, --safe-zone), #stage (position: relative, in stage.css). Each bar's/the
-   cutout's position (top/right/bottom/left/width/height) is set by a generated <style> element
-   (static/ui-safe-zones.js's ensureStyleElement) computed from the active SafeZoneGeometry rect,
-   rather than inline styles — this file only keeps the shared visual (fill color). The cutout div
-   itself carries no visible border (safe-zone-guide-tweaks feature, replacing the earlier accent
-   border with the .safe-zone-label below) — kept only as a positioned marker of the active rect. */
+   with a diagonal-striped scrim, plus a "SAFE ZONE" label (shield icon + text) just below the
+   top edge of the stage. Toggled from the timeline toolbar. */
+/* Exposes #safe-zones (+ .safe-zone-dim/.safe-zone-label). #safe-zones-toggle lives in
+   #timeline-toolbar and is built via UI.button (button.css's .button[aria-pressed="true"]) for
+   its pressed state. Depends on tokens.css (--safe-zone-scrim, --safe-zone-scrim-alt,
+   --safe-zone), #stage (position: relative, in stage.css). .safe-zone-dim's mask-image/mask-size
+   (the rectangular hole cut for the active safe rect) is set by a generated <style> element
+   (static/ui-safe-zones.js's ensureStyleElement, via ShapeMask.cssInverseMaskImage,
+   static/shape-mask.js) computed from the active SafeZoneGeometry rect, rather than inline styles
+   — this file only keeps the shared visual (the striped fill). One continuous div rather than 4
+   separate bars (as before 2026-08-01, safe-zone-scrim-stripes feature) so the diagonal stripe
+   pattern doesn't seam at bar boundaries. */
 #safe-zones {
   position: absolute;
   inset: 0;
@@ -19,13 +20,12 @@
 
 #safe-zones[hidden] { display: none; }
 
-.safe-zone-bar {
+.safe-zone-dim {
   position: absolute;
-  background: var(--safe-zone-scrim);
-}
-
-.safe-zone-cutout {
-  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(135deg,
+    var(--safe-zone-scrim) 0px, var(--safe-zone-scrim) 8px,
+    var(--safe-zone-scrim-alt) 8px, var(--safe-zone-scrim-alt) 16px);
 }
 
 .safe-zone-label {

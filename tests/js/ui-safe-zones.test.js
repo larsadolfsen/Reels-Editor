@@ -53,21 +53,30 @@ test("rectToPercent converts a px rect to percent-of-canvas bounds", () => {
   assert.strictEqual(pct.bottom, 73);
 });
 
-test("guideCss('text') positions the 4 bars + cutout around TEXT_IMAGE_SAFE_RECT", () => {
+// guideCss now returns one .safe-zone-dim rule whose mask-image data URI punches a rectangular
+// hole matching the active safe rect in percent-of-100 coordinates, rather than 4 separately-
+// positioned bars.
+function decodeMaskSvg(css) {
+  const match = css.match(/data:image\/svg\+xml,([^)]+)"\)/);
+  assert.ok(match, "mask-image data URI not found in guideCss output");
+  return decodeURIComponent(match[1]);
+}
+
+test("guideCss('text') masks a hole matching TEXT_IMAGE_SAFE_RECT (percent coords)", () => {
   delete require.cache[require.resolve("../../static/ui-safe-zones.js")];
   const { guideCss } = require("../../static/ui-safe-zones.js");
   const css = guideCss("text");
-  assert.match(css, /\.safe-zone-bar-top \{ top: 0%; left: 0%; right: 0%; height: 6%; \}/);
-  assert.match(css, /\.safe-zone-bar-bottom \{ bottom: 0%; left: 0%; right: 0%; height: 27%; \}/);
-  assert.match(css, /\.safe-zone-bar-left \{ top: 6%; height: 67%; left: 0%; width: 15%; \}/);
-  assert.match(css, /\.safe-zone-bar-right \{ top: 6%; height: 67%; left: 85%; right: 0%; \}/);
-  assert.match(css, /\.safe-zone-cutout \{ top: 6%; left: 15%; right: 15%; bottom: 27%; \}/);
+  assert.match(css, /^\.safe-zone-dim \{ mask-image: url\("data:image\/svg\+xml,/);
+  assert.match(css, /mask-size: 100% 100%;/);
+  const svg = decodeMaskSvg(css);
+  assert.match(svg, /<rect x="0" y="0" width="100" height="100" fill="#fff"\/>/);
+  assert.match(svg, /<rect x="15" y="6" width="70" height="67" fill="#000"\/>/);
 });
 
-test("guideCss('caption') positions the 4 bars + cutout around CAPTION_SAFE_RECT", () => {
+test("guideCss('caption') masks a hole matching CAPTION_SAFE_RECT (percent coords)", () => {
   delete require.cache[require.resolve("../../static/ui-safe-zones.js")];
   const { guideCss } = require("../../static/ui-safe-zones.js");
   const css = guideCss("caption");
-  assert.match(css, /\.safe-zone-bar-top \{ top: 0%; left: 0%; right: 0%; height: 73%; \}/);
-  assert.match(css, /\.safe-zone-bar-left \{ top: 73%; height: 20%; left: 0%; width: 15%; \}/);
+  const svg = decodeMaskSvg(css);
+  assert.match(svg, /<rect x="15" y="73" width="70" height="20" fill="#000"\/>/);
 });
