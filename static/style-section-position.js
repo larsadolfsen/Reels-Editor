@@ -1,7 +1,8 @@
 // Shared Box-tab section: the absolute HORIZONTAL/VERTICAL pixel fields (TextPreset.x/y) plus
 // the stateless single-row six-icon anchor shortcut, one file serving both the TEXT and CAPTIONS
-// panels. Uses target.getBoxSize() for the box's live rendered size and panel-text.js's
-// anchorPositionX/anchorPositionY for the edge-flush maths. Every write is setPresetField.
+// panels. Uses target.getBoxSize() for the box's live rendered size and static/anchor-position.js's
+// AnchorPosition.positionX/positionY (kind-aware: target.kind picks the text/image vs caption safe
+// rect) for the edge-flush maths. Every write is setPresetField.
 //
 // NOTE: this replaces an earlier two-row (TOP/MID/BTM + LEFT/MID/RIGHT) version built against a
 // stale snapshot of the Box tab. Commit f69f15f ("POSITION anchors as a single row of icon
@@ -65,12 +66,14 @@ window.StyleSection = window.StyleSection || {};
     const setActive = UI.buttonGroup(gridEl, OPTIONS, null, (value) => {
       const size = target.getBoxSize();
       if (value === "top" || value === "mid-v" || value === "btm") {
-        const y = anchorPositionY(value === "mid-v" ? "mid" : value, size && size.height);
+        const y = AnchorPosition.positionY(value === "mid-v" ? "mid" : value, size && size.height, target.kind);
         target.setPresetField("y", Math.round(y));
       } else {
-        // anchorPositionX's third argument is the align mode: stage.css shifts the box by a
-        // fraction of its own width depending on align, and the edge-flush x has to compensate.
-        const x = anchorPositionX(value === "mid-h" ? "mid" : value, size && size.width, target.getPreset().align);
+        // AnchorPosition.positionX's third argument is the align mode: stage.css shifts the box
+        // by a fraction of its own width depending on align, and the edge-flush x has to
+        // compensate; the fourth argument picks which safe rect (text/image vs caption) to snap
+        // to.
+        const x = AnchorPosition.positionX(value === "mid-h" ? "mid" : value, size && size.width, target.getPreset().align, target.kind);
         target.setPresetField("x", Math.round(x));
       }
       target.rerenderPanel();

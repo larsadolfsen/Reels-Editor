@@ -87,10 +87,18 @@ async function confirmFlushAndSwitch(action) {
   await action();
 }
 
+// "caption" (a caption group selected on the timeline) or "captions" (the CAPTIONS panel open via
+// the nav rail with nothing specific selected yet) narrows the safe-zone guide to the caption-only
+// safe rect; everything else (including nothing selected) uses the wider text/image safe rect.
+function safeZoneKindFor(sel) {
+  return sel && (sel.type === "caption" || sel.type === "captions") ? "caption" : "text";
+}
+
 function renderTimeline() {
   const t = parseFloat(document.getElementById("time").textContent) || 0;
   Timeline.render(project, t, selected, onTimelineSelect,
     { onAddClip: () => importMedia(), onSelectAudio: () => openAudioPanel(), onOpenCaptionsPanel: () => openCaptionsPanel() });
+  UI.safeZones(document.getElementById("safe-zones"), safeZoneKindFor(selected));
 }
 
 let stylePanelCollapsed = false;
@@ -164,8 +172,6 @@ ShapePreview.setOnActivate((shapeId) => {
 PreviewCaptions.setOnActivate(() => {
   openCaptionsPanel();
 });
-
-UI.safeZones(document.getElementById("safe-zones"));
 
 function setSafeZonesVisible(visible) {
   document.getElementById("safe-zones").hidden = !visible;

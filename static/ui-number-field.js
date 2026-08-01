@@ -42,9 +42,12 @@ window.UI.numberField = function numberField(container, { label, unit, value, st
   // stepper-button class pinned by tests/js/no-legacy-button-classes.test.js.
   const arrows = document.createElement("div");
   arrows.className = "number-field-arrows";
+  // iconSize 10 (not UI.button's 16px default): each arrow is half of --control-size-sm (28px)
+  // tall, i.e. ~14px, so the default 16px glyph overflowed its own button.
   const up = UI.button(arrows, {
     icon: "chevron-up",
     size: "sm",
+    iconSize: 10,
     disabled,
     onClick: () => bump(step),
   });
@@ -53,6 +56,7 @@ window.UI.numberField = function numberField(container, { label, unit, value, st
   const down = UI.button(arrows, {
     icon: "chevron-down",
     size: "sm",
+    iconSize: 10,
     disabled,
     onClick: () => bump(-step),
   });

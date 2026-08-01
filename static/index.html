@@ -696,6 +696,10 @@
 <script src="/static/panel-video.js"></script>
 <script src="/static/ui-safe-zones.js"></script>
 <script src="/static/safe-zone-geometry.js"></script>
+<!-- anchor-position.js only reads SafeZoneGeometry inside its exported functions' bodies, called
+     later at click time (via style-section-position.js, loaded earlier above) — never at parse
+     time — so loading after its producer here (and after that one consumer above) is safe. -->
+<script src="/static/anchor-position.js"></script>
 <script src="/static/panel-text.js"></script>
 <script src="/static/text-panel-background.js"></script>
 <script src="/static/canvas-point.js"></script>

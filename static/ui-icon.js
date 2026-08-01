@@ -127,6 +127,12 @@ const ICON_PATHS = {
   // tab's drill-down list (box-panel-mask.js), alongside the existing "Shape" ("venetian-mask").
   user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   type: '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/>',
+  // Added 2026-08-01 (mask-type-none): "None" mask-type row in the Mask tab's drill-down list
+  // (box-panel-mask.js), replacing the old standalone ON/OFF switch.
+  ban: '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+  // Added 2026-08-01 (mask-type-none): "Square" mask-type row in the Mask tab's drill-down list
+  // (box-panel-mask.js), replacing the "Shape"/venetian-mask row's icon.
+  square: '<rect width="18" height="18" x="3" y="3" rx="2"/>',
 };
 
 // Wrapper attributes shared by every icon already inlined across this codebase's markup
