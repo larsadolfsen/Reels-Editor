@@ -23,6 +23,27 @@
 // visible, only leaving the anchor's whole subtree (mouseleave) hides it again — mousemove never
 // hides (or repositions) an already-visible toolbar, so moving the cursor up into the popover
 // itself (still a descendant of anchorEl, hence never a mouseleave) never makes it disappear.
+//
+// The chip defaults to rendering above the anchor (`bottom: 100%` in popover-toolbar.css). When
+// the anchor sits near the top of its nearest scrolling ancestor — e.g. a transcript-sidebar word
+// on the topmost visible line, added 2026-08-01 for the transcript hover-slice feature — that
+// would clip the chip against that ancestor's own overflow (there is no scrollbar to hint at it,
+// since the clipping ancestor may hide its scrollbar by design, as transcript-sidebar.css does).
+// Right before every reveal, any previous flip is cleared, then the chip's own (already-laid-out,
+// just invisible) getBoundingClientRect().top is compared against the nearest scrolling
+// ancestor's own top edge (not the viewport — fixed 2026-08-01, an earlier version compared
+// against 0/viewport, which under-flipped words below the topmost line but still above the
+// ancestor's own clip edge, and never cleared the flip before remeasuring, so it alternated
+// between correct and clipped on repeated hovers of the same word). `ui-popover-toolbar-below`
+// flips the chip to render below the anchor instead when there isn't room above.
+function uiPopoverToolbarScrollAncestor(el) {
+  let node = el.parentElement;
+  while (node && node !== document.body) {
+    if (/(auto|scroll|hidden|clip)/.test(getComputedStyle(node).overflowY)) return node;
+    node = node.parentElement;
+  }
+  return null;
+}
 const uiPopoverToolbarGlobal = typeof window !== "undefined" ? window : global;
 uiPopoverToolbarGlobal.UI = uiPopoverToolbarGlobal.UI || {};
 
@@ -63,6 +84,10 @@ uiPopoverToolbarGlobal.UI.popoverToolbar = function popoverToolbar(anchorEl, but
       clearTimeout(hoverTimer);
       hoverTimer = setTimeout(() => {
         toolbar.style.left = `${lastX}px`;
+        toolbar.classList.remove("ui-popover-toolbar-below");
+        const clipAncestor = uiPopoverToolbarScrollAncestor(anchorEl);
+        const limit = (clipAncestor ? clipAncestor.getBoundingClientRect().top : 0) + 6;
+        toolbar.classList.toggle("ui-popover-toolbar-below", toolbar.getBoundingClientRect().top < limit);
         toolbar.classList.add("ui-popover-toolbar-visible");
       }, UI_POPOVER_TOOLBAR_HOVER_DELAY_MS);
     }
