@@ -45,8 +45,16 @@ window.ShapePanel = window.ShapePanel || {};
     return createShapeAt({});
   }
 
+  // Repaints the shape's own on-stage element AND, if it's currently masking a video/image box
+  // (mask_shape_id), that box's stage element too — otherwise live edits (position/size/opacity/
+  // corner_radius) only show on the box after some unrelated future render (found in Task 12
+  // manual verification: opacity/corner_radius edits looked "stuck" until reselecting the box).
   function repaintStage() {
     ShapePreview.render(project.shapes, Preview.currentTimelineTime());
+    const masksVideoBox = (project.video_boxes || []).some((v) => v.mask_shape_id === lastSelectedId);
+    const masksImageBox = (project.image_boxes || []).some((b) => b.mask_shape_id === lastSelectedId);
+    if (masksVideoBox) VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+    if (masksImageBox) ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
   }
 
   function renderDetail(shape) {
