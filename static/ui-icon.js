@@ -130,6 +130,9 @@ const ICON_PATHS = {
   // Added 2026-08-01 (mask-type-none): "None" mask-type row in the Mask tab's drill-down list
   // (box-panel-mask.js), replacing the old standalone ON/OFF switch.
   ban: '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+  // Added 2026-08-01 (mask-type-none): "Square" mask-type row in the Mask tab's drill-down list
+  // (box-panel-mask.js), replacing the "Shape"/venetian-mask row's icon.
+  square: '<rect width="18" height="18" x="3" y="3" rx="2"/>',
 };
 
 // Wrapper attributes shared by every icon already inlined across this codebase's markup

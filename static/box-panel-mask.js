@@ -2,16 +2,18 @@
 // replacing the retired timeline-mask-accordion.js): window.BoxMaskPanel.render(container, box,
 // {onChange, getWindow}) renders a "Type" settings row (added 2026-08-01, mask-list-styling,
 // replacing the retired ui-mask-type-gallery.js card grid) that always shows the current
-// selection ("None"/"Shape", mirroring style-section-font-family.js's Font Family row) and opens
+// selection ("None"/"Square", mirroring style-section-font-family.js's Font Family row) and opens
 // a drill-down list of mask source kinds — "None" (default, added 2026-08-01 mask-type-none,
 // replacing the old standalone ON/OFF switch — selecting it sets box.mask_enabled = false while
-// leaving mask_shape_id/the shape's own config untouched, so re-selecting "Shape" later instantly
+// leaving mask_shape_id/the shape's own config untouched, so re-selecting "Square" later instantly
 // reapplies the same mask; see box-mask-render.js's maskingShapeFor and app/main.py's
-// _rasterize_mask_png, both of which gate on this same field for preview/export) and "Shape" are
+// _rasterize_mask_png, both of which gate on this same field for preview/export) and "Square"
+// (internally the ShapeLayer `"shape"` value — the display label was renamed 2026-08-01
+// mask-type-none, but the mask source is still a rectangular ShapeLayer under the hood) are
 // selectable, "Person"/"Text" (`MASK_TYPES`) are disabled placeholder rows, per the retired
 // gallery's own note that more kinds could be added later as more rows — and finally a content
 // area that changes to match the current selection: empty when "None", or the assigned-mask row
-// (icon + "Shape" label, trash icon removes the mask and reverts to "None") plus inline SIZE &
+// (icon + "Square" label, trash icon removes the mask and reverts to "None") plus inline SIZE &
 // POSITION + OPACITY fields for that mask shape (added 2026-08-01, mask-list-styling, replacing
 // the row's old click-to-navigate-to-the-standalone-SHAPE-panel behavior — the mask shape is
 // edited as a subpage of this box's own panel, not on its own page, reusing
@@ -39,7 +41,7 @@
 window.BoxMaskPanel = (() => {
   const MASK_TYPES = [
     { value: "none", icon: "ban", label: "None", enabled: true },
-    { value: "shape", icon: "venetian-mask", label: "Shape", enabled: true },
+    { value: "shape", icon: "square", label: "Square", enabled: true },
     { value: "person", icon: "user", label: "Person", enabled: false },
     { value: "text", icon: "type", label: "Text", enabled: false },
   ];
@@ -121,6 +123,7 @@ window.BoxMaskPanel = (() => {
         const nameGroup = document.createElement("span");
         nameGroup.className = "font-list-row-name-group";
         const iconEl = document.createElement("span");
+        iconEl.className = "font-list-row-icon";
         iconEl.innerHTML = UI.icon(t.icon, { size: 16 });
         const nameEl = document.createElement("span");
         nameEl.className = "font-list-row-name";
@@ -156,7 +159,7 @@ window.BoxMaskPanel = (() => {
     UI.listRow(row, {});
     const label = document.createElement("span");
     label.className = "mask-assigned-row-label";
-    label.innerHTML = `${UI.icon("venetian-mask", { size: 14 })}<span>Shape</span>`;
+    label.innerHTML = `${UI.icon("square", { size: 14 })}<span>Square</span>`;
     row.appendChild(label);
 
     const removeBtn = document.createElement("button");
