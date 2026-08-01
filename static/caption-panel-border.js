@@ -1,27 +1,14 @@
 // CAPTIONS panel Box tab: Border row + drill-down subpanel (on/off toggle + width/radius/color),
 // same pattern as text-panel-border.js but against the caption track's preset. box_border_width
 // === 0 IS "no border" — there is no box_border boolean. Exposes window.CaptionPanel.renderBorder().
+// Drill-down subpage is built via the shared captionStyleHost (panel-captions.js's SubpanelHost)
+// rather than hand-rolled hidden-attribute toggling — see style-section-outline.js for the pattern.
 window.CaptionPanel = window.CaptionPanel || {};
 
 (() => {
   const DEFAULT_BORDER_WIDTH = 2;
   let borderRowSetValue = null;
-
-  function openBorderPanel() {
-    // Typing in WIDTH only refreshes the row (a full render would destroy the input being
-    // typed in — see ui-number-field.js), so the subpanel's toggle/field visibility can be
-    // stale by the time it is reopened. Re-render on open, when nothing has focus.
-    window.CaptionPanel.renderBorder();
-    document.getElementById("panel-captions-main").hidden = true;
-    document.getElementById("panel-captions-border").hidden = false;
-  }
-
-  function closeBorderPanel() {
-    document.getElementById("panel-captions-border").hidden = true;
-    document.getElementById("panel-captions-main").hidden = false;
-  }
-
-  UI.subPanelHeader(document.getElementById("caption-border-subpanel-header"), { title: "Border", onBack: closeBorderPanel });
+  let page = null;
 
   function refreshBorderRow(preset) {
     const on = preset.box_border_width > 0;
@@ -33,7 +20,7 @@ window.CaptionPanel = window.CaptionPanel || {};
     } else {
       borderRowSetValue = UI.settingsRow(document.getElementById("caption-box-border-row"), {
         label: "Border", value, swatchColor: swatch,
-        onClick: openBorderPanel,
+        onClick: () => page.open(),
       });
     }
   }
@@ -41,38 +28,67 @@ window.CaptionPanel = window.CaptionPanel || {};
   window.CaptionPanel.renderBorder = function renderBorder() {
     const preset = ensureCaptionPreset(ensureCaptionTrack().preset_id);
 
-    const on = preset.box_border_width > 0;
-
     refreshBorderRow(preset);
 
-    document.getElementById("caption-box-border-width-field").hidden = !on;
-    document.getElementById("caption-box-border-radius-field").hidden = !on;
-    document.getElementById("caption-box-border-color-field").hidden = !on;
+    if (!page) {
+      // buildBody reruns on every page.open(), so it always reflects the current preset —
+      // no separate pre-open re-render step is needed the way the old hand-rolled open did.
+      page = captionStyleHost.page("Border", (bodyEl) => {
+        const p = ensureCaptionPreset(ensureCaptionTrack().preset_id);
+        const on = p.box_border_width > 0;
 
-    UI.buttonGroup(document.getElementById("caption-box-border-toggle-group"),
-      [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
-      on ? "on" : "off",
-      (v) => {
-        if (v === "on") {
-          if (preset.box_border_width === 0) preset.box_border_width = DEFAULT_BORDER_WIDTH;
-        } else {
-          preset.box_border_width = 0;
-        }
-        saveProject();
-        renderCaptionPreview();
-        renderBorder();
-      });
+        const toggleGroup = document.createElement("div");
+        toggleGroup.className = "style-group";
+        const toggleEl = document.createElement("div");
+        toggleGroup.appendChild(toggleEl);
 
-    UI.numberField(document.getElementById("caption-box-border-width-field"),
-      { label: "WIDTH", unit: "PX", value: preset.box_border_width, min: 0, max: 40, span: 4,
-        onChange: (v) => { preset.box_border_width = v; saveProject(); renderCaptionPreview(); refreshBorderRow(preset); } });
+        const fieldsGroup = document.createElement("div");
+        fieldsGroup.className = "style-group";
+        const fieldsRow = document.createElement("div");
+        fieldsRow.className = "style-row";
+        const widthField = document.createElement("label");
+        const radiusField = document.createElement("label");
+        fieldsRow.append(widthField, radiusField);
+        fieldsGroup.appendChild(fieldsRow);
 
-    UI.numberField(document.getElementById("caption-box-border-radius-field"),
-      { label: "RADIUS", unit: "PX", value: preset.box_border_radius, min: 0, max: 200, span: 4,
-        onChange: (v) => { preset.box_border_radius = v; saveProject(); renderCaptionPreview(); } });
+        const colorGroup = document.createElement("div");
+        colorGroup.className = "style-group";
+        const colorField = document.createElement("label");
+        colorGroup.appendChild(colorField);
 
-    UI.colorSwatch(document.getElementById("caption-box-border-color-field"),
-      { label: "Border", value: preset.box_border_color, span: 8,
-        onChange: (v) => { preset.box_border_color = v; saveProject(); renderCaptionPreview(); refreshBorderRow(preset); } });
+        bodyEl.append(toggleGroup, fieldsGroup, colorGroup);
+
+        widthField.hidden = !on;
+        radiusField.hidden = !on;
+        colorField.hidden = !on;
+
+        UI.buttonGroup(toggleEl,
+          [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
+          on ? "on" : "off",
+          (v) => {
+            if (v === "on") {
+              if (p.box_border_width === 0) p.box_border_width = DEFAULT_BORDER_WIDTH;
+            } else {
+              p.box_border_width = 0;
+            }
+            saveProject();
+            renderCaptionPreview();
+            refreshBorderRow(p);
+            page.open();
+          });
+
+        UI.numberField(widthField,
+          { label: "WIDTH", unit: "PX", value: p.box_border_width, min: 0, max: 40, span: 4,
+            onChange: (v) => { p.box_border_width = v; saveProject(); renderCaptionPreview(); refreshBorderRow(p); } });
+
+        UI.numberField(radiusField,
+          { label: "RADIUS", unit: "PX", value: p.box_border_radius, min: 0, max: 200, span: 4,
+            onChange: (v) => { p.box_border_radius = v; saveProject(); renderCaptionPreview(); } });
+
+        UI.colorSwatch(colorField,
+          { label: "Border", value: p.box_border_color, span: 8,
+            onChange: (v) => { p.box_border_color = v; saveProject(); renderCaptionPreview(); refreshBorderRow(p); } });
+      }, { onClose: () => refreshBorderRow(ensureCaptionPreset(ensureCaptionTrack().preset_id)) });
+    }
   };
 })();
