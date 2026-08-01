@@ -3,12 +3,12 @@
 // hit-area (contiguous with the anchor, no gap, so a diagonal mouse approach can't cross a
 // dead zone and lose "hovered") wrapping a visible chip (background/border/shadow + a triangle
 // pointing down at the anchor) holding one icon-only button per `buttons` entry
-// ({icon, title, onClick}). The chip tracks the pointer's x position across the anchor (clamped
-// to the anchor's own width) rather than sitting fixed at center, so it stays above wherever the
-// user is hovering along a wide anchor (e.g. a multi-second timeline block) instead of
-// potentially sitting far from the cursor. Adds a `ui-popover-toolbar-anchor` class to anchorEl
-// so the fade-reveal CSS (popover-toolbar.css) triggers off ANY anchor, not a specific caller's
-// element type — first consumer is static/timeline-overlay-copy-toolbar.js, but nothing here is
+// ({icon, title, onClick}). The chip sits at a fixed position, centered over the anchor
+// (popover-toolbar.css's left: 50%/translateX(-50%)) — it does not track the pointer's x
+// position (dropped 2026-08-01: repositioning the chip under the cursor made it feel like it
+// was chasing the mouse). Adds a `ui-popover-toolbar-anchor` class to anchorEl so the
+// fade-reveal CSS (popover-toolbar.css) triggers off ANY anchor, not a specific caller's element
+// type — first consumer is static/timeline-overlay-copy-toolbar.js, but nothing here is
 // timeline-specific. The icon buttons reuse the shared .ui-toolbar-icon look
 // (toolbar-chip.css, also used by the timeline's playhead slice handle) rather than their own
 // copy of the same rules. Depends on UI.icon (static/ui-icon.js), popover-toolbar.css, and
@@ -18,13 +18,14 @@
 // to move the cursor up through a lane without the chip popping up in the way). A
 // `HOVER_DELAY_MS` timer restarts on every mousemove over the anchor and only adds the
 // `ui-popover-toolbar-visible` class (CSS fades it in) once the pointer has been still for that
-// long. Once visible, only leaving the anchor's whole subtree (mouseleave) hides it again —
-// mousemove never hides an already-visible toolbar, so moving the cursor up into the popover
-// itself (still a descendant of anchorEl, hence never a mouseleave) never makes it disappear.
+// long — kept short (not the original 400ms) so the toolbar still feels responsive. Once
+// visible, only leaving the anchor's whole subtree (mouseleave) hides it again — mousemove never
+// hides an already-visible toolbar, so moving the cursor up into the popover itself (still a
+// descendant of anchorEl, hence never a mouseleave) never makes it disappear.
 const uiPopoverToolbarGlobal = typeof window !== "undefined" ? window : global;
 uiPopoverToolbarGlobal.UI = uiPopoverToolbarGlobal.UI || {};
 
-const UI_POPOVER_TOOLBAR_HOVER_DELAY_MS = 400;
+const UI_POPOVER_TOOLBAR_HOVER_DELAY_MS = 120;
 
 uiPopoverToolbarGlobal.UI.popoverToolbar = function popoverToolbar(anchorEl, buttons) {
   anchorEl.classList.add("ui-popover-toolbar-anchor");
@@ -52,11 +53,7 @@ uiPopoverToolbarGlobal.UI.popoverToolbar = function popoverToolbar(anchorEl, but
 
   let hoverTimer = null;
 
-  anchorEl.addEventListener("mousemove", (e) => {
-    const rect = anchorEl.getBoundingClientRect();
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-    toolbar.style.left = `${x}px`;
-
+  anchorEl.addEventListener("mousemove", () => {
     if (!toolbar.classList.contains("ui-popover-toolbar-visible")) {
       clearTimeout(hoverTimer);
       hoverTimer = setTimeout(() => {
