@@ -54,8 +54,10 @@ test("rectToPercent converts a px rect to percent-of-canvas bounds", () => {
 });
 
 // guideCss now returns one .safe-zone-border rule positioning/sizing that border to exactly cover
-// the active safe rect, in percent-of-container coordinates, rather than masking a hole in a
-// darkening overlay.
+// the active safe rect (rather than masking a hole in a darkening overlay). .safe-zone-label's own
+// `top` is NOT part of guideCss's output — it's computed imperatively in safeZones() from the
+// label's actual measured height, which requires a real DOM and isn't covered by this pure-module
+// test (see tests/js/README or the safeZones() doc comment for why).
 test("guideCss('text') positions the border over TEXT_IMAGE_SAFE_RECT (percent coords)", () => {
   delete require.cache[require.resolve("../../static/ui-safe-zones.js")];
   const { guideCss } = require("../../static/ui-safe-zones.js");

@@ -1,21 +1,22 @@
 /* Safe-zone guide: outlines a "safe rectangle" — the centered text/image area by default, or the
-   narrower caption-only area while a caption is selected — with a red/white hazard-stripe border,
-   plus a "SAFE ZONE" label (shield icon + text) just below the top edge of the stage. Toggled
+   narrower caption-only area while a caption is selected — with a black/yellow hazard-stripe
+   border, plus a "SAFE ZONE ON" label (shield icon + text) sitting just above the rect. Toggled
    from the timeline toolbar. */
 /* Exposes #safe-zones (+ .safe-zone-border/.safe-zone-label). #safe-zones-toggle lives in
    #timeline-toolbar and is built via UI.button (button.css's .button[aria-pressed="true"]) for
-   its pressed state. Depends on tokens.css (--safe-zone), #stage (position: relative, in
-   stage.css). .safe-zone-border's position/size (matching the active SafeZoneGeometry rect) is
-   set by a generated <style> element (static/ui-safe-zones.js's ensureStyleElement) rather than
-   inline styles — this file only keeps the shared visual (the border itself). Replaces the
-   earlier diagonal-striped darkening scrim that covered everything outside the safe rect
-   (safe-zone-border-not-scrim feature) — found too visually intrusive while editing; the guide no
-   longer draws over or dims any part of the canvas. The border went through a plain-red (too thin
-   to read over busy footage, safe-zone-border-visibility) and a dark-halo variant (felt too heavy)
-   before landing on a repeating diagonal red/white stripe via `border-image` (safe-zone-hazard-
-   stripe feature) — the alternating color reads clearly against any background without needing a
-   dark surround; `border-image` ignores `border-radius`, so corners render square (fine for a
-   hazard-tape look). */
+   its pressed state. Depends on tokens.css (--safe-zone-stripe-dark, --safe-zone-stripe-light),
+   #stage (position: relative, in stage.css). .safe-zone-border's position/size and
+   .safe-zone-label's `top` (both keyed to the active SafeZoneGeometry rect, so the label tracks
+   the rect's own top edge instead of sitting at a fixed stage offset) are set by a generated
+   <style> element (static/ui-safe-zones.js's ensureStyleElement) rather than inline styles — this
+   file only keeps the shared visual. Replaces the earlier diagonal-striped darkening scrim that
+   covered everything outside the safe rect (safe-zone-border-not-scrim feature) — found too
+   visually intrusive while editing; the guide no longer draws over or dims any part of the canvas.
+   The border went through a plain-red (too thin to read over busy footage,
+   safe-zone-border-visibility), a dark-halo variant (felt too heavy), and a red/white candy stripe
+   (read as circus tape, safe-zone-hazard-stripe) before landing on the current black/safety-yellow
+   caution-tape pairing (safe-zone-caution-badge feature) via `border-image`; `border-image`
+   ignores `border-radius`, so corners render square (fine for a hazard-tape look). */
 #safe-zones {
   position: absolute;
   inset: 0;
@@ -28,13 +29,12 @@
   position: absolute;
   border: 4px solid transparent;
   border-image: repeating-linear-gradient(45deg,
-    var(--safe-zone) 0px, var(--safe-zone) 8px,
-    #fff 8px, #fff 16px) 4;
+    var(--safe-zone-stripe-dark) 0px, var(--safe-zone-stripe-dark) 8px,
+    var(--safe-zone-stripe-light) 8px, var(--safe-zone-stripe-light) 16px) 4;
 }
 
 .safe-zone-label {
   position: absolute;
-  top: var(--space-3);
   left: 50%;
   transform: translateX(-50%);
   display: inline-flex;
