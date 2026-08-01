@@ -340,6 +340,8 @@ window.Timeline = (() => {
           () => onSelect({ type: "shape", item: s }), { resizable: true });
         laneTrack.lastElementChild.dataset.blockId = s.id;
       }
+
+      OverlayCopyToolbar.attach(laneTrack.lastElementChild, entry);
     }
   }
 
