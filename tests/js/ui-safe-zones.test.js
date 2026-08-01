@@ -22,3 +22,23 @@ test("SafeZoneGeometry derives the same pixel values it hardcodes today", () => 
   assert.strictEqual(g.CAPTION_ZONE_BOTTOM, 1785.6);
   assert.strictEqual(g.HORIZONTAL_MARGIN, 162);
 });
+
+test("SafeZoneGeometry derives TEXT_IMAGE_SAFE_RECT: mirrored margin, top-zone-to-caption-zone", () => {
+  const g = global.SafeZoneGeometry;
+  assert.deepStrictEqual(g.TEXT_IMAGE_SAFE_RECT, {
+    left: 162,
+    right: 918,
+    top: 115.2,
+    bottom: 1401.6,
+  });
+});
+
+test("SafeZoneGeometry derives CAPTION_SAFE_RECT: today's existing caption band bounds", () => {
+  const g = global.SafeZoneGeometry;
+  assert.deepStrictEqual(g.CAPTION_SAFE_RECT, {
+    left: 0,
+    right: 918,
+    top: 1401.6,
+    bottom: 1785.6,
+  });
+});
