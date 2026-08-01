@@ -120,6 +120,9 @@ const ICON_PATHS = {
   "message-circle-warning": '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
   // Added for the timeline zoom-out button (final review finding 4: retired zoom button migration).
   minus: '<path d="M5 12h14"/>',
+  // Added Task 9 (layer-masking-system, timeline mask accordion): MASK sub-lane icon, verified
+  // against Lucide's current "venetian-mask" path data.
+  "venetian-mask": '<path d="M20.6 11a1.9 1.9 0 0 0-1.6-2A2.9 2.9 0 0 0 16.3 2c-1.4.2-2.9 1.2-4.3 1.2S9.1 2.2 7.7 2A2.9 2.9 0 0 0 5 9a1.9 1.9 0 0 0-1.6 2 12 12 0 0 0-.4 3v2a8 8 0 0 0 16 0v-2a12 12 0 0 0-.4-3"/><path d="M4 8a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1"/><path d="M20 8a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1"/><path d="M6.3 15c.4 1.5 2.6 3 5.7 3s5.3-1.5 5.7-3"/>',
 };
 
 // Wrapper attributes shared by every icon already inlined across this codebase's markup
