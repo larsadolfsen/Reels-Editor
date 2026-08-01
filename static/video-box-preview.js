@@ -5,14 +5,11 @@
 // and wires drag-to-move (UI.videoBoxDrag)/resize (UI.resizeHandles) onto the selected box.
 // Exposes window.VideoBoxPreview.{render, setSelectedVideoBox, setOnActivate,
 // setActiveMaskShapeId}. Muted always (no PiP audio).
-// Shape-as-mask (layer-masking-system): a box with mask_shape_id set looks up that ShapeLayer
-// in the (bare-global, classic-script-shared) project.shapes, computes its rect in the box's
-// local coordinate space via ShapeMask.localRect, and applies it as a CSS mask-image
-// (ShapeMask.cssMaskImage) — soft-alpha, respecting the shape's opacity and corner_radius,
-// unlike the retired box-edge-mask's hard clip-path. While the masking shape is the currently
-// selected layer (setActiveMaskShapeId, called by panel-shape.js), an additional translucent
-// red "rubylith" overlay div is drawn over the box showing exactly what the mask cuts away
-// (ShapeMask.cssInverseMaskImage), matching Photoshop's quick-mask convention.
+// Shape-as-mask (layer-masking-system): rendering of a box's mask_shape_id — CSS mask-image via
+// ShapeMask, plus the rubylith "what gets cut" overlay shown while the mask shape is selected —
+// is shared with image-box-preview.js via static/box-mask-render.js (BoxMaskRender.sync/release);
+// setActiveMaskShapeId below just delegates to that shared module so this file's public API is
+// unchanged for existing callers (panel-shape.js, panel-nav.js).
 window.VideoBoxPreview = (() => {
   const overlay = document.getElementById("overlay");
   const mounted = new Map(); // boxId -> <video>
@@ -20,57 +17,9 @@ window.VideoBoxPreview = (() => {
   let selectedBoxId = null;
   let callbacks = null;
   let onActivate = null; // (boxId) => void, fired by a plain click on an unselected box in Select mode
-  let activeMaskShapeId = null; // shape id currently being edited as a mask (rubylith view); set by panel-shape.js via setActiveMaskShapeId
-  const rubylithOverlays = new Map(); // boxId -> <div>, the translucent red "what gets cut" overlay shown only while its mask shape is selected
 
   function boxEnd(v) {
     return v.start + (v.out_point - v.in_point);
-  }
-
-  function maskingShapeFor(v) {
-    if (!v.mask_shape_id) return null;
-    return (project.shapes || []).find((s) => s.id === v.mask_shape_id) || null;
-  }
-
-  function syncMaskRendering(v, video) {
-    const shape = maskingShapeFor(v);
-    if (!shape) {
-      video.style.maskImage = "";
-      video.style.webkitMaskImage = "";
-      const existing = rubylithOverlays.get(v.id);
-      if (existing) { existing.remove(); rubylithOverlays.delete(v.id); }
-      return;
-    }
-    const rect = ShapeMask.localRect(v, shape);
-    const maskCss = ShapeMask.cssMaskImage(v.width, v.height, rect);
-    video.style.maskImage = maskCss;
-    video.style.webkitMaskImage = maskCss;
-    video.style.maskRepeat = "no-repeat";
-    video.style.webkitMaskRepeat = "no-repeat";
-
-    let overlay = rubylithOverlays.get(v.id);
-    if (shape.id === activeMaskShapeId) {
-      if (!overlay) {
-        overlay = document.createElement("div");
-        overlay.className = "mask-rubylith-overlay";
-        overlay.style.pointerEvents = "none";
-        document.getElementById("overlay").appendChild(overlay);
-        rubylithOverlays.set(v.id, overlay);
-      }
-      overlay.style.left = video.style.left;
-      overlay.style.top = video.style.top;
-      overlay.style.width = video.style.width;
-      overlay.style.height = video.style.height;
-      overlay.style.zIndex = "9999";
-      const inverseCss = ShapeMask.cssInverseMaskImage(v.width, v.height, rect);
-      overlay.style.maskImage = inverseCss;
-      overlay.style.webkitMaskImage = inverseCss;
-      overlay.style.maskRepeat = "no-repeat";
-      overlay.style.webkitMaskRepeat = "no-repeat";
-    } else if (overlay) {
-      overlay.remove();
-      rubylithOverlays.delete(v.id);
-    }
   }
 
   function mountHandles(boxId, video, v) {
@@ -131,7 +80,7 @@ window.VideoBoxPreview = (() => {
       video.style.width = (v.width / 1080 * stageW) + "px";
       video.style.height = (v.height / 1920 * stageH) + "px";
       video.style.zIndex = String(v.z_index);
-      syncMaskRendering(v, video);
+      BoxMaskRender.sync(v, video);
 
       const inWindow = v.start <= timelineTime && timelineTime < boxEnd(v);
       if (inWindow) {
@@ -159,8 +108,7 @@ window.VideoBoxPreview = (() => {
         unmountHandles(id);
         video.remove();
         mounted.delete(id);
-        const overlay = rubylithOverlays.get(id);
-        if (overlay) { overlay.remove(); rubylithOverlays.delete(id); }
+        BoxMaskRender.release(id);
       }
     }
   }
@@ -176,7 +124,7 @@ window.VideoBoxPreview = (() => {
   }
 
   function setActiveMaskShapeId(shapeId) {
-    activeMaskShapeId = shapeId || null;
+    BoxMaskRender.setActiveMaskShapeId(shapeId);
   }
 
   return { render, setSelectedVideoBox, setOnActivate, setActiveMaskShapeId };

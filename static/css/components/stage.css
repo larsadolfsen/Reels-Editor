@@ -105,6 +105,7 @@
 .mask-rubylith-overlay {
   position: absolute;
   background-color: rgba(255, 0, 0, 0.5);
+  z-index: 9999;
 }
 
 #transport {

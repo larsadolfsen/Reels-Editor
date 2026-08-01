@@ -274,6 +274,24 @@ def media_filmstrip(media_id: str, path: str) -> FileResponse:
 def media_file(path: str):
     return media.media_response(path)
 
+def _rasterize_mask_png(box, shapes: list, out_dir: Path, stem: str, band_index: int) -> str | None:
+    """If box has a mask_shape_id resolving to a real shape, rasterize its mask PNG (named
+    "{stem}-band{band_index}-mask.png" under out_dir) and return its path; else return None.
+    box must have x/y/width/height/mask_shape_id attributes — works for both VideoBoxLayer and
+    ImageBoxLayer via duck typing, since both bands build this the same way."""
+    if not box.mask_shape_id:
+        return None
+    shape = next((s for s in shapes if s.id == box.mask_shape_id), None)
+    if not shape:
+        return None
+    rect = shape_mask.local_rect(box.x, box.y, shape.x, shape.y, shape.width, shape.height,
+                                 shape.opacity, shape.corner_radius)
+    png = out_dir / f"{stem}-band{band_index}-mask.png"
+    shape_render.write_shape_mask_png(str(png), box.width, box.height,
+                                      rect["rel_x"], rect["rel_y"], rect["width"], rect["height"],
+                                      rect["opacity"], rect["corner_radius"])
+    return str(png)
+
 @app.post("/api/projects/{pid}/export")
 def export_project(pid: str) -> dict:
     p = store.load_project(pid, DATA_DIR)
@@ -302,32 +320,16 @@ def export_project(pid: str) -> dict:
             elif band["kind"] == "video_box":
                 v = band["video_box"]
                 entry = {"kind": "video_box", "video_box": v}
-                if v.mask_shape_id:
-                    shape = next((s for s in p.shapes if s.id == v.mask_shape_id), None)
-                    if shape:
-                        rect = shape_mask.local_rect(v.x, v.y, shape.x, shape.y, shape.width,
-                                                     shape.height, shape.opacity, shape.corner_radius)
-                        png = out_dir / f"{p.name}-{p.id[:8]}-band{i}-mask.png"
-                        shape_render.write_shape_mask_png(str(png), v.width, v.height,
-                                                           rect["rel_x"], rect["rel_y"],
-                                                           rect["width"], rect["height"],
-                                                           rect["opacity"], rect["corner_radius"])
-                        entry["mask_path"] = str(png)
+                mask_path = _rasterize_mask_png(v, p.shapes, out_dir, f"{p.name}-{p.id[:8]}", i)
+                if mask_path:
+                    entry["mask_path"] = mask_path
                 bands.append(entry)
             elif band["kind"] == "image_box":
                 b = band["image_box"]
                 entry = {"kind": "image_box", "image_box": b}
-                if b.mask_shape_id:
-                    shape = next((s for s in p.shapes if s.id == b.mask_shape_id), None)
-                    if shape:
-                        rect = shape_mask.local_rect(b.x, b.y, shape.x, shape.y, shape.width,
-                                                     shape.height, shape.opacity, shape.corner_radius)
-                        png = out_dir / f"{p.name}-{p.id[:8]}-band{i}-mask.png"
-                        shape_render.write_shape_mask_png(str(png), b.width, b.height,
-                                                           rect["rel_x"], rect["rel_y"],
-                                                           rect["width"], rect["height"],
-                                                           rect["opacity"], rect["corner_radius"])
-                        entry["mask_path"] = str(png)
+                mask_path = _rasterize_mask_png(b, p.shapes, out_dir, f"{p.name}-{p.id[:8]}", i)
+                if mask_path:
+                    entry["mask_path"] = mask_path
                 bands.append(entry)
             else:  # "shape"
                 s = band["shape"]
