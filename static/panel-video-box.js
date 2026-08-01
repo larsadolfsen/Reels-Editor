@@ -1,10 +1,11 @@
 // #panel-video-box context-panel section: add-from-media-library picker, time/position/size
 // fields, drag-to-move/resize on stage (via VideoBoxPreview), delete. The detail view is split
 // into Box (SIZE + POSITION, via the shared BoxSizePositionPanel — box-panel-size-position.js),
-// Time (START) tab panes via UI.tabBar (Box default), with Delete as an
-// always-visible footer. No trim (IN/OUT) controls — removed 2026-07-30, the in_point/out_point
-// fields still exist on VideoBoxLayer (set once at creation from the source media's full
-// duration) but are no longer user-editable via this panel. Exposes
+// Time (START), and Mask (via the shared BoxMaskPanel — box-panel-mask.js, added 2026-08-01
+// mask-visibility-ui, replacing the timeline's per-lane MASK accordion) tab panes via UI.tabBar
+// (Box default), with Delete as an always-visible footer. No trim (IN/OUT) controls — removed
+// 2026-07-30, the in_point/out_point fields still exist on VideoBoxLayer (set once at creation
+// from the source media's full duration) but are no longer user-editable via this panel. Exposes
 // window.VideoBoxPanel.render(selectedId) and window.VideoBoxPanel.createVideoBox(mediaItem)
 // (added 2026-07-30, video-hover-icons-files: pushes a new VideoBoxLayer into
 // project.video_boxes and returns it, no save/render — caller's responsibility; reused by
@@ -16,14 +17,17 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
   const VIDEO_BOX_HEADER_ICON = UI.icon("picture-in-picture", { size: 18 });
   const VIDEO_BOX_TAB_ICON_BOX = UI.icon("square-dashed", { size: 18 });
   const VIDEO_BOX_TAB_ICON_TIME = UI.icon("timer", { size: 18 });
+  const VIDEO_BOX_TAB_ICON_MASK = UI.icon("venetian-mask", { size: 18 });
 
   const VIDEO_BOX_TABS = [
     { value: "box", icon: VIDEO_BOX_TAB_ICON_BOX, label: "Box" },
     { value: "time", icon: VIDEO_BOX_TAB_ICON_TIME, label: "Time" },
+    { value: "mask", icon: VIDEO_BOX_TAB_ICON_MASK, label: "Mask" },
   ];
   const videoBoxTabPanes = {
     box: document.getElementById("video-box-box-body"),
     time: document.getElementById("video-box-time-body"),
+    mask: document.getElementById("video-box-mask-body"),
   };
   let activeVideoBoxTab = "box";
   function showVideoBoxTab(value) {
@@ -103,6 +107,16 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
         VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
       },
       getNaturalSize: () => probeVideoAspect(box.file_path),
+    });
+
+    BoxMaskPanel.render(document.getElementById("video-box-mask-body"), box, {
+      getWindow: () => ({ start: box.start, duration: box.out_point - box.in_point }),
+      onChange: async () => {
+        await saveProject();
+        renderTimeline();
+        VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+        renderDetail(box);
+      },
     });
 
     document.getElementById("video-box-delete").onclick = async () => {
