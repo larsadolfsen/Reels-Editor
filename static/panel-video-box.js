@@ -30,9 +30,14 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
     mask: document.getElementById("video-box-mask-body"),
   };
   let activeVideoBoxTab = "box";
+  let currentBox = null;
   function showVideoBoxTab(value) {
     activeVideoBoxTab = value;
     Object.entries(videoBoxTabPanes).forEach(([k, el]) => { el.hidden = k !== value; });
+    // Leaving the Mask tab (without any field edit re-rendering this panel) must still hide the
+    // rubylith overlay — and returning to it must still show it — so sync it directly rather than
+    // relying on renderDetail() to run again.
+    if (currentBox) BoxMaskPanel.syncActive(currentBox, value === "mask");
   }
   UI.tabBar(document.getElementById("video-box-tab-bar"), VIDEO_BOX_TABS, activeVideoBoxTab, showVideoBoxTab);
   showVideoBoxTab(activeVideoBoxTab);
@@ -109,6 +114,7 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
     });
 
     BoxMaskPanel.render(document.getElementById("video-box-mask-body"), box, {
+      active: activeVideoBoxTab === "mask",
       getWindow: () => ({ start: box.start, duration: box.out_point - box.in_point }),
       onChange: async () => {
         await saveProject();
@@ -173,6 +179,7 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
     document.getElementById("video-box-add-group").hidden = !!box;
     document.getElementById("video-box-picker").hidden = !!box;
     document.getElementById("video-box-detail").hidden = !box;
+    currentBox = box;
     if (!box) {
       renderPicker();
       VideoBoxPreview.setSelectedVideoBox(null, null);

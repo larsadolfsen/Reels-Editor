@@ -71,22 +71,30 @@ window.BoxMaskPanel = (() => {
     return check;
   }
 
-  function render(container, box, { onChange, getWindow }) {
-    container.innerHTML = "";
+  // Drive the rubylith "what gets cut" preview — previously only panel-shape.js's own
+  // select/deselect set this, but a mask shape is no longer independently selectable
+  // (mask-list-styling moved its editing inline into this Mask tab). `active` gates it to only
+  // the Mask tab itself: this panel's body is built (and this function called) on every render
+  // regardless of which of Box/Time/Mask is the visible tab, so without the gate the red overlay
+  // stayed on the stage while editing SIZE/POSITION/TIME too. Both preview modules share one
+  // BoxMaskRender-backed variable (see mask-shape-active-id.js), so both always receive the same
+  // value regardless of which box kind is open. Exposed as `syncActive` so a plain tab switch
+  // (no field change, no re-render of this panel's own DOM) can still update it.
+  function syncActive(box, active) {
     const shape = box.mask_enabled ? maskShapeFor(box) : null;
-    const currentType = shape ? "shape" : "none";
-
-    // Drive the rubylith "what gets cut" preview from this panel itself — previously only
-    // panel-shape.js's own select/deselect set this, but a mask shape is no longer independently
-    // selectable (mask-list-styling moved its editing inline into this Mask tab), so the preview
-    // never showed while a mask was actually being edited. Both preview modules share one
-    // BoxMaskRender-backed variable (see mask-shape-active-id.js), so both always receive the same
-    // value regardless of which box kind is open.
-    const activeMaskShapeId = shape ? shape.id : null;
+    const activeMaskShapeId = active && shape ? shape.id : null;
     VideoBoxPreview.setActiveMaskShapeId(activeMaskShapeId);
     ImageBoxPreview.setActiveMaskShapeId(activeMaskShapeId);
     VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
     ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+  }
+
+  function render(container, box, { onChange, getWindow, active }) {
+    container.innerHTML = "";
+    const shape = box.mask_enabled ? maskShapeFor(box) : null;
+    const currentType = shape ? "shape" : "none";
+
+    syncActive(box, !!active);
 
     // mainEl/drillEl are plain top-level siblings (not grid items of a .style-group), matching
     // #panel-text-main/#panel-text — SubpanelHost's "style-sub-panel" subpage class assumes that
@@ -200,5 +208,5 @@ window.BoxMaskPanel = (() => {
     ShapeOpacityField.render(opacityEl, shape, { onChange: fieldOnChange, span: 8 });
   }
 
-  return { render };
+  return { render, syncActive };
 })();

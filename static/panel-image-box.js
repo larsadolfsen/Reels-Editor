@@ -28,9 +28,14 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     mask: document.getElementById("image-box-mask-body"),
   };
   let activeImageBoxTab = "box";
+  let currentBox = null;
   function showImageBoxTab(value) {
     activeImageBoxTab = value;
     Object.entries(imageBoxTabPanes).forEach(([k, el]) => { el.hidden = k !== value; });
+    // Leaving the Mask tab (without any field edit re-rendering this panel) must still hide the
+    // rubylith overlay — and returning to it must still show it — so sync it directly rather than
+    // relying on renderDetail() to run again.
+    if (currentBox) BoxMaskPanel.syncActive(currentBox, value === "mask");
   }
   UI.tabBar(document.getElementById("image-box-tab-bar"), IMAGE_BOX_TABS, activeImageBoxTab, showImageBoxTab);
   showImageBoxTab(activeImageBoxTab);
@@ -107,6 +112,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     });
 
     BoxMaskPanel.render(document.getElementById("image-box-mask-body"), box, {
+      active: activeImageBoxTab === "mask",
       getWindow: () => ({ start: box.start, duration: box.duration }),
       onChange: async () => {
         await saveProject();
@@ -171,6 +177,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     document.getElementById("image-box-add-group").hidden = !!box;
     document.getElementById("image-box-picker").hidden = !!box;
     document.getElementById("image-box-detail").hidden = !box;
+    currentBox = box;
     if (!box) {
       renderPicker();
       ImageBoxPreview.setSelectedImageBox(null, null);
