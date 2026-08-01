@@ -70,6 +70,7 @@ window.VideoBoxPreview = (() => {
         video.addEventListener("click", () => {
           if (v.id === selectedBoxId) return;
           if (!window.ToolMode || ToolMode.get() !== "select") return;
+          if (window.BoxMaskRender && BoxMaskRender.isActive()) return; // mask-page-selection fix
           if (onActivate) onActivate(v.id);
         });
         overlay.appendChild(video);

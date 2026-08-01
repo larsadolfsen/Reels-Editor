@@ -56,12 +56,20 @@ window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput
     return !window.ToolMode || window.ToolMode.get() === "text";
   }
 
+  // True while a mask shape is being actively edited (box-panel-mask.js's Mask tab) — text
+  // blocks stay fully inert (no select, no move, no edit) so a stray stage click can't swap the
+  // selection away from the mask shape mid-edit (mask-page-selection fix).
+  function isMaskEditActive() {
+    return window.BoxMaskRender && BoxMaskRender.isActive();
+  }
+
   function handlePlainClick() {
     if (isTextToolActive()) enterEditMode();
     else if (onSelectClick) onSelectClick();
   }
 
   div.addEventListener("mousedown", (e) => {
+    if (isMaskEditActive()) return;
     if (e.target.closest(".resize-handle")) return; // let resize handles work unmodified
     if (div.contentEditable === "true") return; // already editing, let native caret placement work
 
@@ -108,6 +116,7 @@ window.UI.textInteraction = function textInteraction(div, { onEditStart, onInput
   });
 
   div.addEventListener("dblclick", (e) => {
+    if (isMaskEditActive()) return;
     if (e.target.closest(".resize-handle")) return;
     if (div.contentEditable === "true") return;
     if (!isTextToolActive()) enterEditMode();

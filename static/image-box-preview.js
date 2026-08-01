@@ -68,6 +68,7 @@ window.ImageBoxPreview = (() => {
         img.addEventListener("click", () => {
           if (b.id === selectedBoxId) return;
           if (!window.ToolMode || ToolMode.get() !== "select") return;
+          if (window.BoxMaskRender && BoxMaskRender.isActive()) return; // mask-page-selection fix
           if (onActivate) onActivate(b.id);
         });
         overlay.appendChild(img);

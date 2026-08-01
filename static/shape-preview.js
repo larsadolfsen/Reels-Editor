@@ -70,6 +70,7 @@ window.ShapePreview = (() => {
         div.addEventListener("click", () => {
           if (s.id === selectedShapeId) return;
           if (!window.ToolMode || ToolMode.get() !== "select") return;
+          if (window.BoxMaskRender && BoxMaskRender.isActive()) return; // mask-page-selection fix
           if (onActivate) onActivate(s.id);
         });
         overlay.appendChild(div);

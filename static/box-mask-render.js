@@ -92,5 +92,13 @@ window.BoxMaskRender = (() => {
     activeMaskShapeId = shapeId || null;
   }
 
-  return { sync, release, setActiveMaskShapeId };
+  // True while a mask shape is being actively edited (box-panel-mask.js's Mask tab is the open
+  // tab for some box) — the stage's other click-to-select handlers (video/image box, shape, text
+  // block) consult this to stay inert so a stray stage click can't swap the selection away from
+  // the mask shape mid-edit (mask-page-selection fix).
+  function isActive() {
+    return !!activeMaskShapeId;
+  }
+
+  return { sync, release, setActiveMaskShapeId, isActive };
 })();
