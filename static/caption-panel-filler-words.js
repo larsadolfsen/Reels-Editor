@@ -9,44 +9,13 @@
 // is meaningless. Not language-specific in storage (plain strings); user builds whatever list
 // fits their transcript's language (e.g. Danish "øh"/"øhm"/"altså" instead of the English
 // default). Exposes window.CaptionPanel.renderFillerWords(). Reaches into editor.js's
-// project/saveProject/renderTimeline globals.
+// project/saveProject/renderTimeline globals, and CAPTIONS' shared captionStyleHost
+// (panel-captions.js) for its drill-down list subpage (2026-08-01, subpanel-host convergence —
+// replaces the old hand-rolled #panel-captions-filler open/close toggle).
 window.CaptionPanel = window.CaptionPanel || {};
 
 (() => {
   let fillerWordsRowSetValue = null;
-
-  function openFillerPanel() {
-    renderFillerWordsList();
-    document.getElementById("panel-captions-main").hidden = true;
-    document.getElementById("panel-captions-filler").hidden = false;
-  }
-
-  function closeFillerPanel() {
-    document.getElementById("panel-captions-filler").hidden = true;
-    document.getElementById("panel-captions-main").hidden = false;
-  }
-
-  UI.subPanelHeader(document.getElementById("caption-filler-subpanel-header"), { title: "Filler words", onBack: closeFillerPanel });
-
-  async function addFillerWord() {
-    const input = document.getElementById("caption-filler-word-input");
-    const value = input.value.trim().toLowerCase();
-    input.value = "";
-    if (!value) return;
-    if (!project.filler_words.includes(value)) {
-      project.filler_words.push(value);
-      await saveProject();
-    }
-    renderFillerWordsList();
-    renderFillerWordsRow();
-  }
-
-  async function removeFillerWord(word) {
-    project.filler_words = project.filler_words.filter((w) => w !== word);
-    await saveProject();
-    renderFillerWordsList();
-    renderFillerWordsRow();
-  }
 
   // True when `word` (normalized the same way as detection) occurs anywhere in the current
   // transcript, so the FILLER WORDS list can flag which entries Auto-remove would actually cut.
@@ -56,9 +25,58 @@ window.CaptionPanel = window.CaptionPanel || {};
     return words.some((w) => FillerWords.normalizeWord(w.text) === normalized);
   }
 
-  function renderFillerWordsList() {
-    const listEl = document.getElementById("caption-filler-words-list");
-    listEl.innerHTML = "";
+  async function addFillerWord(input) {
+    const value = input.value.trim().toLowerCase();
+    input.value = "";
+    if (!value) return;
+    if (!project.filler_words.includes(value)) {
+      project.filler_words.push(value);
+      await saveProject();
+    }
+    refreshFillerWordsPage();
+    renderFillerWordsRow();
+  }
+
+  async function removeFillerWord(word) {
+    project.filler_words = project.filler_words.filter((w) => w !== word);
+    await saveProject();
+    refreshFillerWordsPage();
+    renderFillerWordsRow();
+  }
+
+  // Builds the drill-down's whole body (add-field row + list) fresh into bodyEl — the
+  // SubpanelHost contract: a subpage's body is rebuilt on every open(), same as the shared
+  // style-section-*.js files' own drill-downs.
+  function buildFillerWordsBody(bodyEl) {
+    const fieldGroup = document.createElement("div");
+    fieldGroup.className = "style-group";
+    const fieldRow = document.createElement("div");
+    fieldRow.className = "style-row";
+    fieldGroup.appendChild(fieldRow);
+    bodyEl.appendChild(fieldGroup);
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "col-6";
+    input.placeholder = "e.g. øh";
+    fieldRow.appendChild(input);
+
+    const addBtn = UI.button(fieldRow, {
+      icon: "plus",
+      size: "sm",
+      onClick: () => addFillerWord(input),
+    });
+    addBtn.classList.add("col-2");
+    addBtn.title = "Add filler word";
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); addFillerWord(input); }
+    });
+
+    const listEl = document.createElement("ul");
+    listEl.className = "font-list";
+    bodyEl.appendChild(listEl);
+
     (project.filler_words || []).forEach((word) => {
       const li = document.createElement("li");
       li.className = "font-list-row";
@@ -96,10 +114,16 @@ window.CaptionPanel = window.CaptionPanel || {};
     });
   }
 
-  document.getElementById("caption-filler-word-add").addEventListener("click", addFillerWord);
-  document.getElementById("caption-filler-word-input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); addFillerWord(); }
-  });
+  // Registered once, at module scope, against the panel-wide captionStyleHost (panel-captions.js)
+  // — mirrors how style-section-*.js files register their own drill-downs.
+  const fillerWordsPage = captionStyleHost.page("Filler words", buildFillerWordsBody);
+
+  // Refreshes the list in place when it's already open (an add/delete inside the open page),
+  // without a full close/reopen — open() already rebuilds the body fresh, so calling it again
+  // is the same "clear + rebuild" the host does on a genuine open.
+  function refreshFillerWordsPage() {
+    fillerWordsPage.open();
+  }
 
   function renderFillerWordsRow() {
     const count = (project.filler_words || []).length;
@@ -109,7 +133,7 @@ window.CaptionPanel = window.CaptionPanel || {};
     } else {
       fillerWordsRowSetValue = UI.settingsRow(document.getElementById("caption-filler-words-row"), {
         label: "Filler words", value,
-        onClick: openFillerPanel,
+        onClick: fillerWordsPage.open,
       });
     }
   }
@@ -133,6 +157,5 @@ window.CaptionPanel = window.CaptionPanel || {};
   window.CaptionPanel.renderFillerWords = function renderFillerWords() {
     document.getElementById("caption-filler-section").hidden = !(project.captions && project.captions.words.length);
     renderFillerWordsRow();
-    renderFillerWordsList();
   };
 })();
