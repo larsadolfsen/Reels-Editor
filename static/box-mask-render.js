@@ -5,12 +5,17 @@
 // and applies it as a CSS mask-image (ShapeMask.cssMaskImage) — soft-alpha, respecting the
 // shape's opacity and corner_radius. While the masking shape is the currently selected layer
 // (setActiveMaskShapeId, called by panel-shape.js), an additional translucent red "rubylith"
-// overlay div is drawn over the box showing exactly what the mask cuts away
-// (ShapeMask.cssInverseMaskImage), matching Photoshop's quick-mask convention. Box-agnostic —
-// works for a <video> (video-box-preview.js) or <img> (image-box-preview.js) element, keyed by
-// the box's own id. Exposes window.BoxMaskRender.{sync, release, setActiveMaskShapeId}; both
-// VideoBoxPreview and ImageBoxPreview re-export setActiveMaskShapeId so their public API is
-// unchanged for existing callers (panel-shape.js, panel-nav.js).
+// overlay div is drawn over the FULL STAGE (not just the target box's own footprint — fixed
+// 2026-08-02, mask-display-bug: a box positioned off-canvas/undersized used to leave its rubylith
+// stopping at the box's own edge, wrongly implying the area beyond it wasn't cut, when a mask
+// conceptually cuts everything outside the shape across the whole reel regardless of where the
+// box itself reaches) showing exactly what the mask cuts away (ShapeMask.cssInverseMaskImage,
+// hole punched at the shape's own absolute canvas position, not box-relative), matching
+// Photoshop's quick-mask convention. Box-agnostic — works for a <video> (video-box-preview.js) or
+// <img> (image-box-preview.js) element, keyed by the box's own id. Exposes
+// window.BoxMaskRender.{sync, release, setActiveMaskShapeId}; both VideoBoxPreview and
+// ImageBoxPreview re-export setActiveMaskShapeId so their public API is unchanged for existing
+// callers (panel-shape.js, panel-nav.js).
 window.BoxMaskRender = (() => {
   const overlayRoot = document.getElementById("overlay");
   let activeMaskShapeId = null; // shape id currently being edited as a mask (rubylith view)
@@ -67,11 +72,25 @@ window.BoxMaskRender = (() => {
         overlayRoot.appendChild(overlay);
         rubylithOverlays.set(box.id, overlay);
       }
-      overlay.style.left = el.style.left;
-      overlay.style.top = el.style.top;
-      overlay.style.width = el.style.width;
-      overlay.style.height = el.style.height;
-      const inverseCss = ShapeMask.cssInverseMaskImage(targetWidth, targetHeight, scaledRect);
+      // The rubylith is a "what does this mask cut away" preview of the FULL reel, not just the
+      // target box's own (possibly offset/undersized) footprint — a box positioned partway off
+      // canvas still conceptually cuts everything outside the shape, even where the box itself
+      // doesn't reach, so the red tint must cover the whole canvas rather than stop at the box's
+      // own edge. Position the overlay over the full stage and punch the hole at the shape's own
+      // absolute canvas position (not box-relative — this overlay isn't the box's own crop mask).
+      overlay.style.left = "0px";
+      overlay.style.top = "0px";
+      overlay.style.width = stageW + "px";
+      overlay.style.height = stageH + "px";
+      const absoluteRect = {
+        relX: shape.x * scaleX,
+        relY: shape.y * scaleY,
+        width: shape.width * scaleX,
+        height: shape.height * scaleY,
+        opacity: shape.opacity,
+        cornerRadius: shape.corner_radius * scaleX,
+      };
+      const inverseCss = ShapeMask.cssInverseMaskImage(stageW, stageH, absoluteRect);
       overlay.style.maskImage = inverseCss;
       overlay.style.webkitMaskImage = inverseCss;
       overlay.style.maskRepeat = "no-repeat";
