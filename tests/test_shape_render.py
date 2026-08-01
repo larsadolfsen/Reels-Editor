@@ -48,3 +48,36 @@ def test_corner_radius_clamped_to_half_min_dimension(tmp_path):
     img = Image.open(path)
     _, _, _, center_alpha = img.getpixel((25, 50))
     assert center_alpha == 255
+
+from app.shape_render import write_shape_mask_png
+
+def test_write_shape_mask_png_has_target_size_and_rgba_mode(tmp_path):
+    path = tmp_path / "mask.png"
+    write_shape_mask_png(str(path), 200, 300, 0, 0, 200, 300, 1.0, 0)
+    with Image.open(path) as img:
+        assert img.size == (200, 300)
+        assert img.mode == "RGBA"
+
+def test_write_shape_mask_png_full_opacity_inside_transparent_outside(tmp_path):
+    path = tmp_path / "mask.png"
+    # A 100x100 shape centered in a 200x200 target box: rel_x/rel_y = 50, 50.
+    write_shape_mask_png(str(path), 200, 200, 50, 50, 100, 100, 1.0, 0)
+    with Image.open(path) as img:
+        assert img.getpixel((100, 100))[3] == 255  # inside the shape
+        assert img.getpixel((10, 10))[3] == 0      # outside the shape
+
+def test_write_shape_mask_png_opacity_scales_alpha(tmp_path):
+    path = tmp_path / "mask.png"
+    write_shape_mask_png(str(path), 200, 200, 50, 50, 100, 100, 0.5, 0)
+    with Image.open(path) as img:
+        assert img.getpixel((100, 100))[3] == 128  # round(0.5 * 255)
+
+def test_write_shape_mask_png_offset_outside_canvas_is_clipped_safely(tmp_path):
+    path = tmp_path / "mask.png"
+    # Mask shape hangs off the left/top edge of the target box — must not error, and the
+    # visible portion (inside the canvas) must still be opaque.
+    write_shape_mask_png(str(path), 100, 100, -30, -30, 60, 60, 1.0, 0)
+    with Image.open(path) as img:
+        assert img.size == (100, 100)
+        assert img.getpixel((15, 15))[3] == 255
+        assert img.getpixel((80, 80))[3] == 0

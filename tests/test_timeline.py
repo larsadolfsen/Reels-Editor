@@ -1,6 +1,6 @@
 # Tests for app.timeline: pure sequence math over ordered, trimmed clips.
 import pytest
-from app.models import ClipLayer, VideoBoxLayer, ImageBoxLayer, TextBlockLayer, Project
+from app.models import ClipLayer, VideoBoxLayer, ImageBoxLayer, TextBlockLayer, ShapeLayer, Project
 from app.timeline import ordered, clip_duration, sequence_duration, locate, video_box_end, image_box_end, banded_layers, slice_clip, clip_starts
 
 def c(i, o, order): return ClipLayer(media_id=f"m{order}", file_path=f"{order}.mp4", in_point=i, out_point=o, order=order)
@@ -161,6 +161,16 @@ def test_banded_layers_shape_between_two_text_blocks():
     bands = banded_layers(p)
     assert [b["kind"] for b in bands] == ["text", "shape", "text"]
     assert bands[1]["shape"] == shape
+
+def test_banded_layers_excludes_a_shape_used_as_a_mask():
+    shape = ShapeLayer(id="mask-shape", x=0, y=0, width=100, height=100)
+    box = VideoBoxLayer(media_id="m1", file_path="a.mp4", out_point=1.0, height=100,
+                        mask_shape_id="mask-shape")
+    other_shape = ShapeLayer(id="visible-shape", x=0, y=0, width=50, height=50)
+    p = Project(name="p", video_boxes=[box], shapes=[shape, other_shape])
+    bands = banded_layers(p)
+    shape_bands = [b for b in bands if b["kind"] == "shape"]
+    assert [b["shape"].id for b in shape_bands] == ["visible-shape"]
 
 def test_banded_layers_shape_video_box_image_box_sorted_by_z_index():
     from app.models import ShapeLayer, VideoBoxLayer, ImageBoxLayer, Project

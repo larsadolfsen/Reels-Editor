@@ -6,7 +6,7 @@ import pytest
 from fastapi import HTTPException
 from app import export_jobs, store
 from app.main import export_project, list_presets, create_preset, delete_preset, probe, sanitize_export_filename, resolve_export_path, media_peaks, import_media
-from app.models import Project, TextBlockLayer, TextPreset, MediaItem, VideoBoxLayer
+from app.models import Project, TextBlockLayer, TextPreset, MediaItem, VideoBoxLayer, ShapeLayer
 
 def test_export_writes_ass_file_and_burns_it_in(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
@@ -401,10 +401,10 @@ def test_export_image_box_only_project_uses_banded_path(tmp_path, monkeypatch):
 def test_export_writes_a_mask_png_and_alphamerges_it_for_a_masked_video_box(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
     monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
+    shape = ShapeLayer(x=0, y=0, width=300, height=500)
     box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", out_point=2.0,
-                        width=300, height=500, mask_enabled=True, mask_angle=0.0,
-                        mask_offset=0.0, mask_flip=False)
-    p = Project(name="r", video_boxes=[box])
+                        width=300, height=500, mask_shape_id=shape.id)
+    p = Project(name="r", video_boxes=[box], shapes=[shape])
     with patch("app.main.store.load_project", return_value=p), \
          patch("app.main.media.run_export") as run_export:
         export_project(p.id)
@@ -427,6 +427,27 @@ def test_export_writes_no_mask_png_for_an_unmasked_video_box(tmp_path, monkeypat
     cmd = run_export.call_args[0][0]
     fc = cmd[cmd.index("-filter_complex") + 1]
     assert "alphamerge" not in fc
+
+def test_export_masked_video_box_rasterizes_mask_png_from_its_shape(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from PIL import Image
+    from app.main import app as fastapi_app
+    client = TestClient(fastapi_app)
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
+    shape = ShapeLayer(id="mshape", x=350, y=750, width=300, height=500, opacity=0.8, corner_radius=12)
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", out_point=2.0,
+                        x=300, y=700, width=300, height=500, mask_shape_id="mshape")
+    p = Project(name="r", video_boxes=[box], shapes=[shape])
+    with patch("app.main.store.load_project", return_value=p), \
+         patch("app.main.media.run_export") as run_export:
+        resp = client.post(f"/api/projects/{p.id}/export")
+    assert resp.status_code == 200
+    cmd = run_export.call_args[0][0]
+    mask_pngs = [tmp_path_arg for tmp_path_arg in cmd if str(tmp_path_arg).endswith("-mask.png")]
+    assert len(mask_pngs) == 1
+    with Image.open(mask_pngs[0]) as img:
+        assert img.size == (300, 500)  # target box's own size, not the shape's
 
 def test_import_media_copies_probes_and_appends_media_item(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)

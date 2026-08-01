@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.models import Project, TextPreset, ProjectSummary, new_id, CaptionTrack, AutoSliceApplyRequest, MediaItem
-from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip, auth, auto_slice, mask_image, shape_render
+from app import store, media, ffmpeg_cmd, ass_render, timeline, transcribe, export_jobs, waveform, filmstrip, auth, auto_slice, shape_render, shape_mask
 from app.font_metrics import available_weights, WEIGHT_LABELS
 
 def _resolve_data_dir() -> Path:
@@ -302,20 +302,32 @@ def export_project(pid: str) -> dict:
             elif band["kind"] == "video_box":
                 v = band["video_box"]
                 entry = {"kind": "video_box", "video_box": v}
-                if v.mask_enabled:
-                    png = out_dir / f"{p.name}-{p.id[:8]}-band{i}-mask.png"
-                    mask_image.write_mask_png(str(png), v.width, v.height,
-                                              v.mask_angle, v.mask_offset, v.mask_flip)
-                    entry["mask_path"] = str(png)
+                if v.mask_shape_id:
+                    shape = next((s for s in p.shapes if s.id == v.mask_shape_id), None)
+                    if shape:
+                        rect = shape_mask.local_rect(v.x, v.y, shape.x, shape.y, shape.width,
+                                                     shape.height, shape.opacity, shape.corner_radius)
+                        png = out_dir / f"{p.name}-{p.id[:8]}-band{i}-mask.png"
+                        shape_render.write_shape_mask_png(str(png), v.width, v.height,
+                                                           rect["rel_x"], rect["rel_y"],
+                                                           rect["width"], rect["height"],
+                                                           rect["opacity"], rect["corner_radius"])
+                        entry["mask_path"] = str(png)
                 bands.append(entry)
             elif band["kind"] == "image_box":
                 b = band["image_box"]
                 entry = {"kind": "image_box", "image_box": b}
-                if b.mask_enabled:
-                    png = out_dir / f"{p.name}-{p.id[:8]}-band{i}-mask.png"
-                    mask_image.write_mask_png(str(png), b.width, b.height,
-                                              b.mask_angle, b.mask_offset, b.mask_flip)
-                    entry["mask_path"] = str(png)
+                if b.mask_shape_id:
+                    shape = next((s for s in p.shapes if s.id == b.mask_shape_id), None)
+                    if shape:
+                        rect = shape_mask.local_rect(b.x, b.y, shape.x, shape.y, shape.width,
+                                                     shape.height, shape.opacity, shape.corner_radius)
+                        png = out_dir / f"{p.name}-{p.id[:8]}-band{i}-mask.png"
+                        shape_render.write_shape_mask_png(str(png), b.width, b.height,
+                                                           rect["rel_x"], rect["rel_y"],
+                                                           rect["width"], rect["height"],
+                                                           rect["opacity"], rect["corner_radius"])
+                        entry["mask_path"] = str(png)
                 bands.append(entry)
             else:  # "shape"
                 s = band["shape"]

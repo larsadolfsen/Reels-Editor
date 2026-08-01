@@ -65,13 +65,21 @@ def shape_end(s: ShapeLayer) -> float:
 def banded_layers(project: Project) -> list[dict]:
     """Partitions text blocks, video boxes, image boxes, and shapes into z-order bands for export
     compositing: consecutive text blocks accumulate into one 'text' band; each video/image box
-    or shape is its own band. Consumed by app.main's export route to decide how many ASS files to
-    render, and by app.ffmpeg_cmd to build the alternating ass-burn/overlay filter chain."""
+    or shape is its own band. A shape referenced by some box's mask_shape_id is a mask source,
+    not a visible layer, and is excluded here — it's rasterized separately (app.shape_render's
+    write_shape_mask_png) and attached to its target box's band as "mask_path" by app.main's
+    export route, instead of getting its own overlay band. Consumed by app.main's export route to
+    decide how many ASS files to render, and by app.ffmpeg_cmd to build the alternating
+    ass-burn/overlay filter chain."""
+    mask_shape_ids = {v.mask_shape_id for v in project.video_boxes if v.mask_shape_id}
+    mask_shape_ids |= {i.mask_shape_id for i in project.image_boxes if i.mask_shape_id}
+    visible_shapes = [s for s in project.shapes if s.id not in mask_shape_ids]
+
     entries = sorted(
         [("text", b) for b in project.text_blocks]
         + [("video_box", v) for v in project.video_boxes]
         + [("image_box", i) for i in project.image_boxes]
-        + [("shape", s) for s in project.shapes],
+        + [("shape", s) for s in visible_shapes],
         key=lambda e: e[1].z_index,
     )
     bands: list[dict] = []
