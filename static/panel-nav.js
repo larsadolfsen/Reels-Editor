@@ -9,7 +9,17 @@ function showPanel(type) {
   if (type !== "text") Preview.setSelectedTextBlock(null, null);
   if (type !== "video-box") VideoBoxPreview.setSelectedVideoBox(null, null);
   if (type !== "image-box") ImageBoxPreview.setSelectedImageBox(null, null);
-  if (type !== "shape") ShapePreview.setSelectedShape(null, null);
+  if (type !== "shape") {
+    ShapePreview.setSelectedShape(null, null);
+    // Switching away from the SHAPE panel by any path (stage click, timeline select) must also
+    // clear the rubylith mask-preview state — panel-shape.js is the only place that sets it, so
+    // without this a mask selected there stays visually tinted red after the user selects a
+    // different layer entirely, until some unrelated future render happens to redraw it away.
+    VideoBoxPreview.setActiveMaskShapeId(null);
+    ImageBoxPreview.setActiveMaskShapeId(null);
+    VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+    ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+  }
   document.getElementById("style-panel").hidden = false;
   ["files", "video", "text", "captions", "video-box", "image-box", "settings", "export", "projects", "audio", "shape"].forEach((t) => {
     document.getElementById(`panel-${t}`).hidden = t !== type;
