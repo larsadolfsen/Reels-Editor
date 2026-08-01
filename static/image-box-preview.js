@@ -6,11 +6,6 @@
 // resize (UI.resizeHandles) onto the selected box. Exposes
 // window.ImageBoxPreview.{render, setSelectedImageBox, setOnActivate}. No playback sync needed
 // (static image) — simpler than video-box-preview.js's currentTime/play/pause handling.
-// Applies BoxMask.clipPath(box) as the element's CSS clip-path so a mask_enabled box is cut
-// along its straight line (added 2026-07-29, box edge mask); unmasked boxes get "" (no clipping).
-// Also mounts the on-stage cut-line guide (UI.maskLineDrag, static/ui-mask-line-drag.js) for the
-// selected box while its mask is on, reporting drags through setOnMaskChange(fn) as
-// fn({angle, offset}, done) — done=false live during the drag, true once on mouseup.
 window.ImageBoxPreview = (() => {
   const overlay = document.getElementById("overlay");
   const mounted = new Map(); // boxId -> <img>
@@ -18,11 +13,6 @@ window.ImageBoxPreview = (() => {
   let selectedBoxId = null;
   let callbacks = null;
   let onActivate = null; // (boxId) => void, fired by a plain click on an unselected box in Select mode
-  let onMaskChange = null;   // ({angle, offset}, done) => void, fired by the mask-line drag guide
-  let maskGuide = null;      // the UI.maskLineDrag handle for the selected box, if it is masked
-  let maskGuideBoxId = null; // which box the mounted guide belongs to
-  let maskGuideBox = null;   // the box object the guide's getRect/getMask closures should read live
-  let maskGuideEl = null;    // the <img> element the guide's getRect closure should read live
 
   function boxEnd(b) {
     return b.start + b.duration;
@@ -45,45 +35,6 @@ window.ImageBoxPreview = (() => {
   function unmountHandles(boxId) {
     const destroy = handlesDestroyers.get(boxId);
     if (destroy) { destroy(); handlesDestroyers.delete(boxId); }
-  }
-
-  function unmountMaskGuide() {
-    if (maskGuide) { maskGuide.destroy(); maskGuide = null; }
-    maskGuideBoxId = null;
-    maskGuideBox = null;
-    maskGuideEl = null;
-  }
-
-  // The guide only exists for the selected box while its mask is on; every other case tears it
-  // down, so switching selection or turning the mask off leaves no stray SVG in #overlay.
-  // Only tears down the guide when THIS box owns it — render() calls this once per visible box,
-  // so an unrelated box must not destroy the selected box's guide (it would never paint).
-  //
-  // maskGuideBox/maskGuideEl are refreshed on every call (before the `if (!maskGuide)` create
-  // gate), and the guide's getRect/getMask closures read those module vars instead of closing
-  // over this call's `box`/`el` arguments directly. Without that indirection, a later render
-  // with a *different* box object for the same id — e.g. after undo/redo, where applyRestore()
-  // reparses `project` into brand-new objects — would leave the guide's closures pinned to the
-  // stale pre-restore box/element: `maskGuide` already exists, so the create gate is skipped and
-  // the closures are never rebuilt, and the guide keeps drawing/dragging the superseded state.
-  function syncMaskGuide(box, el) {
-    if (!box.mask_enabled || box.id !== selectedBoxId) {
-      if (maskGuideBoxId === box.id) unmountMaskGuide();
-      return;
-    }
-    maskGuideBox = box;
-    maskGuideEl = el;
-    if (!maskGuide) {
-      maskGuide = UI.maskLineDrag(overlay, {
-        getRect: () => ({ left: maskGuideEl.offsetLeft, top: maskGuideEl.offsetTop,
-                          width: maskGuideEl.offsetWidth, height: maskGuideEl.offsetHeight }),
-        getMask: () => ({ angle: maskGuideBox.mask_angle || 0, offset: maskGuideBox.mask_offset || 0 }),
-        onChange: (mask) => { if (onMaskChange) onMaskChange(mask, false); },
-        onChangeEnd: (mask) => { if (onMaskChange) onMaskChange(mask, true); },
-      });
-      maskGuideBoxId = box.id;
-    }
-    maskGuide.render();
   }
 
   function render(imageBoxes, timelineTime) {
@@ -121,10 +72,6 @@ window.ImageBoxPreview = (() => {
       img.style.width = (b.width / 1080 * stageW) + "px";
       img.style.height = (b.height / 1920 * stageH) + "px";
       img.style.zIndex = String(b.z_index);
-      // Straight-edge mask (box-mask.js): a percentage polygon, so it survives stage resizes
-      // untouched. "" when the box is unmasked, which is exactly the pre-feature rendering.
-      img.style.clipPath = BoxMask.clipPath(b);
-      syncMaskGuide(b, img);
 
       if (b.id === selectedBoxId && callbacks) mountHandles(b.id, img, b);
       else unmountHandles(b.id);
@@ -132,7 +79,6 @@ window.ImageBoxPreview = (() => {
 
     for (const [id, img] of mounted) {
       if (!activeIds.has(id)) {
-        if (id === selectedBoxId) unmountMaskGuide();
         unmountHandles(id);
         img.remove();
         mounted.delete(id);
@@ -142,7 +88,6 @@ window.ImageBoxPreview = (() => {
 
   function setSelectedImageBox(boxId, cb) {
     if (selectedBoxId && selectedBoxId !== boxId) unmountHandles(selectedBoxId);
-    if (selectedBoxId !== boxId) unmountMaskGuide();
     selectedBoxId = boxId;
     callbacks = cb || null;
   }
@@ -151,9 +96,5 @@ window.ImageBoxPreview = (() => {
     onActivate = fn || null;
   }
 
-  function setOnMaskChange(fn) {
-    onMaskChange = fn || null;
-  }
-
-  return { render, setSelectedImageBox, setOnActivate, setOnMaskChange };
+  return { render, setSelectedImageBox, setOnActivate };
 })();

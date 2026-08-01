@@ -1,7 +1,7 @@
 // #panel-image-box context-panel section: add-from-media-library picker (images only),
 // size/position/time fields, drag-to-move/resize on stage (via ImageBoxPreview), delete. The
 // detail view is split into Box (SIZE + POSITION, via the shared BoxSizePositionPanel —
-// box-panel-size-position.js), Time (START + DURATION) and Mask (EDGE MASK) tab panes via
+// box-panel-size-position.js) and Time (START + DURATION) tab panes via
 // UI.tabBar (Box default), with Delete as an always-visible footer. Exposes
 // window.ImageBoxPanel.render(selectedId). One image box selected at a time; multiple boxes
 // live in project.image_boxes (see app/models.py's ImageBoxLayer). Mirrors panel-video-box.js;
@@ -14,17 +14,14 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
   const IMAGE_BOX_HEADER_ICON = UI.icon("image", { size: 18 });
   const IMAGE_BOX_TAB_ICON_BOX = UI.icon("square-dashed", { size: 18 });
   const IMAGE_BOX_TAB_ICON_TIME = UI.icon("timer", { size: 18 });
-  const IMAGE_BOX_TAB_ICON_MASK = UI.icon("columns-2", { size: 18 });
 
   const IMAGE_BOX_TABS = [
     { value: "box", icon: IMAGE_BOX_TAB_ICON_BOX, label: "Box" },
     { value: "time", icon: IMAGE_BOX_TAB_ICON_TIME, label: "Time" },
-    { value: "mask", icon: IMAGE_BOX_TAB_ICON_MASK, label: "Mask" },
   ];
   const imageBoxTabPanes = {
     box: document.getElementById("image-box-box-body"),
     time: document.getElementById("image-box-time-body"),
-    mask: document.getElementById("image-box-mask-body"),
   };
   let activeImageBoxTab = "box";
   function showImageBoxTab(value) {
@@ -89,50 +86,6 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     return { width: Math.round(size.height * ratio), height: size.height };
   }
 
-  // Re-renders the stage so a mask change is visible immediately, same as the X/Y/W/H fields do.
-  function repaintStage() {
-    ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
-  }
-
-  function renderMask(box) {
-    UI.buttonGroup(document.getElementById("image-box-mask-toggle"),
-      [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
-      box.mask_enabled ? "on" : "off",
-      async (v) => {
-        box.mask_enabled = v === "on";
-        await saveProject();
-        renderMask(box);
-        repaintStage();
-      });
-
-    UI.numberField(document.getElementById("image-box-mask-angle-field"),
-      { label: "ANGLE", unit: "DEG", value: box.mask_angle ?? 0, step: 1, decimals: 1, span: 4,
-        disabled: !box.mask_enabled,
-        onChange: async (v) => { box.mask_angle = v; await saveProject(); repaintStage(); } });
-    UI.numberField(document.getElementById("image-box-mask-offset-field"),
-      { label: "OFFSET", unit: "PX", value: box.mask_offset ?? 0, step: 10, span: 4,
-        disabled: !box.mask_enabled,
-        onChange: async (v) => { box.mask_offset = v; await saveProject(); repaintStage(); } });
-
-    const flip = document.getElementById("image-box-mask-flip");
-    flip.disabled = !box.mask_enabled;
-    flip.onclick = async () => {
-      box.mask_flip = !box.mask_flip;
-      await saveProject();
-      repaintStage();
-    };
-
-    ImageBoxPreview.setOnMaskChange(async (mask, done) => {
-      box.mask_angle = mask.angle;
-      box.mask_offset = Math.round(mask.offset);
-      repaintStage();
-      if (done) {
-        await saveProject();
-        renderMask(box);   // number fields track the drag once it settles
-      }
-    });
-  }
-
   function renderDetail(box) {
     UI.numberField(document.getElementById("image-box-start-field"),
       { label: "START", unit: "SEC", value: box.start, step: 0.1, min: 0, span: 4,
@@ -153,11 +106,9 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     document.getElementById("image-box-delete").onclick = async () => {
       project.image_boxes = project.image_boxes.filter((b) => b.id !== box.id);
       await saveProject();
-      repaintStage();
+      ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
       openFilesPanel();
     };
-
-    renderMask(box);
 
     ImageBoxPreview.setSelectedImageBox(box.id, {
       onResize: (size) => {
