@@ -5,8 +5,8 @@
 // own Color/Outline/Shadow/Highlight are built by reusing the four shared style sections
 // (style-section-color.js/outline.js/shadow.js/highlight.js) pointed at the preset's spotlight_*
 // fields via each section's field-name options (added 2026-07-30) — a second, nested
-// StylePanelHost scoped to this subpage's own body gives them their own chevron drill-downs,
-// matching the reference mockup, without changing StylePanelHost itself. Outline and Shadow only
+// SubpanelHost scoped to this subpage's own body gives them their own chevron drill-downs,
+// matching the reference mockup, without changing SubpanelHost itself. Outline and Shadow only
 // render in "current_word" mode (see app/ass_render.py's _current_word_dialogues header for why
 // ASS can't carry them through "progressive_fill"'s \k sweep) — their rows hide in that mode and
 // when the mode is "off"; Color and Highlight hide only when "off".
@@ -49,13 +49,13 @@ window.StyleSection.spotlight = function spotlightSection(container, target, opt
     modeGroup.appendChild(modeEl);
     bodyEl.appendChild(modeGroup);
 
-    // A nested StylePanelHost scoped to this subpage: mainEl is this subpage's own body (already
+    // A nested SubpanelHost scoped to this subpage: mainEl is this subpage's own body (already
     // holding the mode group above it), drillEl is a sibling appended to the subpage's outer
     // element so the four reused sections' subpages don't get wiped when this body rebuilds.
     const pageEl = bodyEl.parentElement;
     const nestedDrillEl = document.createElement("div");
     pageEl.appendChild(nestedDrillEl);
-    const nestedHost = StylePanelHost(bodyEl, nestedDrillEl);
+    const nestedHost = SubpanelHost(bodyEl, nestedDrillEl);
 
     // Each wrapper uses the existing .style-section convention (style-panel.css) — the same one
     // style-tab-design.js's sectionWrapper() uses — so the reused sections' own .style-group

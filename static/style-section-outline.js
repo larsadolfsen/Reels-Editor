@@ -44,7 +44,7 @@ window.StyleSection.outline = function outlineSection(container, target, options
     setRowValue(widthText(), null, colorValue());
   }
 
-  // StylePanelHost rebuilds the body on every open(), so building the fields here — rather
+  // SubpanelHost rebuilds the body on every open(), so building the fields here — rather
   // than in render() — is what keeps the subpage in step with the current preset.
   const page = host.page("Outline", (bodyEl) => {
     const colorGroup = document.createElement("div");

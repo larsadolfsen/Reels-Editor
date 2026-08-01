@@ -1,7 +1,8 @@
-// Generic drill-down subpage manager for the TEXT and CAPTIONS panels: registers a
-// subpage against a panel's main view, builds its back-arrow header, and toggles which
-// of the two is visible. Replaces the per-control openXPanel/closeXPanel function pairs.
-window.StylePanelHost = function StylePanelHost(mainEl, drillEl) {
+// Generic drill-down subpage manager (renamed from StylePanelHost, 2026-08-01 — no longer
+// TEXT/CAPTIONS-only, box-panel-mask.js's MASK tab uses it too): registers a subpage against a panel's main view,
+// builds its back-arrow header, and toggles which of the two is visible. Replaces the per-control
+// openXPanel/closeXPanel function pairs.
+window.SubpanelHost = function SubpanelHost(mainEl, drillEl) {
   const pages = [];
 
   // Closes through each open page's own close() — not a bare `hidden = true` sweep — so
