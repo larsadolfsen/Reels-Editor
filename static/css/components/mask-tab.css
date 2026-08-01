@@ -1,39 +1,14 @@
-/* VIDEO BOX/IMAGE BOX panel's Mask tab (static/box-panel-mask.js): the assigned-mask row
-   (icon+label on the left, a remove button on the right, built on the shared .list-row card
-   recipe, list-row.css, applied via UI.listRow). Depends on tokens.css. The "Type" settings row +
-   drill-down list (added 2026-08-01, mask-list-styling, replacing this file's old
-   .mask-add-gallery-wrap/.mask-type-gallery/.mask-type-gallery-card card-grid rules) needs no
-   styling of its own beyond .font-list-row-disabled below — it composes UI.settingsRow
+/* VIDEO BOX/IMAGE BOX panel's Mask tab (static/box-panel-mask.js). Depends on tokens.css. The
+   "Type" settings row + drill-down list (added 2026-08-01, mask-list-styling, replacing this
+   file's old .mask-add-gallery-wrap/.mask-type-gallery/.mask-type-gallery-card card-grid rules)
+   needs no styling of its own beyond .font-list-row-disabled below — it composes UI.settingsRow
    (settings-row.css), UI.subPanelHeader (sub-panel.css), and the shared .font-list rows
-   (sub-panel.css) as-is. */
+   (sub-panel.css) as-is. The old .mask-assigned-row/-label/-remove rules (the icon+label+trash
+   row shown below the Type row once a mask was assigned) were removed 2026-08-01 (mask-type-none)
+   along with the row itself — redundant with the Type row, which already shows the current
+   selection with a checkmark. */
 .font-list-row-disabled {
   opacity: 0.4;
   cursor: default;
   pointer-events: none;
-}
-
-.mask-assigned-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-.mask-assigned-row-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--text);
-}
-.mask-assigned-row-remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  padding: var(--space-1);
-  color: var(--text-tertiary);
-  cursor: pointer;
-}
-.mask-assigned-row-remove:hover {
-  color: var(--danger);
 }
