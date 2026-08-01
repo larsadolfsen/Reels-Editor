@@ -7,6 +7,7 @@
 
 function showPanel(type) {
   if (type !== "text") Preview.setSelectedTextBlock(null, null);
+  if (type !== "captions") PreviewCaptions.setSelectedCaption(false, null);
   if (type !== "video-box") VideoBoxPreview.setSelectedVideoBox(null, null);
   if (type !== "image-box") ImageBoxPreview.setSelectedImageBox(null, null);
   if (type !== "shape") {

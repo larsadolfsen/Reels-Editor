@@ -12,13 +12,35 @@
 // (preset.text_case): displayed via CSS text-transform, paginated using a measurer wrapped through
 // TextCase.apply so line-wrapping matches what CSS actually draws.
 // getBoxSizeCanvasPx() reads the caption block's live on-stage rendered size (in 1080x1920 canvas
-// px) for the POSITION single-row icon anchor shortcut. Exposes window.PreviewCaptions.
-// {renderCaptions(project, presets, timelineTime), getBoxSizeCanvasPx}.
+// px) for the POSITION single-row icon anchor shortcut. The div's own padding (CAPTION_PAD_*_PX)
+// mirrors app/ass_render.py's CAPTION_PAD_LEFT/RIGHT/TOP/BOTTOM_PX exactly, since pagination above
+// reserves that same space when measuring what fits — a mismatch there is what let wrapped lines
+// exceed the box and get clipped by its overflow:hidden (overlay-lane-caption-drag fix). Click-to-
+// select + drag-to-move/resize (setSelectedCaption/setOnActivate) mirror video-box-preview.js's
+// pattern, but there's only ever one caption box, so no per-id map — a plain click on the
+// unselected box, Select-tool only, fires onActivate(); once selected, UI.videoBoxDrag/
+// UI.resizeHandles mount directly on the (recreated-every-render) div, same as preview-text.js's
+// text blocks. Exposes window.PreviewCaptions.{renderCaptions(project, presets, timelineTime),
+// getBoxSizeCanvasPx, setSelectedCaption(isSelected, cb), setOnActivate(fn)}.
 window.PreviewCaptions = (() => {
   const overlay = document.getElementById("overlay");
   const stage = document.getElementById("stage");
   let paginationCache = null; // { key, pages }
+  let capProject = null;
+  let capPresets = {};
+  let selected = false; // whether the caption box is the stage's active selection (drag/resize handles mount)
+  let callbacks = null; // { onMove, onMoveEnd, onResize, onDragEnd }, set by setSelectedCaption
+  let onActivate = null; // () => void, fired by a plain click on the not-yet-selected caption box in Select mode
   const HIGHLIGHT_PAD_EM = 0.2; // equal padding on all 4 sides of a Highlight/Spotlight background, mirrors app/ass_render.py's HIGHLIGHT_PAD_EM
+  // Mirrors app/ass_render.py's CAPTION_PAD_LEFT/RIGHT/TOP/BOTTOM_PX (1080x1920 canvas-px basis).
+  // Pagination below reserves exactly this much space when measuring what fits the box, so the
+  // rendered box's own padding (in renderCaptions) MUST use these same values — a mismatch here
+  // means text wraps assuming one box size but renders into a smaller (or larger) one, clipping
+  // words the pagination thought would fit.
+  const CAPTION_PAD_LEFT_PX = 4;
+  const CAPTION_PAD_RIGHT_PX = 4;
+  const CAPTION_PAD_TOP_PX = 4;
+  const CAPTION_PAD_BOTTOM_PX = 3;
 
   function hexToRgba(hex, opacityPercent) {
     const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
@@ -37,8 +59,8 @@ window.PreviewCaptions = (() => {
     if (paginationCache && paginationCache.key === key) return paginationCache.pages;
     const rawMeasure = FontFit.canvasMeasurer(preset.font, preset.size_px, { weight: preset.weight, italic: preset.italic });
     const measure = (s) => rawMeasure(TextCase.apply(s, preset.text_case));
-    const padX = 4 + 4; // left + right, mirrors app/ass_render.py's CAPTION_PAD_LEFT_PX/CAPTION_PAD_RIGHT_PX
-    const padY = 4 + 3; // top + bottom, mirrors app/ass_render.py's CAPTION_PAD_TOP_PX/CAPTION_PAD_BOTTOM_PX
+    const padX = CAPTION_PAD_LEFT_PX + CAPTION_PAD_RIGHT_PX;
+    const padY = CAPTION_PAD_TOP_PX + CAPTION_PAD_BOTTOM_PX;
     const pages = CaptionLayout.paginateWords(track.words, measure,
       Math.max(1, preset.box_width - padX), Math.max(1, preset.box_height - padY), preset.size_px);
     paginationCache = { key, pages };
@@ -54,7 +76,9 @@ window.PreviewCaptions = (() => {
   }
 
   function renderCaptions(project, presets, timelineTime) {
-    overlay.querySelectorAll(".caption-block").forEach((el) => el.remove());
+    capProject = project;
+    capPresets = presets;
+    overlay.querySelectorAll(".caption-block, .caption-block-handles").forEach((el) => el.remove());
     const track = project.captions;
     if (!track || !track.words.length) return;
     const preset = presets[track.preset_id];
@@ -82,7 +106,8 @@ window.PreviewCaptions = (() => {
     div.style.textDecoration = preset.underline ? "underline" : "none";
     div.style.fontSize = (preset.size_px / 1920 * stageH) + "px";
     div.style.webkitTextStroke = `${preset.outline_px / 1920 * stageH}px ${preset.outline_color}`;
-    div.style.padding = "0.15em 0.35em";
+    div.style.padding = `${CAPTION_PAD_TOP_PX / 1920 * stageH}px ${CAPTION_PAD_RIGHT_PX / 1080 * stageW}px ` +
+      `${CAPTION_PAD_BOTTOM_PX / 1920 * stageH}px ${CAPTION_PAD_LEFT_PX / 1080 * stageW}px`;
     div.style.backgroundColor = preset.box_background ? hexToRgba(preset.box_background_color, preset.box_background_opacity) : "transparent";
     div.style.borderWidth = (preset.box_border_width / 1080 * stageW) + "px";
     div.style.borderStyle = preset.box_border_width > 0 ? "solid" : "none";
@@ -91,7 +116,44 @@ window.PreviewCaptions = (() => {
       ? `${preset.shadow_offset_x / 1920 * stageH}px ${preset.shadow_offset_y / 1920 * stageH}px ${preset.shadow_blur / 1920 * stageH}px ${preset.shadow_color}`
       : "none";
     div.style.borderRadius = (preset.box_border_radius / 1080 * stageW) + "px";
-    div.style.pointerEvents = "none";
+    // Click-to-select + drag-to-move/resize (added overlay-lane-caption-drag), mirroring
+    // video-box-preview.js/preview-text.js: pointer-events must be on for either to receive
+    // events. Select-tool gating happens inside the click handler itself, same as video boxes —
+    // in Text/Shape-tool mode the click no-ops and bubbles to #stage's own click routing.
+    div.style.pointerEvents = "auto";
+    if (selected && callbacks) {
+      UI.videoBoxDrag(div, {
+        onMove: (delta) => { if (callbacks.onMove) callbacks.onMove(delta); },
+        onMoveEnd: (delta) => { if (callbacks.onMoveEnd) callbacks.onMoveEnd(delta); },
+      });
+      // .caption-block has overflow:hidden (so overflowing text never bleeds past the box —
+      // see the padding fix above); resize handles sit half outside the box edge, so they'd be
+      // clipped if mounted as children of div like video-box-preview.js does. Mount them on a
+      // plain sibling positioned/sized to match instead — UI.resizeHandles' own wrap already
+      // fills whatever container it's given (resize-handles.css's `inset: 0`).
+      const handlesHost = document.createElement("div");
+      // Shares the same text-block--align-* class as div (not just its left/top/width/height) so
+      // the center/right alignment transform (stage.css) that visually shifts the box also shifts
+      // this sibling identically — align isn't expressed via `left` alone.
+      handlesHost.className = `caption-block-handles text-block--align-${preset.align}`;
+      handlesHost.style.position = "absolute";
+      handlesHost.style.left = div.style.left;
+      handlesHost.style.top = div.style.top;
+      handlesHost.style.width = div.style.width;
+      handlesHost.style.height = div.style.height;
+      handlesHost.style.zIndex = "9999";
+      overlay.appendChild(handlesHost);
+      UI.resizeHandles(handlesHost, {
+        getSize: () => ({ width: div.offsetWidth, height: div.offsetHeight }),
+        onResize: (size) => { if (callbacks.onResize) callbacks.onResize(size); },
+        onDragEnd: (size) => { if (callbacks.onDragEnd) callbacks.onDragEnd(size); },
+      });
+    } else {
+      div.addEventListener("click", () => {
+        if (!window.ToolMode || ToolMode.get() !== "select") return;
+        if (onActivate) onActivate();
+      });
+    }
 
     const highlightPadPx = (HIGHLIGHT_PAD_EM * preset.size_px / 1920 * stageH);
     const highlightRadiusPx = (preset.highlight_border_radius / 1920 * stageH) + "px";
@@ -158,5 +220,19 @@ window.PreviewCaptions = (() => {
     return { width: div.offsetWidth / stageW * 1080, height: div.offsetHeight / stageH * 1920 };
   }
 
-  return { renderCaptions, getBoxSizeCanvasPx };
+  // setSelectedCaption(isSelected, cb): mirrors preview-text.js's setSelectedTextBlock — cb is
+  // { onMove, onMoveEnd, onResize, onDragEnd }, called by UI.videoBoxDrag/UI.resizeHandles once
+  // mounted on the box (see renderCaptions above). Immediately re-renders against the last-known
+  // project/presets so the handles mount/unmount without waiting for the caller's next render.
+  function setSelectedCaption(isSelected, cb) {
+    selected = !!isSelected;
+    callbacks = cb || null;
+    if (capProject) renderCaptions(capProject, capPresets, window.Preview ? Preview.currentTimelineTime() : 0);
+  }
+
+  function setOnActivate(fn) {
+    onActivate = fn || null;
+  }
+
+  return { renderCaptions, getBoxSizeCanvasPx, setSelectedCaption, setOnActivate };
 })();

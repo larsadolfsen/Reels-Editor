@@ -4,7 +4,10 @@
 // Plain globals shared with caption-panel-*.js; reaches into editor.js's
 // `project`/`saveProject`/`renderTimeline` globals. Transcription itself (the Auto-caption button
 // and the Language row) lives in this panel's own Auto tab as of 2026-07-31 — see
-// static/caption-panel-auto-caption.js/caption-panel-language.js.
+// static/caption-panel-auto-caption.js/caption-panel-language.js. Stage drag-to-move/resize
+// (selectCaptionBoxOnStage, handleCaptionBoxMove/MoveEnd/Resize/ResizeEnd, added
+// overlay-lane-caption-drag) selects the caption box on PreviewCaptions whenever this panel is
+// open, mirroring panel-text.js's handleBoxMove/handleBoxResize.
 
 function defaultCaptionPreset(id) {
   return {
@@ -67,6 +70,52 @@ function renderCaptionPreview() {
   if (window.TranscriptSidebar) TranscriptSidebar.render(project);
 }
 
+// Stage drag-to-move/resize for the caption box (overlay-lane-caption-drag), mirroring
+// panel-text.js's handleBoxMove/handleBoxResize: live-preview against a cloned preset during the
+// drag (no save), commit + persist only on mouseup. stageScale() is panel-text.js's global helper.
+function handleCaptionBoxMove(preset, { dx, dy }) {
+  const scale = stageScale();
+  const previewPreset = { ...preset, x: preset.x + dx * scale, y: preset.y + dy * scale };
+  Preview.renderCaptions(project, { ...project.text_presets, [preset.id]: previewPreset }, Preview.currentTimelineTime());
+}
+
+async function handleCaptionBoxMoveEnd(preset, { dx, dy }) {
+  const scale = stageScale();
+  preset.x = Math.round(preset.x + dx * scale);
+  preset.y = Math.round(preset.y + dy * scale);
+  await saveProject();
+  renderCaptionPreview();
+  renderCaptionBoxTab();
+}
+
+function handleCaptionBoxResize(preset, { width, height }) {
+  const scale = stageScale();
+  const previewPreset = { ...preset, box_width: Math.round(width * scale), box_height: Math.round(height * scale) };
+  Preview.renderCaptions(project, { ...project.text_presets, [preset.id]: previewPreset }, Preview.currentTimelineTime());
+}
+
+async function handleCaptionBoxResizeEnd(preset, { width, height }) {
+  const scale = stageScale();
+  preset.box_width = Math.round(width * scale);
+  preset.box_height = Math.round(height * scale);
+  await saveProject();
+  renderCaptionPreview();
+  renderCaptionBoxTab();
+}
+
+// Selects the caption box on stage (drag/resize handles) for as long as the CAPTIONS panel is
+// open — there's only ever one caption track, so unlike VIDEO BOX/IMAGE BOX/SHAPE there's no
+// per-item selection to make; opening the panel always means "this is the active box".
+function selectCaptionBoxOnStage() {
+  const preset = project.text_presets[project.captions.preset_id];
+  PreviewCaptions.setSelectedCaption(true, {
+    onMove: (delta) => handleCaptionBoxMove(preset, delta),
+    onMoveEnd: (delta) => handleCaptionBoxMoveEnd(preset, delta),
+    onResize: (size) => handleCaptionBoxResize(preset, size),
+    onDragEnd: (size) => handleCaptionBoxResizeEnd(preset, size),
+  });
+}
+
 // Box tab: existing Background/Border settings-row + subpage UI (unchanged), then the shared
 // StyleTab.box sections mounted into #caption-box-shared-body. sizeModes is false — a caption
 // box is always a fixed size (word-wrap/pagination adapts to it, see preview-captions.js /
@@ -95,6 +144,7 @@ async function renderCaptionPanel() {
   CaptionPanel.renderFillerWords();
   CaptionPanel.renderWords();
 
+  selectCaptionBoxOnStage();
   renderCaptionPreview();
 }
 

@@ -157,6 +157,14 @@ ShapePreview.setOnActivate((shapeId) => {
   ShapePreview.render(project.shapes, Preview.currentTimelineTime());
 });
 
+// Select-tool click on the not-yet-selected caption box (preview-captions.js's setOnActivate,
+// added overlay-lane-caption-drag): there's only one caption track, so unlike the boxes above
+// there's no id to resolve — just open the CAPTIONS panel, which selects it on stage itself
+// (panel-captions.js's selectCaptionBoxOnStage, called from renderCaptionPanel).
+PreviewCaptions.setOnActivate(() => {
+  openCaptionsPanel();
+});
+
 UI.safeZones(document.getElementById("safe-zones"));
 
 function setSafeZonesVisible(visible) {
