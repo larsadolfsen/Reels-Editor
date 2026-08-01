@@ -88,11 +88,6 @@ window.BoxMaskPanel = (() => {
     VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
     ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
 
-    const eyebrow = document.createElement("div");
-    eyebrow.className = "section-label-spacer text-eyebrow";
-    eyebrow.textContent = "MASK";
-    container.appendChild(eyebrow);
-
     // mainEl/drillEl are plain top-level siblings (not grid items of a .style-group), matching
     // #panel-text-main/#panel-text — SubpanelHost's "style-sub-panel" subpage class assumes that
     // unconstrained layout, not a fixed 28px grid track.
@@ -100,6 +95,16 @@ window.BoxMaskPanel = (() => {
     const drillEl = document.createElement("div");
     container.append(mainEl, drillEl);
     const host = SubpanelHost(mainEl, drillEl);
+
+    // "MASK" lives inside mainEl (not container) so it hides along with the rest of the main
+    // view whenever the Mask Type drill-down is open — every other SubpanelHost-backed panel's
+    // subpages replace the *entire* tab body, with no static label left showing above the
+    // subpage's own back-arrow header; before this fix "MASK" stayed pinned above "< Mask Type",
+    // which no other drill-down in the app does.
+    const eyebrow = document.createElement("div");
+    eyebrow.className = "section-label-spacer text-eyebrow";
+    eyebrow.textContent = "MASK";
+    mainEl.appendChild(eyebrow);
 
     const group = document.createElement("div");
     group.className = "style-group";
