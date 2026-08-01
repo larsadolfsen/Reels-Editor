@@ -15,9 +15,10 @@ uiButtonGlobal.buttonClasses = function buttonClasses({ size = "md", intent = "n
 
 // size: "sm" (28px square, icon-only) | "md" (33px, full-width, label + optional leading icon).
 // intent: "neutral" | "accent" (the app's one primary action, e.g. Export) | "danger" | "dashed".
-// iconSize: passed through to UI.icon only when given — otherwise the icon renders at UI.icon's
-// own default (24px), which is the size every button's icon should use unless a caller has a
-// specific reason to deviate.
+// iconSize: the pixel size passed to UI.icon. Defaults to 16 — every icon-button's SVG glyph
+// stays at or under 16x16 regardless of its button's own footprint (a "sm" button is 28px
+// square, but the glyph inside it must not grow to fill that box); a caller may pass a smaller
+// value but should not exceed 16.
 uiButtonGlobal.UI.button = function button(container, {
   label = "",
   icon,
@@ -25,7 +26,7 @@ uiButtonGlobal.UI.button = function button(container, {
   intent = "neutral",
   pressed = false,
   disabled = false,
-  iconSize,
+  iconSize = 16,
   onClick,
 } = {}) {
   const btn = document.createElement("button");
@@ -34,7 +35,7 @@ uiButtonGlobal.UI.button = function button(container, {
   btn.disabled = disabled;
   if (pressed) btn.setAttribute("aria-pressed", "true");
   if (icon) {
-    btn.innerHTML = uiButtonGlobal.UI.icon(icon, iconSize ? { size: iconSize } : undefined);
+    btn.innerHTML = uiButtonGlobal.UI.icon(icon, { size: iconSize });
   }
   if (label) {
     const span = document.createElement("span");

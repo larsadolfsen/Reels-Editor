@@ -2,9 +2,11 @@
    slice handle (#slice-btn, static/index.html) and UI.popoverToolbar's popup (ui-popover-toolbar.js)
    both compose these two classes onto their own markup so the look (background/border/shadow,
    icon-button sizing/hover) never drifts between call sites. .ui-toolbar-icon's box matches
-   --control-size-sm (UI.button's "sm" footprint) so it comfortably fits UI.icon's default 24px
-   glyph the same way a UI.button "sm" icon button does. Not a JS component itself — callers add
-   their own classes alongside these for their own positioning/behavior. */
+   --control-size-sm (UI.button's "sm" footprint); the glyph inside is capped at 16px (passed
+   explicitly by every caller — UI.icon's own 24px default is too large for this box and reads
+   as oversized/cramped) the same way a UI.button "sm" icon button caps its own icon at 16px.
+   Not a JS component itself — callers add their own classes alongside these for their own
+   positioning/behavior. */
 .ui-toolbar-chip {
   display: flex;
   align-items: center;
