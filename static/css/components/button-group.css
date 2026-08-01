@@ -3,7 +3,12 @@
 /* Exposes .btn-group, .btn-group button, .btn-group-inline, .icon-hidden. Depends on tokens.css. Built by static/ui-components.js. */
 .btn-group {
   display: grid;
-  grid-template-columns: repeat(8, var(--control-size-sm));
+  /* 1fr (not a fixed --control-size-sm track) so the group always fills the width its own
+     col-N span gives it — a fixed-px track combined with this grid's tighter --space-1 gap
+     falls short of an outer .style-group's --space-2-gapped column math, leaving dead space
+     on the right (found on the MASK ON/OFF switch, which nests a .btn-group directly inside
+     a .style-group). */
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: var(--space-1);
 }
 

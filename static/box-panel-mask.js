@@ -4,8 +4,9 @@
 // mask-enabled-toggle — independent of whether a mask type is even picked yet: OFF renders the
 // box unmasked while keeping mask_shape_id/the shape's own config untouched, so switching back ON
 // instantly reapplies the same mask; see box-mask-render.js's maskingShapeFor and
-// app/main.py's _rasterize_mask_png, both of which gate on this same field for preview/export),
-// a "Type" settings row (added 2026-08-01, mask-list-styling, replacing the retired
+// app/main.py's _rasterize_mask_png, both of which gate on this same field for preview/export).
+// OFF also hides the rest of this tab (Type row + assigned-mask fields, added 2026-08-01) — only
+// the switch itself renders; a "Type" settings row (added 2026-08-01, mask-list-styling, replacing the retired
 // ui-mask-type-gallery.js card grid) that always shows the current selection ("None"/"Shape",
 // mirroring style-section-font-family.js's Font Family row) and opens a drill-down list of mask
 // source kinds — only "Shape" (`MASK_TYPES`) is actually selectable, "Person"/"Text" are
@@ -84,6 +85,10 @@ window.BoxMaskPanel = (() => {
         box.mask_enabled = v === "on";
         await onChange();
       });
+
+    // OFF hides the rest of the tab (Type row + any assigned-mask fields) — mask_shape_id and
+    // the shape's own config stay untouched underneath, so switching back ON needs no rebuild.
+    if (!box.mask_enabled) return;
 
     const group = document.createElement("div");
     group.className = "style-group";
