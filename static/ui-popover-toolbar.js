@@ -36,7 +36,7 @@
 // ancestor's own clip edge, and never cleared the flip before remeasuring, so it alternated
 // between correct and clipped on repeated hovers of the same word). `ui-popover-toolbar-below`
 // flips the chip to render below the anchor instead when there isn't room above.
-function nearestScrollAncestor(el) {
+function uiPopoverToolbarScrollAncestor(el) {
   let node = el.parentElement;
   while (node && node !== document.body) {
     if (/(auto|scroll|hidden|clip)/.test(getComputedStyle(node).overflowY)) return node;
@@ -85,7 +85,7 @@ uiPopoverToolbarGlobal.UI.popoverToolbar = function popoverToolbar(anchorEl, but
       hoverTimer = setTimeout(() => {
         toolbar.style.left = `${lastX}px`;
         toolbar.classList.remove("ui-popover-toolbar-below");
-        const clipAncestor = nearestScrollAncestor(anchorEl);
+        const clipAncestor = uiPopoverToolbarScrollAncestor(anchorEl);
         const limit = (clipAncestor ? clipAncestor.getBoundingClientRect().top : 0) + 6;
         toolbar.classList.toggle("ui-popover-toolbar-below", toolbar.getBoundingClientRect().top < limit);
         toolbar.classList.add("ui-popover-toolbar-visible");
