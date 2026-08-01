@@ -14,29 +14,21 @@
 // Delegated on #label-overlays itself (persists across renders; its children are rebuilt by
 // Timeline.render). Depends on window.OverlayLayers (timeline-overlay-layers.js) and editor.js's
 // project/saveProject/renderTimeline globals. Boundary Y positions are read from the actual
-// rendered lane labels (collectBoundaries) rather than a fixed LANE_HEIGHT grid, so the
-// layer-masking-system feature's expandable per-box MASK sub-lane (static/timeline.js's
-// renderOverlaysRow) doesn't throw off the drop-index math when expanded above the drag point.
+// rendered lane labels (collectBoundaries) rather than a fixed LANE_HEIGHT grid.
 (() => {
   const THRESHOLD_PX = 4;
 
   const labelCol = document.getElementById("label-overlays");
 
   // Boundary Y positions (relative to labelCol's own top) are read from the actual rendered
-  // top-level entry labels rather than assumed as a uniform LANE_HEIGHT grid — the
-  // layer-masking-system feature's mask accordion (static/timeline.js's renderOverlaysRow)
-  // inserts an extra 32px ".overlay-lane-label-mask" sub-lane between a video_box/image_box
-  // entry and the next one whenever that entry's accordion is expanded, so a fixed-arithmetic
-  // grid silently drifts out of sync with the DOM the moment any accordion above the drag
-  // point is open. Excluding `.overlay-lane-label-mask` from the selector keeps only the
-  // draggable top-level entry lanes; any expanded mask sub-lane between two of them is still
-  // correctly reflected because it pushes the following entry's own rendered top down.
+  // top-level entry labels rather than assumed as a uniform LANE_HEIGHT grid, since a lane's
+  // rendered height can vary (e.g. a resizable text/image-box/shape lane's own chrome).
   // Computed once at drag start (mousedown) — the DOM doesn't reflow during the drag itself,
   // only the dragged lane's own CSS transform changes, same reasoning as
   // timeline-clip-drag.js's sequenceBoundaries.
   function collectBoundaries() {
     const colRect = labelCol.getBoundingClientRect();
-    const laneLabels = [...labelCol.querySelectorAll(".overlay-lane-label:not(.overlay-lane-label-mask)")];
+    const laneLabels = [...labelCol.querySelectorAll(".overlay-lane-label")];
     if (!laneLabels.length) return [0];
     const boundaries = laneLabels.map((el) => el.getBoundingClientRect().top - colRect.top);
     const last = laneLabels[laneLabels.length - 1];
