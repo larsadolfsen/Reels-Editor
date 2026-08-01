@@ -1,23 +1,22 @@
 // Shared Box-panel MASK tab for VIDEO BOX / IMAGE BOX (added 2026-08-01, mask-visibility-ui,
 // replacing the retired timeline-mask-accordion.js): window.BoxMaskPanel.render(container, box,
-// {onChange, getWindow}) renders, in order: an ON/OFF switch (box.mask_enabled, added 2026-08-01
-// mask-enabled-toggle — independent of whether a mask type is even picked yet: OFF renders the
-// box unmasked while keeping mask_shape_id/the shape's own config untouched, so switching back ON
-// instantly reapplies the same mask; see box-mask-render.js's maskingShapeFor and
-// app/main.py's _rasterize_mask_png, both of which gate on this same field for preview/export).
-// OFF also hides the rest of this tab (Type row + assigned-mask fields, added 2026-08-01) — only
-// the switch itself renders; a "Type" settings row (added 2026-08-01, mask-list-styling, replacing the retired
-// ui-mask-type-gallery.js card grid) that always shows the current selection ("None"/"Shape",
-// mirroring style-section-font-family.js's Font Family row) and opens a drill-down list of mask
-// source kinds — only "Shape" (`MASK_TYPES`) is actually selectable, "Person"/"Text" are
-// disabled placeholder rows, per the retired gallery's own note that more kinds could be added
-// later as more rows — and finally a content area that changes to match the current selection:
-// empty when unassigned, or the assigned-mask row (icon + "Shape" label, trash icon removes the
-// mask) plus inline SIZE & POSITION + OPACITY fields for that mask shape (added 2026-08-01,
-// mask-list-styling, replacing the row's old click-to-navigate-to-the-standalone-SHAPE-panel
-// behavior — the mask shape is edited as a subpage of this box's own panel, not on its own page,
-// reusing ShapeSizePositionFields/ShapeOpacityField shared with panel-shape.js's Box/Style tabs).
-// The picker subpage is a lightweight local main/picker toggle rather than going through
+// {onChange, getWindow}) renders a "Type" settings row (added 2026-08-01, mask-list-styling,
+// replacing the retired ui-mask-type-gallery.js card grid) that always shows the current
+// selection ("None"/"Shape", mirroring style-section-font-family.js's Font Family row) and opens
+// a drill-down list of mask source kinds — "None" (default, added 2026-08-01 mask-type-none,
+// replacing the old standalone ON/OFF switch — selecting it sets box.mask_enabled = false while
+// leaving mask_shape_id/the shape's own config untouched, so re-selecting "Shape" later instantly
+// reapplies the same mask; see box-mask-render.js's maskingShapeFor and app/main.py's
+// _rasterize_mask_png, both of which gate on this same field for preview/export) and "Shape" are
+// selectable, "Person"/"Text" (`MASK_TYPES`) are disabled placeholder rows, per the retired
+// gallery's own note that more kinds could be added later as more rows — and finally a content
+// area that changes to match the current selection: empty when "None", or the assigned-mask row
+// (icon + "Shape" label, trash icon removes the mask and reverts to "None") plus inline SIZE &
+// POSITION + OPACITY fields for that mask shape (added 2026-08-01, mask-list-styling, replacing
+// the row's old click-to-navigate-to-the-standalone-SHAPE-panel behavior — the mask shape is
+// edited as a subpage of this box's own panel, not on its own page, reusing
+// ShapeSizePositionFields/ShapeOpacityField shared with panel-shape.js's Box/Style tabs). The
+// picker subpage is a lightweight local main/picker toggle rather than going through
 // StylePanelHost, since this panel has no drill-element pairing wired up in index.html the way
 // TEXT/CAPTIONS do.
 //
@@ -37,6 +36,7 @@
 // box-panel-size-position.js.
 window.BoxMaskPanel = (() => {
   const MASK_TYPES = [
+    { value: "none", icon: "ban", label: "None", enabled: true },
     { value: "shape", icon: "venetian-mask", label: "Shape", enabled: true },
     { value: "person", icon: "user", label: "Person", enabled: false },
     { value: "text", icon: "type", label: "Text", enabled: false },
@@ -64,31 +64,13 @@ window.BoxMaskPanel = (() => {
 
   function render(container, box, { onChange, getWindow }) {
     container.innerHTML = "";
-    const shape = maskShapeFor(box);
-    const currentType = shape ? "shape" : null;
+    const shape = box.mask_enabled ? maskShapeFor(box) : null;
+    const currentType = shape ? "shape" : "none";
 
     const eyebrow = document.createElement("div");
     eyebrow.className = "section-label-spacer text-eyebrow";
     eyebrow.textContent = "MASK";
     container.appendChild(eyebrow);
-
-    // ---- ON/OFF switch — always shown, independent of whether a type is picked yet ----------
-    const switchGroup = document.createElement("div");
-    switchGroup.className = "style-group";
-    container.appendChild(switchGroup);
-    const switchEl = document.createElement("div");
-    switchGroup.appendChild(switchEl);
-    UI.buttonGroup(switchEl,
-      [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
-      box.mask_enabled ? "on" : "off",
-      async (v) => {
-        box.mask_enabled = v === "on";
-        await onChange();
-      });
-
-    // OFF hides the rest of the tab (Type row + any assigned-mask fields) — mask_shape_id and
-    // the shape's own config stay untouched underneath, so switching back ON needs no rebuild.
-    if (!box.mask_enabled) return;
 
     const group = document.createElement("div");
     group.className = "style-group";
@@ -97,12 +79,18 @@ window.BoxMaskPanel = (() => {
     // ---- "Type" settings row + drill-down list ----------------------------------------------
     async function assignType(kind) {
       if (kind === currentType) { closePicker(); return; }
+      if (kind === "none") {
+        box.mask_enabled = false;
+        await onChange();
+        return;
+      }
       const win = getWindow();
-      const newShape = ShapePanel.createShapeAt({
+      const newShape = maskShapeFor(box) || ShapePanel.createShapeAt({
         x: box.x, y: box.y, width: box.width, height: box.height,
         start: win.start, duration: win.duration,
       });
       box.mask_shape_id = newShape.id;
+      box.mask_enabled = true;
       await onChange();
     }
 
@@ -178,6 +166,7 @@ window.BoxMaskPanel = (() => {
       e.stopPropagation();
       project.shapes = project.shapes.filter((s) => s.id !== shape.id);
       box.mask_shape_id = null;
+      box.mask_enabled = false;
       VideoBoxPreview.setActiveMaskShapeId(null);
       ImageBoxPreview.setActiveMaskShapeId(null);
       await onChange();
