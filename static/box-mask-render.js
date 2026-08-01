@@ -31,8 +31,28 @@ window.BoxMaskRender = (() => {
       if (existing) { existing.remove(); rubylithOverlays.delete(box.id); }
       return;
     }
+    // box.width/box.height are project-canvas px (0-1080 x, 0-1920 y), but `el` is rendered at
+    // the stage's own scaled-down CSS pixel size (see video-box-preview.js's/image-box-preview.js's
+    // v.x/1080*stageW convention) — a CSS mask-image renders at its declared width/height with no
+    // stretch-to-fit, so building the mask SVG at box.width/box.height and painting it onto the
+    // much-smaller rendered element only ever shows a tiny top-left sliver of it. Scale the rect
+    // into the same rendered-pixel space `el` actually occupies before handing it to ShapeMask.
+    const stageW = overlayRoot.clientWidth || 1;
+    const stageH = overlayRoot.clientHeight || 1;
+    const scaleX = stageW / 1080;
+    const scaleY = stageH / 1920;
+    const targetWidth = box.width * scaleX;
+    const targetHeight = box.height * scaleY;
     const rect = ShapeMask.localRect(box, shape);
-    const maskCss = ShapeMask.cssMaskImage(box.width, box.height, rect);
+    const scaledRect = {
+      relX: rect.relX * scaleX,
+      relY: rect.relY * scaleY,
+      width: rect.width * scaleX,
+      height: rect.height * scaleY,
+      opacity: rect.opacity,
+      cornerRadius: rect.cornerRadius * scaleX,
+    };
+    const maskCss = ShapeMask.cssMaskImage(targetWidth, targetHeight, scaledRect);
     el.style.maskImage = maskCss;
     el.style.webkitMaskImage = maskCss;
     el.style.maskRepeat = "no-repeat";
@@ -51,7 +71,7 @@ window.BoxMaskRender = (() => {
       overlay.style.top = el.style.top;
       overlay.style.width = el.style.width;
       overlay.style.height = el.style.height;
-      const inverseCss = ShapeMask.cssInverseMaskImage(box.width, box.height, rect);
+      const inverseCss = ShapeMask.cssInverseMaskImage(targetWidth, targetHeight, scaledRect);
       overlay.style.maskImage = inverseCss;
       overlay.style.webkitMaskImage = inverseCss;
       overlay.style.maskRepeat = "no-repeat";
