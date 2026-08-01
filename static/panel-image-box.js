@@ -104,6 +104,9 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     });
 
     document.getElementById("image-box-delete").onclick = async () => {
+      if (box.mask_shape_id) {
+        project.shapes = project.shapes.filter((s) => s.id !== box.mask_shape_id);
+      }
       project.image_boxes = project.image_boxes.filter((b) => b.id !== box.id);
       await saveProject();
       ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
