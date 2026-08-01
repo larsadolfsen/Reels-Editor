@@ -46,6 +46,7 @@ window.TranscriptSidebar = (() => {
       sentence.words.forEach((word, i) => {
         const span = document.createElement("span");
         span.className = "transcript-word";
+        span.dataset.tStart = word.t_start;
         span.textContent = word.text + (i < sentence.words.length - 1 ? " " : "");
         span.addEventListener("click", () => Preview.seek(word.t_start));
         sentenceDiv.appendChild(span);

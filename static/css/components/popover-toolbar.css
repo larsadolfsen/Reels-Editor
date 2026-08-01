@@ -42,3 +42,19 @@
   border: 5px solid transparent;
   border-top-color: var(--surface);
 }
+
+/* Flipped variant (JS-toggled, ui-popover-toolbar.js): renders below the anchor instead of above,
+   for an anchor near the top of the viewport where the default placement would clip against a
+   scrolling ancestor's own overflow (e.g. a transcript-sidebar word on the topmost visible line). */
+.ui-popover-toolbar.ui-popover-toolbar-below {
+  bottom: auto;
+  top: 100%;
+  padding-bottom: 0;
+  padding-top: 8px;
+}
+.ui-popover-toolbar.ui-popover-toolbar-below .ui-popover-toolbar-chip::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--surface);
+}

@@ -1,0 +1,32 @@
+/* VIDEO BOX/IMAGE BOX panel's Mask tab (static/box-panel-mask.js): the assigned-mask row
+   (icon+label on the left, a remove button on the right, built on the shared .list-row card
+   recipe, list-row.css, applied via UI.listRow). Depends on tokens.css. The unassigned "Type"
+   settings row + drill-down list (added 2026-08-01, mask-list-styling, replacing this file's old
+   .mask-add-gallery-wrap/.mask-type-gallery/.mask-type-gallery-card card-grid rules) needs no
+   styling of its own — it composes UI.settingsRow (settings-row.css), UI.subPanelHeader
+   (sub-panel.css), and the shared .font-list rows (sub-panel.css) as-is. */
+.mask-assigned-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.mask-assigned-row-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text);
+}
+.mask-assigned-row-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: var(--space-1);
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+.mask-assigned-row-remove:hover {
+  color: var(--danger);
+}
