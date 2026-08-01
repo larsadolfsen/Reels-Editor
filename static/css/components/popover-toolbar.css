@@ -1,0 +1,52 @@
+/* Reusable hover-reveal popover toolbar (UI.popoverToolbar, static/ui-popover-toolbar.js):
+   a small chip with a downward-pointing triangle, shown above any anchor element on hover.
+   The anchor must position: relative (or otherwise establish a containing block) and opt in
+   via the ui-popover-toolbar-anchor class, which UI.popoverToolbar adds automatically. */
+.ui-popover-toolbar {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding-bottom: 8px;
+  z-index: 6;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+}
+.ui-popover-toolbar-anchor:hover .ui-popover-toolbar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ui-popover-toolbar-chip {
+  position: relative;
+  display: flex;
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-chip);
+  padding: var(--space-1);
+}
+.ui-popover-toolbar-chip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border: 5px solid transparent;
+  border-top-color: var(--surface);
+}
+
+.ui-popover-toolbar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.ui-popover-toolbar-icon:hover { background: var(--bg-2); }
