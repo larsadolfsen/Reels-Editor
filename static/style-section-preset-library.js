@@ -10,6 +10,7 @@ window.StyleSection.presetLibrary = function presetLibrary(container, target, op
   const saveGroup = document.createElement("div");
   saveGroup.className = "style-group";
   const saveBtn = UI.button(saveGroup, { label: "+ Save current style", intent: "dashed" });
+  saveBtn.classList.add("col-8");
 
   const formEl = document.createElement("div");
   formEl.className = "style-group";
