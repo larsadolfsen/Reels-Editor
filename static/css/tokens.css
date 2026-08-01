@@ -77,6 +77,11 @@
   --tooltip-shortcut-bg: #E7E7E6;
   --tooltip-shortcut-border: #E7E7E6;
   --tooltip-shortcut-text: #101113;
+
+  /* Safe-zone darkening guide scrim (static/ui-safe-zones.js): fixed regardless of theme, like
+     the tooltip palette above — it overlays arbitrary video content, not app chrome, so it
+     shouldn't shift with the light/dark toggle. */
+  --safe-zone-scrim: rgba(0, 0, 0, 0.55);
 }
 
 :root[data-theme="light"] {

@@ -1,6 +1,6 @@
-/* Shared small-labeled-chip component: usage counts, status badges, safe-zone labels. */
-/* Exposes .chip + .chip--pill/.chip--outlined/.chip--safe-zone/.chip--tinted/.chip--silence/
-   .chip--filler modifiers. Depends on tokens.css. */
+/* Shared small-labeled-chip component: usage counts, status badges. */
+/* Exposes .chip + .chip--pill/.chip--tinted/.chip--silence/.chip--filler modifiers. Depends on
+   tokens.css. */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -20,24 +20,6 @@
 .chip--pill {
   min-width: var(--icon-size-sm);
   border-radius: var(--radius-pill);
-}
-
-/* Outlined label chip (safe-zone guide labels). */
-.chip--outlined {
-  height: auto;
-  padding: 3px 7px;
-  background: var(--surface);
-  border-color: var(--border-color);
-  box-shadow: var(--shadow-chip);
-  color: var(--text-secondary);
-  font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: var(--ls-wide);
-  text-transform: uppercase;
-}
-
-.chip--safe-zone {
-  border-left: 3px solid var(--safe-zone);
 }
 
 /* Tinted status badge (AUTO SLICE detected-range kind). */

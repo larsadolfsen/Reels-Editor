@@ -1,5 +1,13 @@
-/* Safe-zone reference overlay: shaded bands + solid accent edge (matching TikTok's UI chrome) with high-contrast label chips, toggled from the timeline toolbar. */
-/* Exposes #safe-zones (+ .safe-zone-*). #safe-zones-toggle lives in #timeline-toolbar and is built via UI.button (button.css's .button[aria-pressed="true"]) for its pressed state. Depends on tokens.css, chip.css (label styling, added 2026-07-29 chip component), #stage (position: relative, in stage.css). Labels use the shared .chip .chip--outlined .chip--safe-zone recipe (chip.css) rather than bare text so they stay legible over any video content underneath. */
+/* Safe-zone darkening guide: dims everything outside a "safe rectangle" — the centered
+   text/image area by default, or the narrower caption-only area while a caption is selected —
+   with a solid accent border outlining the cutout. Toggled from the timeline toolbar. */
+/* Exposes #safe-zones (+ .safe-zone-bar/.safe-zone-bar-*/.safe-zone-cutout). #safe-zones-toggle
+   lives in #timeline-toolbar and is built via UI.button (button.css's .button[aria-pressed="true"])
+   for its pressed state. Depends on tokens.css (--safe-zone-scrim, --safe-zone), #stage (position:
+   relative, in stage.css). Each bar's/the cutout's position (top/right/bottom/left/width/height)
+   is set by a generated <style> element (static/ui-safe-zones.js's ensureStyleElement) computed
+   from the active SafeZoneGeometry rect, rather than inline styles — this file only keeps the
+   shared visual (fill color / border). */
 #safe-zones {
   position: absolute;
   inset: 0;
@@ -8,26 +16,12 @@
 
 #safe-zones[hidden] { display: none; }
 
-.safe-zone {
+.safe-zone-bar {
   position: absolute;
-  background: color-mix(in srgb, var(--safe-zone) 30%, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  background: var(--safe-zone-scrim);
 }
 
-/* Solid (non-dashed) accent line on the edge facing the safe interior, so the
-   boundary reads clearly even against busy/bright footage where a thin dashed
-   line disappears. Position/size (top/right/bottom/left/width/height) is no longer set
-   here — UI.safeZones (ui-safe-zones.js) computes those from SAFE_ZONES and injects them as
-   a generated <style> element (one rule per band) rather than inline styles, so this file
-   only keeps each band's visual accent. */
-.safe-zone-top { border-bottom: 2px solid var(--safe-zone); }
-.safe-zone-right { writing-mode: vertical-rl; border-left: 2px solid var(--safe-zone); }
-.safe-zone-caption { align-items: flex-start; padding-top: var(--space-2); border-top: 2px solid var(--safe-zone); }
-.safe-zone-nav { border-top: 2px solid var(--safe-zone); }
-
-/* Label chip: .chip .chip--outlined .chip--safe-zone (chip.css) — opaque surface + border +
-   drop shadow + the safe-zone accent border-left, so text contrast never depends on the video
-   color beneath it. Nothing safe-zone-span-specific remains here; see chip.css. */
+.safe-zone-cutout {
+  position: absolute;
+  border: 2px solid var(--safe-zone);
+}
