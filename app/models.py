@@ -87,7 +87,7 @@ class TextPreset(BaseModel):
     size_px: int = 96
     color: str = "#FFFFFF"
     outline_color: str = "#000000"
-    outline_px: int = 4
+    outline_px: int = 0
     shadow: bool = False           # drop-shadow on/off
     shadow_color: str = "#000000"
     shadow_offset_x: int = 4       # px on the 1080x1920 canvas; UI clamps -40..40

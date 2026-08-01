@@ -12,7 +12,7 @@
 function defaultCaptionPreset(id) {
   return {
     id, name: "Caption", font: "Public Sans", size_px: 72, color: "#FFFFFF",
-    outline_color: "#000000", outline_px: 4, weight: 400, italic: false, underline: false,
+    outline_color: "#000000", outline_px: 0, weight: 400, italic: false, underline: false,
     text_case: "none",
     shadow: false, shadow_color: "#000000", shadow_offset_x: 4, shadow_offset_y: 4, shadow_blur: 0,
     box_width_mode: "fixed", box_height_mode: "fixed", box_width: 900, box_height: 350,
