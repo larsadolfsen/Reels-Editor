@@ -26,6 +26,7 @@
   justify-content: center;
   width: var(--control-size-sm);
   height: var(--control-size-sm);
+  padding: 0;
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
