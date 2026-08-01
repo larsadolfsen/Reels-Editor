@@ -1,23 +1,16 @@
 // TEXT panel Box tab: Background row + drill-down subpanel (on/off toggle + color + opacity),
-// same row+subpanel pattern as text-panel-shadow.js. Whole-block preset only — no per-range
-// FormatRun override. Exposes window.TextPanel.renderBackground().
-// Reaches into editor.js's globals (currentTextBlock, ensureTextPreset, saveProject, renderTextPreview).
+// same row+subpanel pattern as text-panel-shadow.js used to. Whole-block preset only — no
+// per-range FormatRun override. Exposes window.TextPanel.renderBackground().
+// Reaches into editor.js's globals (currentTextBlock, ensureTextPreset, saveProject,
+// renderTextPreview) and panel-text.js's textStyleHost (a top-level const visible across
+// <script> tags on the same page — this file's own <script> tag loads after panel-text.js's
+// in index.html so textStyleHost already exists by the time this module body runs).
 window.TextPanel = window.TextPanel || {};
 
 (() => {
   let backgroundRowSetValue = null;
 
-  function openBackgroundPanel() {
-    document.getElementById("panel-text-main").hidden = true;
-    document.getElementById("panel-text-background").hidden = false;
-  }
-
-  function closeBackgroundPanel() {
-    document.getElementById("panel-text-background").hidden = true;
-    document.getElementById("panel-text-main").hidden = false;
-  }
-
-  UI.subPanelHeader(document.getElementById("text-background-subpanel-header"), { title: "Background", onBack: closeBackgroundPanel });
+  function isOn() { return !!ensureTextPreset(currentTextBlock().preset_id).box_background; }
 
   function refreshBackgroundRow(preset) {
     const value = SettingsRowValue.orNone(preset.box_background, `${preset.box_background_opacity}%`);
@@ -28,36 +21,61 @@ window.TextPanel = window.TextPanel || {};
     } else {
       backgroundRowSetValue = UI.settingsRow(document.getElementById("text-box-background-row"), {
         label: "Background", value, swatchColor: swatch,
-        onClick: openBackgroundPanel,
+        onClick: () => backgroundPage.open(),
       });
     }
   }
 
-  window.TextPanel.renderBackground = function renderBackground() {
+  const backgroundPage = textStyleHost.page("Background", (bodyEl) => {
     const preset = ensureTextPreset(currentTextBlock().preset_id);
 
-    refreshBackgroundRow(preset);
+    const toggleGroup = document.createElement("div");
+    toggleGroup.className = "style-group";
+    const toggleEl = document.createElement("div");
+    toggleGroup.appendChild(toggleEl);
 
-    const fieldsHidden = !preset.box_background;
-    document.getElementById("text-box-background-color-field").hidden = fieldsHidden;
-    document.getElementById("text-box-background-opacity-field").hidden = fieldsHidden;
+    const colorGroup = document.createElement("div");
+    colorGroup.className = "style-group";
+    const colorField = document.createElement("label");
+    colorGroup.appendChild(colorField);
 
-    UI.buttonGroup(document.getElementById("text-box-background-toggle-group"),
+    const opacityGroup = document.createElement("div");
+    opacityGroup.className = "style-group";
+    const opacityField = document.createElement("label");
+    opacityGroup.appendChild(opacityField);
+
+    bodyEl.append(toggleGroup, colorGroup, opacityGroup);
+
+    function syncFields() {
+      const hidden = !isOn();
+      colorField.hidden = hidden;
+      opacityField.hidden = hidden;
+    }
+
+    UI.buttonGroup(toggleEl,
       [{ value: "off", label: "OFF", span: 4 }, { value: "on", label: "ON", span: 4 }],
       preset.box_background ? "on" : "off",
       (v) => {
         preset.box_background = v === "on";
         saveProject();
         renderTextPreview();
-        renderBackground();
+        syncFields();
+        refreshBackgroundRow(preset);
       });
 
-    UI.colorSwatch(document.getElementById("text-box-background-color-field"),
+    UI.colorSwatch(colorField,
       { label: "Background", value: preset.box_background_color, span: 8,
         onChange: (v) => { preset.box_background_color = v; saveProject(); renderTextPreview(); refreshBackgroundRow(preset); } });
 
-    UI.numberField(document.getElementById("text-box-background-opacity-field"),
+    UI.numberField(opacityField,
       { label: "OPACITY", unit: "%", value: preset.box_background_opacity, min: 0, max: 100, span: 8,
         onChange: (v) => { preset.box_background_opacity = v; saveProject(); renderTextPreview(); refreshBackgroundRow(preset); } });
+
+    syncFields();
+  });
+
+  window.TextPanel.renderBackground = function renderBackground() {
+    const preset = ensureTextPreset(currentTextBlock().preset_id);
+    refreshBackgroundRow(preset);
   };
 })();
