@@ -28,6 +28,10 @@ test("UI.icon embeds the clapperboard icon's path data", () => {
   assert.match(global.UI.icon("clapperboard"), /M20.2 6 3 11l-.9-2.4/);
 });
 
+test("UI.icon embeds the copy icon's path data", () => {
+  assert.match(global.UI.icon("copy"), /<rect width="14" height="14" x="8" y="8" rx="2" ry="2"\/>/);
+});
+
 test("UI.icon throws on an unrecognized name", () => {
   assert.throws(() => global.UI.icon("not-a-real-icon"), /unknown icon/i);
 });
