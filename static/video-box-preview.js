@@ -2,9 +2,11 @@
 // visible box into #overlay (a sibling of preview.js's text-block divs — both set an explicit
 // CSS z-index from their model's z_index so stacking follows the project's cross-layer
 // z-order), keeps each element's position/size/currentTime in sync with the timeline clock,
-// and wires drag-to-move (UI.videoBoxDrag)/resize (UI.resizeHandles) onto the selected box.
-// Exposes window.VideoBoxPreview.{render, setSelectedVideoBox, setOnActivate,
-// setActiveMaskShapeId}. Muted always (no PiP audio).
+// and wires drag-to-move (UI.videoBoxDrag)/resize onto the selected box — the resize handles
+// themselves are hosted in a sibling overlay div (static/box-resize-overlay.js), since a
+// UI.resizeHandles container appended directly onto a <video> never paints (replaced elements
+// don't render DOM children). Exposes window.VideoBoxPreview.{render, setSelectedVideoBox,
+// setOnActivate, setActiveMaskShapeId}. Muted always (no PiP audio).
 // Shape-as-mask (layer-masking-system): rendering of a box's mask_shape_id — CSS mask-image via
 // ShapeMask, plus the rubylith "what gets cut" overlay shown while the mask shape is selected —
 // is shared with image-box-preview.js via static/box-mask-render.js (BoxMaskRender.sync/release);
@@ -28,12 +30,11 @@ window.VideoBoxPreview = (() => {
       onMove: (delta) => { if (callbacks && callbacks.onMove) callbacks.onMove(delta); },
       onMoveEnd: (delta) => { if (callbacks && callbacks.onMoveEnd) callbacks.onMoveEnd(delta); },
     });
-    const destroyResize = UI.resizeHandles(video, {
-      getSize: () => ({ width: video.offsetWidth, height: video.offsetHeight }),
+    BoxResizeOverlay.mount(boxId, video, {
       onResize: (size) => { if (callbacks && callbacks.onResize) callbacks.onResize(size); },
       onDragEnd: (size) => { if (callbacks && callbacks.onDragEnd) callbacks.onDragEnd(size); },
     });
-    handlesDestroyers.set(boxId, () => { destroyDrag(); destroyResize(); });
+    handlesDestroyers.set(boxId, () => { destroyDrag(); BoxResizeOverlay.unmount(boxId); });
   }
 
   function unmountHandles(boxId) {
@@ -99,7 +100,7 @@ window.VideoBoxPreview = (() => {
         if (!video.paused) video.pause();
       }
 
-      if (v.id === selectedBoxId && callbacks) mountHandles(v.id, video, v);
+      if (v.id === selectedBoxId && callbacks) { mountHandles(v.id, video, v); BoxResizeOverlay.sync(v.id, video); }
       else unmountHandles(v.id);
     }
 

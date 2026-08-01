@@ -114,6 +114,17 @@
   z-index: 9999;
 }
 
+/* Hosts a selected video/image box's resize handles (static/box-resize-overlay.js) — a sibling
+   div rather than a child of the <video>/<img> itself, since replaced elements never paint DOM
+   children. pointer-events: none lets clicks/drags pass through to the box element underneath
+   everywhere except the handles themselves (resize-handles.css sets pointer-events: auto on
+   .resize-handle). */
+.box-resize-overlay {
+  position: absolute;
+  pointer-events: none;
+  z-index: 9999;
+}
+
 #transport {
   display: flex;
   align-items: center;
