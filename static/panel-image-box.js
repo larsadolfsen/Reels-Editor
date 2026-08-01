@@ -100,16 +100,6 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     });
   }
 
-  // Locks aspect ratio to the box's own current width/height: whichever dimension actually
-  // changed from `from` drives, the other is derived — same logic as panel-video-box.js.
-  function applyAspectLock(from, size) {
-    const ratio = from.width / from.height;
-    if (size.width !== from.width) {
-      return { width: size.width, height: Math.round(size.width / ratio) };
-    }
-    return { width: Math.round(size.height * ratio), height: size.height };
-  }
-
   function renderDetail(box) {
     UI.numberField(document.getElementById("image-box-start-field"),
       { label: "START", unit: "SEC", value: box.start, step: 0.1, min: 0, span: 4,
@@ -157,7 +147,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     return {
       onResize: (size) => {
         const scale = stageScale();
-        const { width, height } = applyAspectLock(box, { width: Math.round(size.width * scale), height: Math.round(size.height * scale) });
+        const { width, height } = AspectLock.apply(box, { width: Math.round(size.width * scale), height: Math.round(size.height * scale) }, size.edge);
         const startWidth = Math.round(size.startWidth * scale);
         const startHeight = Math.round(size.startHeight * scale);
         const { x, y } = ResizeAnchor.anchoredPosition(box.x, box.y, startWidth, startHeight, width, height, size.edge);
@@ -168,7 +158,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
       },
       onDragEnd: async (size) => {
         const scale = stageScale();
-        const { width, height } = applyAspectLock(box, { width: Math.round(size.width * scale), height: Math.round(size.height * scale) });
+        const { width, height } = AspectLock.apply(box, { width: Math.round(size.width * scale), height: Math.round(size.height * scale) }, size.edge);
         const startWidth = Math.round(size.startWidth * scale);
         const startHeight = Math.round(size.startHeight * scale);
         const { x, y } = ResizeAnchor.anchoredPosition(box.x, box.y, startWidth, startHeight, width, height, size.edge);

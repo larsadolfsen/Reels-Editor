@@ -77,6 +77,13 @@
   --tooltip-shortcut-bg: #E7E7E6;
   --tooltip-shortcut-border: #E7E7E6;
   --tooltip-shortcut-text: #101113;
+
+  /* Fixed hazard-tape palette for the safe-zone border (static/ui-safe-zones.js): same
+     "unaffected by the light/dark toggle" reasoning as the tooltip palette above — it overlays
+     arbitrary video content, not app chrome. Went through a plain-red and a red/white candy-stripe
+     look before landing on black/safety-yellow, the conventional caution-tape pairing. */
+  --safe-zone-stripe-dark: #1A1A1A;
+  --safe-zone-stripe-light: #FFC400;
 }
 
 :root[data-theme="light"] {

@@ -4,10 +4,10 @@
 // HORIZONTAL_MARGIN (and, in turn, TEXT_IMAGE_SAFE_RECT/CAPTION_SAFE_RECT) from — but as of the
 // safe-zone-darkening-alignment feature it's no longer iterated to render 4 separate shaded/
 // labeled bands. UI.safeZones outlines ONE context-aware safe rectangle instead (see the `kind`
-// param below) with a plain red border (`.safe-zone-border`), replacing the earlier diagonally-
-// striped darkening scrim that covered the rest of the canvas — that scrim was found too visually
-// intrusive while editing (safe-zone-border-not-scrim feature), so the guide is now a non-covering
-// outline: nothing outside the safe rect is dimmed or drawn over.
+// param below) with a black/yellow hazard-stripe border (`.safe-zone-border`), replacing the
+// earlier diagonally-striped darkening scrim that covered the rest of the canvas — that scrim was
+// found too visually intrusive while editing (safe-zone-border-not-scrim feature), so the guide is
+// now a non-covering outline: nothing outside the safe rect is dimmed or drawn over.
 const uiSafeZonesGlobal = typeof window !== "undefined" ? window : global;
 uiSafeZonesGlobal.UI = uiSafeZonesGlobal.UI || {};
 
@@ -45,7 +45,9 @@ function rectToPercent(rect) {
 // The position/size rule for .safe-zone-border, computed from the active safe rect
 // (TEXT_IMAGE_SAFE_RECT for kind="text", CAPTION_SAFE_RECT for kind="caption"), in percent of
 // #safe-zones' own rendered box (#safe-zones isn't a fixed pixel size — it fills #stage, which is
-// itself CSS-scaled to the viewport).
+// itself CSS-scaled to the viewport). .safe-zone-label's own position is set imperatively in
+// safeZones() below, not here — it needs the label's actual rendered height (which a fixed-px CSS
+// offset can't know), so it's computed from real DOM geometry after both elements are mounted.
 function guideCss(kind) {
   const rectPx = kind === "caption"
     ? uiSafeZonesGlobal.SafeZoneGeometry.CAPTION_SAFE_RECT
@@ -55,6 +57,9 @@ function guideCss(kind) {
   const height = roundPct(pct.bottom - pct.top);
   return `.safe-zone-border { left: ${pct.left}%; top: ${pct.top}%; width: ${width}%; height: ${height}%; }`;
 }
+
+// Vertical gap (px) between the label's bottom edge and the border's top edge.
+const LABEL_GAP_PX = 8;
 
 // Injects/updates the generated geometry <style> element (idempotent — safe to call on every
 // render; the element is reused, only its content is replaced when `kind` changes).
@@ -73,9 +78,12 @@ function ensureStyleElement(kind) {
 // kind: "text" (default) outlines the wide, centered text/image safe area
 // (SafeZoneGeometry.TEXT_IMAGE_SAFE_RECT); "caption" outlines the narrower, lower caption-only
 // safe area (SafeZoneGeometry.CAPTION_SAFE_RECT). Call again with a different kind to switch which
-// rect is outlined — editor.js's renderTimeline() does this on every selection change. A "SAFE
-// ZONE" label (shield icon + text) sits just below the top edge of the stage, unconditional on
-// `kind` — one static indicator that the guide is active, alongside the per-rect red border.
+// rect is outlined — editor.js's renderTimeline() does this on every selection change. A
+// "SAFE ZONE ON" label (shield icon + text) sits just above the active rect's top edge, tracking
+// whichever rect is currently outlined instead of sitting at a fixed stage offset. The label's
+// `top` is set here (not in guideCss's generated stylesheet) because it needs the label's actual
+// rendered height — a fixed-px guess overlapped the border on a small/short #stage where the
+// border's own top offset (percent-based) was smaller than the guessed offset.
 uiSafeZonesGlobal.UI.safeZones = function safeZones(container, kind = "text") {
   container.innerHTML = "";
   ensureStyleElement(kind);
@@ -84,8 +92,12 @@ uiSafeZonesGlobal.UI.safeZones = function safeZones(container, kind = "text") {
   container.appendChild(border);
   const label = document.createElement("div");
   label.className = "safe-zone-label";
-  label.innerHTML = `<span class="safe-zone-label-icon">${uiSafeZonesGlobal.UI.icon("shield", { size: 14 })}</span><span class="safe-zone-label-text">SAFE ZONE</span>`;
+  label.innerHTML = `<span class="safe-zone-label-icon">${uiSafeZonesGlobal.UI.icon("shield", { size: 14 })}</span><span class="safe-zone-label-text">SAFE ZONE ON</span>`;
   container.appendChild(label);
+  const containerTop = container.getBoundingClientRect().top;
+  const borderTop = border.getBoundingClientRect().top - containerTop;
+  const labelHeight = label.getBoundingClientRect().height;
+  label.style.top = `${Math.max(0, borderTop - LABEL_GAP_PX - labelHeight)}px`;
 };
 
 if (typeof module !== "undefined") {
