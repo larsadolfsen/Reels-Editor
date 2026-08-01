@@ -66,6 +66,17 @@ test("duplicate clones a text block AND its own TextPreset under a new id", () =
   assert.strictEqual(project.text_presets.p1.font, "Public Sans");
 });
 
+test("duplicate clones formatting_runs so mutating the copy's runs doesn't affect the original", () => {
+  const project = baseProject();
+  project.text_blocks[0].formatting_runs = [{ start: 0, end: 2, color: "#FF0000" }];
+  const entry = { id: "t1", kind: "text", item: project.text_blocks[0] };
+  const newItem = duplicate(project, entry, deps);
+
+  assert.notStrictEqual(newItem.formatting_runs, project.text_blocks[0].formatting_runs);
+  newItem.formatting_runs.push({ start: 2, end: 4, color: "#00FF00" });
+  assert.strictEqual(project.text_blocks[0].formatting_runs.length, 1);
+});
+
 test("duplicate places the new layer immediately in front of (above) the original", () => {
   const project = baseProject();
   const entry = { id: "v1", kind: "video_box", item: project.video_boxes[0] };

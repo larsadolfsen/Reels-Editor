@@ -1,6 +1,10 @@
 // Hover-reveal copy toolbar for #row-overlays lanes (text block/video box/image box/shape):
 // a small popover above the lane's .timeline-block with a triangle pointing down at it and one
-// Copy icon button, mirroring the look of the playhead-handle's .slice-btn. Clicking Copy
+// Copy icon button, mirroring the look of the playhead-handle's .slice-btn. The toolbar is built
+// as an outer .overlay-copy-toolbar hit-area (contiguous with the block, no gap, so a diagonal
+// mouse approach can't cross a dead zone and lose :hover) wrapping an inner .overlay-copy-chip
+// (the visible pill with background/border/shadow/triangle, separated from the block only by
+// internal padding) — see the CSS in timeline.css for the full split. Clicking Copy
 // duplicates that layer via OverlayCopy.duplicate (static/overlay-copy.js), saves, and selects
 // the new layer. Reaches into editor.js's project/saveProject/onTimelineSelect globals and
 // VideoBoxPreview/ImageBoxPreview/ShapePreview globals at call time — same documented approach
@@ -29,6 +33,9 @@
     const toolbar = document.createElement("div");
     toolbar.className = "overlay-copy-toolbar";
 
+    const chip = document.createElement("div");
+    chip.className = "overlay-copy-chip";
+
     const btn = document.createElement("span");
     btn.className = "overlay-copy-icon";
     btn.title = "Copy layer";
@@ -41,7 +48,8 @@
       repaintStage(entry.kind);
     });
 
-    toolbar.appendChild(btn);
+    chip.appendChild(btn);
+    toolbar.appendChild(chip);
     blockDiv.appendChild(toolbar);
   }
 

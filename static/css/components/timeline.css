@@ -69,19 +69,21 @@
 #playhead-grip { cursor: grab; }
 #playhead-grip:active { cursor: grabbing; }
 
+/* Overlay lanes need overflow: visible so the hover-reveal copy toolbar (positioned via
+   bottom: 100%, i.e. above the block's own box) isn't clipped by the base .timeline-block's
+   overflow: hidden below — other rows (e.g. VIDEO/MAIN) keep overflow: hidden for filmstrip
+   thumbnail corner clipping, so this is scoped to the overlays row only. */
+.timeline-row[data-row="overlays"] .timeline-block {
+  overflow: visible;
+}
+
 .overlay-copy-toolbar {
   position: absolute;
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  margin-bottom: 8px;
+  padding-bottom: 8px;
   z-index: 6;
-  display: flex;
-  background: var(--surface);
-  border: var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-chip);
-  padding: var(--space-1);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.1s;
@@ -90,7 +92,16 @@
   opacity: 1;
   pointer-events: auto;
 }
-.overlay-copy-toolbar::after {
+.overlay-copy-chip {
+  position: relative;
+  display: flex;
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-chip);
+  padding: var(--space-1);
+}
+.overlay-copy-chip::after {
   content: "";
   position: absolute;
   top: 100%;

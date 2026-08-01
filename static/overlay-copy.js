@@ -16,7 +16,11 @@
   // returns the new layer object. For a text block, also deep-clones its TextPreset under a new
   // id (project.text_presets[id]) and repoints the copy's preset_id at the clone — a text
   // block's preset is always 1:1 (see panel-text.js's addTextBlock/ensureTextPreset), so sharing
-  // the original's preset would let restyling the copy silently restyle the original too.
+  // the original's preset would let restyling the copy silently restyle the original too. The
+  // block's own formatting_runs array is deep-cloned (new array of new objects) for the same
+  // aliasing reason — FormatRunWrite.upsertFormatRun mutates/pushes onto that array in place, so
+  // a shallow spread would let restyling a per-range selection on the copy silently mutate the
+  // original block's runs too.
   function duplicate(project, entry, deps = {}) {
     const OverlayLayers = deps.overlayLayers || (typeof window !== "undefined" ? window.OverlayLayers : undefined);
     const id = newId();
@@ -25,7 +29,12 @@
     if (entry.kind === "text") {
       const presetId = newId();
       project.text_presets[presetId] = { ...project.text_presets[entry.item.preset_id], id: presetId };
-      newItem = { ...entry.item, id, preset_id: presetId };
+      newItem = {
+        ...entry.item,
+        id,
+        preset_id: presetId,
+        formatting_runs: (entry.item.formatting_runs || []).map((run) => ({ ...run })),
+      };
       project.text_blocks.push(newItem);
     } else if (entry.kind === "video_box") {
       newItem = { ...entry.item, id };
