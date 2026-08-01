@@ -3,7 +3,9 @@
 // video-box-preview.js's <video>s — all three set an explicit CSS z-index from their model's
 // z_index so stacking follows the project's cross-layer z-order), keeps each element's
 // position/size in sync with the timeline clock, and wires drag-to-move (UI.videoBoxDrag)/
-// resize (UI.resizeHandles) onto the selected box. Exposes
+// resize onto the selected box — the resize handles themselves are hosted in a sibling overlay
+// div (static/box-resize-overlay.js), since a UI.resizeHandles container appended directly onto
+// an <img> never paints (replaced elements don't render DOM children). Exposes
 // window.ImageBoxPreview.{render, setSelectedImageBox, setOnActivate, setActiveMaskShapeId}.
 // No playback sync needed (static image) — simpler than video-box-preview.js's
 // currentTime/play/pause handling.
@@ -30,12 +32,11 @@ window.ImageBoxPreview = (() => {
       onMove: (delta) => { if (callbacks && callbacks.onMove) callbacks.onMove(delta); },
       onMoveEnd: (delta) => { if (callbacks && callbacks.onMoveEnd) callbacks.onMoveEnd(delta); },
     });
-    const destroyResize = UI.resizeHandles(img, {
-      getSize: () => ({ width: img.offsetWidth, height: img.offsetHeight }),
+    BoxResizeOverlay.mount(boxId, img, {
       onResize: (size) => { if (callbacks && callbacks.onResize) callbacks.onResize(size); },
       onDragEnd: (size) => { if (callbacks && callbacks.onDragEnd) callbacks.onDragEnd(size); },
     });
-    handlesDestroyers.set(boxId, () => { destroyDrag(); destroyResize(); });
+    handlesDestroyers.set(boxId, () => { destroyDrag(); BoxResizeOverlay.unmount(boxId); });
   }
 
   function unmountHandles(boxId) {
@@ -80,7 +81,7 @@ window.ImageBoxPreview = (() => {
       img.style.zIndex = String(b.z_index);
       BoxMaskRender.sync(b, img);
 
-      if (b.id === selectedBoxId && callbacks) mountHandles(b.id, img, b);
+      if (b.id === selectedBoxId && callbacks) { mountHandles(b.id, img, b); BoxResizeOverlay.sync(b.id, img); }
       else unmountHandles(b.id);
     }
 

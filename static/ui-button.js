@@ -30,7 +30,7 @@ uiButtonGlobal.UI.button = function button(container, {
   btn.disabled = disabled;
   if (pressed) btn.setAttribute("aria-pressed", "true");
   if (icon) {
-    btn.innerHTML = uiButtonGlobal.UI.icon(icon, { size: size === "sm" ? 14 : 16 });
+    btn.innerHTML = uiButtonGlobal.UI.icon(icon, { size: 16 });
   }
   if (label) {
     const span = document.createElement("span");
