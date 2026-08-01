@@ -277,7 +277,7 @@ UI.contextPanelHeader(document.getElementById("text-header"), { icon: UI.icon("t
 // the same place the remaining per-control subpanels (#panel-text-background, etc.) already
 // live.
 const textStyleTarget = StyleTarget.forTextBlock();
-const textStyleHost = StylePanelHost(
+const textStyleHost = SubpanelHost(
   document.getElementById("panel-text-main"),
   document.getElementById("panel-text"),
 );

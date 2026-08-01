@@ -16,16 +16,18 @@
 // the row's old click-to-navigate-to-the-standalone-SHAPE-panel behavior — the mask shape is
 // edited as a subpage of this box's own panel, not on its own page, reusing
 // ShapeSizePositionFields/ShapeOpacityField shared with panel-shape.js's Box/Style tabs). The
-// picker subpage is a lightweight local main/picker toggle rather than going through
-// StylePanelHost, since this panel has no drill-element pairing wired up in index.html the way
-// TEXT/CAPTIONS do.
+// Type picker is a real SubpanelHost drill-down subpage (same component Font Family/Weight/
+// Color use on the TEXT/CAPTIONS panels), not hand-rolled toggle logic — mainEl/drillEl are built
+// fresh as a local main/drill pair on every render() call rather than referencing fixed ids from
+// index.html, since this shared panel serves two different callers (VIDEO BOX/IMAGE BOX) with
+// their own container ids.
 //
 // Field edits use their own lightweight save+repaint (`fieldOnChange`, mirroring
 // panel-shape.js's `repaintStage()`) rather than the caller's `onChange` — that one rebuilds this
-// whole panel via `renderDetail(box)`, which fires on every render of the switch/type-assign/
-// remove-mask actions but must NOT fire per keystroke (UI.numberField's onChange fires on every
-// `input` event; rebuilding the container mid-keystroke would tear down the very input the user
-// is still typing into, same hazard box-panel-size-position.js documents for its own fields).
+// whole panel via `renderDetail(box)`, which fires on every render of the type-assign/remove-mask
+// actions but must NOT fire per keystroke (UI.numberField's onChange fires on every `input`
+// event; rebuilding the container mid-keystroke would tear down the very input the user is still
+// typing into, same hazard box-panel-size-position.js documents for its own fields).
 // `getWindow()` returns {start, duration} — the box's own current visible window — used to size a
 // newly-created mask shape and to keep an existing mask shape's start/duration following the
 // box's own on every render. A mask shape has no timing of its own; before this it could drift
@@ -72,13 +74,21 @@ window.BoxMaskPanel = (() => {
     eyebrow.textContent = "MASK";
     container.appendChild(eyebrow);
 
+    // mainEl/drillEl are plain top-level siblings (not grid items of a .style-group), matching
+    // #panel-text-main/#panel-text — SubpanelHost's "style-sub-panel" subpage class assumes that
+    // unconstrained layout, not a fixed 28px grid track.
+    const mainEl = document.createElement("div");
+    const drillEl = document.createElement("div");
+    container.append(mainEl, drillEl);
+    const host = SubpanelHost(mainEl, drillEl);
+
     const group = document.createElement("div");
     group.className = "style-group";
-    container.appendChild(group);
+    mainEl.appendChild(group);
 
     // ---- "Type" settings row + drill-down list ----------------------------------------------
     async function assignType(kind) {
-      if (kind === currentType) { closePicker(); return; }
+      if (kind === currentType) { typePage.close(); return; }
       if (kind === "none") {
         box.mask_enabled = false;
         await onChange();
@@ -94,49 +104,41 @@ window.BoxMaskPanel = (() => {
       await onChange();
     }
 
-    const mainEl = document.createElement("div");
-    mainEl.className = "col-8";
-    const pickerEl = document.createElement("div");
-    pickerEl.hidden = true;
-    group.append(mainEl, pickerEl);
+    const typePage = host.page("Mask Type", (bodyEl) => {
+      const listEl = document.createElement("ul");
+      listEl.className = "font-list";
+      bodyEl.appendChild(listEl);
+      MASK_TYPES.forEach((t) => {
+        const li = document.createElement("li");
+        li.className = "font-list-row";
+        UI.listRow(li, { subtle: true });
+        if (t.enabled) {
+          li.addEventListener("click", () => assignType(t.value));
+        } else {
+          li.classList.add("font-list-row-disabled");
+        }
 
-    function openPicker() { mainEl.hidden = true; pickerEl.hidden = false; }
-    function closePicker() { pickerEl.hidden = true; mainEl.hidden = false; }
+        const nameGroup = document.createElement("span");
+        nameGroup.className = "font-list-row-name-group";
+        const iconEl = document.createElement("span");
+        iconEl.innerHTML = UI.icon(t.icon, { size: 16 });
+        const nameEl = document.createElement("span");
+        nameEl.className = "font-list-row-name";
+        nameEl.textContent = t.label;
+        nameGroup.append(iconEl, nameEl);
+        li.appendChild(nameGroup);
 
-    const currentTypeInfo = MASK_TYPES.find((t) => t.value === currentType);
-    UI.settingsRow(mainEl, { label: "Type", value: currentTypeInfo ? currentTypeInfo.label : "None", onClick: openPicker });
+        if (t.value === currentType) li.appendChild(checkmark());
 
-    const headerEl = document.createElement("div");
-    pickerEl.appendChild(headerEl);
-    UI.subPanelHeader(headerEl, { title: "Mask Type", onBack: closePicker });
-
-    const listEl = document.createElement("ul");
-    listEl.className = "font-list";
-    pickerEl.appendChild(listEl);
-    MASK_TYPES.forEach((t) => {
-      const li = document.createElement("li");
-      li.className = "font-list-row";
-      UI.listRow(li, { subtle: true });
-      if (t.enabled) {
-        li.addEventListener("click", () => assignType(t.value));
-      } else {
-        li.classList.add("font-list-row-disabled");
-      }
-
-      const nameGroup = document.createElement("span");
-      nameGroup.className = "font-list-row-name-group";
-      const iconEl = document.createElement("span");
-      iconEl.innerHTML = UI.icon(t.icon, { size: 16 });
-      const nameEl = document.createElement("span");
-      nameEl.className = "font-list-row-name";
-      nameEl.textContent = t.label;
-      nameGroup.append(iconEl, nameEl);
-      li.appendChild(nameGroup);
-
-      if (t.value === currentType) li.appendChild(checkmark());
-
-      listEl.appendChild(li);
+        listEl.appendChild(li);
+      });
     });
+
+    const typeRowMount = document.createElement("div");
+    typeRowMount.className = "col-8";
+    group.appendChild(typeRowMount);
+    const currentTypeInfo = MASK_TYPES.find((t) => t.value === currentType);
+    UI.settingsRow(typeRowMount, { label: "Type", value: currentTypeInfo ? currentTypeInfo.label : "None", onClick: typePage.open });
 
     // ---- content area — changes to match the current selection ------------------------------
     if (!shape) return;
@@ -173,7 +175,7 @@ window.BoxMaskPanel = (() => {
     });
     row.appendChild(removeBtn);
 
-    mainEl.appendChild(row);
+    group.appendChild(row);
 
     // Per-keystroke field edits repaint the stage directly rather than going through the
     // caller's `onChange` — that one calls renderDetail(box), which rebuilds this whole panel
@@ -188,12 +190,12 @@ window.BoxMaskPanel = (() => {
 
     const sizePositionMount = document.createElement("div");
     sizePositionMount.className = "col-8";
-    mainEl.appendChild(sizePositionMount);
+    group.appendChild(sizePositionMount);
     ShapeSizePositionFields.render(sizePositionMount, shape, { onChange: fieldOnChange });
 
     const opacityRow = document.createElement("div");
     opacityRow.className = "style-row";
-    mainEl.appendChild(opacityRow);
+    group.appendChild(opacityRow);
     const opacityEl = document.createElement("label");
     opacityRow.appendChild(opacityEl);
     ShapeOpacityField.render(opacityEl, shape, { onChange: fieldOnChange, span: 8 });

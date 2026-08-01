@@ -113,13 +113,13 @@
   white-space: nowrap;
 }
 
-/* Wrapper the StylePanelHost creates around each drill-down subpage's header + body.
+/* Wrapper the SubpanelHost creates around each drill-down subpage's header + body.
    Layout only — the header and any list inside keep their existing styling. */
 .style-sub-panel {
   display: flex;
   flex-direction: column;
 }
-/* Without this, a closed subpage (StylePanelHost sets only the `hidden` attribute, never
+/* Without this, a closed subpage (SubpanelHost sets only the `hidden` attribute, never
    inline style/display) stays visually rendered: the [hidden] UA-stylesheet default loses to
    this class's own `display: flex` since both are author-tier rules of equal specificity and
    this one is the later declaration. Every subpage this class has ever wrapped (Font Family,

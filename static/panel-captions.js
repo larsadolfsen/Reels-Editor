@@ -183,7 +183,7 @@ UI.contextPanelHeader(document.getElementById("captions-header"), { icon: UI.ico
 
 // Built ONCE, mirroring panel-text.js — the sections are re-rendered afterwards, never rebuilt.
 const captionStyleTarget = StyleTarget.forCaptionTrack();
-const captionStyleHost = StylePanelHost(
+const captionStyleHost = SubpanelHost(
   document.getElementById("panel-captions-main"),
   document.getElementById("panel-captions"),
 );
