@@ -102,6 +102,11 @@
   box-sizing: border-box;
 }
 
+.mask-rubylith-overlay {
+  position: absolute;
+  background-color: rgba(255, 0, 0, 0.5);
+}
+
 #transport {
   display: flex;
   align-items: center;
