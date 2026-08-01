@@ -4,15 +4,17 @@
 // HORIZONTAL_MARGIN (and, in turn, TEXT_IMAGE_SAFE_RECT/CAPTION_SAFE_RECT) from — but as of the
 // safe-zone-darkening-alignment feature it's no longer iterated to render 4 separate shaded/
 // labeled bands. UI.safeZones now darkens everything outside ONE context-aware safe rectangle
-// instead (see the `kind` param below). As of 2026-08-01 (safe-zone-scrim-stripes feature) the
-// darkened area is one striped `.safe-zone-dim` div rather than 4 separate `.safe-zone-bar-*`
-// divs — a striped `background` needs one continuous element to avoid seams at bar boundaries
-// (each bar would restart the diagonal pattern at its own origin), so the cutout is now punched
-// out via a CSS `mask-image` (a "full-canvas white rect + a black hole" luminance-mask data URI,
-// the same technique `static/shape-mask.js`'s `cssInverseMaskImage` uses for the video/image-box
-// rubylith mask-edit overlay — built locally here rather than reusing that file, since it isn't
-// `require()`-safe under `node --test`: it assigns `window.ShapeMask` unconditionally with no
-// `typeof window !== "undefined"` guard) instead of 4 tiled scrim rectangles.
+// instead (see the `kind` param below), via one flat-tinted `.safe-zone-dim` div rather than 4
+// separate `.safe-zone-bar-*` divs — the cutout is punched out via a CSS `mask-image` (a
+// "full-canvas white rect + a black hole" luminance-mask data URI, the same technique
+// `static/shape-mask.js`'s `cssInverseMaskImage` uses for the video/image-box rubylith mask-edit
+// overlay — built locally here rather than reusing that file, since it isn't `require()`-safe
+// under `node --test`: it assigns `window.ShapeMask` unconditionally with no
+// `typeof window !== "undefined"` guard) instead of 4 tiled scrim rectangles. (Briefly given a
+// diagonal-striped fill the same day as this rewrite, safe-zone-scrim-stripes feature — reverted
+// the day after, safe-zone-revert-stripes feature, back to the flat tint per feedback; the
+// single-div-plus-mask architecture itself was kept either way, it's simpler than 4 tiled bars
+// regardless of fill style.)
 const uiSafeZonesGlobal = typeof window !== "undefined" ? window : global;
 uiSafeZonesGlobal.UI = uiSafeZonesGlobal.UI || {};
 
