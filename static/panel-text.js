@@ -7,33 +7,10 @@
 // opens the panel, and immediately enters on-stage contentEditable edit mode via
 // Preview.enterTextEditMode() so the user can type right away; an optional {x, y} canvas-px
 // position overrides the new block's default centered placement.
-
-// Position grid anchors: edge-flush against the 1080x1920 canvas, using the box's own actual
-// rendered width/height (from Preview.getTextBoxSize/getCaptionBoxSize) so TOP/BTM/LEFT/RIGHT
-// place the box's edge (not its top-left corner) flush with the canvas edge, and MID centers it.
-// Used only as a stateless one-shot shortcut in the POSITION single row of icon buttons — clicking
-// one writes the computed value straight into TextPreset.x/y with no persisted anchor selection.
-function anchorPositionX(value, boxWidth, align) {
-  // The box's rendered left edge is offset from `x` by a CSS transform keyed on text align
-  // (stage.css's .text-block--align-*: 0 for left, -50% for center, -100% for right), so the
-  // same edge-flush x must be shifted by that same fraction of the box width to compensate.
-  const w = boxWidth || 0;
-  const offsetFactor = align === "center" ? 0.5 : align === "right" ? 1 : 0;
-  const canvasW = SafeZoneGeometry.CANVAS_W;
-  const margin = SafeZoneGeometry.HORIZONTAL_MARGIN;
-  let visualLeft;
-  if (value === "left") visualLeft = margin;
-  else if (value === "right") visualLeft = Math.max(margin, canvasW - margin - w);
-  else visualLeft = Math.max(0, (canvasW - w) / 2);
-  return visualLeft + offsetFactor * w;
-}
-
-function anchorPositionY(value, boxHeight) {
-  const h = boxHeight || 0;
-  if (value === "top") return 0;
-  if (value === "btm") return Math.max(0, 1920 - h);
-  return Math.max(0, (1920 - h) / 2);
-}
+//
+// POSITION anchor math (the TOP/BTM/LEFT/RIGHT/MID edge-flush shortcut buttons) moved to
+// static/anchor-position.js (safe-zone-darkening-alignment feature, extracted so it can run under
+// node --test without a DOM) — see AnchorPosition.positionX/positionY there.
 
 function defaultTextPreset(id) {
   return {
