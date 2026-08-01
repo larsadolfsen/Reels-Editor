@@ -80,11 +80,8 @@
 
   /* Safe-zone darkening guide scrim (static/ui-safe-zones.js): fixed regardless of theme, like
      the tooltip palette above — it overlays arbitrary video content, not app chrome, so it
-     shouldn't shift with the light/dark toggle. --safe-zone-scrim-alt (added 2026-08-01,
-     safe-zone-scrim-stripes feature) is the same darkening strength as --safe-zone-scrim at a
-     slightly lower alpha, so the two alternate into a diagonal stripe rather than a flat tint. */
+     shouldn't shift with the light/dark toggle. */
   --safe-zone-scrim: rgba(0, 0, 0, 0.55);
-  --safe-zone-scrim-alt: rgba(0, 0, 0, 0.42);
 }
 
 :root[data-theme="light"] {
