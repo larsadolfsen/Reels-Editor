@@ -1,22 +1,13 @@
 // CAPTIONS panel's Auto tab: the language passed to faster-whisper when transcribing
-// (CaptionTrack.language, "" = auto-detect). Settings-row + drill-down subpanel, same pattern as
-// caption-panel-background.js. Exposes window.CaptionPanel.renderLanguage(). Reaches into
-// editor.js's project/saveProject/ensureCaptionTrack/AVAILABLE_LANGUAGES globals.
+// (CaptionTrack.language, "" = auto-detect). Settings-row + drill-down subpage, registered against
+// the shared captionStyleHost (panel-captions.js) rather than hand-rolled markup toggling — mirrors
+// style-section-font-family.js's page pattern. Exposes window.CaptionPanel.renderLanguage(). Reaches
+// into editor.js's project/saveProject/ensureCaptionTrack/AVAILABLE_LANGUAGES globals and
+// panel-captions.js's captionStyleHost.
 window.CaptionPanel = window.CaptionPanel || {};
 
 (() => {
   let languageRowSetValue = null;
-
-  function openLanguagePanel() {
-    renderLanguageList();
-    document.getElementById("panel-captions-main").hidden = true;
-    document.getElementById("panel-captions-language").hidden = false;
-  }
-
-  function closeLanguagePanel() {
-    document.getElementById("panel-captions-language").hidden = true;
-    document.getElementById("panel-captions-main").hidden = false;
-  }
 
   function labelFor(code) {
     const found = AVAILABLE_LANGUAGES.find((l) => l.code === code);
@@ -28,12 +19,14 @@ window.CaptionPanel = window.CaptionPanel || {};
     track.language = code;
     await saveProject();
     renderLanguage();
-    closeLanguagePanel();
+    languagePage.close();
   }
 
-  function renderLanguageList() {
-    const listEl = document.getElementById("caption-language-list");
-    listEl.innerHTML = "";
+  function buildLanguageList(bodyEl) {
+    const listEl = document.createElement("ul");
+    listEl.className = "font-list";
+    bodyEl.appendChild(listEl);
+
     const track = ensureCaptionTrack();
     AVAILABLE_LANGUAGES.forEach((lang) => {
       const li = document.createElement("li");
@@ -65,7 +58,7 @@ window.CaptionPanel = window.CaptionPanel || {};
     });
   }
 
-  UI.subPanelHeader(document.getElementById("caption-language-subpanel-header"), { title: "Language", onBack: closeLanguagePanel });
+  const languagePage = captionStyleHost.page("Language", buildLanguageList);
 
   function renderLanguage() {
     const track = ensureCaptionTrack();
@@ -75,7 +68,7 @@ window.CaptionPanel = window.CaptionPanel || {};
     } else {
       languageRowSetValue = UI.settingsRow(document.getElementById("caption-language-row"), {
         label: "Language", value: label,
-        onClick: openLanguagePanel,
+        onClick: languagePage.open,
       });
     }
   }
