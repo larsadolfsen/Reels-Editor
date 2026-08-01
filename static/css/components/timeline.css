@@ -318,17 +318,23 @@
   margin-left: 6px;
 }
 
-/* Right-edge duration resize handle for TEXT-row blocks (static/timeline-text-resize.js).
+/* Left/right-edge duration resize handles for TEXT/IMAGE BOX/SHAPE overlay lanes
+   (static/timeline-text-resize.js, timeline-image-resize.js, timeline-shape-resize.js).
    Hidden by default, revealed on hover/selected so the block's own click-to-select stays
-   the primary interaction. */
+   the primary interaction. Base rule holds shared sizing; -start/-end position each edge. */
 .timeline-resize-handle {
   position: absolute;
   top: 0;
-  right: 0;
   bottom: 0;
   width: 6px;
   cursor: ew-resize;
   opacity: 0;
+}
+.timeline-resize-handle-start {
+  left: 0;
+}
+.timeline-resize-handle-end {
+  right: 0;
 }
 .timeline-block:hover .timeline-resize-handle,
 .timeline-block.selected .timeline-resize-handle {

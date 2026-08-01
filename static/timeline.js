@@ -238,9 +238,12 @@ window.Timeline = (() => {
     div.appendChild(span);
     div.addEventListener("click", (e) => { e.stopPropagation(); onClick(); });
     if (resizable) {
-      const handle = document.createElement("div");
-      handle.className = "timeline-resize-handle";
-      div.appendChild(handle);
+      const startHandle = document.createElement("div");
+      startHandle.className = "timeline-resize-handle timeline-resize-handle-start";
+      div.appendChild(startHandle);
+      const endHandle = document.createElement("div");
+      endHandle.className = "timeline-resize-handle timeline-resize-handle-end";
+      div.appendChild(endHandle);
     }
     track.appendChild(div);
   }
