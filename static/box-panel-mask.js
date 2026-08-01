@@ -106,6 +106,13 @@ window.BoxMaskPanel = (() => {
   // the exact code path panel-shape.js already drives for an ordinary, non-mask shape — rather
   // than building a second implementation.
   function syncActive(box, active) {
+    // A plain tab switch calls this directly instead of going through render() (see the comment
+    // above), but onResize/onDragEnd/onMoveEnd below re-render via `lastRenderArgs.opts.active` —
+    // without this, that flag stays stuck at whatever it was during the box's last FULL render()
+    // (usually `false`, from the initial Box-tab-default render), so the very first stage drag
+    // after switching to the Mask tab recurses into render() with a stale `active: false` and
+    // wipes both the mask shape and its rubylith right back off the stage.
+    if (lastRenderArgs && lastRenderArgs.box === box) lastRenderArgs.opts.active = active;
     const shape = box.mask_enabled ? maskShapeFor(box) : null;
     const activeMaskShapeId = active && shape ? shape.id : null;
     VideoBoxPreview.setActiveMaskShapeId(activeMaskShapeId);
