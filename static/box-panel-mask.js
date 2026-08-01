@@ -12,12 +12,17 @@
 // mask-type-none, but the mask source is still a rectangular ShapeLayer under the hood) are
 // selectable, "Person"/"Text" (`MASK_TYPES`) are disabled placeholder rows, per the retired
 // gallery's own note that more kinds could be added later as more rows — and finally a content
-// area that changes to match the current selection: empty when "None", or the assigned-mask row
-// (icon + "Square" label, trash icon removes the mask and reverts to "None") plus inline SIZE &
-// POSITION + OPACITY fields for that mask shape (added 2026-08-01, mask-list-styling, replacing
-// the row's old click-to-navigate-to-the-standalone-SHAPE-panel behavior — the mask shape is
-// edited as a subpage of this box's own panel, not on its own page, reusing
-// ShapeSizePositionFields/ShapeOpacityField shared with panel-shape.js's Box/Style tabs). The
+// area that changes to match the current selection: empty when "None", or inline SIZE & POSITION
+// + OPACITY fields for that mask shape (added 2026-08-01, mask-list-styling, replacing the row's
+// old click-to-navigate-to-the-standalone-SHAPE-panel behavior — the mask shape is edited as a
+// subpage of this box's own panel, not on its own page, reusing ShapeSizePositionFields/
+// ShapeOpacityField shared with panel-shape.js's Box/Style tabs). The old assigned-mask row
+// (icon + "Square" label + a trash button that deleted the shape and reverted to "None") was
+// removed 2026-08-01 (mask-type-none) as redundant with the Type row above it, which already
+// shows the current selection with a checkmark; picking "None" in the Type picker is now the
+// only way to turn a mask off — it still just flips box.mask_enabled, leaving the ShapeLayer and
+// mask_shape_id in place so re-picking "Square" instantly reapplies the same mask, same as
+// before. The
 // Type picker is a real SubpanelHost drill-down subpage (same component Font Family/Weight/
 // Color use on the TEXT/CAPTIONS panels), not hand-rolled toggle logic — mainEl/drillEl are built
 // fresh as a local main/drill pair on every render() call rather than referencing fixed ids from
@@ -165,32 +170,6 @@ window.BoxMaskPanel = (() => {
       shape.duration = win.duration;
       saveProject();
     }
-
-    const row = document.createElement("div");
-    row.className = "mask-assigned-row";
-    UI.listRow(row, {});
-    const label = document.createElement("span");
-    label.className = "mask-assigned-row-label";
-    label.innerHTML = `${UI.icon("square", { size: 14 })}<span>Square</span>`;
-    row.appendChild(label);
-
-    const removeBtn = document.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.className = "mask-assigned-row-remove";
-    removeBtn.title = "Remove mask";
-    removeBtn.innerHTML = UI.icon("trash", { size: 14 });
-    removeBtn.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      project.shapes = project.shapes.filter((s) => s.id !== shape.id);
-      box.mask_shape_id = null;
-      box.mask_enabled = false;
-      VideoBoxPreview.setActiveMaskShapeId(null);
-      ImageBoxPreview.setActiveMaskShapeId(null);
-      await onChange();
-    });
-    row.appendChild(removeBtn);
-
-    group.appendChild(row);
 
     // Per-keystroke field edits repaint the stage directly rather than going through the
     // caller's `onChange` — that one calls renderDetail(box), which rebuilds this whole panel

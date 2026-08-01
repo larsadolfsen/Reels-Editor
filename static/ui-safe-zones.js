@@ -4,7 +4,15 @@
 // HORIZONTAL_MARGIN (and, in turn, TEXT_IMAGE_SAFE_RECT/CAPTION_SAFE_RECT) from — but as of the
 // safe-zone-darkening-alignment feature it's no longer iterated to render 4 separate shaded/
 // labeled bands. UI.safeZones now darkens everything outside ONE context-aware safe rectangle
-// instead (see the `kind` param below).
+// instead (see the `kind` param below). As of 2026-08-01 (safe-zone-scrim-stripes feature) the
+// darkened area is one striped `.safe-zone-dim` div rather than 4 separate `.safe-zone-bar-*`
+// divs — a striped `background` needs one continuous element to avoid seams at bar boundaries
+// (each bar would restart the diagonal pattern at its own origin), so the cutout is now punched
+// out via a CSS `mask-image` (a "full-canvas white rect + a black hole" luminance-mask data URI,
+// the same technique `static/shape-mask.js`'s `cssInverseMaskImage` uses for the video/image-box
+// rubylith mask-edit overlay — built locally here rather than reusing that file, since it isn't
+// `require()`-safe under `node --test`: it assigns `window.ShapeMask` unconditionally with no
+// `typeof window !== "undefined"` guard) instead of 4 tiled scrim rectangles.
 const uiSafeZonesGlobal = typeof window !== "undefined" ? window : global;
 uiSafeZonesGlobal.UI = uiSafeZonesGlobal.UI || {};
 
@@ -39,23 +47,27 @@ function rectToPercent(rect) {
   };
 }
 
-// One CSS rule per bar + the cutout border, computed from the active safe rect
-// (TEXT_IMAGE_SAFE_RECT for kind="text", CAPTION_SAFE_RECT for kind="caption"). The top/bottom
-// bars span the full canvas width (so they also cover the corners above/below the cutout's own
-// left/right margins); the left/right bars only span the cutout's own vertical range — so the
-// four bars tile the darkened area with no gaps or overlaps.
+// A luminance mask data URI on a 100x100 canvas (matching our percent-of-canvas coordinate
+// system exactly): a full white rect (visible everywhere) with a black rect punched out over
+// `r` (hidden there — the safe rect's own hole).
+function maskDataUri(r) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">` +
+    `<rect x="0" y="0" width="100" height="100" fill="#fff"/>` +
+    `<rect x="${r.left}" y="${r.top}" width="${r.right - r.left}" height="${r.bottom - r.top}" fill="#000"/>` +
+    `</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+// The mask-image rule for .safe-zone-dim, computed from the active safe rect
+// (TEXT_IMAGE_SAFE_RECT for kind="text", CAPTION_SAFE_RECT for kind="caption"). mask-size
+// stretches the 100x100 intrinsic SVG to the element's own actual rendered box (#safe-zones isn't
+// a fixed pixel size — it fills #stage, which is itself CSS-scaled to the viewport).
 function guideCss(kind) {
   const rectPx = kind === "caption"
     ? uiSafeZonesGlobal.SafeZoneGeometry.CAPTION_SAFE_RECT
     : uiSafeZonesGlobal.SafeZoneGeometry.TEXT_IMAGE_SAFE_RECT;
-  const r = rectToPercent(rectPx);
-  return [
-    `.safe-zone-bar-top { top: 0%; left: 0%; right: 0%; height: ${r.top}%; }`,
-    `.safe-zone-bar-bottom { bottom: 0%; left: 0%; right: 0%; height: ${100 - r.bottom}%; }`,
-    `.safe-zone-bar-left { top: ${r.top}%; height: ${r.bottom - r.top}%; left: 0%; width: ${r.left}%; }`,
-    `.safe-zone-bar-right { top: ${r.top}%; height: ${r.bottom - r.top}%; left: ${r.right}%; right: 0%; }`,
-    `.safe-zone-cutout { top: ${r.top}%; left: ${r.left}%; right: ${100 - r.right}%; bottom: ${100 - r.bottom}%; }`,
-  ].join("\n");
+  const mask = maskDataUri(rectToPercent(rectPx));
+  return `.safe-zone-dim { mask-image: ${mask}; -webkit-mask-image: ${mask}; mask-size: 100% 100%; -webkit-mask-size: 100% 100%; }`;
 }
 
 // Injects/updates the generated geometry <style> element (idempotent — safe to call on every
@@ -82,14 +94,9 @@ function ensureStyleElement(kind) {
 uiSafeZonesGlobal.UI.safeZones = function safeZones(container, kind = "text") {
   container.innerHTML = "";
   ensureStyleElement(kind);
-  ["top", "bottom", "left", "right"].forEach((side) => {
-    const bar = document.createElement("div");
-    bar.className = `safe-zone-bar safe-zone-bar-${side}`;
-    container.appendChild(bar);
-  });
-  const cutout = document.createElement("div");
-  cutout.className = "safe-zone-cutout";
-  container.appendChild(cutout);
+  const dim = document.createElement("div");
+  dim.className = "safe-zone-dim";
+  container.appendChild(dim);
   const label = document.createElement("div");
   label.className = "safe-zone-label";
   label.innerHTML = `<span class="safe-zone-label-icon">${uiSafeZonesGlobal.UI.icon("shield", { size: 14 })}</span><span class="safe-zone-label-text">SAFE ZONE</span>`;
