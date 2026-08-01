@@ -1,0 +1,30 @@
+/* Shared visual base for small floating icon-button toolbars/chips: the timeline's playhead
+   slice handle (#slice-btn, static/index.html) and UI.popoverToolbar's popup (ui-popover-toolbar.js)
+   both compose these two classes onto their own markup so the look (background/border/shadow,
+   22px icon-button sizing/hover) never drifts between call sites. Not a JS component itself —
+   callers add their own classes alongside these for their own positioning/behavior. */
+.ui-toolbar-chip {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-chip);
+  padding: var(--space-1);
+}
+
+.ui-toolbar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.ui-toolbar-icon:hover { background: var(--bg-2); }
+.ui-toolbar-icon.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.ui-toolbar-icon.disabled:hover { background: none; }

@@ -38,33 +38,20 @@
   margin-left: var(--space-2);
 }
 
+/* .slice-btn composes the shared .ui-toolbar-chip look (toolbar-chip.css) with its own
+   playhead-tracking position/z-index/gap/color — see static/index.html's #slice-btn markup and
+   static/timeline.js's updateSliceButton, which sets its `left` to follow the playhead. Its two
+   icon spans (#playhead-grip/#slice-action) compose the shared .ui-toolbar-icon look the
+   same way. */
 .slice-btn {
   position: absolute;
   top: 14px;
   left: 88px;
   transform: translateX(-50%);
   z-index: 6;
-  display: flex;
-  align-items: center;
   gap: 2px;
-  background: var(--surface);
-  border: var(--border);
   color: var(--text-secondary);
-  padding: var(--space-1);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-chip);
 }
-
-.slice-icon-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-.slice-icon-trigger:hover { background: var(--bg-2); }
 
 #playhead-grip { cursor: grab; }
 #playhead-grip:active { cursor: grabbing; }
@@ -432,11 +419,3 @@
   align-items: center;
 }
 
-/* Visual-only disabled state at clip boundaries / empty timeline (static/timeline.js's
-   updateSliceButton) — the click handler in timeline-slice.js already no-ops safely either
-   way, this just communicates it. */
-.slice-icon-trigger.disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-.slice-icon-trigger.disabled:hover { background: none; }

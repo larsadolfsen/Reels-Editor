@@ -1,7 +1,11 @@
 /* Reusable hover-reveal popover toolbar (UI.popoverToolbar, static/ui-popover-toolbar.js):
-   a small chip with a downward-pointing triangle, shown above any anchor element on hover.
-   The anchor must position: relative (or otherwise establish a containing block) and opt in
-   via the ui-popover-toolbar-anchor class, which UI.popoverToolbar adds automatically. */
+   a small chip with a downward-pointing triangle, shown above any anchor element on hover,
+   tracking the pointer's x position across the anchor. The anchor must position: relative
+   (or otherwise establish a containing block) and opt in via the ui-popover-toolbar-anchor
+   class, which UI.popoverToolbar adds automatically. The chip's own visual look (background/
+   border/shadow) and its icon buttons come from the shared .ui-toolbar-chip/.ui-toolbar-icon
+   classes (toolbar-chip.css) — this file holds only what's specific to being a hover-reveal
+   popover: position/opacity/pointer-events and the triangle. */
 .ui-popover-toolbar {
   position: absolute;
   bottom: 100%;
@@ -20,12 +24,6 @@
 
 .ui-popover-toolbar-chip {
   position: relative;
-  display: flex;
-  background: var(--surface);
-  border: var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-chip);
-  padding: var(--space-1);
 }
 .ui-popover-toolbar-chip::after {
   content: "";
@@ -38,15 +36,3 @@
   border: 5px solid transparent;
   border-top-color: var(--surface);
 }
-
-.ui-popover-toolbar-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  color: var(--text-secondary);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-.ui-popover-toolbar-icon:hover { background: var(--bg-2); }

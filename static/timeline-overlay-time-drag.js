@@ -29,7 +29,7 @@
 
   row.addEventListener("mousedown", (e) => {
     if (e.target.closest(".timeline-resize-handle")) return;
-    if (e.target.closest(".overlay-copy-toolbar")) return;
+    if (e.target.closest(".ui-popover-toolbar")) return;
     const blockEl = e.target.closest(".timeline-block");
     if (!blockEl || !blockEl.dataset.blockId) return;
     const blockId = blockEl.dataset.blockId;
