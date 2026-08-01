@@ -174,8 +174,13 @@ window.ShapePanel = window.ShapePanel || {};
     }
     const masksVideoBox = (project.video_boxes || []).some((v) => v.mask_shape_id === shape.id);
     const masksImageBox = (project.image_boxes || []).some((b) => b.mask_shape_id === shape.id);
-    VideoBoxPreview.setActiveMaskShapeId(masksVideoBox ? shape.id : null);
-    ImageBoxPreview.setActiveMaskShapeId(masksImageBox ? shape.id : null);
+    // VideoBoxPreview/ImageBoxPreview.setActiveMaskShapeId both delegate to one shared
+    // BoxMaskRender variable (static/box-mask-render.js), so both calls must agree on the
+    // same value — "does this shape mask EITHER kind of box" — or whichever call runs last
+    // silently overwrites the other's rubylith state.
+    const activeMaskShapeId = maskActiveShapeId(masksVideoBox, masksImageBox, shape.id);
+    VideoBoxPreview.setActiveMaskShapeId(activeMaskShapeId);
+    ImageBoxPreview.setActiveMaskShapeId(activeMaskShapeId);
     VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
     ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
     lastSelectedId = shape.id;
