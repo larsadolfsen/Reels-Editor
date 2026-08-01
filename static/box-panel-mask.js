@@ -1,8 +1,17 @@
 // Shared Box-panel MASK tab for VIDEO BOX / IMAGE BOX (added 2026-08-01, mask-visibility-ui,
 // replacing the retired timeline-mask-accordion.js): window.BoxMaskPanel.render(container, box,
 // {onChange, getWindow}) shows "+ Add mask" (UI.maskTypeGallery, only "Shape" today) when
-// box.mask_shape_id is unset, or an assigned-mask row (icon + "Shape" label, click opens the
-// SHAPE panel via onTimelineSelect, trash icon removes the mask) when set. `getWindow()` returns
+// box.mask_shape_id is unset, or an assigned-mask row (icon + "Shape" label, trash icon removes
+// the mask) plus inline SIZE & POSITION + OPACITY fields for that mask shape when set — added
+// 2026-08-01, mask-list-styling, replacing the row's old click-to-navigate-to-the-standalone-
+// SHAPE-panel behavior: the mask shape is edited as a subpage of this box's own panel, not on
+// its own page, reusing ShapeSizePositionFields/ShapeOpacityField (shared with panel-shape.js's
+// Box/Style tabs). Field edits use their own lightweight save+repaint (`fieldOnChange`, mirroring
+// panel-shape.js's `repaintStage()`) rather than the caller's `onChange` — that one rebuilds this
+// whole panel via `renderDetail(box)`, which fires on every render of the assign/remove-mask
+// gallery but must NOT fire per keystroke (UI.numberField's onChange fires on every `input`
+// event; rebuilding the container mid-keystroke would tear down the very input being typed into,
+// same hazard box-panel-size-position.js documents for its own fields). `getWindow()` returns
 // {start, duration} — the box's own current visible window — used to size a newly-created mask
 // shape and to keep an existing mask shape's start/duration following the box's own on every
 // render. A mask shape has no timing of its own; before this it could drift from its box
@@ -60,7 +69,6 @@ window.BoxMaskPanel = (() => {
     const label = document.createElement("span");
     label.className = "mask-assigned-row-label";
     label.innerHTML = `${UI.icon("venetian-mask", { size: 14 })}<span>Shape</span>`;
-    label.addEventListener("click", () => onTimelineSelect({ type: "shape", item: shape }));
     row.appendChild(label);
 
     const removeBtn = document.createElement("button");
@@ -79,6 +87,29 @@ window.BoxMaskPanel = (() => {
     row.appendChild(removeBtn);
 
     group.appendChild(row);
+
+    // Per-keystroke field edits repaint the stage directly rather than going through the
+    // caller's `onChange` — that one calls renderDetail(box), which rebuilds this whole panel
+    // (including these very fields) via BoxMaskPanel.render, tearing down the input the user is
+    // still typing into.
+    const fieldOnChange = async () => {
+      await saveProject();
+      renderTimeline();
+      VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+      ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+    };
+
+    const sizePositionMount = document.createElement("div");
+    sizePositionMount.className = "col-8";
+    group.appendChild(sizePositionMount);
+    ShapeSizePositionFields.render(sizePositionMount, shape, { onChange: fieldOnChange });
+
+    const opacityRow = document.createElement("div");
+    opacityRow.className = "style-row";
+    group.appendChild(opacityRow);
+    const opacityEl = document.createElement("label");
+    opacityRow.appendChild(opacityEl);
+    ShapeOpacityField.render(opacityEl, shape, { onChange: fieldOnChange, span: 8 });
   }
 
   return { render };

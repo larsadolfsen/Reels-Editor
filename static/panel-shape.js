@@ -58,25 +58,16 @@ window.ShapePanel = window.ShapePanel || {};
   }
 
   function renderDetail(shape) {
-    UI.numberField(document.getElementById("shape-x-field"),
-      { label: "X", unit: "PX", value: shape.x, min: 0, max: 1080, span: 4,
-        onChange: async (v) => { shape.x = v; await saveProject(); repaintStage(); } });
-    UI.numberField(document.getElementById("shape-y-field"),
-      { label: "Y", unit: "PX", value: shape.y, min: 0, max: 1920, span: 4,
-        onChange: async (v) => { shape.y = v; await saveProject(); repaintStage(); } });
-    UI.numberField(document.getElementById("shape-width-field"),
-      { label: "WIDTH", unit: "PX", value: shape.width, min: 1, max: 1080, span: 4,
-        onChange: async (v) => { shape.width = v; await saveProject(); renderTimeline(); repaintStage(); } });
-    UI.numberField(document.getElementById("shape-height-field"),
-      { label: "HEIGHT", unit: "PX", value: shape.height, min: 1, max: 1920, span: 4,
-        onChange: async (v) => { shape.height = v; await saveProject(); renderTimeline(); repaintStage(); } });
+    ShapeSizePositionFields.render(document.getElementById("shape-box-body"), shape, {
+      onChange: async () => { await saveProject(); renderTimeline(); repaintStage(); },
+    });
 
     UI.colorSwatch(document.getElementById("shape-fill-color-field"),
       { label: "Fill", value: shape.fill_color, span: 8,
         onChange: async (v) => { shape.fill_color = v; await saveProject(); repaintStage(); } });
-    UI.numberField(document.getElementById("shape-opacity-field"),
-      { label: "OPACITY", unit: "%", value: Math.round(shape.opacity * 100), min: 0, max: 100, span: 4,
-        onChange: async (v) => { shape.opacity = v / 100; await saveProject(); repaintStage(); } });
+    ShapeOpacityField.render(document.getElementById("shape-opacity-field"), shape, {
+      onChange: async () => { await saveProject(); repaintStage(); },
+    });
     UI.numberField(document.getElementById("shape-corner-radius-field"),
       { label: "RADIUS", unit: "PX", value: shape.corner_radius, min: 0, span: 4,
         onChange: async (v) => { shape.corner_radius = v; await saveProject(); repaintStage(); } });
