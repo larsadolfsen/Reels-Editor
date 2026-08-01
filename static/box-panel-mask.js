@@ -184,7 +184,7 @@ window.BoxMaskPanel = (() => {
     });
     row.appendChild(removeBtn);
 
-    group.appendChild(row);
+    mainEl.appendChild(row);
 
     // Per-keystroke field edits repaint the stage directly rather than going through the
     // caller's `onChange` — that one calls renderDetail(box), which rebuilds this whole panel
@@ -199,12 +199,12 @@ window.BoxMaskPanel = (() => {
 
     const sizePositionMount = document.createElement("div");
     sizePositionMount.className = "col-8";
-    group.appendChild(sizePositionMount);
+    mainEl.appendChild(sizePositionMount);
     ShapeSizePositionFields.render(sizePositionMount, shape, { onChange: fieldOnChange });
 
     const opacityRow = document.createElement("div");
     opacityRow.className = "style-row";
-    group.appendChild(opacityRow);
+    mainEl.appendChild(opacityRow);
     const opacityEl = document.createElement("label");
     opacityRow.appendChild(opacityEl);
     ShapeOpacityField.render(opacityEl, shape, { onChange: fieldOnChange, span: 8 });
