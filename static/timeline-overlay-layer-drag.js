@@ -13,30 +13,51 @@
 // every entry's z_index to match the new order (OverlayLayers.renumber), saves, and re-renders.
 // Delegated on #label-overlays itself (persists across renders; its children are rebuilt by
 // Timeline.render). Depends on window.OverlayLayers (timeline-overlay-layers.js) and editor.js's
-// project/saveProject/renderTimeline globals.
+// project/saveProject/renderTimeline globals. Boundary Y positions are read from the actual
+// rendered lane labels (collectBoundaries) rather than a fixed LANE_HEIGHT grid, so the
+// layer-masking-system feature's expandable per-box MASK sub-lane (static/timeline.js's
+// renderOverlaysRow) doesn't throw off the drop-index math when expanded above the drag point.
 (() => {
   const THRESHOLD_PX = 4;
-  const LANE_HEIGHT = 44;
 
   const labelCol = document.getElementById("label-overlays");
 
-  // There are entries.length+1 possible boundary lines (before the first lane, between each
-  // pair, after the last) in the un-reflowed lane stack (siblings don't move during the drag,
-  // only the dragged lane itself does, via CSS transform — same reasoning as
-  // timeline-clip-drag.js's sequenceBoundaries). Returns the nearest boundary's own on-screen
+  // Boundary Y positions (relative to labelCol's own top) are read from the actual rendered
+  // top-level entry labels rather than assumed as a uniform LANE_HEIGHT grid — the
+  // layer-masking-system feature's mask accordion (static/timeline.js's renderOverlaysRow)
+  // inserts an extra 32px ".overlay-lane-label-mask" sub-lane between a video_box/image_box
+  // entry and the next one whenever that entry's accordion is expanded, so a fixed-arithmetic
+  // grid silently drifts out of sync with the DOM the moment any accordion above the drag
+  // point is open. Excluding `.overlay-lane-label-mask` from the selector keeps only the
+  // draggable top-level entry lanes; any expanded mask sub-lane between two of them is still
+  // correctly reflected because it pushes the following entry's own rendered top down.
+  // Computed once at drag start (mousedown) — the DOM doesn't reflow during the drag itself,
+  // only the dragged lane's own CSS transform changes, same reasoning as
+  // timeline-clip-drag.js's sequenceBoundaries.
+  function collectBoundaries() {
+    const colRect = labelCol.getBoundingClientRect();
+    const laneLabels = [...labelCol.querySelectorAll(".overlay-lane-label:not(.overlay-lane-label-mask)")];
+    if (!laneLabels.length) return [0];
+    const boundaries = laneLabels.map((el) => el.getBoundingClientRect().top - colRect.top);
+    const last = laneLabels[laneLabels.length - 1];
+    boundaries.push(last.getBoundingClientRect().bottom - colRect.top);
+    return boundaries;
+  }
+
+  // `boundaries` holds entries.length+1 possible drop lines (before the first lane, between
+  // each pair, after the last), in on-screen order. Returns the nearest boundary's own
   // position (`y`, for the indicator) plus the drop index adjusted for the dragged entry's
   // removal (`index`, for the actual splice on drop) — any boundary at or before the dragged
   // entry's own position needs no adjustment; any boundary after it shifts down by one, since
   // removing the dragged entry closes that gap.
-  function nearestBoundary(contentY, entryCount, fromIndex) {
+  function nearestBoundary(contentY, boundaries, fromIndex) {
     let bestBoundaryIndex = 0, bestDist = Infinity;
-    for (let i = 0; i <= entryCount; i++) {
-      const y = i * LANE_HEIGHT;
-      const dist = Math.abs(y - contentY);
+    for (let i = 0; i < boundaries.length; i++) {
+      const dist = Math.abs(boundaries[i] - contentY);
       if (dist < bestDist) { bestDist = dist; bestBoundaryIndex = i; }
     }
     const index = bestBoundaryIndex > fromIndex ? bestBoundaryIndex - 1 : bestBoundaryIndex;
-    return { index, y: bestBoundaryIndex * LANE_HEIGHT };
+    return { index, y: boundaries[bestBoundaryIndex] };
   }
 
   function getIndicator() {
@@ -61,6 +82,10 @@
     if (!entry) return;
     const wasLocked = !!entry.item.locked;
     const fromIndex = entries.findIndex((en) => en.id === entryId);
+    // Read once, before any drag transform is applied — the dragged lane's own transform
+    // never triggers reflow (it's a visual-only CSS transform), so these positions stay valid
+    // for the whole gesture, including any expanded mask sub-lane heights baked into them.
+    const boundaries = collectBoundaries();
 
     const startY = e.clientY;
     let dragging = false;
@@ -79,7 +104,7 @@
 
       const colRect = labelCol.getBoundingClientRect();
       const contentY = moveEvent.clientY - colRect.top;
-      const { y: snapY } = nearestBoundary(contentY, entries.length, fromIndex);
+      const { y: snapY } = nearestBoundary(contentY, boundaries, fromIndex);
       const indicator = getIndicator();
       indicator.style.top = `${snapY}px`;
       indicator.style.display = "block";
@@ -107,7 +132,7 @@
       if (freshFromIndex === -1) return;
       const colRect = labelCol.getBoundingClientRect();
       const contentY = upEvent.clientY - colRect.top;
-      const { index: toIndex } = nearestBoundary(contentY, freshEntries.length, freshFromIndex);
+      const { index: toIndex } = nearestBoundary(contentY, boundaries, freshFromIndex);
       if (toIndex === freshFromIndex) return;
 
       const reordered = [...freshEntries];

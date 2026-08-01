@@ -1,0 +1,29 @@
+/* Small card grid for the timeline's "+ Add mask" flow (UI.maskTypeGallery). Depends on
+   tokens.css for its border/background/accent colors. */
+.mask-type-gallery {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  align-items: center;
+  height: 100%;
+}
+
+.mask-type-gallery-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2-5);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--fs-2xs);
+}
+
+.mask-type-gallery-card:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}

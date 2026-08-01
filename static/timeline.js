@@ -61,6 +61,11 @@ window.Timeline = (() => {
   let lastSelected = null;
   let visibleSeconds = DEFAULT_VISIBLE_SECONDS;
   let manualZoom = false;
+  const MASK_LANE_HEIGHT = 32; // px, nested mask sub-lane under a video_box/image_box entry
+  // ids of video_box/image_box overlay entries whose mask accordion is currently expanded
+  // (layer-masking-system feature); module-level so it survives across renders, cleared never
+  // (an entry that no longer exists just stops showing up in `entries`).
+  const expandedMaskAccordions = new Set();
 
   // Pixels-per-second scale that fits `visibleSeconds` seconds across the scroll container's
   // width. Recomputed fresh every call (not cached) since the container can resize (panel
@@ -266,6 +271,14 @@ window.Timeline = (() => {
     }
   }
 
+  // A video_box/image_box entry's mask shape, if it has one assigned (layer-masking-system
+  // feature) — mirrors the same lookup already duplicated per-file in video-box-preview.js/
+  // image-box-preview.js/shape-preview.js.
+  function maskShapeFor(project, box) {
+    if (!box.mask_shape_id) return null;
+    return (project.shapes || []).find((s) => s.id === box.mask_shape_id) || null;
+  }
+
   // Merges TEXT blocks + VIDEO BOX + IMAGE BOX layers into one z_index-ordered stack of 44px
   // lanes inside #row-overlays (top = highest z_index = frontmost), replacing the old separate
   // TEXT/VIDEO BOX rows. Each lane still renders its item exactly as before (time-positioned
@@ -280,10 +293,23 @@ window.Timeline = (() => {
   // OverlayLayers.mergedEntries/renumber. A lane with entry.item.locked shows a "lock" icon
   // instead of "grip-vertical" and is not draggable — see
   // static/timeline-overlay-layer-drag.js for the click-to-toggle/drag-skip logic.
+  // As of the layer-masking-system feature, every video_box/image_box lane gets an extra
+  // expand/collapse chevron opening a nested 32px MASK sub-lane (expandedMaskAccordions,
+  // module-level so expand state survives a re-render) — either the assigned mask shape's own
+  // clickable lane (opens #panel-shape via onSelect({type:"shape", ...})), or a
+  // UI.maskTypeGallery "+ Add mask" gallery whose sole "Shape" card creates a new ShapeLayer
+  // sized/positioned to the box via ShapePanel.createShapeAt, with `duration` set to match the
+  // box's own visible window (videoBoxEnd(v) - v.start for a video_box, box.duration directly
+  // for an image_box — not ShapeDefaults' constant 3s), assigns it as box.mask_shape_id, and
+  // selects it. The mask shape itself is excluded from `entries` by OverlayLayers.mergedEntries
+  // (Task 8), so it never also renders as its own top-level lane.
   function renderOverlaysRow(project, px, selected, onSelect) {
     const entries = OverlayLayers.mergedEntries(project);
     const rowEl = document.querySelector('.timeline-row[data-row="overlays"]');
-    const totalHeight = `${Math.max(entries.length, 1) * LANE_HEIGHT}px`;
+    const expandedCount = entries.filter(
+      (e) => (e.kind === "video_box" || e.kind === "image_box") && expandedMaskAccordions.has(e.id),
+    ).length;
+    const totalHeight = `${Math.max(entries.length, 1) * LANE_HEIGHT + expandedCount * MASK_LANE_HEIGHT}px`;
     rowEl.style.height = totalHeight;
     document.getElementById("label-overlays").style.height = totalHeight;
 
@@ -342,6 +368,63 @@ window.Timeline = (() => {
       }
 
       OverlayCopyToolbar.attach(laneTrack.lastElementChild, entry);
+
+      if (entry.kind === "video_box" || entry.kind === "image_box") {
+        const box = entry.item;
+        const expanded = expandedMaskAccordions.has(entry.id);
+        const chevron = document.createElement("span");
+        chevron.className = "overlay-lane-mask-chevron";
+        chevron.innerHTML = UI.icon(expanded ? "chevron-down" : "chevron-right", { size: 12 });
+        chevron.title = "Mask";
+        chevron.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (expanded) expandedMaskAccordions.delete(entry.id); else expandedMaskAccordions.add(entry.id);
+          renderTimeline();
+        });
+        laneLabel.appendChild(chevron);
+
+        if (expanded) {
+          const maskShape = maskShapeFor(project, box);
+
+          const maskLabel = document.createElement("div");
+          maskLabel.className = "row-label overlay-lane-label overlay-lane-label-mask";
+          if (maskShape) {
+            maskLabel.innerHTML = `<span class="overlay-lane-handle">${UI.icon("venetian-mask", { size: 14 })}</span>`;
+            const text = document.createElement("span");
+            text.className = "overlay-lane-label-text";
+            text.textContent = "MASK";
+            text.addEventListener("click", () => onSelect({ type: "shape", item: maskShape }));
+            maskLabel.appendChild(text);
+          }
+          labelContainer.appendChild(maskLabel);
+
+          const maskTrack = document.createElement("div");
+          maskTrack.className = "row-track overlay-lane-track overlay-lane-track-mask";
+          row.appendChild(maskTrack);
+
+          if (maskShape) {
+            const isSel = !!selected && selected.type === "shape" && !!selected.item && selected.item.id === maskShape.id;
+            addBlock(maskTrack, maskShape.start * px, maskShape.duration * px, "Mask", isSel,
+              () => onSelect({ type: "shape", item: maskShape }));
+            maskTrack.lastElementChild.dataset.blockId = maskShape.id;
+          } else {
+            const galleryWrap = document.createElement("div");
+            galleryWrap.className = "mask-add-gallery-wrap";
+            UI.maskTypeGallery(galleryWrap, [{ value: "shape", icon: "square", label: "Shape" }], (kind) => {
+              if (kind !== "shape") return;
+              const maskDuration = entry.kind === "video_box" ? videoBoxEnd(box) - box.start : box.duration;
+              const newShape = ShapePanel.createShapeAt({
+                x: box.x, y: box.y, width: box.width, height: box.height, start: box.start,
+                duration: maskDuration,
+              });
+              box.mask_shape_id = newShape.id;
+              saveProject();
+              onSelect({ type: "shape", item: newShape });
+            });
+            maskTrack.appendChild(galleryWrap);
+          }
+        }
+      }
     }
   }
 

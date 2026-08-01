@@ -5,7 +5,10 @@
 // element's position/size/fill/opacity/corner-radius in sync with the timeline clock, and wires
 // drag-to-move (UI.videoBoxDrag) / resize (UI.resizeHandles) onto the selected shape. Unlike
 // video/image boxes, resize is free-form (no aspect lock) — a shape has no source media aspect
-// ratio to preserve. Exposes window.ShapePreview.{render, setSelectedShape, setOnActivate}.
+// ratio to preserve. A shape referenced by some box's mask_shape_id only renders here while it
+// is itself the selected shape (mask-edit mode) — otherwise it's a hidden mask source,
+// composited via video-box-preview.js/image-box-preview.js instead.
+// Exposes window.ShapePreview.{render, setSelectedShape, setOnActivate}.
 window.ShapePreview = (() => {
   const overlay = document.getElementById("overlay");
   const mounted = new Map(); // shapeId -> <div>
@@ -41,8 +44,16 @@ window.ShapePreview = (() => {
     const activeIds = new Set();
     const stageW = overlay.clientWidth || 1;
     const stageH = overlay.clientHeight || 1;
+    // Bare global `project` (classic-script sharing, mirrors video-box-preview.js's
+    // maskingShapeFor/Task 7) — `shapes` here is just project.shapes, with no box context.
+    const maskShapeIds = new Set(
+      [...(project.video_boxes || []), ...(project.image_boxes || [])]
+        .map((b) => b.mask_shape_id)
+        .filter(Boolean),
+    );
 
     for (const s of shapes) {
+      if (maskShapeIds.has(s.id) && s.id !== selectedShapeId) continue;
       const visible = s.start <= timelineTime && timelineTime < shapeEnd(s);
       if (!visible) continue;
       activeIds.add(s.id);
