@@ -41,7 +41,7 @@ uiPopoverToolbarGlobal.UI.popoverToolbar = function popoverToolbar(anchorEl, but
     const btn = document.createElement("span");
     btn.className = "ui-toolbar-icon";
     btn.title = title;
-    btn.innerHTML = uiPopoverToolbarGlobal.UI.icon(icon, { size: 14 });
+    btn.innerHTML = uiPopoverToolbarGlobal.UI.icon(icon);
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       onClick(e);
