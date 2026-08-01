@@ -108,6 +108,13 @@
   box-sizing: border-box;
 }
 
+/* A shape currently shown only because it's being edited as a box's mask source
+   (static/shape-preview.js) — transparent fill, dashed outline so its bounds are still visible
+   without painting a false block of color over the stage. */
+.shape-box-mask-outline {
+  border: 2px dashed var(--accent, #4c6fff);
+}
+
 .mask-rubylith-overlay {
   position: absolute;
   background-color: rgba(255, 0, 0, 0.5);

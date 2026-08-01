@@ -81,7 +81,14 @@ window.ShapePreview = (() => {
       div.style.width = (s.width / 1080 * stageW) + "px";
       div.style.height = (s.height / 1920 * stageH) + "px";
       div.style.zIndex = String(s.z_index);
-      div.style.backgroundColor = ShapeColor.toRgba(s.fill_color, s.opacity);
+      // A shape being edited as a mask source (only ever rendered here while selected, see the
+      // maskShapeIds skip above) isn't really "content" — its target box's own rubylith overlay
+      // (box-mask-render.js) already shows what gets cut. Rendering it with its normal solid
+      // fill/opacity paints a false rectangle of that color over the stage, so show only its
+      // outline instead and leave the stage content beneath it visible.
+      const isMask = maskShapeIds.has(s.id);
+      div.classList.toggle("shape-box-mask-outline", isMask);
+      div.style.backgroundColor = isMask ? "transparent" : ShapeColor.toRgba(s.fill_color, s.opacity);
       // Corner radius is stored in 1080x1920 canvas px; scale it the same way width/height are
       // scaled to the stage's actual rendered size, so it doesn't visually change with zoom.
       div.style.borderRadius = (s.corner_radius / 1080 * stageW) + "px";
