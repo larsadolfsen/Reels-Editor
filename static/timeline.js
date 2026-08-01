@@ -298,8 +298,10 @@ window.Timeline = (() => {
   // module-level so expand state survives a re-render) — either the assigned mask shape's own
   // clickable lane (opens #panel-shape via onSelect({type:"shape", ...})), or a
   // UI.maskTypeGallery "+ Add mask" gallery whose sole "Shape" card creates a new ShapeLayer
-  // sized/positioned to the box via ShapePanel.createShapeAt, assigns it as box.mask_shape_id,
-  // and selects it. The mask shape itself is excluded from `entries` by OverlayLayers.mergedEntries
+  // sized/positioned to the box via ShapePanel.createShapeAt, with `duration` set to match the
+  // box's own visible window (videoBoxEnd(v) - v.start for a video_box, box.duration directly
+  // for an image_box — not ShapeDefaults' constant 3s), assigns it as box.mask_shape_id, and
+  // selects it. The mask shape itself is excluded from `entries` by OverlayLayers.mergedEntries
   // (Task 8), so it never also renders as its own top-level lane.
   function renderOverlaysRow(project, px, selected, onSelect) {
     const entries = OverlayLayers.mergedEntries(project);
@@ -410,8 +412,10 @@ window.Timeline = (() => {
             galleryWrap.className = "mask-add-gallery-wrap";
             UI.maskTypeGallery(galleryWrap, [{ value: "shape", icon: "square", label: "Shape" }], (kind) => {
               if (kind !== "shape") return;
+              const maskDuration = entry.kind === "video_box" ? videoBoxEnd(box) - box.start : box.duration;
               const newShape = ShapePanel.createShapeAt({
                 x: box.x, y: box.y, width: box.width, height: box.height, start: box.start,
+                duration: maskDuration,
               });
               box.mask_shape_id = newShape.id;
               saveProject();
