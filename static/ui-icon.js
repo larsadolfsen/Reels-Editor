@@ -122,7 +122,7 @@ const ICON_PATHS = {
   minus: '<path d="M5 12h14"/>',
   // Added Task 9 (layer-masking-system, timeline mask accordion): MASK sub-lane icon, verified
   // against Lucide's current "venetian-mask" path data.
-  "venetian-mask": '<path d="M20.6 11a1.9 1.9 0 0 0-1.6-2A2.9 2.9 0 0 0 16.3 2c-1.4.2-2.9 1.2-4.3 1.2S9.1 2.2 7.7 2A2.9 2.9 0 0 0 5 9a1.9 1.9 0 0 0-1.6 2 12 12 0 0 0-.4 3v2a8 8 0 0 0 16 0v-2a12 12 0 0 0-.4-3"/><path d="M4 8a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1"/><path d="M20 8a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1"/><path d="M6.3 15c.4 1.5 2.6 3 5.7 3s5.3-1.5 5.7-3"/>',
+  "venetian-mask": '<path d="M18 11c-1.5 0-2.5.5-3 2"/><path d="M4 6a2 2 0 0 0-2 2v4a5 5 0 0 0 5 5 8 8 0 0 1 5 2 8 8 0 0 1 5-2 5 5 0 0 0 5-5V8a2 2 0 0 0-2-2h-3a8 8 0 0 0-5 2 8 8 0 0 0-5-2z"/><path d="M6 11c1.5 0 2.5.5 3 2"/>',
 };
 
 // Wrapper attributes shared by every icon already inlined across this codebase's markup

@@ -1,7 +1,9 @@
 /* #transcript-sidebar: the paragraph-style caption transcript beside the stage (editor-only, not exported). */
 /* Exposes #transcript-sidebar and its .transcript-sentence/.transcript-word children. Depends on tokens.css. */
 #transcript-sidebar {
-  flex: 1 1 0;
+  grid-column: 3;
+  justify-self: start;
+  width: 100%;
   min-width: 0;
   height: 100%;
   overflow-y: auto;
