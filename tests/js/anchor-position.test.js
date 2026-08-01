@@ -27,13 +27,13 @@ test("positionX: text kind centers MID on the canvas (symmetric margins)", () =>
   assert.strictEqual(r(positionX("mid", 500, "center", "text")), 540);
 });
 
-test("positionX: caption kind snaps LEFT to 0, RIGHT to the same margin as text", () => {
-  assert.strictEqual(r(positionX("left", 100, "left", "caption")), 0);
+test("positionX: caption kind snaps LEFT/RIGHT to the same mirrored margin as text", () => {
+  assert.strictEqual(r(positionX("left", 100, "left", "caption")), 162);
   assert.strictEqual(r(positionX("right", 100, "left", "caption")), 818);
 });
 
-test("positionX: caption kind centers MID within its own (asymmetric) rect", () => {
-  assert.strictEqual(r(positionX("mid", 500, "center", "caption")), 459);
+test("positionX: caption kind centers MID on the canvas (symmetric margins)", () => {
+  assert.strictEqual(r(positionX("mid", 500, "center", "caption")), 540);
 });
 
 test("positionX: defaults to text kind when omitted", () => {
