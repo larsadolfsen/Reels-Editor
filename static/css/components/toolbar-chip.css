@@ -13,6 +13,11 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-chip);
   padding: var(--space-1);
+  /* Establishes a fresh color context for .ui-toolbar-icon's currentColor-stroked SVGs, so the
+     icon color never depends on whatever text color the chip happens to be nested inside (e.g.
+     the transcript sidebar's .transcript-word:hover sets color: var(--accent), which the icon
+     would otherwise inherit and render blue instead of neutral). */
+  color: var(--text);
 }
 
 .ui-toolbar-icon {
