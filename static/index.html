@@ -301,50 +301,6 @@
 
         </div>
 
-        <div id="panel-captions-language" hidden>
-          <div id="caption-language-subpanel-header"></div>
-          <ul id="caption-language-list" class="font-list"></ul>
-        </div>
-
-        <div id="panel-captions-filler" hidden>
-          <div id="caption-filler-subpanel-header"></div>
-          <div class="style-group">
-            <div class="style-row">
-              <input id="caption-filler-word-input" type="text" class="col-6" placeholder="e.g. øh">
-              <button id="caption-filler-word-add" class="col-2" data-button data-button-size="sm" data-button-icon="plus" title="Add filler word"></button>
-            </div>
-          </div>
-          <ul id="caption-filler-words-list" class="font-list"></ul>
-        </div>
-
-        <div id="panel-captions-background" hidden>
-          <div id="caption-background-subpanel-header"></div>
-          <div class="style-group">
-            <div id="caption-box-background-toggle-group"></div>
-          </div>
-          <div class="style-group">
-            <label id="caption-box-background-color-field"></label>
-          </div>
-          <div class="style-group">
-            <label id="caption-box-background-opacity-field"></label>
-          </div>
-        </div>
-
-        <div id="panel-captions-border" hidden>
-          <div id="caption-border-subpanel-header"></div>
-          <div class="style-group">
-            <div id="caption-box-border-toggle-group"></div>
-          </div>
-          <div class="style-group">
-            <div class="style-row">
-              <label id="caption-box-border-width-field"></label>
-              <label id="caption-box-border-radius-field"></label>
-            </div>
-          </div>
-          <div class="style-group">
-            <label id="caption-box-border-color-field"></label>
-          </div>
-        </div>
 
       </div>
 
@@ -577,35 +533,6 @@
 
         </div>
 
-        <div id="panel-text-background" hidden>
-          <div id="text-background-subpanel-header"></div>
-          <div class="style-group">
-            <div id="text-box-background-toggle-group"></div>
-          </div>
-          <div class="style-group">
-            <label id="text-box-background-color-field"></label>
-          </div>
-          <div class="style-group">
-            <label id="text-box-background-opacity-field"></label>
-          </div>
-        </div>
-
-        <div id="panel-text-border" hidden>
-          <div id="text-border-subpanel-header"></div>
-          <div class="style-group">
-            <div id="text-box-border-toggle-group"></div>
-          </div>
-          <div class="style-group">
-            <div class="style-row">
-              <label id="text-box-border-width-field"></label>
-              <label id="text-box-border-radius-field"></label>
-            </div>
-          </div>
-          <div class="style-group">
-            <label id="text-box-border-color-field"></label>
-          </div>
-        </div>
-
       </div>
     </aside>
   </main>
@@ -735,14 +662,12 @@
 <script src="/static/caption-panel-border.js"></script>
 <script src="/static/caption-panel-words.js"></script>
 <script src="/static/filler-word-ranges.js"></script>
-<script src="/static/caption-panel-filler-words.js"></script>
 <script src="/static/api-list-projects.js"></script>
 <script src="/static/api-delete-project.js"></script>
 <script src="/static/api-duplicate-project.js"></script>
 <script src="/static/api-rename-project.js"></script>
 <script src="/static/api-create-project.js"></script>
 <script src="/static/api-list-font-weights.js"></script>
-<script src="/static/text-panel-background.js"></script>
 <script src="/static/text-panel-border.js"></script>
 <script src="/static/text-panel-time.js"></script>
 <script src="/static/panel-projects.js"></script>
@@ -776,11 +701,13 @@
      time — so loading after its producer here (and after that one consumer above) is safe. -->
 <script src="/static/anchor-position.js"></script>
 <script src="/static/panel-text.js"></script>
+<script src="/static/text-panel-background.js"></script>
 <script src="/static/canvas-point.js"></script>
 <script src="/static/stage-click-router.js"></script>
 <script src="/static/stage-shape-draw.js"></script>
 <script src="/static/stage-tool-cursor.js"></script>
 <script src="/static/panel-captions.js"></script>
+<script src="/static/caption-panel-filler-words.js"></script>
 <script src="/static/clip-sequence.js"></script>
 <script src="/static/panel-auto-slice.js"></script>
 <script src="/static/panel-audio-track.js"></script>
