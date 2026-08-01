@@ -32,7 +32,7 @@ window.BoxMaskPanel = (() => {
     if (!shape) {
       const wrap = document.createElement("div");
       wrap.className = "mask-add-gallery-wrap";
-      UI.maskTypeGallery(wrap, [{ value: "shape", icon: "square", label: "Shape" }], async (kind) => {
+      UI.maskTypeGallery(wrap, [{ value: "shape", icon: "venetian-mask", label: "Shape" }], async (kind) => {
         if (kind !== "shape") return;
         const win = getWindow();
         const newShape = ShapePanel.createShapeAt({
