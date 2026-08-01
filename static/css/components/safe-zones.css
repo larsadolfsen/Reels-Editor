@@ -1,7 +1,7 @@
 /* Safe-zone guide: outlines a "safe rectangle" — the centered text/image area by default, or the
-   narrower caption-only area while a caption is selected — with a plain red border, plus a
-   "SAFE ZONE" label (shield icon + text) just below the top edge of the stage. Toggled from the
-   timeline toolbar. */
+   narrower caption-only area while a caption is selected — with a red/white hazard-stripe border,
+   plus a "SAFE ZONE" label (shield icon + text) just below the top edge of the stage. Toggled
+   from the timeline toolbar. */
 /* Exposes #safe-zones (+ .safe-zone-border/.safe-zone-label). #safe-zones-toggle lives in
    #timeline-toolbar and is built via UI.button (button.css's .button[aria-pressed="true"]) for
    its pressed state. Depends on tokens.css (--safe-zone), #stage (position: relative, in
@@ -10,7 +10,12 @@
    inline styles — this file only keeps the shared visual (the border itself). Replaces the
    earlier diagonal-striped darkening scrim that covered everything outside the safe rect
    (safe-zone-border-not-scrim feature) — found too visually intrusive while editing; the guide no
-   longer draws over or dims any part of the canvas. */
+   longer draws over or dims any part of the canvas. The border went through a plain-red (too thin
+   to read over busy footage, safe-zone-border-visibility) and a dark-halo variant (felt too heavy)
+   before landing on a repeating diagonal red/white stripe via `border-image` (safe-zone-hazard-
+   stripe feature) — the alternating color reads clearly against any background without needing a
+   dark surround; `border-image` ignores `border-radius`, so corners render square (fine for a
+   hazard-tape look). */
 #safe-zones {
   position: absolute;
   inset: 0;
@@ -21,8 +26,10 @@
 
 .safe-zone-border {
   position: absolute;
-  border: 2px solid var(--safe-zone);
-  border-radius: var(--radius-sm);
+  border: 4px solid transparent;
+  border-image: repeating-linear-gradient(45deg,
+    var(--safe-zone) 0px, var(--safe-zone) 8px,
+    #fff 8px, #fff 16px) 4;
 }
 
 .safe-zone-label {

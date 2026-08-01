@@ -31,6 +31,21 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
   };
   let activeVideoBoxTab = "box";
   let currentBox = null;
+  // While the Mask tab is active, on-stage dragging targets the mask shape instead of the box
+  // (see box-panel-mask.js's syncActive) — so the box's own resize/move handles must not also be
+  // live at the same time, or dragging a corner would ambiguously resize both. Passing `null`
+  // callbacks to VideoBoxPreview.setSelectedVideoBox leaves the box selected (rubylith etc. still
+  // work) but mounts no handles for it.
+  function updateBoxStageHandles() {
+    if (!currentBox) return;
+    VideoBoxPreview.setSelectedVideoBox(currentBox.id, activeVideoBoxTab === "mask" ? null : boxDragCallbacks(currentBox));
+    // setSelectedVideoBox only records the new callbacks — it doesn't unmount an already-mounted
+    // box's own handles by itself (that check lives in VideoBoxPreview.render()'s per-box loop,
+    // and only runs the next time render() happens to be called for some other reason). Force
+    // that render now so switching to/from the Mask tab shows/hides the right handle set
+    // immediately, not on the next unrelated re-render.
+    VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+  }
   function showVideoBoxTab(value) {
     activeVideoBoxTab = value;
     Object.entries(videoBoxTabPanes).forEach(([k, el]) => { el.hidden = k !== value; });
@@ -38,6 +53,7 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
     // rubylith overlay — and returning to it must still show it — so sync it directly rather than
     // relying on renderDetail() to run again.
     if (currentBox) BoxMaskPanel.syncActive(currentBox, value === "mask");
+    updateBoxStageHandles();
   }
   UI.tabBar(document.getElementById("video-box-tab-bar"), VIDEO_BOX_TABS, activeVideoBoxTab, showVideoBoxTab);
   showVideoBoxTab(activeVideoBoxTab);
@@ -134,12 +150,19 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
       openFilesPanel();
     };
 
-    VideoBoxPreview.setSelectedVideoBox(box.id, {
+    updateBoxStageHandles();
+  }
+
+  // Extracted from renderDetail() so updateBoxStageHandles() can also reach these when a tab
+  // switch (not a field edit) is what should re-enable the box's own handles.
+  function boxDragCallbacks(box) {
+    return {
       onResize: (size) => {
         const scale = stageScale();
         const { width, height } = applyAspectLock(box, { width: Math.round(size.width * scale), height: Math.round(size.height * scale) });
-        const x = size.edge.includes("w") ? box.x + (box.width - width) : box.x;
-        const y = size.edge.includes("n") ? box.y + (box.height - height) : box.y;
+        const startWidth = Math.round(size.startWidth * scale);
+        const startHeight = Math.round(size.startHeight * scale);
+        const { x, y } = ResizeAnchor.anchoredPosition(box.x, box.y, startWidth, startHeight, width, height, size.edge);
         VideoBoxPreview.render(
           project.video_boxes.map((b) => (b.id === box.id ? { ...b, x, y, width, height } : b)),
           Preview.currentTimelineTime(),
@@ -148,8 +171,10 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
       onDragEnd: async (size) => {
         const scale = stageScale();
         const { width, height } = applyAspectLock(box, { width: Math.round(size.width * scale), height: Math.round(size.height * scale) });
-        if (size.edge.includes("w")) box.x += box.width - width;
-        if (size.edge.includes("n")) box.y += box.height - height;
+        const startWidth = Math.round(size.startWidth * scale);
+        const startHeight = Math.round(size.startHeight * scale);
+        const { x, y } = ResizeAnchor.anchoredPosition(box.x, box.y, startWidth, startHeight, width, height, size.edge);
+        box.x = x; box.y = y;
         box.width = width; box.height = height;
         await saveProject();
         renderDetail(box);
@@ -168,7 +193,7 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
         await saveProject();
         renderDetail(box);
       },
-    });
+    };
   }
 
   let lastSelectedId = null;

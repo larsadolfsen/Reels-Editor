@@ -100,8 +100,9 @@ window.ShapePanel = window.ShapePanel || {};
         const scale = stageScale();
         const width = Math.round(size.width * scale);
         const height = Math.round(size.height * scale);
-        const x = size.edge.includes("w") ? shape.x + (shape.width - width) : shape.x;
-        const y = size.edge.includes("n") ? shape.y + (shape.height - height) : shape.y;
+        const startWidth = Math.round(size.startWidth * scale);
+        const startHeight = Math.round(size.startHeight * scale);
+        const { x, y } = ResizeAnchor.anchoredPosition(shape.x, shape.y, startWidth, startHeight, width, height, size.edge);
         ShapePreview.render(
           project.shapes.map((s) => (s.id === shape.id ? { ...s, x, y, width, height } : s)),
           Preview.currentTimelineTime(),
@@ -111,8 +112,11 @@ window.ShapePanel = window.ShapePanel || {};
         const scale = stageScale();
         const width = Math.round(size.width * scale);
         const height = Math.round(size.height * scale);
-        if (size.edge.includes("w")) shape.x += shape.width - width;
-        if (size.edge.includes("n")) shape.y += shape.height - height;
+        const startWidth = Math.round(size.startWidth * scale);
+        const startHeight = Math.round(size.startHeight * scale);
+        const { x, y } = ResizeAnchor.anchoredPosition(shape.x, shape.y, startWidth, startHeight, width, height, size.edge);
+        shape.x = x;
+        shape.y = y;
         shape.width = width;
         shape.height = height;
         await saveProject();
