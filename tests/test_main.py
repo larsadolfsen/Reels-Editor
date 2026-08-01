@@ -428,6 +428,27 @@ def test_export_writes_no_mask_png_for_an_unmasked_video_box(tmp_path, monkeypat
     fc = cmd[cmd.index("-filter_complex") + 1]
     assert "alphamerge" not in fc
 
+def test_export_masked_video_box_rasterizes_mask_png_from_its_shape(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from PIL import Image
+    from app.main import app as fastapi_app
+    client = TestClient(fastapi_app)
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
+    shape = ShapeLayer(id="mshape", x=350, y=750, width=300, height=500, opacity=0.8, corner_radius=12)
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", out_point=2.0,
+                        x=300, y=700, width=300, height=500, mask_shape_id="mshape")
+    p = Project(name="r", video_boxes=[box], shapes=[shape])
+    with patch("app.main.store.load_project", return_value=p), \
+         patch("app.main.media.run_export") as run_export:
+        resp = client.post(f"/api/projects/{p.id}/export")
+    assert resp.status_code == 200
+    cmd = run_export.call_args[0][0]
+    mask_pngs = [tmp_path_arg for tmp_path_arg in cmd if str(tmp_path_arg).endswith("-mask.png")]
+    assert len(mask_pngs) == 1
+    with Image.open(mask_pngs[0]) as img:
+        assert img.size == (300, 500)  # target box's own size, not the shape's
+
 def test_import_media_copies_probes_and_appends_media_item(tmp_path, monkeypatch):
     monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
     src = tmp_path / "PXL_20260711_091857914.mp4"
