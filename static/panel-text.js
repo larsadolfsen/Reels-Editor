@@ -186,20 +186,53 @@ function stageScale() {
   return 1080 / stageW;
 }
 
-function handleBoxResize(preset, { width, height }) {
+// TextPreset.x is align-aware (left edge for align="left", center for "center", right edge for
+// "right" — see stage.css's .text-block--align-* transforms), unlike VIDEO BOX/IMAGE BOX/SHAPE
+// whose x is always a plain top-left corner. ResizeAnchor.anchoredPosition only knows the
+// top-left-corner convention, so a resize drag converts x to/from that left-edge space around it.
+function leftEdgeForAlign(x, width, align) {
+  if (align === "center") return x - width / 2;
+  if (align === "right") return x - width;
+  return x;
+}
+
+function xForAlign(leftEdge, width, align) {
+  if (align === "center") return leftEdge + width / 2;
+  if (align === "right") return leftEdge + width;
+  return leftEdge;
+}
+
+function resizedBoxPosition(preset, size, width, height) {
   const scale = stageScale();
+  const startWidth = Math.round(size.startWidth * scale);
+  const startHeight = Math.round(size.startHeight * scale);
+  const startLeft = leftEdgeForAlign(preset.x, startWidth, preset.align);
+  const { x: left, y } = ResizeAnchor.anchoredPosition(startLeft, preset.y, startWidth, startHeight, width, height, size.edge);
+  return { x: xForAlign(left, width, preset.align), y };
+}
+
+function handleBoxResize(preset, size) {
+  const scale = stageScale();
+  const width = Math.round(size.width * scale);
+  const height = Math.round(size.height * scale);
+  const { x, y } = resizedBoxPosition(preset, size, width, height);
   const previewPreset = { ...preset, box_width_mode: "fixed", box_height_mode: "fixed",
-    box_width: Math.round(width * scale), box_height: Math.round(height * scale) };
+    box_width: width, box_height: height, x, y };
   const previewPresets = { ...project.text_presets, [preset.id]: previewPreset };
   Preview.renderText(project, previewPresets, Preview.currentTimelineTime());
 }
 
-async function handleBoxResizeEnd(preset, { width, height }) {
+async function handleBoxResizeEnd(preset, size) {
   const scale = stageScale();
+  const width = Math.round(size.width * scale);
+  const height = Math.round(size.height * scale);
+  const { x, y } = resizedBoxPosition(preset, size, width, height);
   preset.box_width_mode = "fixed";
   preset.box_height_mode = "fixed";
-  preset.box_width = Math.round(width * scale);
-  preset.box_height = Math.round(height * scale);
+  preset.box_width = width;
+  preset.box_height = height;
+  preset.x = Math.round(x);
+  preset.y = Math.round(y);
   renderTextPreview();
   await saveProject();
   renderBoxTab();

@@ -158,14 +158,21 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
       onResize: (size) => {
         const scale = stageScale();
         const { width, height } = applyAspectLock(box, { width: Math.round(size.width * scale), height: Math.round(size.height * scale) });
+        const startWidth = Math.round(size.startWidth * scale);
+        const startHeight = Math.round(size.startHeight * scale);
+        const { x, y } = ResizeAnchor.anchoredPosition(box.x, box.y, startWidth, startHeight, width, height, size.edge);
         ImageBoxPreview.render(
-          project.image_boxes.map((b) => (b.id === box.id ? { ...b, width, height } : b)),
+          project.image_boxes.map((b) => (b.id === box.id ? { ...b, x, y, width, height } : b)),
           Preview.currentTimelineTime(),
         );
       },
       onDragEnd: async (size) => {
         const scale = stageScale();
         const { width, height } = applyAspectLock(box, { width: Math.round(size.width * scale), height: Math.round(size.height * scale) });
+        const startWidth = Math.round(size.startWidth * scale);
+        const startHeight = Math.round(size.startHeight * scale);
+        const { x, y } = ResizeAnchor.anchoredPosition(box.x, box.y, startWidth, startHeight, width, height, size.edge);
+        box.x = x; box.y = y;
         box.width = width; box.height = height;
         await saveProject();
         renderDetail(box);

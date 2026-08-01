@@ -53,45 +53,19 @@ test("rectToPercent converts a px rect to percent-of-canvas bounds", () => {
   assert.strictEqual(pct.bottom, 73);
 });
 
-// guideCss now returns one .safe-zone-dim rule whose mask-image data URI punches a rectangular
-// hole matching the active safe rect in percent-of-100 coordinates, rather than 4 separately-
-// positioned bars.
-function decodeMaskSvg(css) {
-  const match = css.match(/data:image\/svg\+xml,([^)]+)"\)/);
-  assert.ok(match, "mask-image data URI not found in guideCss output");
-  return decodeURIComponent(match[1]);
-}
-
-test("guideCss('text') masks a hole matching TEXT_IMAGE_SAFE_RECT (percent coords)", () => {
+// guideCss now returns one .safe-zone-border rule positioning/sizing that border to exactly cover
+// the active safe rect, in percent-of-container coordinates, rather than masking a hole in a
+// darkening overlay.
+test("guideCss('text') positions the border over TEXT_IMAGE_SAFE_RECT (percent coords)", () => {
   delete require.cache[require.resolve("../../static/ui-safe-zones.js")];
   const { guideCss } = require("../../static/ui-safe-zones.js");
   const css = guideCss("text");
-  assert.match(css, /^\.safe-zone-dim \{ mask-image: url\("data:image\/svg\+xml,/);
-  assert.match(css, /mask-size: 100% 100%;/);
-  const svg = decodeMaskSvg(css);
-  assert.match(svg, /<path fill-rule="evenodd" fill="#fff" d="M0,0 H100 V100 H0 Z M15,6 H85 V73 H15 Z"\/>/);
+  assert.strictEqual(css, ".safe-zone-border { left: 15%; top: 6%; width: 70%; height: 67%; }");
 });
 
-test("guideCss('caption') masks a hole matching CAPTION_SAFE_RECT (percent coords)", () => {
+test("guideCss('caption') positions the border over CAPTION_SAFE_RECT (percent coords)", () => {
   delete require.cache[require.resolve("../../static/ui-safe-zones.js")];
   const { guideCss } = require("../../static/ui-safe-zones.js");
   const css = guideCss("caption");
-  const svg = decodeMaskSvg(css);
-  assert.match(svg, /<path fill-rule="evenodd" fill="#fff" d="M0,0 H100 V100 H0 Z M15,73 H85 V93 H15 Z"\/>/);
-});
-
-// Regression: an earlier version drew the hole as a second, separately-filled <rect> on top of a
-// full-canvas <rect> (both fully opaque). CSS mask-image keys off the ALPHA channel for a bare
-// image source (not luminance, which only applies to a referenced <mask> element), so that
-// "hole" rect — despite being black — still had alpha=255, identical to the surrounding fill, and
-// produced no visible cutout in any browser. The fix uses one evenodd-filled <path> instead, so
-// the hole region is genuinely unpainted (alpha 0). Pin the single-<path>, zero-<rect> shape so
-// this can't silently regress back to the broken two-<rect> version.
-test("guideCss's mask SVG uses a single evenodd path, never a separate <rect> for the hole", () => {
-  delete require.cache[require.resolve("../../static/ui-safe-zones.js")];
-  const { guideCss } = require("../../static/ui-safe-zones.js");
-  const svg = decodeMaskSvg(guideCss("text"));
-  assert.strictEqual((svg.match(/<rect/g) || []).length, 0);
-  assert.strictEqual((svg.match(/<path/g) || []).length, 1);
-  assert.match(svg, /fill-rule="evenodd"/);
+  assert.strictEqual(css, ".safe-zone-border { left: 15%; top: 73%; width: 70%; height: 20%; }");
 });
