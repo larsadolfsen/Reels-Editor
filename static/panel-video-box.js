@@ -138,14 +138,18 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
       onResize: (size) => {
         const scale = stageScale();
         const { width, height } = applyAspectLock(box, { width: Math.round(size.width * scale), height: Math.round(size.height * scale) });
+        const x = size.edge.includes("w") ? box.x + (box.width - width) : box.x;
+        const y = size.edge.includes("n") ? box.y + (box.height - height) : box.y;
         VideoBoxPreview.render(
-          project.video_boxes.map((b) => (b.id === box.id ? { ...b, width, height } : b)),
+          project.video_boxes.map((b) => (b.id === box.id ? { ...b, x, y, width, height } : b)),
           Preview.currentTimelineTime(),
         );
       },
       onDragEnd: async (size) => {
         const scale = stageScale();
         const { width, height } = applyAspectLock(box, { width: Math.round(size.width * scale), height: Math.round(size.height * scale) });
+        if (size.edge.includes("w")) box.x += box.width - width;
+        if (size.edge.includes("n")) box.y += box.height - height;
         box.width = width; box.height = height;
         await saveProject();
         renderDetail(box);

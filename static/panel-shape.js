@@ -100,15 +100,21 @@ window.ShapePanel = window.ShapePanel || {};
         const scale = stageScale();
         const width = Math.round(size.width * scale);
         const height = Math.round(size.height * scale);
+        const x = size.edge.includes("w") ? shape.x + (shape.width - width) : shape.x;
+        const y = size.edge.includes("n") ? shape.y + (shape.height - height) : shape.y;
         ShapePreview.render(
-          project.shapes.map((s) => (s.id === shape.id ? { ...s, width, height } : s)),
+          project.shapes.map((s) => (s.id === shape.id ? { ...s, x, y, width, height } : s)),
           Preview.currentTimelineTime(),
         );
       },
       onDragEnd: async (size) => {
         const scale = stageScale();
-        shape.width = Math.round(size.width * scale);
-        shape.height = Math.round(size.height * scale);
+        const width = Math.round(size.width * scale);
+        const height = Math.round(size.height * scale);
+        if (size.edge.includes("w")) shape.x += shape.width - width;
+        if (size.edge.includes("n")) shape.y += shape.height - height;
+        shape.width = width;
+        shape.height = height;
         await saveProject();
         renderDetail(shape);
       },
