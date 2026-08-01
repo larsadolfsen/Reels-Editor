@@ -28,9 +28,10 @@
 // render()'s 5th `actions = {}` param ({ onAddClip }) renders a small dashed "+" button
 // after the VIDEO row's clip sequence (at x=0 when empty), giving a visible way to add a
 // clip beyond the console. TEXT blocks are added via the left icon rail's TEXT entry instead
-// (see panel-nav.js); TEXT-row and IMAGE BOX lanes instead render a right-edge resize handle
-// (`resizable` option on addBlock, dataset.blockId set on each block) driven by
-// timeline-text-resize.js / timeline-image-resize.js respectively.
+// (see panel-nav.js); TEXT/IMAGE BOX/SHAPE lanes instead render two resize handles
+// (`timeline-resize-handle-start`/`-end`, via the `resizable` option on addBlock, dataset.blockId
+// set on each block) driven by timeline-text-resize.js / timeline-image-resize.js /
+// timeline-shape-resize.js respectively.
 // MAIN and AUDIO's labels get a static, non-interactive lock icon (ensureFixedRowLockIcons,
 // idempotent, called from render()) signaling they can never be reordered — see the overlay
 // row's own per-layer lock toggle in renderOverlaysRow/timeline-overlay-layer-drag.js instead.

@@ -9,7 +9,7 @@
   // edge is fixed for this drag.
   function computeEdgeResize(edge, dx, initialStart, initialEnd, minDuration) {
     if (edge === "start") {
-      const newStart = Math.min(Math.max(initialStart + dx, 0), initialEnd - minDuration);
+      const newStart = Math.max(0, Math.min(initialStart + dx, initialEnd - minDuration));
       return { start: newStart, end: initialEnd };
     }
     const newEnd = Math.max(initialStart + minDuration, initialEnd + dx);

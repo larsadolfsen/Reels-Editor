@@ -51,3 +51,12 @@ test("start edge never moves end", () => {
   const result = computeEdgeResize("start", -3, 5, 10, 0.1);
   assert.strictEqual(result.end, 10);
 });
+
+test("start edge: never returns a negative start even when initialEnd is below minDuration", () => {
+  // A block shorter than its own minDuration (0.08 - 0.05 = 0.03 < 0.3) is an edge case
+  // nothing else in the codebase prevents from existing. Pre-fix, the outer Math.min could
+  // let initialEnd - minDuration (0.08 - 0.3 = -0.22) override the >= 0 floor and return a
+  // negative start; post-fix the 0 floor is applied last and always wins.
+  const result = computeEdgeResize("start", -100, 0.05, 0.08, 0.3);
+  assert.deepStrictEqual(result, { start: 0, end: 0.08 });
+});
