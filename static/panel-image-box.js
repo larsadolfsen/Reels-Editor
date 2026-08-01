@@ -174,6 +174,10 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     if (!box) {
       renderPicker();
       ImageBoxPreview.setSelectedImageBox(null, null);
+      VideoBoxPreview.setActiveMaskShapeId(null);
+      ImageBoxPreview.setActiveMaskShapeId(null);
+      VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+      ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
       lastSelectedId = null;
       return;
     }

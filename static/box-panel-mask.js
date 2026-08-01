@@ -71,6 +71,18 @@ window.BoxMaskPanel = (() => {
     const shape = box.mask_enabled ? maskShapeFor(box) : null;
     const currentType = shape ? "shape" : "none";
 
+    // Drive the rubylith "what gets cut" preview from this panel itself — previously only
+    // panel-shape.js's own select/deselect set this, but a mask shape is no longer independently
+    // selectable (mask-list-styling moved its editing inline into this Mask tab), so the preview
+    // never showed while a mask was actually being edited. Both preview modules share one
+    // BoxMaskRender-backed variable (see mask-shape-active-id.js), so both always receive the same
+    // value regardless of which box kind is open.
+    const activeMaskShapeId = shape ? shape.id : null;
+    VideoBoxPreview.setActiveMaskShapeId(activeMaskShapeId);
+    ImageBoxPreview.setActiveMaskShapeId(activeMaskShapeId);
+    VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+    ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+
     const eyebrow = document.createElement("div");
     eyebrow.className = "section-label-spacer text-eyebrow";
     eyebrow.textContent = "MASK";
