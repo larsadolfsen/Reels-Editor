@@ -76,7 +76,9 @@ function ensureStyleElement(kind) {
 // (SafeZoneGeometry.TEXT_IMAGE_SAFE_RECT); "caption" darkens around the narrower, lower
 // caption-only safe area (SafeZoneGeometry.CAPTION_SAFE_RECT). Call again with a different kind
 // to switch which rect is cut out — editor.js's renderTimeline() does this on every selection
-// change.
+// change. A "SAFE ZONE" label (shield icon + text, safe-zone-guide-tweaks feature, replacing the
+// cutout's accent border) sits just below the top edge of the stage, unconditional on `kind` — one
+// static indicator that the guide is active, rather than a per-rect outline.
 uiSafeZonesGlobal.UI.safeZones = function safeZones(container, kind = "text") {
   container.innerHTML = "";
   ensureStyleElement(kind);
@@ -88,6 +90,10 @@ uiSafeZonesGlobal.UI.safeZones = function safeZones(container, kind = "text") {
   const cutout = document.createElement("div");
   cutout.className = "safe-zone-cutout";
   container.appendChild(cutout);
+  const label = document.createElement("div");
+  label.className = "safe-zone-label";
+  label.innerHTML = `<span class="safe-zone-label-icon">${uiSafeZonesGlobal.UI.icon("shield", { size: 14 })}</span><span class="safe-zone-label-text">SAFE ZONE</span>`;
+  container.appendChild(label);
 };
 
 if (typeof module !== "undefined") {

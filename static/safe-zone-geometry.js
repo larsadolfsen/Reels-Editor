@@ -34,11 +34,12 @@ safeZoneGeometryGlobal.SafeZoneGeometry = (function deriveSafeZoneGeometry() {
     bottom: CAPTION_ZONE_TOP,
   };
 
-  // The caption-only safe rectangle: exactly today's existing caption band bounds (left 0, right
-  // margin, caption zone top/bottom) — unchanged from the pre-existing caption geometry. Active
-  // for kind="caption" in both ui-safe-zones.js and anchor-position.js.
+  // The caption-only safe rectangle: same mirrored HORIZONTAL_MARGIN on both sides as
+  // TEXT_IMAGE_SAFE_RECT (2026-08-01, safe-zone-guide-tweaks — previously left: 0, an asymmetric
+  // leftover of the old caption band's inset), caption zone top/bottom unchanged. Active for
+  // kind="caption" in both ui-safe-zones.js and anchor-position.js.
   const CAPTION_SAFE_RECT = {
-    left: 0,
+    left: HORIZONTAL_MARGIN,
     right: CANVAS_W - HORIZONTAL_MARGIN,
     top: CAPTION_ZONE_TOP,
     bottom: CAPTION_ZONE_BOTTOM,

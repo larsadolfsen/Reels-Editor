@@ -33,10 +33,10 @@ test("SafeZoneGeometry derives TEXT_IMAGE_SAFE_RECT: mirrored margin, top-zone-t
   });
 });
 
-test("SafeZoneGeometry derives CAPTION_SAFE_RECT: today's existing caption band bounds", () => {
+test("SafeZoneGeometry derives CAPTION_SAFE_RECT: mirrored margin, caption zone top-to-bottom", () => {
   const g = global.SafeZoneGeometry;
   assert.deepStrictEqual(g.CAPTION_SAFE_RECT, {
-    left: 0,
+    left: 162,
     right: 918,
     top: 1401.6,
     bottom: 1785.6,
@@ -69,5 +69,5 @@ test("guideCss('caption') positions the 4 bars + cutout around CAPTION_SAFE_RECT
   const { guideCss } = require("../../static/ui-safe-zones.js");
   const css = guideCss("caption");
   assert.match(css, /\.safe-zone-bar-top \{ top: 0%; left: 0%; right: 0%; height: 73%; \}/);
-  assert.match(css, /\.safe-zone-bar-left \{ top: 73%; height: 20%; left: 0%; width: 0%; \}/);
+  assert.match(css, /\.safe-zone-bar-left \{ top: 73%; height: 20%; left: 0%; width: 15%; \}/);
 });
