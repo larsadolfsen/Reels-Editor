@@ -9,7 +9,7 @@ function makeBox(overrides = {}) {
     id: "box1", media_id: "m1", file_path: "/a.mp4",
     in_point: 2, out_point: 12, start: 5,
     x: 100, y: 100, width: 300, height: 500, z_index: -1,
-    mask_enabled: false, mask_angle: 0, mask_offset: 0, mask_flip: false,
+    mask_shape_id: null,
     ...overrides,
   };
 }
@@ -69,7 +69,7 @@ test("sliceVideoBox: splits into two back-to-back boxes at t=10", () => {
   // (e.g. mask fields silently reset to default, or y/x swapped) would actually be caught.
   const box = makeBox({
     y: 200, height: 500,
-    mask_enabled: true, mask_angle: 15, mask_offset: 20, mask_flip: true,
+    mask_shape_id: "shape-abc",
   }); // start=5, in=2, out=12 -> window [5, 15)
   const videoBoxes = [box];
   const result = sliceVideoBox(videoBoxes, box, 10, 0.05);
@@ -88,10 +88,7 @@ test("sliceVideoBox: splits into two back-to-back boxes at t=10", () => {
   assert.strictEqual(box.width, 300);
   assert.strictEqual(box.height, 500);
   assert.strictEqual(box.z_index, -1);
-  assert.strictEqual(box.mask_enabled, true);
-  assert.strictEqual(box.mask_angle, 15);
-  assert.strictEqual(box.mask_offset, 20);
-  assert.strictEqual(box.mask_flip, true);
+  assert.strictEqual(box.mask_shape_id, "shape-abc");
 
   // New box: new id, same position/size/z-index/mask/media, starts where the first half ends,
   // in_point continues from the split's source time, out_point unchanged from the original (12).
@@ -107,8 +104,5 @@ test("sliceVideoBox: splits into two back-to-back boxes at t=10", () => {
   assert.strictEqual(newBox.width, 300);
   assert.strictEqual(newBox.height, 500);
   assert.strictEqual(newBox.z_index, -1);
-  assert.strictEqual(newBox.mask_enabled, true);
-  assert.strictEqual(newBox.mask_angle, 15);
-  assert.strictEqual(newBox.mask_offset, 20);
-  assert.strictEqual(newBox.mask_flip, true);
+  assert.strictEqual(newBox.mask_shape_id, "shape-abc");
 });

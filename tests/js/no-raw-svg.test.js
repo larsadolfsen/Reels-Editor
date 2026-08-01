@@ -6,7 +6,10 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const staticDir = path.join(__dirname, "../../static");
-const jsFiles = fs.readdirSync(staticDir).filter((f) => f.endsWith(".js") && f !== "ui-icon.js");
+// shape-mask.js builds a CSS mask-image data-URI SVG (a rect-based alpha mask), not decorative
+// icon markup — a fundamentally different use case than the "every icon comes from UI.icon()"
+// rule this guard enforces, so it's excluded alongside ui-icon.js itself.
+const jsFiles = fs.readdirSync(staticDir).filter((f) => f.endsWith(".js") && f !== "ui-icon.js" && f !== "shape-mask.js");
 
 for (const file of jsFiles) {
   test(`${file} contains no raw <svg markup`, () => {
