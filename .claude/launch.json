@@ -4,7 +4,7 @@
     {
       "name": "reels-editor",
       "runtimeExecutable": "C:/Users/adolf/Documents/GitHub/TikTok-Reels/.venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--reload", "--port", "8123"],
+      "runtimeArgs": ["scripts/dev_server.py"],
       "port": 8123,
       "autoPort": true
     }
