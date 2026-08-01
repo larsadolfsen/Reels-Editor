@@ -403,7 +403,7 @@ def test_export_writes_a_mask_png_and_alphamerges_it_for_a_masked_video_box(tmp_
     monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
     shape = ShapeLayer(x=0, y=0, width=300, height=500)
     box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", out_point=2.0,
-                        width=300, height=500, mask_shape_id=shape.id)
+                        width=300, height=500, mask_shape_id=shape.id, mask_enabled=True)
     p = Project(name="r", video_boxes=[box], shapes=[shape])
     with patch("app.main.store.load_project", return_value=p), \
          patch("app.main.media.run_export") as run_export:
@@ -452,7 +452,7 @@ def test_export_masked_video_box_rasterizes_mask_png_from_its_shape(tmp_path, mo
     monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
     shape = ShapeLayer(id="mshape", x=350, y=750, width=300, height=500, opacity=0.8, corner_radius=12)
     box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", out_point=2.0,
-                        x=300, y=700, width=300, height=500, mask_shape_id="mshape")
+                        x=300, y=700, width=300, height=500, mask_shape_id="mshape", mask_enabled=True)
     p = Project(name="r", video_boxes=[box], shapes=[shape])
     with patch("app.main.store.load_project", return_value=p), \
          patch("app.main.media.run_export") as run_export:
