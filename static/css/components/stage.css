@@ -75,6 +75,8 @@
 
 .text-block--placeholder { color: var(--text-muted); }
 
+.text-block:hover { font-weight: bold; }
+
 /* Tool-mode cursors — #stage's data-tool attribute is kept in sync by stage-tool-cursor.js.
    Select (arrow) tool: plain arrow over text blocks, since a click there selects rather than
    edits. Text tool: caret. A block that's actually in edit mode always shows the caret. */
