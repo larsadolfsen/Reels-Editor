@@ -32,10 +32,18 @@
 
 .transcript-word {
   cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 1px 4px;
+  margin: -1px -4px;
+  border: var(--border-width) solid transparent;
+  border-left-width: 3px;
 }
 
 .transcript-word:hover {
-  text-decoration: underline;
+  color: var(--accent);
+  background: var(--bg-2);
+  border-color: var(--border-soft);
+  border-left-color: var(--accent);
 }
 
 .transcript-word.active-word {
