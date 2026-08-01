@@ -1,0 +1,21 @@
+/* Shared row styling for UI.boxPickerRow (static/ui-box-picker-row.js): the VIDEO BOX / IMAGE
+   BOX panels' "+" add-picker lists. Depends on tokens.css, list-row.css; reuses
+   style-panel.css's .clip-info/.clip-name/.clip-duration-row/.clip-duration for the text column. */
+.box-picker-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.box-picker-row-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--bg-1);
+  border: var(--border-width) solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+}

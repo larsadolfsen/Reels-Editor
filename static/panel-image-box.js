@@ -68,15 +68,14 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     const list = document.getElementById("image-box-picker-list");
     list.innerHTML = "";
     project.media_library.filter((m) => m.kind === "image").forEach((m) => {
-      const li = document.createElement("li");
-      li.textContent = m.name || m.file_path.split(/[\\/]/).pop();
-      li.addEventListener("click", async () => {
-        const box = await createImageBox(m);
-        await saveProject();
-        renderTimeline();
-        render(box.id);
-      });
-      list.appendChild(li);
+      list.appendChild(UI.boxPickerRow(m, {
+        onClick: async () => {
+          const box = await createImageBox(m);
+          await saveProject();
+          renderTimeline();
+          render(box.id);
+        },
+      }));
     });
   }
 
