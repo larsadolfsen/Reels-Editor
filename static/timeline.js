@@ -284,21 +284,16 @@ window.Timeline = (() => {
   // OverlayLayers.mergedEntries/renumber. A lane with entry.item.locked shows a "lock" icon
   // instead of "grip-vertical" and is not draggable — see
   // static/timeline-overlay-layer-drag.js for the click-to-toggle/drag-skip logic.
-  // As of the layer-masking-system feature, every video_box/image_box lane gets an extra
-  // expand/collapse chevron opening a nested 32px MASK sub-lane — either the assigned mask
-  // shape's own clickable lane (opens #panel-shape via onSelect({type:"shape", ...})), or a
-  // UI.maskTypeGallery "+ Add mask" gallery whose sole "Shape" card creates a new ShapeLayer
-  // sized/positioned to the box via ShapePanel.createShapeAt, with `duration` set to match the
-  // box's own visible window (videoBoxEnd(v) - v.start for a video_box, box.duration directly
-  // for an image_box — not ShapeDefaults' constant 3s), assigns it as box.mask_shape_id, and
-  // selects it. The mask shape itself is excluded from `entries` by OverlayLayers.mergedEntries
-  // (Task 8), so it never also renders as its own top-level lane. See
-  // static/timeline-mask-accordion.js for the accordion's own implementation (chevron, expand
-  // state, nested lane, gallery, shape-creation flow).
+  // Mask assignment (layer-masking-system / mask-visibility-ui) lives in the VIDEO BOX/IMAGE BOX
+  // side panel's own Mask tab (static/box-panel-mask.js), not on the timeline — a video_box/
+  // image_box lane here renders exactly like any other overlay lane, no extra chevron/sub-lane.
+  // The mask shape itself is still excluded from `entries` by OverlayLayers.mergedEntries
+  // (it's a mask source, not an overlay layer, while assigned), so it never also renders as its
+  // own top-level lane.
   function renderOverlaysRow(project, px, selected, onSelect) {
     const entries = OverlayLayers.mergedEntries(project);
     const rowEl = document.querySelector('.timeline-row[data-row="overlays"]');
-    const totalHeight = `${Math.max(entries.length, 1) * LANE_HEIGHT + MaskAccordion.expandedHeightFor(entries)}px`;
+    const totalHeight = `${Math.max(entries.length, 1) * LANE_HEIGHT}px`;
     rowEl.style.height = totalHeight;
     document.getElementById("label-overlays").style.height = totalHeight;
 
@@ -357,10 +352,6 @@ window.Timeline = (() => {
       }
 
       OverlayCopyToolbar.attach(laneTrack.lastElementChild, entry);
-
-      if (entry.kind === "video_box" || entry.kind === "image_box") {
-        MaskAccordion.attach(laneLabel, labelContainer, row, px, selected, project, entry, onSelect);
-      }
     }
   }
 

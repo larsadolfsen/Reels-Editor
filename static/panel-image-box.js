@@ -1,8 +1,9 @@
 // #panel-image-box context-panel section: add-from-media-library picker (images only),
 // size/position/time fields, drag-to-move/resize on stage (via ImageBoxPreview), delete. The
 // detail view is split into Box (SIZE + POSITION, via the shared BoxSizePositionPanel —
-// box-panel-size-position.js) and Time (START + DURATION) tab panes via
-// UI.tabBar (Box default), with Delete as an always-visible footer. Exposes
+// box-panel-size-position.js), Time (START + DURATION), and Mask (via the shared BoxMaskPanel —
+// box-panel-mask.js, added 2026-08-01 mask-visibility-ui, replacing the timeline's per-lane MASK
+// accordion) tab panes via UI.tabBar (Box default), with Delete as an always-visible footer. Exposes
 // window.ImageBoxPanel.render(selectedId). One image box selected at a time; multiple boxes
 // live in project.image_boxes (see app/models.py's ImageBoxLayer). Mirrors panel-video-box.js;
 // createImageBox() is also exposed as window.ImageBoxPanel.createImageBox so the MEDIA panel's
@@ -14,14 +15,17 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
   const IMAGE_BOX_HEADER_ICON = UI.icon("image", { size: 18 });
   const IMAGE_BOX_TAB_ICON_BOX = UI.icon("square-dashed", { size: 18 });
   const IMAGE_BOX_TAB_ICON_TIME = UI.icon("timer", { size: 18 });
+  const IMAGE_BOX_TAB_ICON_MASK = UI.icon("venetian-mask", { size: 18 });
 
   const IMAGE_BOX_TABS = [
     { value: "box", icon: IMAGE_BOX_TAB_ICON_BOX, label: "Box" },
     { value: "time", icon: IMAGE_BOX_TAB_ICON_TIME, label: "Time" },
+    { value: "mask", icon: IMAGE_BOX_TAB_ICON_MASK, label: "Mask" },
   ];
   const imageBoxTabPanes = {
     box: document.getElementById("image-box-box-body"),
     time: document.getElementById("image-box-time-body"),
+    mask: document.getElementById("image-box-mask-body"),
   };
   let activeImageBoxTab = "box";
   function showImageBoxTab(value) {
@@ -101,6 +105,16 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
         ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
       },
       getNaturalSize: () => probeImageAspect(box.file_path),
+    });
+
+    BoxMaskPanel.render(document.getElementById("image-box-mask-body"), box, {
+      getWindow: () => ({ start: box.start, duration: box.duration }),
+      onChange: async () => {
+        await saveProject();
+        renderTimeline();
+        ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+        renderDetail(box);
+      },
     });
 
     document.getElementById("image-box-delete").onclick = async () => {

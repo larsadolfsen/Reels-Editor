@@ -1,5 +1,40 @@
-/* Small card grid for the timeline's "+ Add mask" flow (UI.maskTypeGallery). Depends on
-   tokens.css for its border/background/accent colors. */
+/* Small card grid for the "+ Add mask" flow (UI.maskTypeGallery), used by the VIDEO BOX/IMAGE
+   BOX panel's Mask tab (static/box-panel-mask.js). Depends on tokens.css for its
+   border/background/accent colors. */
+.mask-add-gallery-wrap {
+  display: flex;
+  align-items: center;
+}
+
+/* The assigned-mask row (static/box-panel-mask.js): icon+label on the left, a remove button on
+   the right, built on the shared .list-row card recipe (list-row.css, applied via UI.listRow). */
+.mask-assigned-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.mask-assigned-row-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.mask-assigned-row-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: var(--space-1);
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+.mask-assigned-row-remove:hover {
+  color: var(--danger);
+}
+
 .mask-type-gallery {
   display: flex;
   gap: var(--space-2);
