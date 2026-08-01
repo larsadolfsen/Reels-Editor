@@ -82,8 +82,15 @@ window.ShapePanel = window.ShapePanel || {};
 
     document.getElementById("shape-delete").onclick = async () => {
       project.shapes = project.shapes.filter((s) => s.id !== shape.id);
+      // If this shape was acting as a mask for a video/image box, clear that reference so the
+      // accordion collapses back to "+ Add mask" instead of pointing at a deleted shape.
+      (project.video_boxes || []).forEach((v) => { if (v.mask_shape_id === shape.id) v.mask_shape_id = null; });
+      (project.image_boxes || []).forEach((b) => { if (b.mask_shape_id === shape.id) b.mask_shape_id = null; });
+      VideoBoxPreview.setActiveMaskShapeId(null);
+      ImageBoxPreview.setActiveMaskShapeId(null);
       await saveProject();
       repaintStage();
+      renderTimeline();
       openFilesPanel();
     };
 
@@ -140,6 +147,10 @@ window.ShapePanel = window.ShapePanel || {};
     if (!shape) {
       ShapePreview.setSelectedShape(null, null);
       lastSelectedId = null;
+      VideoBoxPreview.setActiveMaskShapeId(null);
+      ImageBoxPreview.setActiveMaskShapeId(null);
+      VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+      ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
       return;
     }
     // Selecting a shape that's outside its own time window seeks the playhead to its start so
@@ -151,6 +162,12 @@ window.ShapePanel = window.ShapePanel || {};
         renderTimeline();
       }
     }
+    const masksVideoBox = (project.video_boxes || []).some((v) => v.mask_shape_id === shape.id);
+    const masksImageBox = (project.image_boxes || []).some((b) => b.mask_shape_id === shape.id);
+    VideoBoxPreview.setActiveMaskShapeId(masksVideoBox ? shape.id : null);
+    ImageBoxPreview.setActiveMaskShapeId(masksImageBox ? shape.id : null);
+    VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
+    ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
     lastSelectedId = shape.id;
     renderDetail(shape);
   }

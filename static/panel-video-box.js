@@ -106,6 +106,9 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
     });
 
     document.getElementById("video-box-delete").onclick = async () => {
+      if (box.mask_shape_id) {
+        project.shapes = project.shapes.filter((s) => s.id !== box.mask_shape_id);
+      }
       project.video_boxes = project.video_boxes.filter((b) => b.id !== box.id);
       await saveProject();
       VideoBoxPreview.render(project.video_boxes, Preview.currentTimelineTime());
