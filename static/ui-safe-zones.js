@@ -4,17 +4,21 @@
 // HORIZONTAL_MARGIN (and, in turn, TEXT_IMAGE_SAFE_RECT/CAPTION_SAFE_RECT) from — but as of the
 // safe-zone-darkening-alignment feature it's no longer iterated to render 4 separate shaded/
 // labeled bands. UI.safeZones now darkens everything outside ONE context-aware safe rectangle
-// instead (see the `kind` param below), via one flat-tinted `.safe-zone-dim` div rather than 4
-// separate `.safe-zone-bar-*` divs — the cutout is punched out via a CSS `mask-image` (a
-// "full-canvas white rect + a black hole" luminance-mask data URI, the same technique
-// `static/shape-mask.js`'s `cssInverseMaskImage` uses for the video/image-box rubylith mask-edit
-// overlay — built locally here rather than reusing that file, since it isn't `require()`-safe
-// under `node --test`: it assigns `window.ShapeMask` unconditionally with no
-// `typeof window !== "undefined"` guard) instead of 4 tiled scrim rectangles. (Briefly given a
-// diagonal-striped fill the same day as this rewrite, safe-zone-scrim-stripes feature — reverted
-// the day after, safe-zone-revert-stripes feature, back to the flat tint per feedback; the
-// single-div-plus-mask architecture itself was kept either way, it's simpler than 4 tiled bars
-// regardless of fill style.)
+// instead (see the `kind` param below), via one diagonally-striped `.safe-zone-dim` div rather
+// than 4 separate `.safe-zone-bar-*` divs — a single continuous element avoids the stripe pattern
+// seaming at bar boundaries (each bar would otherwise restart the diagonal at its own origin). The
+// cutout is punched out via a CSS `mask-image`: a single `<path fill-rule="evenodd">` tracing the
+// full canvas then the hole rect, so the hole is genuinely unpainted (alpha 0) rather than merely
+// drawn in a different *color* — CSS `mask-image` on a bare image source keys off the ALPHA
+// channel, not luminance (that's only the default for a referenced `<mask>` element), so an
+// earlier two-`<rect>` version of this mask (opaque white rect + opaque black rect on top) had
+// alpha=255 in the "hole" too — same opacity as the surrounding fill — and produced no cutout at
+// all in any browser, regardless of whether the fill was striped or flat (the bug predates and
+// outlived the striped-vs-flat back-and-forth below — fixed here, safe-zone-mask-fix feature).
+// (The div's fill was briefly reverted from striped to flat the day the mask bug shipped,
+// safe-zone-revert-stripes feature, on a mistaken read of user feedback that was actually about
+// this same missing-cutout bug, not the stripe pattern itself; restored to striped here now that
+// the real bug is fixed.)
 const uiSafeZonesGlobal = typeof window !== "undefined" ? window : global;
 uiSafeZonesGlobal.UI = uiSafeZonesGlobal.UI || {};
 
@@ -49,13 +53,16 @@ function rectToPercent(rect) {
   };
 }
 
-// A luminance mask data URI on a 100x100 canvas (matching our percent-of-canvas coordinate
-// system exactly): a full white rect (visible everywhere) with a black rect punched out over
-// `r` (hidden there — the safe rect's own hole).
+// An alpha mask data URI on a 100x100 canvas (matching our percent-of-canvas coordinate system
+// exactly): ONE evenodd-filled path tracing the full canvas then `r`'s rect — the hole is genuinely
+// unpainted there (alpha 0, verified via canvas getImageData: a two-<rect> version — an opaque
+// white rect followed by an opaque black rect drawn on top — left alpha=255 in the "hole" too,
+// since CSS mask-image keys off the ALPHA channel for a bare image source, not luminance; only a
+// referenced <mask> element defaults to luminance). Do not go back to two separate <rect>s here.
 function maskDataUri(r) {
+  const path = `M0,0 H100 V100 H0 Z M${r.left},${r.top} H${r.right} V${r.bottom} H${r.left} Z`;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">` +
-    `<rect x="0" y="0" width="100" height="100" fill="#fff"/>` +
-    `<rect x="${r.left}" y="${r.top}" width="${r.right - r.left}" height="${r.bottom - r.top}" fill="#000"/>` +
+    `<path fill-rule="evenodd" fill="#fff" d="${path}"/>` +
     `</svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }

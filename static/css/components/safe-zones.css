@@ -1,19 +1,19 @@
 /* Safe-zone darkening guide: dims everything outside a "safe rectangle" — the centered
    text/image area by default, or the narrower caption-only area while a caption is selected —
-   plus a "SAFE ZONE" label (shield icon + text) just below the top edge of the stage. Toggled
-   from the timeline toolbar. */
+   with a diagonal-striped scrim, plus a "SAFE ZONE" label (shield icon + text) just below the
+   top edge of the stage. Toggled from the timeline toolbar. */
 /* Exposes #safe-zones (+ .safe-zone-dim/.safe-zone-label). #safe-zones-toggle lives in
    #timeline-toolbar and is built via UI.button (button.css's .button[aria-pressed="true"]) for
-   its pressed state. Depends on tokens.css (--safe-zone-scrim, --safe-zone), #stage (position:
-   relative, in stage.css). .safe-zone-dim's mask-image/mask-size (the rectangular hole cut for
-   the active safe rect) is set by a generated <style> element (static/ui-safe-zones.js's
-   ensureStyleElement, via its own inline maskDataUri builder) computed from the active
-   SafeZoneGeometry rect, rather than inline styles — this file only keeps the shared visual (the
-   flat fill). One continuous div rather than 4 separate bars (2026-08-01, safe-zone-darkening-
-   alignment feature) since a mask-punched single div is simpler than tiling 4 positioned bars
-   around the cutout; briefly given a diagonal-striped fill (safe-zone-scrim-stripes feature) the
-   same day, reverted the day after (safe-zone-revert-stripes feature) back to the flat tint below
-   per feedback that the striped look didn't read as well as the plain scrim. */
+   its pressed state. Depends on tokens.css (--safe-zone-scrim, --safe-zone-scrim-alt,
+   --safe-zone), #stage (position: relative, in stage.css). .safe-zone-dim's mask-image/mask-size
+   (the rectangular hole cut for the active safe rect) is set by a generated <style> element
+   (static/ui-safe-zones.js's ensureStyleElement, via its own inline maskDataUri builder — a single
+   evenodd <path>, not two separately-filled <rect>s, since the latter left the "hole" fully
+   opaque under CSS mask-image's alpha-channel semantics; see that file's comment for the full
+   story) computed from the active SafeZoneGeometry rect, rather than inline styles — this file
+   only keeps the shared visual (the striped fill). One continuous div rather than 4 separate bars
+   (2026-08-01, safe-zone-darkening-alignment feature) so the diagonal stripe pattern doesn't seam
+   at bar boundaries. */
 #safe-zones {
   position: absolute;
   inset: 0;
@@ -25,7 +25,9 @@
 .safe-zone-dim {
   position: absolute;
   inset: 0;
-  background: var(--safe-zone-scrim);
+  background: repeating-linear-gradient(135deg,
+    var(--safe-zone-scrim) 0px, var(--safe-zone-scrim) 8px,
+    var(--safe-zone-scrim-alt) 8px, var(--safe-zone-scrim-alt) 16px);
 }
 
 .safe-zone-label {
