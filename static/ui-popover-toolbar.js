@@ -36,6 +36,16 @@
 // ancestor's own clip edge, and never cleared the flip before remeasuring, so it alternated
 // between correct and clipped on repeated hovers of the same word). `ui-popover-toolbar-below`
 // flips the chip to render below the anchor instead when there isn't room above.
+//
+// The same scrolling ancestor also clips horizontally, and not just for wide anchors: per the
+// CSS overflow spec, an ancestor with only `overflow-y: auto` set (no `overflow-x` declared at
+// all) still computes `overflow-x` to `auto` too — visible-paired-with-non-visible is coerced to
+// auto on both axes — so a word near the ancestor's left/right edge clips the chip even though
+// nothing in that ancestor's own CSS looks like it should (transcript-sidebar.css is exactly this
+// case, found via the "Toolbar is partly hidden" bug report, 2026-08-02). Since the chip is
+// centered under the click point (clamped only to the anchor's own width, not the ancestor's),
+// it's shifted back in by `chip left/right vs. ancestor left/right` after the vertical flip check,
+// reusing the same clipAncestor/6px-margin convention.
 function uiPopoverToolbarScrollAncestor(el) {
   let node = el.parentElement;
   while (node && node !== document.body) {
@@ -88,6 +98,20 @@ uiPopoverToolbarGlobal.UI.popoverToolbar = function popoverToolbar(anchorEl, but
         const clipAncestor = uiPopoverToolbarScrollAncestor(anchorEl);
         const limit = (clipAncestor ? clipAncestor.getBoundingClientRect().top : 0) + 6;
         toolbar.classList.toggle("ui-popover-toolbar-below", toolbar.getBoundingClientRect().top < limit);
+
+        if (clipAncestor) {
+          const margin = 6;
+          const ancestorRect = clipAncestor.getBoundingClientRect();
+          const toolbarRect = toolbar.getBoundingClientRect();
+          let shift = 0;
+          if (toolbarRect.left < ancestorRect.left + margin) {
+            shift = (ancestorRect.left + margin) - toolbarRect.left;
+          } else if (toolbarRect.right > ancestorRect.right - margin) {
+            shift = (ancestorRect.right - margin) - toolbarRect.right;
+          }
+          if (shift !== 0) toolbar.style.left = `${lastX + shift}px`;
+        }
+
         toolbar.classList.add("ui-popover-toolbar-visible");
       }, UI_POPOVER_TOOLBAR_HOVER_DELAY_MS);
     }
