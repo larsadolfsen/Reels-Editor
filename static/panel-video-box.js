@@ -72,6 +72,12 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
     const { w, h } = await probeVideoAspect(mediaItem.file_path);
     const width = 1080;
     const height = Math.round(width * h / w);
+    // See panel-image-box.js's createImageBox for why: z_index -1 for every new box tied with
+    // any existing box, and the Layers panel's tie-break (first-created wins) disagreed with
+    // the browser's actual paint tie-break (last-inserted wins), silently hiding whichever box
+    // lost. Placing each new box strictly above every existing overlay layer removes the tie.
+    const frontEntries = OverlayLayers.mergedEntries(project);
+    const z_index = (frontEntries.length ? frontEntries[0].item.z_index : -1) + 1;
     const box = {
       id: crypto.randomUUID().replaceAll("-", ""),
       media_id: mediaItem.id,
@@ -83,7 +89,7 @@ window.VideoBoxPanel = window.VideoBoxPanel || {};
       y: 0,
       width,
       height,
-      z_index: -1,
+      z_index,
     };
     project.video_boxes.push(box);
     return box;

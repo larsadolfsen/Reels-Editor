@@ -69,6 +69,14 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
     const { w, h } = await probeImageAspect(mediaItem.file_path);
     const width = 1080;
     const height = Math.round(width * h / w);
+    // z_index -1 for every new box (the old constant default) meant a second box tied with
+    // the first: OverlayLayers.mergedEntries's stable sort ranked the first-created box as
+    // frontmost, while equal-CSS-z-index elements actually paint in DOM/insertion order (the
+    // *second*-created box wins on screen) — an inverted tie-break that silently hid whichever
+    // box lost that coin flip. Placing each new box strictly above every existing overlay layer
+    // makes stacking deterministic and puts the box you just added where you can see it.
+    const frontEntries = OverlayLayers.mergedEntries(project);
+    const z_index = (frontEntries.length ? frontEntries[0].item.z_index : -1) + 1;
     const box = {
       id: crypto.randomUUID().replaceAll("-", ""),
       media_id: mediaItem.id,
@@ -79,7 +87,7 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
       y: 0,
       width,
       height,
-      z_index: -1,
+      z_index,
     };
     project.image_boxes.push(box);
     return box;
@@ -103,10 +111,20 @@ window.ImageBoxPanel = window.ImageBoxPanel || {};
   function renderDetail(box) {
     UI.numberField(document.getElementById("image-box-start-field"),
       { label: "START", unit: "SEC", value: box.start, step: 0.1, min: 0, span: 4,
-        onChange: async (v) => { box.start = v; await saveProject(); renderTimeline(); } });
+        onChange: async (v) => {
+          box.start = v;
+          await saveProject();
+          renderTimeline();
+          ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+        } });
     UI.numberField(document.getElementById("image-box-duration-field"),
       { label: "DURATION", unit: "SEC", value: box.duration, step: 0.1, min: 0.1, span: 4,
-        onChange: async (v) => { box.duration = v; await saveProject(); renderTimeline(); } });
+        onChange: async (v) => {
+          box.duration = v;
+          await saveProject();
+          renderTimeline();
+          ImageBoxPreview.render(project.image_boxes, Preview.currentTimelineTime());
+        } });
 
     BoxSizePositionPanel.render(document.getElementById("image-box-size-position"), box, {
       onChange: async () => {
