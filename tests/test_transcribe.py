@@ -3,7 +3,8 @@
 import pytest
 from unittest.mock import patch
 from types import SimpleNamespace as NS
-from app.transcribe import words_from_segments, transcribe_file
+import app.transcribe as transcribe_module
+from app.transcribe import words_from_segments, transcribe_file, _fall_back_to_cpu
 
 def test_words_from_segments_flattens_and_orders():
     segs = [NS(words=[NS(word=" Hello", start=0.1, end=0.4), NS(word=" world", start=0.4, end=0.9)]),
@@ -61,6 +62,17 @@ def test_transcribe_file_falls_back_to_cpu_on_cuda_runtime_error():
     assert result == []
     assert len(calls) == 2
     fallback_mock.assert_called_once()
+
+def test_fall_back_to_cpu_switches_model_kwargs_and_drops_cached_model():
+    transcribe_module._model = object()  # pretend a model is already cached
+    transcribe_module._model_kwargs = {"device": "cuda", "compute_type": "float16"}
+    try:
+        _fall_back_to_cpu()
+        assert transcribe_module._model_kwargs == {"device": "cpu", "compute_type": "int8"}
+        assert transcribe_module._model is None
+    finally:
+        transcribe_module._model = None
+        transcribe_module._model_kwargs = {"device": "cuda", "compute_type": "float16"}
 
 def test_transcribe_file_raises_if_cpu_fallback_also_fails():
     def always_fails(path, word_timestamps, language, vad_filter, condition_on_previous_text):

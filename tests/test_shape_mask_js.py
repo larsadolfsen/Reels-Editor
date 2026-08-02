@@ -1,6 +1,5 @@
 # Pins static/shape-mask.js's localRect to app.shape_mask.local_rect over a shared case table,
-# by running the browser file under Node with a minimal `window` shim (same technique as
-# tests/test_box_mask_js.py).
+# by running the browser file under Node with a minimal `window` shim.
 import json
 import shutil
 import subprocess

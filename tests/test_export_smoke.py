@@ -1,12 +1,13 @@
 # Phase 6 smoke test: exercises app.main.export_project with every layer type combined
 # (clips including a video-only one, a formatted text block with box, captions with
-# karaoke highlight, a video box) and asserts the whole pipeline runs without raising.
+# karaoke highlight, a video box, an image box, and a shape masking the video box) and
+# asserts the whole pipeline runs without raising.
 from unittest.mock import patch
 from app import export_jobs
 from app.main import export_project
 from app.models import (
     Project, MediaItem, ClipLayer, TextPreset, TextBlockLayer, FormatRun,
-    CaptionTrack, CaptionWord, VideoBoxLayer, ShapeLayer,
+    CaptionTrack, CaptionWord, VideoBoxLayer, ImageBoxLayer, ShapeLayer,
 )
 
 def test_export_smoke_all_layer_types_combined(tmp_path, monkeypatch):
@@ -15,12 +16,15 @@ def test_export_smoke_all_layer_types_combined(tmp_path, monkeypatch):
 
     text_preset = TextPreset(name="Heading", box_background=True, box_border_width=4, highlight=False)
     caption_preset = TextPreset(name="Captions", highlight_mode="progressive_fill")
+    mask_shape = ShapeLayer(x=50, y=50, width=300, height=400, start=0, duration=2,
+                             fill_color="#00FFFF", opacity=1.0, corner_radius=20, z_index=-3)
 
     p = Project(
         name="smoke",
         media_library=[
             MediaItem(id="m0", file_path="a.mp4", duration=2, has_audio=True),
             MediaItem(id="m1", file_path="b.mp4", duration=2, has_audio=False),
+            MediaItem(id="m2", file_path="c.jpg", duration=0, has_audio=False, kind="image"),
         ],
         clips=[
             ClipLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=2, order=0),
@@ -42,11 +46,17 @@ def test_export_smoke_all_layer_types_combined(tmp_path, monkeypatch):
         ),
         video_boxes=[
             VideoBoxLayer(media_id="m0", file_path="a.mp4", in_point=0, out_point=1,
-                          start=0.5, x=50, y=50, width=300, height=400, z_index=-1),
+                          start=0.5, x=50, y=50, width=300, height=400, z_index=-1,
+                          mask_shape_id=mask_shape.id, mask_enabled=True),
+        ],
+        image_boxes=[
+            ImageBoxLayer(media_id="m2", file_path="c.jpg", start=0.2, duration=1.5,
+                          x=600, y=800, width=200, height=200, z_index=-2),
         ],
         shapes=[
             ShapeLayer(x=20, y=30, width=200, height=150, start=0, duration=2,
-                       fill_color="#FF00FF", opacity=0.8, corner_radius=12, z_index=-2),
+                       fill_color="#FF00FF", opacity=0.8, corner_radius=12, z_index=-4),
+            mask_shape,
         ],
     )
 
@@ -63,6 +73,14 @@ def test_export_smoke_all_layer_types_combined(tmp_path, monkeypatch):
     assert "-filter_complex" in cmd
     assert cmd[-1].endswith(".mp4")
 
+    # Only the standalone shape gets its own top-level band; the mask shape is rasterized
+    # as the video box's mask sidecar instead (banded_layers excludes mask-source shapes).
     shape_pngs = list(tmp_path.glob("exports/*-band*-shape.png"))
     assert len(shape_pngs) == 1
     assert "-i" in cmd and str(shape_pngs[0]) in cmd
+
+    mask_pngs = list(tmp_path.glob("exports/*-band*-mask.png"))
+    assert len(mask_pngs) == 1
+    assert str(mask_pngs[0]) in cmd
+
+    assert "c.jpg" in cmd  # image box's source file is an ffmpeg input

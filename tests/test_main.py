@@ -443,6 +443,20 @@ def test_export_writes_no_mask_png_when_mask_disabled(tmp_path, monkeypatch):
     fc = cmd[cmd.index("-filter_complex") + 1]
     assert "alphamerge" not in fc
 
+def test_export_writes_no_mask_png_for_a_dangling_mask_shape_id(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.main.DATA_DIR", tmp_path)
+    monkeypatch.setattr("app.export_jobs._executor", lambda fn: fn())
+    box = VideoBoxLayer(media_id="m1", file_path="pip.mp4", out_point=2.0, width=300, height=500,
+                        mask_shape_id="does-not-exist", mask_enabled=True)
+    p = Project(name="r", video_boxes=[box], shapes=[])  # the referenced shape was deleted elsewhere
+    with patch("app.main.store.load_project", return_value=p), \
+         patch("app.main.media.run_export") as run_export:
+        export_project(p.id)  # must not raise
+    assert list((tmp_path / "exports").glob("*-mask.png")) == []
+    cmd = run_export.call_args[0][0]
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "alphamerge" not in fc
+
 def test_export_masked_video_box_rasterizes_mask_png_from_its_shape(tmp_path, monkeypatch):
     from fastapi.testclient import TestClient
     from PIL import Image
