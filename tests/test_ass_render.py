@@ -287,7 +287,9 @@ def test_karaoke_dialogue_joins_lines_with_ass_hard_break():
     from app.ass_render import _karaoke_dialogue
     pr = TextPreset(name="Cap")
     page = [[w("Hello", 0.0, 0.5)], [w("world", 0.5, 1.0)]]
-    line = _karaoke_dialogue(page, pr)
+    lines = _karaoke_dialogue(page, pr)
+    assert len(lines) == 1  # no shadow configured -> no shadow line
+    line = lines[0]
     assert "\\N" in line
     assert "Hello" in line and "world" in line
     assert line.startswith("Dialogue: 0,0:00:00.00,0:00:01.00")
@@ -514,6 +516,20 @@ def test_karaoke_dialogue_shadow_on_emits_tags():
     out = render_caption_ass(p, pr)
     line = next(l for l in out.splitlines() if l.startswith("Dialogue:"))
     assert "\\xshad2" in line and "\\yshad5" in line and "\\blur3" in line
+
+def test_karaoke_dialogue_shadow_on_shadow_line_precedes_main_and_main_has_no_blur():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Cap", highlight_mode="progressive_fill",
+                     shadow=True, shadow_color="#00FFFF", shadow_offset_x=2, shadow_offset_y=5, shadow_blur=3)
+    p = Project(name="r", captions=CaptionTrack(words=[w("hi", 0.0, 0.5)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    dialogue_lines = [l for l in out.splitlines() if l.startswith("Dialogue:")]
+    assert len(dialogue_lines) == 2
+    shadow_line, main_line = dialogue_lines
+    assert shadow_line.split(",")[4] == "shadow"
+    assert main_line.split(",")[4] == ""
+    assert "\\blur3" in shadow_line
+    assert "\\blur" not in main_line and "\\4c" not in main_line
 
 def test_current_word_dialogue_shadow_off_emits_no_tags():
     from app.ass_render import render_caption_ass

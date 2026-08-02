@@ -295,15 +295,20 @@ def _caption_style(p: TextPreset, weight: int) -> str:
             f"{hex_to_ass(p.outline_color)},&H00000000,"
             f"0,{italic},{underline},0,100,100,0,0,1,{p.outline_px},0,{alignment},0,0,0,1")
 
-def _karaoke_dialogue(page: list[list[CaptionWord]], p: TextPreset) -> str:
-    fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
+def _karaoke_dialogue(page: list[list[CaptionWord]], p: TextPreset) -> list[str]:
     line_bodies = []
     for line in page:
         body = "".join(f"{{\\k{max(1, round((w.t_end - w.t_start) * 100))}}}{w.text} " for w in line).rstrip()
         line_bodies.append(body)
     body = "\\N".join(line_bodies)
     start, end = page[0][0].t_start, page[-1][-1].t_end
-    return f"Dialogue: 0,{ass_time(start)},{ass_time(end)},{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{body}"
+    lines = []
+    if p.shadow:
+        shadow_fx = f"\\pos({p.x},{p.y})" + _shadow_only_fx(p)
+        lines.append(f"Dialogue: 0,{ass_time(start)},{ass_time(end)},{CAPTION_STYLE_NAME},shadow,0,0,0,,{{{shadow_fx}}}{body}")
+    fx = f"\\pos({p.x},{p.y})"
+    lines.append(f"Dialogue: 0,{ass_time(start)},{ass_time(end)},{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{body}")
+    return lines
 
 def _current_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> list[str]:
     fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
@@ -449,7 +454,7 @@ def render_caption_ass(project: Project, preset: TextPreset) -> str:
         if preset.highlight_mode == "current_word":
             event_lines.extend(_current_word_dialogues(page, preset))
         else:
-            event_lines.append(_karaoke_dialogue(page, preset))
+            event_lines.extend(_karaoke_dialogue(page, preset))
     events = ("\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
               + "\n".join(event_lines))
     return header + styles + events + "\n"
