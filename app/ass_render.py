@@ -227,16 +227,32 @@ def _shadow_tag(p: TextPreset) -> str:
     color = _ass_override_color(p.shadow_color)
     return f"\\4c{color}\\4a00\\xshad{p.shadow_offset_x}\\yshad{p.shadow_offset_y}\\blur{p.shadow_blur}"
 
-def _block_dialogue(b, p: TextPreset, weight: int | None = None) -> str:
-    fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
+def _shadow_only_fx(p: TextPreset) -> str:
+    """Override tags for a shadow-ONLY render: fill and outline forced fully transparent so only
+    the offset, blurred back-copy (the shadow) is visible. Isolates \\blur to this layer, since
+    libass's \\blur otherwise softens the whole composited glyph (fill+outline+shadow) when
+    applied in the same override block as the main text — the cause of "foggy" export letters
+    when a preset has Shadow on with BLUR > 0, even though the CSS preview only blurs the
+    shadow layer. Caller must guard on p.shadow being true before emitting a line with this."""
+    return "\\1a&HFF&\\3a&HFF&" + _shadow_tag(p)
+
+def _block_dialogue(b, p: TextPreset, weight: int | None = None) -> list[str]:
+    pos_fx = f"\\pos({p.x},{p.y})"
+    entrance_fx = ""
     if p.entrance == "fade_pop":
-        fx += "\\fad(200,0)\\fscx80\\fscy80\\t(0,200,\\fscx100\\fscy100)"
+        entrance_fx = "\\fad(200,0)\\fscx80\\fscy80\\t(0,200,\\fscx100\\fscy100)"
     text, _, _, _ = _wrapped_lines_and_size(b, p, weight)
     if b.formatting_runs:
         body = _tagged_text(b, p, text)
     else:
         body = text.replace("\n", "\\N")
-    return f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]},,0,0,0,,{{{fx}}}{body}"
+    lines = []
+    if p.shadow:
+        shadow_fx = pos_fx + _shadow_only_fx(p) + entrance_fx
+        lines.append(f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]},shadow,0,0,0,,{{{shadow_fx}}}{body}")
+    fx = pos_fx + entrance_fx
+    lines.append(f"Dialogue: 0,{ass_time(b.start)},{ass_time(b.end)},P{p.id[:8]},,0,0,0,,{{{fx}}}{body}")
+    return lines
 
 def render_ass(project: Project, presets: dict[str, TextPreset], text_blocks: list | None = None) -> str:
     blocks = project.text_blocks if text_blocks is None else text_blocks
@@ -259,7 +275,7 @@ def render_ass(project: Project, presets: dict[str, TextPreset], text_blocks: li
         if box_line:
             event_lines.append(box_line)
         event_lines.extend(_highlight_dialogues(b, p, weight))
-        event_lines.append(_block_dialogue(b, p, weight))
+        event_lines.extend(_block_dialogue(b, p, weight))
     events = ("\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
               + "\n".join(event_lines))
     return header + styles + events + "\n"

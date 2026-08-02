@@ -54,6 +54,25 @@ def test_block_dialogue_shadow_on_emits_offset_blur_and_color_tags():
     assert "\\4c&HFF00FF&" in line  # #FF00FF -> b=FF,g=00,r=FF, same &HBBGGRR& shape _ass_override_color already uses elsewhere in this file
     assert "\\4a00" in line
 
+def test_block_dialogue_shadow_on_shadow_line_precedes_main_and_main_has_no_blur():
+    pr = TextPreset(name="Pop", shadow=True, shadow_color="#FF00FF",
+                     shadow_offset_x=6, shadow_offset_y=-3, shadow_blur=8)
+    p = Project(name="r", text_blocks=[TextBlockLayer(heading="H", preset_id=pr.id, start=0, end=2)])
+    out = render_ass(p, {pr.id: pr})
+    dialogue_lines = [l for l in out.splitlines() if l.startswith("Dialogue:") and "H" in l]
+    assert len(dialogue_lines) == 2
+    shadow_line, main_line = dialogue_lines
+    # Name field (5th comma-separated field) marks the shadow line
+    assert shadow_line.split(",")[4] == "shadow"
+    assert main_line.split(",")[4] == ""
+    # Shadow line hides fill/outline so only the blurred shadow copy is visible
+    assert "\\1a&HFF&\\3a&HFF&" in shadow_line
+    assert "\\blur8" in shadow_line
+    # Main line must NOT carry any shadow/blur tags — this is the bug fix
+    assert "\\blur" not in main_line
+    assert "\\4c" not in main_line
+    assert "\\xshad" not in main_line
+
 def test_style_line_bold_column_is_always_zero_regardless_of_weight():
     # Bold-ness now lives entirely in which font face Fontname selects, not in ASS's
     # synthetic-bold flag — setting both would double-bold a 700-weight face.
