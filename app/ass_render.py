@@ -12,6 +12,11 @@ CAPTION_PAD_TOP_PX = 4
 CAPTION_PAD_BOTTOM_PX = 3
 LINE_HEIGHT = 1.15
 HIGHLIGHT_PAD_EM = 0.2    # equal padding on all 4 sides of a per-line/per-word highlight rect
+MIN_LINE_GAP_EM = 0.05    # minimum vertical gap (fraction of size_px) reserved between two adjacent
+                          # lines' highlight rects on the same page — HIGHLIGHT_PAD_EM's vertical
+                          # padding is clamped so it can never eat into this, otherwise a multi-line
+                          # page's per-line rects overlap and merge into one solid block (the rects
+                          # are stacked LINE_HEIGHT apart, which has less slack than 2*HIGHLIGHT_PAD_EM)
 
 CAPTION_DEFAULT_BOX_WIDTH = 900    # px on the 1080x1920 canvas — used when the preset predates fixed-size captions
 CAPTION_DEFAULT_BOX_HEIGHT = 350   # px
@@ -376,7 +381,12 @@ def _caption_highlight_dialogues(page: list[list[CaptionWord]], p: TextPreset) -
     tight to the glyph height (size_px), vertically centered in the line's pitch slot. Independent
     of highlight_mode's per-word rendering (current_word/progressive_fill) and of the separate
     spotlight_highlight-gated active-word rect. Spans the whole page's active window (first word's
-    t_start to last word's t_end in this page), same as the page's own text dialogue."""
+    t_start to last word's t_end in this page), same as the page's own text dialogue. Unlike
+    _active_word_highlight_dialogues (only ever one word visible at a time, so its rect can never
+    collide with a sibling), every line's rect here is visible simultaneously — rect_height is
+    clamped to leave MIN_LINE_GAP_EM of vertical breathing room, or a 2+ line page's rects would
+    overlap and merge into one solid block (HIGHLIGHT_PAD_EM's full vertical padding needs more
+    slack than LINE_HEIGHT leaves between stacked lines)."""
     if not p.highlight or not page:
         return []
     weight = _resolved_weight(p)
@@ -384,7 +394,7 @@ def _caption_highlight_dialogues(page: list[list[CaptionWord]], p: TextPreset) -
     fill = _ass_override_color(p.highlight_color)
     pad = HIGHLIGHT_PAD_EM * p.size_px
     line_pitch = p.size_px * LINE_HEIGHT
-    rect_height = p.size_px + 2 * pad
+    rect_height = min(p.size_px + 2 * pad, line_pitch - MIN_LINE_GAP_EM * p.size_px)
     flat = [word for line in page for word in line]
     start, end = flat[0].t_start, flat[-1].t_end
     out = []

@@ -675,6 +675,24 @@ def test_caption_highlight_dialogues_rect_width_hugs_line_not_fixed_box():
     expected_width = _n(bare_width + 2 * pad)
     assert f"m 0 0 l {expected_width} 0" in line  # tight to "Hi", nowhere near the 900px fixed box width
 
+def test_caption_highlight_dialogues_lines_do_not_overlap_vertically():
+    # Bug: with the default HIGHLIGHT_PAD_EM (0.2) padding on all 4 sides, an unclamped rect_height
+    # (size_px * 1.4) exceeds the line_pitch (size_px * LINE_HEIGHT == 1.15) two adjacent lines are
+    # stacked at, so a 2-line page's highlight rects overlap and merge into one solid block in the
+    # export — "too much padding" reported from real exports of multi-line highlighted captions.
+    from app.ass_render import _caption_highlight_dialogues
+    import re
+    pr = TextPreset(name="Cap", x=0, y=0, size_px=96, highlight=True, highlight_color="#00FF00",
+                     align="left", highlight_border_radius=0)
+    page = [[w("Hello", 1.0, 1.5)], [w("world", 1.5, 2.2)]]
+    lines = _caption_highlight_dialogues(page, pr)
+    assert len(lines) == 2
+    tops, heights = [], []
+    for line in lines:
+        tops.append(int(re.search(r"\\pos\(-?\d+,(-?\d+)\)", line).group(1)))
+        heights.append(float(re.search(r"l 0 ([\d.]+)\{", line).group(1)))
+    assert tops[0] + heights[0] <= tops[1]  # line 0's rect must end before line 1's rect begins
+
 def test_render_caption_ass_includes_highlight_rect_before_karaoke_dialogue():
     from app.ass_render import render_caption_ass
     pr = TextPreset(name="Cap", highlight=True, highlight_color="#00FF00", highlight_mode="progressive_fill")
