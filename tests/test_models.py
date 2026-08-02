@@ -329,23 +329,23 @@ def test_project_old_saved_json_without_filler_words_loads_with_default():
     loaded = Project.model_validate_json(old_json)
     assert loaded.filler_words == DEFAULT_FILLER_WORDS
 
-def test_caption_track_language_defaults_empty():
+def test_caption_track_language_defaults_danish():
     from app.models import CaptionTrack
     t = CaptionTrack()
-    assert t.language == ""
+    assert t.language == "da"
 
 def test_caption_track_language_round_trip():
     from app.models import CaptionTrack
-    t = CaptionTrack(language="da")
+    t = CaptionTrack(language="en")
     loaded = CaptionTrack.model_validate_json(t.model_dump_json())
-    assert loaded.language == "da"
+    assert loaded.language == "en"
 
-def test_caption_track_old_saved_json_without_language_loads_as_auto():
+def test_caption_track_old_saved_json_without_language_loads_as_danish():
     from app.models import CaptionTrack
     import json
     old_json = json.dumps({"id": "x", "words": [], "z_index": 0, "preset_id": "p1"})
     loaded = CaptionTrack.model_validate_json(old_json)
-    assert loaded.language == ""
+    assert loaded.language == "da"
 
 def test_image_box_layer_defaults_and_round_trip():
     box = ImageBoxLayer(media_id="m1", file_path="pic.jpg", height=1920)

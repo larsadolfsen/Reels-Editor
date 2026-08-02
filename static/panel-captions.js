@@ -55,7 +55,7 @@ function ensureCaptionTrack() {
   if (!track) {
     track = {
       id: crypto.randomUUID().replaceAll("-", ""), words: [], z_index: 0,
-      preset_id: crypto.randomUUID().replaceAll("-", ""), language: "",
+      preset_id: crypto.randomUUID().replaceAll("-", ""), language: "da",
     };
     project.captions = track;
   }

@@ -194,7 +194,7 @@ class CaptionTrack(BaseModel):
     words: list[CaptionWord] = []
     z_index: int = 0
     preset_id: str = Field(default_factory=new_id)   # points at a TextPreset, same pattern as TextBlockLayer.preset_id
-    language: str = ""   # ISO 639-1 code (e.g. "da") passed to faster-whisper; "" = auto-detect
+    language: str = "da"   # ISO 639-1 code (e.g. "da") passed to faster-whisper; "" = auto-detect, default "da"
 
 class MusicTrack(BaseModel):
     id: str = Field(default_factory=new_id)
