@@ -58,9 +58,6 @@ function guideCss(kind) {
   return `.safe-zone-border { left: ${pct.left}%; top: ${pct.top}%; width: ${width}%; height: ${height}%; }`;
 }
 
-// Vertical gap (px) between the label's bottom edge and the border's top edge.
-const LABEL_GAP_PX = 8;
-
 // Injects/updates the generated geometry <style> element (idempotent — safe to call on every
 // render; the element is reused, only its content is replaced when `kind` changes).
 function ensureStyleElement(kind) {
@@ -79,11 +76,8 @@ function ensureStyleElement(kind) {
 // (SafeZoneGeometry.TEXT_IMAGE_SAFE_RECT); "caption" outlines the narrower, lower caption-only
 // safe area (SafeZoneGeometry.CAPTION_SAFE_RECT). Call again with a different kind to switch which
 // rect is outlined — editor.js's renderTimeline() does this on every selection change. A
-// "SAFE ZONE ON" label (shield icon + text) sits just above the active rect's top edge, tracking
-// whichever rect is currently outlined instead of sitting at a fixed stage offset. The label's
-// `top` is set here (not in guideCss's generated stylesheet) because it needs the label's actual
-// rendered height — a fixed-px guess overlapped the border on a small/short #stage where the
-// border's own top offset (percent-based) was smaller than the guessed offset.
+// "SAFE ZONE ON" label (shield icon + text) sits pinned to the stage's own top edge
+// (top: 8px, safe-zones.css), independent of which rect is currently outlined.
 uiSafeZonesGlobal.UI.safeZones = function safeZones(container, kind = "text") {
   container.innerHTML = "";
   ensureStyleElement(kind);
@@ -94,10 +88,6 @@ uiSafeZonesGlobal.UI.safeZones = function safeZones(container, kind = "text") {
   label.className = "safe-zone-label";
   label.innerHTML = `<span class="safe-zone-label-icon">${uiSafeZonesGlobal.UI.icon("shield", { size: 14 })}</span><span class="safe-zone-label-text">SAFE ZONE ON</span>`;
   container.appendChild(label);
-  const containerTop = container.getBoundingClientRect().top;
-  const borderTop = border.getBoundingClientRect().top - containerTop;
-  const labelHeight = label.getBoundingClientRect().height;
-  label.style.top = `${Math.max(0, borderTop - LABEL_GAP_PX - labelHeight)}px`;
 };
 
 if (typeof module !== "undefined") {

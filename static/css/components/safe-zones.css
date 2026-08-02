@@ -27,25 +27,26 @@
 
 .safe-zone-border {
   position: absolute;
-  border: 4px solid transparent;
+  border: 3px solid transparent;
   border-image: repeating-linear-gradient(45deg,
     var(--safe-zone-stripe-dark) 0px, var(--safe-zone-stripe-dark) 8px,
-    var(--safe-zone-stripe-light) 8px, var(--safe-zone-stripe-light) 16px) 4;
+    var(--safe-zone-stripe-light) 8px, var(--safe-zone-stripe-light) 16px) 3;
 }
 
 .safe-zone-label {
   position: absolute;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   padding: 3px 7px;
-  background: var(--surface);
-  border: var(--border-width) solid var(--border-color);
+  background: var(--safe-zone-stripe-dark);
+  border: var(--border-width) solid var(--safe-zone-stripe-light);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-chip);
-  color: var(--safe-zone);
+  color: var(--safe-zone-stripe-light);
   font-family: var(--font-ui);
   font-size: var(--fs-2xs);
   font-weight: 600;
@@ -57,7 +58,7 @@
 
 .safe-zone-label-icon {
   display: inline-flex;
-  color: var(--safe-zone);
+  color: var(--safe-zone-stripe-light);
 }
 
 .safe-zone-label-icon svg {
