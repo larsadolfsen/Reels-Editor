@@ -66,3 +66,18 @@ test("multiple lines share one page when the box is tall enough", () => {
   const pages = paginateWords(words, charWidthMeasurer(10), 10, 60, 20, 1.15);
   assert.deepStrictEqual(pages.map((page) => page.length), [2, 1]);
 });
+
+test("a long silence forces a new page even though both words would still fit", () => {
+  // "one"/"two" would easily fit one page together (box is huge), but a >1s gap between them
+  // must still force a fresh page so the caption doesn't linger on screen through the silence.
+  const words = [w("one", 0.0, 0.5), w("two", 2.0, 2.5)];
+  const pages = paginateWords(words, charWidthMeasurer(10), 1000, 1000, 20);
+  assert.deepStrictEqual(pages.map((page) => page.flatMap((line) => line.map((x) => x.text))), [["one"], ["two"]]);
+});
+
+test("a short natural gap between words does not break the page", () => {
+  const words = [w("one", 0.0, 0.5), w("two", 0.7, 1.2)];
+  const pages = paginateWords(words, charWidthMeasurer(10), 1000, 1000, 20);
+  assert.strictEqual(pages.length, 1);
+  assert.deepStrictEqual(pages[0][0].map((x) => x.text), ["one", "two"]);
+});

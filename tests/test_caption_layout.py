@@ -50,3 +50,16 @@ def test_paginate_words_multiple_lines_fit_one_page_when_tall_enough():
     words = [w("one", 0.0, 0.5), w("two", 0.5, 1.0), w("three", 1.0, 1.5)]
     pages = paginate_words(words, _char_width_measurer(10), 10, 60, 20, line_height=1.15)
     assert [len(page) for page in pages] == [2, 1]
+
+def test_paginate_words_breaks_page_on_a_long_silence_even_if_it_would_still_fit():
+    # "one"/"two" would easily fit one page together (box is huge), but a >1s gap between them
+    # must still force a fresh page so the caption doesn't linger on screen through the silence.
+    words = [w("one", 0.0, 0.5), w("two", 2.0, 2.5)]
+    pages = paginate_words(words, _char_width_measurer(10), 1000, 1000, 20)
+    assert [[x.text for line in page for x in line] for page in pages] == [["one"], ["two"]]
+
+def test_paginate_words_does_not_break_page_on_a_short_natural_gap():
+    words = [w("one", 0.0, 0.5), w("two", 0.7, 1.2)]
+    pages = paginate_words(words, _char_width_measurer(10), 1000, 1000, 20)
+    assert len(pages) == 1
+    assert [x.text for x in pages[0][0]] == ["one", "two"]
