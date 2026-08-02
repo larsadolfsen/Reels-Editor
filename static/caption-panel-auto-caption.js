@@ -10,9 +10,19 @@
 // "background enhancement, no loading UI" pattern as thumbnail/waveform/filmstrip fetches
 // elsewhere in this app. Failures (e.g. the `ml` extra not installed, or no usable transcription
 // backend) surface in #caption-transcribe-error.
+//
+// A call that arrives while a job is already running (e.g. a second main clip added before the
+// first clip's transcription finished) must not be silently dropped — it's marked as a pending
+// rerun and the whole project is re-transcribed once the in-flight job finishes, so the newly
+// added clip's audio still ends up captioned instead of being skipped for good.
+let pendingAutoCaptionRerun = false;
+
 async function runAutoCaption() {
   const btn = document.getElementById("caption-auto-caption-btn");
-  if (btn.disabled) return;
+  if (btn.disabled) {
+    pendingAutoCaptionRerun = true;
+    return;
+  }
   ensureCaptionTrack();
   const label = btn.querySelector(".button-label");
   const errorEl = document.getElementById("caption-transcribe-error");
@@ -51,6 +61,10 @@ async function runAutoCaption() {
   } finally {
     btn.disabled = false;
     label.textContent = "Auto-caption";
+    if (pendingAutoCaptionRerun) {
+      pendingAutoCaptionRerun = false;
+      runAutoCaption();
+    }
   }
 }
 

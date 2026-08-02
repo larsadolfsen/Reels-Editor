@@ -23,7 +23,14 @@ def _fall_back_to_cpu():
     _model = None
 
 def _run_transcribe(path: str, language: str | None, on_progress=None) -> list[CaptionWord]:
-    segments, info = _get_model().transcribe(path, word_timestamps=True, language=language or None)
+    # vad_filter skips non-speech audio (silence, music, background noise) before it reaches the
+    # model — Whisper is well-documented to hallucinate invented phrases (e.g. stock credit lines)
+    # over exactly those stretches. condition_on_previous_text=False stops a hallucinated segment
+    # from seeding the next one, so one bad guess can't cascade through the rest of the transcript.
+    segments, info = _get_model().transcribe(
+        path, word_timestamps=True, language=language or None,
+        vad_filter=True, condition_on_previous_text=False,
+    )
     collected = []
     for seg in segments:
         collected.append(seg)
