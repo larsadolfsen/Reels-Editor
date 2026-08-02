@@ -50,10 +50,12 @@ function makeFakeAnchor(rect = { left: 0, width: 100 }, parentElement = null) {
 }
 
 // A scrolling ancestor for uiPopoverToolbarScrollAncestor's walk-up to find: any single node
-// with overflowY: auto/scroll/hidden/clip, positioned at `top`, with no parentElement of its own
-// (the walk stops at document.body regardless, so this is enough depth for these tests).
-function makeFakeScrollAncestor(top) {
-  return { overflowY: "auto", getBoundingClientRect: () => ({ top }), parentElement: null };
+// with overflowY: auto/scroll/hidden/clip, positioned at `top`/`left`/`right`, with no
+// parentElement of its own (the walk stops at document.body regardless, so this is enough depth
+// for these tests). left/right default wide open so tests that only care about the vertical flip
+// don't also trip the horizontal clamp.
+function makeFakeScrollAncestor(top, left = -9999, right = 9999) {
+  return { overflowY: "auto", getBoundingClientRect: () => ({ top, left, right }), parentElement: null };
 }
 
 delete require.cache[require.resolve("../../static/ui-icon.js")];
@@ -212,4 +214,68 @@ test("UI.popoverToolbar falls back to the viewport when no scrolling ancestor ex
   anchor._listeners.mousemove({ clientX: 10 });
   t.mock.timers.tick(120);
   assert.strictEqual(toolbar.classList.contains("ui-popover-toolbar-below"), true);
+});
+
+// Reproduces the "Toolbar is partly hidden" bug (2026-08-02): a scrolling ancestor with only
+// overflow-y set (transcript-sidebar.css's #transcript-sidebar) still computes overflow-x to
+// auto per the CSS spec, clipping the chip whenever it's centered near the ancestor's own left
+// or right edge. The chip must shift back inside the ancestor's bounds rather than staying
+// clipped.
+test("UI.popoverToolbar shifts right when the chip would clip the scrolling ancestor's left edge", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  global.document = makeFakeDocument();
+  global.getComputedStyle = (el) => ({ overflowY: el.overflowY || "visible" });
+  require("../../static/ui-icon.js");
+  require("../../static/ui-popover-toolbar.js");
+
+  const scrollAncestor = makeFakeScrollAncestor(200, 100, 500);
+  const anchor = makeFakeAnchor({ left: 100, width: 20 }, scrollAncestor);
+  const toolbar = global.UI.popoverToolbar(anchor, [{ icon: "scissors", title: "Slice main clip here", onClick: () => {} }]);
+  // Plenty of room above; the chip is a 60px-wide box centered under the anchor's left edge, so
+  // it extends 30px to the left of the ancestor's own left edge of 100.
+  toolbar.getBoundingClientRect = () => ({ top: 300, left: 70, right: 130 });
+
+  anchor._listeners.mousemove({ clientX: 0 });
+  t.mock.timers.tick(120);
+
+  // shift = (ancestorLeft(100) + margin(6)) - chipLeft(70) = 36
+  assert.strictEqual(toolbar.style.left, "36px");
+});
+
+test("UI.popoverToolbar shifts left when the chip would clip the scrolling ancestor's right edge", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  global.document = makeFakeDocument();
+  global.getComputedStyle = (el) => ({ overflowY: el.overflowY || "visible" });
+  require("../../static/ui-icon.js");
+  require("../../static/ui-popover-toolbar.js");
+
+  const scrollAncestor = makeFakeScrollAncestor(200, 0, 400);
+  const anchor = makeFakeAnchor({ left: 350, width: 20 }, scrollAncestor);
+  const toolbar = global.UI.popoverToolbar(anchor, [{ icon: "scissors", title: "Slice main clip here", onClick: () => {} }]);
+  toolbar.getBoundingClientRect = () => ({ top: 300, left: 370, right: 430 });
+
+  anchor._listeners.mousemove({ clientX: 360 });
+  t.mock.timers.tick(120);
+
+  // lastX = clamp(360-350, 0, 20) = 10; shift = (ancestorRight(400) - margin(6)) - chipRight(430) = -36
+  assert.strictEqual(toolbar.style.left, "-26px");
+});
+
+test("UI.popoverToolbar leaves the chip alone when it already fits within the scrolling ancestor", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  global.document = makeFakeDocument();
+  global.getComputedStyle = (el) => ({ overflowY: el.overflowY || "visible" });
+  require("../../static/ui-icon.js");
+  require("../../static/ui-popover-toolbar.js");
+
+  const scrollAncestor = makeFakeScrollAncestor(200, 0, 400);
+  const anchor = makeFakeAnchor({ left: 150, width: 20 }, scrollAncestor);
+  const toolbar = global.UI.popoverToolbar(anchor, [{ icon: "scissors", title: "Slice main clip here", onClick: () => {} }]);
+  toolbar.getBoundingClientRect = () => ({ top: 300, left: 140, right: 200 });
+
+  anchor._listeners.mousemove({ clientX: 160 });
+  t.mock.timers.tick(120);
+
+  // lastX = clamp(160-150, 0, 20) = 10; well within the ancestor's [0, 400] bounds, no shift.
+  assert.strictEqual(toolbar.style.left, "10px");
 });
