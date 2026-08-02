@@ -111,6 +111,8 @@ window.MediaPanel = window.MediaPanel || {};
       m.name = input.value.trim();
       await saveProject();
       render();
+      renderTimeline(); // static/timeline.js's VIDEO-row block label reads media.name too — without
+      // this it stays stale until some unrelated re-render happens to fire.
     };
     const cancel = () => {
       if (done) return;
