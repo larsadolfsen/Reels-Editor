@@ -22,6 +22,17 @@
 
 .transcript-sentence {
   max-width: 400px;
+  /* .transcript-word's hover/active decoration below uses a -2px horizontal margin (to keep the
+     word glyphs themselves visually aligned despite its own padding/border) — for the leftmost
+     word on any wrapped line, that pulls the decorated border box 2px past this element's own
+     left edge. #transcript-sidebar's overflow-y:auto forces overflow-x to auto too (the CSS
+     overflow spec coerces an unset "visible" axis to "auto" when the other axis isn't visible),
+     so that 2px bleed was silently clipped, hiding the left accent border on hover for exactly
+     the leftmost word of every line (found 2026-08-02, alongside the popover-toolbar clipping
+     bug — same root cause, different symptom). 2px of padding gives the decoration room to
+     render without being clipped.
+  */
+  padding-left: 2px;
   color: var(--text-muted);
   margin-bottom: var(--space-2-5);
   transition: color var(--transition-fade);
