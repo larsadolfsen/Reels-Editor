@@ -311,7 +311,7 @@ def _karaoke_dialogue(page: list[list[CaptionWord]], p: TextPreset) -> list[str]
     return lines
 
 def _current_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> list[str]:
-    fx = f"\\pos({p.x},{p.y})" + _shadow_tag(p)
+    fx = f"\\pos({p.x},{p.y})"
     highlight = _ass_override_color(p.spotlight_color)
     normal = _ass_override_color(p.color)
     outline_on = f"\\3c{_ass_override_color(p.spotlight_outline_color)}\\bord{p.spotlight_outline_px}" if p.spotlight_outline_px > 0 else ""
@@ -323,22 +323,32 @@ def _current_word_dialogues(page: list[list[CaptionWord]], p: TextPreset) -> lis
                   f"\\xshad{p.shadow_offset_x}\\yshad{p.shadow_offset_y}\\blur{p.shadow_blur}"
                   if p.spotlight_shadow and p.shadow else
                   ("\\4a&HFF&" if p.spotlight_shadow else ""))
+    has_any_shadow = p.shadow or p.spotlight_shadow
+    shadow_fx = fx + "\\1a&HFF&\\3a&HFF&" + _shadow_tag(p)
     flat = [word for line in page for word in line]
     dialogues = []
     for active in flat:
-        line_bodies = []
+        main_bodies = []
+        shadow_bodies = []
         for line in page:
-            segments = []
+            main_segments = []
+            shadow_segments = []
             for j, other in enumerate(line):
                 seg = other.text + (" " if j < len(line) - 1 else "")
                 if other is active:
-                    segments.append(f"{{\\1c{highlight}{outline_on}{shadow_on}}}{seg}{{\\1c{normal}{outline_off}{shadow_off}}}")
+                    main_segments.append(f"{{\\1c{highlight}{outline_on}}}{seg}{{\\1c{normal}{outline_off}}}")
+                    shadow_segments.append(f"{{{shadow_on}}}{seg}{{{shadow_off}}}")
                 else:
-                    segments.append(seg)
-            line_bodies.append("".join(segments))
-        body = "\\N".join(line_bodies)
-        dialogues.append(f"Dialogue: 0,{ass_time(active.t_start)},{ass_time(active.t_end)},"
-                          f"{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{body}")
+                    main_segments.append(seg)
+                    shadow_segments.append(seg)
+            main_bodies.append("".join(main_segments))
+            shadow_bodies.append("".join(shadow_segments))
+        main_body = "\\N".join(main_bodies)
+        shadow_body = "\\N".join(shadow_bodies)
+        start, end = ass_time(active.t_start), ass_time(active.t_end)
+        if has_any_shadow:
+            dialogues.append(f"Dialogue: 0,{start},{end},{CAPTION_STYLE_NAME},shadow,0,0,0,,{{{shadow_fx}}}{shadow_body}")
+        dialogues.append(f"Dialogue: 0,{start},{end},{CAPTION_STYLE_NAME},,0,0,0,,{{{fx}}}{main_body}")
     return dialogues
 
 def _line_word_offsets(line: list[CaptionWord], measure: Callable[[str], float]) -> tuple[list[tuple[float, float]], float]:

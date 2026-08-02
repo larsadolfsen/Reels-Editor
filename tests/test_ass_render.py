@@ -548,6 +548,37 @@ def test_current_word_dialogue_shadow_on_emits_tags():
     line = next(l for l in out.splitlines() if l.startswith("Dialogue:"))
     assert "\\xshad4" in line and "\\yshad-2" in line and "\\blur1" in line
 
+def test_current_word_dialogue_shadow_on_shadow_line_precedes_main_and_main_has_no_blur():
+    from app.ass_render import render_caption_ass
+    pr = TextPreset(name="Cap", highlight_mode="current_word",
+                     shadow=True, shadow_color="#0000FF", shadow_offset_x=4, shadow_offset_y=-2, shadow_blur=1)
+    p = Project(name="r", captions=CaptionTrack(words=[w("hi", 0.0, 0.5)], preset_id=pr.id))
+    out = render_caption_ass(p, pr)
+    dialogue_lines = [l for l in out.splitlines() if l.startswith("Dialogue:")]
+    assert len(dialogue_lines) == 2  # 1 word * (shadow line + main line)
+    shadow_line, main_line = dialogue_lines
+    assert shadow_line.split(",")[4] == "shadow"
+    assert main_line.split(",")[4] == ""
+    assert "\\blur1" in shadow_line
+    assert "\\blur" not in main_line and "\\4c" not in main_line
+
+def test_current_word_dialogue_no_shadow_line_when_both_shadow_flags_off():
+    pr = TextPreset(name="Cap", highlight_mode="current_word", shadow=False, spotlight_shadow=False)
+    words = [CaptionWord(text="hi", t_start=0.0, t_end=0.5), CaptionWord(text="there", t_start=0.5, t_end=1.0)]
+    dialogues = _current_word_dialogues([words], pr)
+    assert len(dialogues) == 2  # one main line per active word, no shadow lines
+    assert all(d.split(",")[4] == "" for d in dialogues)
+
+def test_current_word_dialogue_spotlight_shadow_only_still_emits_shadow_line():
+    # p.shadow is off but spotlight_shadow (the active word's own override) is on — a shadow
+    # line must still appear for the active word, since something is visible to blur.
+    pr = TextPreset(name="Cap", highlight_mode="current_word", shadow=False, spotlight_shadow=True,
+                     spotlight_shadow_blur=2)
+    words = [CaptionWord(text="hi", t_start=0.0, t_end=0.5)]
+    dialogues = _current_word_dialogues([words], pr)
+    assert len(dialogues) == 2  # shadow line + main line for the one active word
+    assert any(d.split(",")[4] == "shadow" and "\\blur2" in d for d in dialogues)
+
 def test_karaoke_dialogue_shadow_off_emits_no_tags():
     from app.ass_render import render_caption_ass
     pr = TextPreset(name="Cap", highlight_mode="progressive_fill", shadow=False)
